@@ -3,7 +3,7 @@ import sbt.Tests.{SubProcess, Group}
 import sbt._
 import play.routes.compiler.StaticRoutesGenerator
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
-
+import scoverage.ScoverageKeys
 
 trait MicroService {
 
@@ -35,6 +35,14 @@ trait MicroService {
       retrieveManaged := true,
       evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
       routesGenerator := StaticRoutesGenerator
+    )
+    .settings(
+      ScoverageKeys.coverageExcludedFiles := "<empty>;Reverse.*;.*filters.*;.*handlers.*;.*components.*;.*models.*;.*repositories.*;" +
+        ".*BuildInfo.*;.*javascript.*;.*Routes.*;.*GuiceInjector;",
+      ScoverageKeys.coverageMinimum := 80,
+      ScoverageKeys.coverageFailOnMinimum := true,
+      ScoverageKeys.coverageHighlighting := true,
+      parallelExecution in Test := false
     )
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
