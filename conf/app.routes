@@ -1,3 +1,5 @@
 # microservice specific routes
 
 GET        /hello-world             @uk.gov.hmrc.pensionsscheme.controllers.MicroserviceHelloWorld.hello
+
+POST       /register-scheme         @uk.gov.hmrc.pensionsscheme.controllers.SchemeRegistrationController.registerScheme

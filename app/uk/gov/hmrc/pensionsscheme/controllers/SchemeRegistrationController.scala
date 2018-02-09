@@ -15,26 +15,15 @@
  */
 
 package uk.gov.hmrc.pensionsscheme.controllers
+import javax.inject.Singleton
+import play.api.mvc.Action
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
-import play.api.http.Status
-import play.api.test.FakeRequest
-import play.api.http.Status
-import play.api.test.FakeRequest
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.play.test.WithFakeApplication
-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import scala.concurrent.Future
 
+class SchemeRegistrationController extends BaseController {
 
-class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication{
-
-  val fakeRequest = FakeRequest("GET", "/")
-
-  "GET /" should {
-    "return 200" in {
-      val controller = new MicroserviceHelloWorld()
-      val result = controller.hello()(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
+  def registerScheme=Action.async{ implicit request =>
+    Future.successful(Ok)
   }
-
 }

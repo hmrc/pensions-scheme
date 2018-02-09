@@ -17,24 +17,19 @@
 package uk.gov.hmrc.pensionsscheme.controllers
 
 import play.api.http.Status
-import play.api.test.FakeRequest
-import play.api.http.Status
-import play.api.test.FakeRequest
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.play.test.WithFakeApplication
+import play.api.test.{FakeApplication, FakeRequest}
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 
-class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication{
+class SchemeRegistrationControllerSpec extends UnitSpec with WithFakeApplication {
 
-  val fakeRequest = FakeRequest("GET", "/")
+  val fakeRequest=FakeRequest("POST","/")
 
-  "GET /" should {
+  "POST /" should {
     "return 200" in {
-      val controller = new MicroserviceHelloWorld()
-      val result = controller.hello()(fakeRequest)
+      val controller=new SchemeRegistrationController()
+      val result=controller.registerScheme()(fakeRequest)
       status(result) shouldBe Status.OK
     }
   }
-
 }
