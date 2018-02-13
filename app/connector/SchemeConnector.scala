@@ -28,9 +28,7 @@ class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends
 
   override def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
-    def desHeader = Seq(
-      "Environment" -> config.desEnvironment,
-      "Authorization" -> config.authorization,
+    val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
       "Content-Type" -> "application/json")
 
     val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
