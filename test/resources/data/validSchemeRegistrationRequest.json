@@ -1,0 +1,112 @@
+{
+  "customerAndSchemeDetails": {
+    "schemeName": "John Scheme",
+    "isSchemeMasterTrust": true,
+    "schemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
+    "otherSchemeStructure": "abcdefghijklmnopqrst",
+    "haveMoreThanTenTrustee":true,
+    "currentSchemeMembers": "0",
+    "futureSchemeMembers": "0",
+    "isReguledSchemeInvestment": true,
+    "isOccupationalPensionScheme": true,
+    "doesSchemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
+    "areBenefitsSecuredContractInsuranceCompany": true,
+    "schemeEstablishedCountry": "AD",
+    "haveValidBank": true,
+    "insuranceCompanyName": "XZY - Co. -Ltd",
+    "insuranceCompanyAddress": {
+      "addressType": "UK",
+      "line1": "abcdefg",
+      "line2": "abcdef",
+      "line3": "abcd",
+      "line4": "abcdefghijklmno",
+      "postalCode": "B5 9EX",
+      "countryCode": "UK"
+    },
+    "policyNumber": "12345678"
+  },
+  "pensionSchemeDeclaration": {
+    "box1": true,
+    "box2": false,
+    "box3": true,
+    "box4": true,
+    "box5": false,
+    "box6": true,
+    "box7": false,
+    "box8": false,
+    "box9": true,
+    "box10": false,
+    "box11": true,
+    "pensionAdviserName": "abcdef",
+    "addressAndContactDetails": {
+      "addressDetails": {
+        "addressType": "UK",
+        "line1": "abcdefg",
+        "line2": "abcdef",
+        "line3": "abcd",
+        "line4": "abcdefghijklmno",
+        "postalCode": "B5 9EX",
+        "countryCode": "UK"
+      },
+      "contactDetails": {
+        "telephone": "7889129814",
+        "mobileNumber": "7889129814",
+        "fax": "7889129814",
+        "email": "abac@company.com"
+      }
+    }
+  },
+  "establisherDetails": [
+    {
+      "type": "Individual",
+      "organisationName": "Organisation 1",
+      "personalDetails": {
+        "title": "Mr",
+        "firstName": "Job",
+        "middleName": "R",
+        "lastName": "Broker",
+        "dateOfBirth": "2018-12-12"
+      },
+      "referenceOrNino": "AA000067Y",
+      "noNinoReason": "Reference Text.'#",
+      "utr": "7123456789",
+      "noUtrReason": "Reference Text.'#",
+      "crnNumber": "abcde",
+      "noCrnReason": "abcdefghijk",
+      "vatRegistrationNumber": "099999444",
+      "payeReference": "012123456789",
+      "haveMoreThanTenDirectorOrPartner": false,
+      "correspondenceAddressDetails": {
+        "addressDetails": {
+          "addressType": "UK",
+          "line1": "abcdefg",
+          "line2": "abcdef",
+          "line3": "abcd",
+          "line4": "abcdefghijklmno",
+          "postalCode": "B5 9EX",
+          "countryCode": "UK"
+        }
+      },
+      "correspondenceContactDetails": {
+        "contactDetails": {
+          "telephone": "7889129814",
+          "mobileNumber": "7889129814",
+          "fax": "7889129814",
+          "email": "abac@company.com"
+        }
+      },
+      "previousAddressDetails": {
+        "isPreviousAddressLast12Month": true,
+        "previousAddressDetails": {
+          "addressType": "UK",
+          "line1": "abcdefg",
+          "line2": "abcdef",
+          "line3": "abcd",
+          "line4": "abcdefghijklmno",
+          "postalCode": "B5 9EX",
+          "countryCode": "UK"
+        }
+      }
+    }
+  ]
+}
