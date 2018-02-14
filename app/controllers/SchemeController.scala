@@ -54,4 +54,16 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
       Future.failed(new Exception(e.getMessage))
   }
   }
+
+  def registerPSA(): Action[AnyContent] = Action.async { implicit request =>
+
+    val feJson = request.body.asJson
+
+    feJson match {
+      case Some(jsValue) => schemeConnector.registerPSA(jsValue).map {
+        httpResponse => Ok (httpResponse.body)
+      }
+      case _ => Future.failed(new BadRequestException("Bad Request"))
+    }
+  }
 }

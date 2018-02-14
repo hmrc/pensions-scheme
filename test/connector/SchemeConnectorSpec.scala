@@ -34,15 +34,13 @@ import scala.concurrent.Future
 class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
 
   val httpClient = mock[HttpClient]
-
   val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig)
-  val url = appConfig.schemeRegistrationUrl.format("A2000001")
+  implicit val hc = HeaderCarrier()
 
   before(reset(httpClient))
 
   "registerScheme" must {
-    implicit val hc = HeaderCarrier()
-
+    val url = appConfig.schemeRegistrationUrl.format("A2000001")
     "return OK when Des/Etmp returns successfully" in {
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
@@ -53,7 +51,6 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       val result = schemeConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result) { res =>
         res.status mustBe OK
-        verify(httpClient, times(1)).POST(Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())
       }
     }
 
@@ -70,7 +67,41 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
-        verify(httpClient, times(1)).POST(Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())
+      }
+    }
+  }
+
+  "register PSA" must {
+    val schemeAdminRegisterUrl = appConfig.schemeAdminRegistrationUrl
+    "return OK when DES/Etmp returns successfully" in {
+      val inputRequestData = readJsonFromFile("/data/validPsaRequest.json")
+      val successResponse = Json.obj(
+        "processingDate" -> LocalDate.now,
+        "formBundle" -> "1121313",
+        "psaId" -> "A21999999"
+      )
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
+        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = schemeConnector.registerPSA(inputRequestData)
+      ScalaFutures.whenReady(result) { res =>
+        res.status mustBe OK
+      }
+    }
+
+    "throw BadRequestException when DES/Etmp throws Bad Request" in {
+      val invalidData = Json.obj("data" -> "invalid")
+      val failureResponse: JsObject = Json.obj(
+        "code" -> "INVALID_PAYLOAD",
+        "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
+      )
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
+        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+
+      val result = schemeConnector.registerPSA(invalidData)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe failureResponse.toString()
       }
     }
   }

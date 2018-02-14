@@ -159,4 +159,18 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       }
     }
   }
+
+  "registerPSA" must {
+    "returns OK" in {
+      val result = schemeController.registerPSA()(FakeRequest("", ""))
+      status(result) mustBe OK
+    }
+
+    "throw BadRequestException" in {
+
+      val result = schemeController.registerPSA()(FakeRequest())
+      status(result) mustBe BAD_REQUEST
+    }
+
+  }
 }
