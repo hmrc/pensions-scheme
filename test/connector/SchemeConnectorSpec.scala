@@ -18,6 +18,7 @@ package connector
 
 import base.SpecBase
 import org.joda.time.LocalDate
+import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
@@ -35,6 +36,7 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
   val httpClient = mock[HttpClient]
 
   val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig)
+  val url = appConfig.schemeRegistrationUrl.format("A2000001")
 
   before(reset(httpClient))
 
@@ -44,29 +46,31 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
     "return OK when Des/Etmp returns successfully" in {
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-      when(httpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any())).
+
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+
       val result = schemeConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result) { res =>
         res.status mustBe OK
-        verify(httpClient, times(1)).POST(any(), any(), any())(any(), any(), any(), any())
+        verify(httpClient, times(1)).POST(Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())
       }
     }
 
-    "throw BadRequestException when bad request returned from Des" in {
+    "throw BadRequestException when bad request returned from Des/Etmp" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
       val invalidPayload: JsObject = Json.obj(
         "code" -> "INVALID_PAYLOAD",
         "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
       )
-      when(httpClient.POST[JsValue, HttpResponse](any(), any(), any())(any(), any(), any(), any())).
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
         thenReturn(Future.failed(new BadRequestException(invalidPayload.toString())))
 
       val result = schemeConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
-        verify(httpClient, times(1)).POST(any(), any(), any())(any(), any(), any(), any())
+        verify(httpClient, times(1)).POST(Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())
       }
     }
   }
