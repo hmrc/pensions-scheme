@@ -23,10 +23,12 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import utils.ErrorHandler
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseController {
+class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
 
   def registerScheme(): Action[AnyContent] = Action.async { implicit request => {
 
@@ -35,35 +37,25 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
 
     (psaId, feJson) match {
       case (Some(psa), Some(jsValue)) =>
-       val pensionSchemeData = Json.toJson(jsValue.as[PensionsScheme])
+        val pensionSchemeData = Json.toJson(jsValue.as[PensionsScheme])
         schemeConnector.registerScheme(psa, pensionSchemeData).map { httpResponse =>
           Ok(httpResponse.body)
         }
       case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
     }
-  } recoverWith {
-    case e: BadRequestException =>
-      Future.failed(new BadRequestException(e.message))
-    case e: NotFoundException =>
-      Future.failed(new Upstream4xxResponse(e.message, NOT_FOUND, NOT_FOUND))
-    case e: Upstream4xxResponse =>
-      Future.failed(new Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
-    case e: Upstream5xxResponse =>
-      Future.failed(new Upstream5xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
-    case e: Exception =>
-      Future.failed(new Exception(e.getMessage))
-  }
+  } recoverWith recoverFromError
   }
 
-  def registerPSA(): Action[AnyContent] = Action.async { implicit request =>
+  def registerPSA(): Action[AnyContent] = Action.async { implicit request => {
 
     val feJson = request.body.asJson
 
     feJson match {
       case Some(jsValue) => schemeConnector.registerPSA(jsValue).map {
-        httpResponse => Ok (httpResponse.body)
+        httpResponse => Ok(httpResponse.body)
       }
-      case _ => Future.failed(new BadRequestException("Bad Request"))
+      case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
     }
+  } recoverWith recoverFromError
   }
 }

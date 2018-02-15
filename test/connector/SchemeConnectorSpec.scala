@@ -36,6 +36,10 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
   val httpClient = mock[HttpClient]
   val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig)
   implicit val hc = HeaderCarrier()
+  val failureResponse: JsObject = Json.obj(
+    "code" -> "INVALID_PAYLOAD",
+    "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
+  )
 
   before(reset(httpClient))
 
@@ -56,17 +60,13 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
 
     "throw BadRequestException when bad request returned from Des/Etmp" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-      val invalidPayload: JsObject = Json.obj(
-        "code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
-      )
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new BadRequestException(invalidPayload.toString())))
+        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
       val result = schemeConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe invalidPayload.toString()
+        e.getMessage mustBe failureResponse.toString()
       }
     }
   }
@@ -91,10 +91,6 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
 
     "throw BadRequestException when DES/Etmp throws Bad Request" in {
       val invalidData = Json.obj("data" -> "invalid")
-      val failureResponse: JsObject = Json.obj(
-        "code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
-      )
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
         thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
