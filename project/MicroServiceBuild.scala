@@ -32,8 +32,7 @@ object MicroServiceBuild extends Build with MicroService {
   val compile = Seq(
     "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.3.0",
-    "com.github.aishfenton" %% "argus" % "0.2.7"
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.3.0"
   )
 
   def test(scope: String = "test,it") = Seq(
