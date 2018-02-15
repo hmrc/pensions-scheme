@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package utils
 
-import play.api.http.Status._
 import play.api.mvc.Result
-import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, Upstream5xxResponse}
+import uk.gov.hmrc.http.{BadRequestException, Upstream4xxResponse, Upstream5xxResponse}
 
 import scala.concurrent.Future
 
@@ -26,8 +26,6 @@ trait ErrorHandler {
   def recoverFromError: PartialFunction[Throwable, Future[Result]] = {
     case e: BadRequestException =>
       Future.failed(new BadRequestException(e.message))
-    case e: NotFoundException =>
-      Future.failed(new Upstream4xxResponse(e.message, NOT_FOUND, NOT_FOUND))
     case e: Upstream4xxResponse =>
       Future.failed(new Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
     case e: Upstream5xxResponse =>

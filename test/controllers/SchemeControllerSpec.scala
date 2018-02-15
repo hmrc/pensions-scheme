@@ -18,6 +18,7 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
+import models.PensionSchemeAdministrator
 import org.joda.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
@@ -29,17 +30,18 @@ import uk.gov.hmrc.http._
 import play.api.mvc.AnyContentAsJson
 import play.api.test.Helpers._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+
 import scala.concurrent.Future
 
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
-
-  def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data).withHeaders(("psaId", "A2000001"))
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
   val schemeController = new SchemeController(mockSchemeConnector)
 
   before(reset(mockSchemeConnector))
 
   "registerScheme" must {
+
+    def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data).withHeaders(("psaId", "A2000001"))
 
     "return OK when the scheme is registered successfully" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
@@ -90,20 +92,6 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
-        verify(mockSchemeConnector, times(1)).registerScheme(Matchers.any(),
-          Matchers.any())(Matchers.any(), Matchers.any())
-      }
-    }
-
-    "throw Upstream4xxResponse when not found exception returned from Des" in {
-      val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-      when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
-        Future.failed(new NotFoundException("Not Found Exception")))
-
-      val result = schemeController.registerScheme()(fakeRequest(validData))
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream4xxResponse]
-        e.getMessage mustBe "Not Found Exception"
         verify(mockSchemeConnector, times(1)).registerScheme(Matchers.any(),
           Matchers.any())(Matchers.any(), Matchers.any())
       }
@@ -161,16 +149,83 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
   }
 
   "registerPSA" must {
-    "returns OK" in {
-      val result = schemeController.registerPSA()(FakeRequest("", ""))
-      status(result) mustBe OK
+
+    def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
+
+    "returns OK when ETMP/DES returns successfully" in {
+      val validRequestData = readJsonFromFile("/data/validPsaRequest.json")
+      val successResponse = Json.obj("processingDate" -> LocalDate.now, "formBundle" -> "1000000", "psaId" -> "A2000000")
+
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
+        validRequestData.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
+        Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = schemeController.registerPSA(fakeRequest(validRequestData))
+      ScalaFutures.whenReady(result) { res =>
+        status(result) mustBe OK
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
     }
 
-    "throw BadRequestException" in {
+    "throw BadRequestException when ETMP/DES return bad request" in {
+      val invalidRequest = readJsonFromFile("/data/validPsaRequest.json")
+      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD", "reason" -> "Submission has not passed validation. Invalid PAYLOAD.")
 
-      val result = schemeController.registerPSA()(FakeRequest())
-      status(result) mustBe BAD_REQUEST
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
+        invalidRequest.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
+        Future.failed(new BadRequestException(failureResponse.toString()))
+      )
+      val result = schemeController.registerPSA(fakeRequest(invalidRequest))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe failureResponse.toString()
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
     }
 
+    "throw BadRequestException when there is no data in the request" in {
+      val result = schemeController.registerPSA(FakeRequest("POST", "/"))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe "Bad Request with no request body"
+        verify(mockSchemeConnector, never()).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
+    }
+
+    "throw Upstream4xxResponse when DES/ETMP returns Upstream4xxResponse" in {
+      val invalidRequest = readJsonFromFile("/data/validPsaRequest.json")
+      val invalidBusinessPartner: JsObject = Json.obj(
+        "code" -> "INVALID_BUSINESS_PARTNER",
+        "reason" -> "Business partner already has active subscription for this regime."
+      )
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
+        invalidRequest.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
+        Future.failed(new Upstream4xxResponse(invalidBusinessPartner.toString(), FORBIDDEN, FORBIDDEN))
+      )
+      val result = schemeController.registerPSA(fakeRequest(invalidRequest))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream4xxResponse]
+        e.getMessage mustBe invalidBusinessPartner.toString()
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
+    }
+
+    "throw Upstream5xxResponse when DES/ETMP returns Upstream5xxResponse" in {
+      val invalidRequest = readJsonFromFile("/data/validPsaRequest.json")
+      val serverError: JsObject = Json.obj(
+        "code" -> "SERVER_ERROR",
+        "reason" -> "DES is currently experiencing problems that require live service intervention."
+      )
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
+        invalidRequest.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
+        Future.failed(new Upstream5xxResponse(serverError.toString(), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR))
+      )
+      val result = schemeController.registerPSA(fakeRequest(invalidRequest))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream5xxResponse]
+        e.getMessage mustBe serverError.toString()
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
+    }
   }
 }

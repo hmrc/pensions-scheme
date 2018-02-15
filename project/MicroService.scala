@@ -28,6 +28,8 @@ trait MicroService {
     .enablePlugins(Seq(play.sbt.PlayScala,SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin) ++ plugins : _*)
     .settings(playSettings : _*)
     .settings(scalaSettings: _*)
+    .settings(Seq(addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+    ))
     .settings(publishingSettings: _*)
     .settings(defaultSettings(): _*)
     .settings(
