@@ -18,19 +18,6 @@ package models
 
 import play.api.libs.json.Json
 
-case class ContactDetails(telephone: String, mobileNumber: Option[String] = None, fax: Option[String] = None, email: String)
-
-object ContactDetails {
-  implicit val formats = Json.format[ContactDetails]
-}
-
-case class AddressDetails(addressType: String, line1: String, line2: String, line3: Option[String],
-                          line4: Option[String], postalCode: Option[String], countryCode: String)
-
-object AddressDetails {
-  implicit val formats = Json.format[AddressDetails]
-}
-
 case class AddressAndContactDetails(addressDetails: AddressDetails, contactDetails: ContactDetails)
 
 object AddressAndContactDetails {
@@ -56,12 +43,6 @@ object CorrespondenceContactDetails {
   implicit val formats = Json.format[CorrespondenceContactDetails]
 }
 
-case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddressDetails: Option[AddressDetails] = None)
-
-object PreviousAddressDetails {
-  implicit val formats = Json.format[PreviousAddressDetails]
-}
 
 case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: Option[String] = None,
                                     otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,

@@ -1,3 +1,5 @@
 # microservice specific routes
 
 POST        /register-scheme             @controllers.SchemeController.registerScheme
+
+POST        /register-psa                @controllers.SchemeController.registerPSA

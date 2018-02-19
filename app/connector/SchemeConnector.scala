@@ -26,20 +26,27 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends SchemeConnector {
 
+  val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
+    "Content-Type" -> "application/json")
+  implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+
   override def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-
-    val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
-      "Content-Type" -> "application/json")
-
     val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
-    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
 
     http.POST(schemeRegisterUrl, registerData)
+  }
+
+  override def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    val schemeAdminRegisterUrl = config.schemeAdminRegistrationUrl
+
+    http.POST(schemeAdminRegisterUrl, registerData)
   }
 }
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
   def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
+  def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 

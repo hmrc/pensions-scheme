@@ -1,0 +1,91 @@
+{
+  "customerType": "UK",
+  "legalStatus": "Individual",
+  "idType": "AA999999A",
+  "idNumber": "AA999999A",
+  "sapNumber" : "0123456789",
+  "noIdentifier": false,
+  "individualDetail": {
+    "title": "Mr",
+    "firstName": "abcdefghijklmnopqrs",
+    "middleName": "abcdefghijklmnopq",
+    "lastName": "abcdefghijk",
+    "dateOfBirth": "2018-12-12"
+  },
+  "pensionSchemeAdministratoridentifierStatus": {
+    "isExistingPensionSchemaAdministrator": false,
+    "existingPensionSchemaAdministratorReference": "01234567"
+  },
+  "correspondenceAddressDetail": {
+    "addressType": "UK",
+    "line1": "worthing 1",
+    "line2": "worthing 2",
+    "postalCode": "LN12 4DC",
+    "countryCode": "UK"
+  },
+  "correspondenceContactDetail": {
+    "telephone": "0044-09876542312",
+    "mobileNumber": "0044-09876542312",
+    "fax": "0044-09876542312",
+    "email": "abc@hmrc.gsi.gov.uk"
+  },
+  "previousAddressDetail": {
+    "isPreviousAddressLast12Month": true,
+    "previousAddressDetail": {
+      "addressType": "UK",
+      "line1": "abcdefg",
+      "line2": "abcdef",
+      "line3": "abcd",
+      "line4": "abcdefghijklmno",
+      "postalCode": "B5 9EX",
+      "countryCode": "UK"
+    }
+  },
+  "numberOfDirectorOrPartners": {
+    "isMorethanTenDirectors": true,
+    "isMorethanTenPartners": true
+  },
+  "directorOrPartnerDetail": [
+    {
+      "sequenceId": "077",
+      "entityType": "Director",
+      "title": "Mr",
+      "firstName": "abcdefghijklmnopqrs",
+      "middleName": "abcdefg",
+      "lastName": "abcdef",
+      "dateOfBirth": "2018-12-12",
+      "referenceOrNino": "abcdefghijklmn",
+      "noNinoReason": "abcdefghijklmnopqrs",
+      "utr": "0123456789",
+      "noUtrReason": "abcdef",
+      "correspondenceCommonDetail": {
+        "addressDetail": {
+          "addressType": "UK",
+          "line1": "abcdefg",
+          "line2": "abcdef",
+          "line3": "abcd",
+          "line4": "abcdefghijklmno",
+          "postalCode": "B5 9EX",
+          "countryCode": "UK"
+        },
+        "contactDetail": {
+          "telephone": "0044-09876542312",
+          "mobileNumber": "0044-09876542312",
+          "fax": "0044-09876542312",
+          "email": "abc@hmrc.gsi.gov.uk"
+        }
+      },
+      "previousAddressDetail": {
+        "isPreviousAddressLast12Month": false,
+        "previousAddressDetail": {
+          "addressType": "UK",
+          "line1": "abcdefg",
+          "line2": "abcdef",
+          "line3": "abcd",
+          "line4": "abcdefghijklmno",
+          "countryCode": "AD"
+        }
+      }
+    }
+  ]
+}
