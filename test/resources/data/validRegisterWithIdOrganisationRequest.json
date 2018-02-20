@@ -1,0 +1,9 @@
+{
+  "regime": "PODS",
+  "requiresNameMatch": true,
+  "isAnAgent": true,
+  "organisation": {
+    "organisationName": "John",
+    "organisationType": "LLP"
+  }
+}

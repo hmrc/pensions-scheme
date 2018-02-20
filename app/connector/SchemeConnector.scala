@@ -41,6 +41,13 @@ class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends
 
     http.POST(schemeAdminRegisterUrl, registerData)
   }
+
+  override def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit  hc: HeaderCarrier,
+                                                                                       ec: ExecutionContext): Future[HttpResponse] = {
+    val registerWithIdUrl = config.registerWithIdUrl.format(idType, idNumber)
+
+    http.POST(registerWithIdUrl, registerData)
+  }
 }
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
@@ -48,5 +55,7 @@ trait SchemeConnector {
   def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
+  def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 
