@@ -18,7 +18,7 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeConnector
-import models.{RegisterWithId, SuccessResponse}
+import models.{IndividualOrOrganisation, SuccessResponse}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.http.BadRequestException
@@ -40,7 +40,7 @@ class RegistrationController @Inject()(schemeConnector: SchemeConnector) extends
 
       (idType, idNumber, feJson) match {
         case (Some(id), Some(number), Some(jsValue)) =>
-          val registerWithIdData = Json.toJson(jsValue.as[RegisterWithId])
+          val registerWithIdData = Json.toJson(jsValue.as[IndividualOrOrganisation])
           schemeConnector.registerWithId(id, number, registerWithIdData).map { httpResponse =>
             val response = httpResponse.json.as[SuccessResponse]
             Ok(Json.toJson[SuccessResponse](response))

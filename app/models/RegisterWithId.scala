@@ -37,16 +37,3 @@ case class IndividualOrOrganisation(regime: Option[String] = None,
 object IndividualOrOrganisation {
   implicit val formats = Json.format[IndividualOrOrganisation]
 }
-
-case class NoIndividualOrOrganisation(regime: String, requiresNameMatch: Boolean, isAnAgent: Boolean)
-
-object NoIndividualOrOrganisation {
-  implicit val formats = Json.format[NoIndividualOrOrganisation]
-}
-
-case class RegisterWithId(individualOrOrganisation: Option[IndividualOrOrganisation],
-                          noIndividualOrOrganisation: Option[NoIndividualOrOrganisation])
-
-object RegisterWithId {
-  implicit val formats = Json.format[RegisterWithId]
-}

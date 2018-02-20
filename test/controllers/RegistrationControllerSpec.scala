@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
-import models.{FailureResponse, FailureResponseElement, RegisterWithId, SuccessResponse}
+import models._
 import org.mockito.Matchers
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
@@ -45,7 +45,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
   "register With Id" must {
 
     "return OK when the registration with id is successful for Individual" in {
-      val validIndividualRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdIndividualRequest.json").as[RegisterWithId])
+      val validIndividualRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdIndividualRequest.json").as[IndividualOrOrganisation])
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json").as[SuccessResponse])
       when(mockSchemeConnector.registerWithId(Matchers.eq("nino"), Matchers.eq("AB100100A"), Matchers.eq(validIndividualRequest))(
         any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
@@ -58,7 +58,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
 
     "return OK when the registration with id is successful for Company" in {
-      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[RegisterWithId])
+      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[IndividualOrOrganisation])
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json").as[SuccessResponse])
       when(mockSchemeConnector.registerWithId(Matchers.eq("utr"), Matchers.eq("1000000000"), Matchers.eq(validOrganisationRequest))(any(), any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
@@ -71,7 +71,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
 
     "return Bad Request when idType and IdNumber is not present in request header" in {
-      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[RegisterWithId])
+      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[IndividualOrOrganisation])
       val result = registrationController.registerWithId(FakeRequest("POST", "/").withJsonBody(validOrganisationRequest))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
@@ -88,7 +88,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
 
     "throw Upstream4xxResponse when DES/ETMP returns Upstream4xxResponse" in {
-      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[RegisterWithId])
+      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[IndividualOrOrganisation])
       val failureResponse = Json.toJson(FailureResponse(Some(FailureResponseElement(code = "INVALID_PAYLOAD",
         reason = "Submission has not passed validation. Invalid PAYLOAD"))))
       when(mockSchemeConnector.registerWithId(Matchers.eq("utr"), Matchers.eq("1000000000"), Matchers.eq(validOrganisationRequest))(any(), any())).
@@ -103,7 +103,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
 
     "throw Upstream5xxResponse when DES/ETMP returns Upstream5xxResponse" in {
-      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[RegisterWithId])
+      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[IndividualOrOrganisation])
       val failureResponse = Json.toJson(FailureResponse(Some(FailureResponseElement(code = "SERVER_ERROR",
         reason = "DES is currently experiencing problems that require live service intervention."))))
       when(mockSchemeConnector.registerWithId(Matchers.eq("utr"), Matchers.eq("1000000000"), Matchers.eq(validOrganisationRequest))(any(), any())).thenReturn(
@@ -118,7 +118,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
 
     "throw generic exception when any other exception returned from Des" in {
-      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[RegisterWithId])
+      val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[IndividualOrOrganisation])
       when(mockSchemeConnector.registerWithId(Matchers.eq("utr"), Matchers.eq("1000000000"),
         Matchers.eq(validOrganisationRequest))(Matchers.any(), Matchers.any())).thenReturn(Future.failed(new Exception("Generic Exception")))
 
