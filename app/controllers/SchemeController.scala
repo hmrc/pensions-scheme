@@ -17,7 +17,7 @@
 package controllers
 
 import com.google.inject.Inject
-import connector.SchemeConnector
+import connector.EtmpConnector
 import models.{PensionSchemeAdministrator, PensionsScheme}
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -28,7 +28,7 @@ import utils.ErrorHandler
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
+class SchemeController @Inject()(etmpConnector: EtmpConnector) extends BaseController with ErrorHandler {
 
   def registerScheme: Action[AnyContent] = Action.async { implicit request => {
 
@@ -38,7 +38,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
     (psaId, feJson) match {
       case (Some(psa), Some(jsValue)) =>
         val pensionSchemeData = Json.toJson(jsValue.as[PensionsScheme])
-        schemeConnector.registerScheme(psa, pensionSchemeData).map { httpResponse =>
+        etmpConnector.registerScheme(psa, pensionSchemeData).map { httpResponse =>
           Ok(httpResponse.body)
         }
       case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
@@ -53,7 +53,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
     feJson match {
       case Some(jsValue) =>
         val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator])
-        schemeConnector.registerPSA(psa).map {
+        etmpConnector.registerPSA(psa).map {
           httpResponse => Ok(httpResponse.body)
         }
       case _ => Future.failed(new BadRequestException("Bad Request with no request body"))

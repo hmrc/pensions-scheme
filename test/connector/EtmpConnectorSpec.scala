@@ -31,10 +31,10 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
+class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
 
   val httpClient = mock[HttpClient]
-  val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig)
+  val etmpConnector = new EtmpConnectorImpl(httpClient, appConfig)
   implicit val hc = HeaderCarrier()
   val failureResponse: JsObject = Json.obj(
     "code" -> "INVALID_PAYLOAD",
@@ -52,7 +52,7 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
 
-      val result = schemeConnector.registerScheme("A2000001", validData)
+      val result = etmpConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result) { res =>
         res.status mustBe OK
       }
@@ -63,13 +63,14 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
         thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
-      val result = schemeConnector.registerScheme("A2000001", validData)
+      val result = etmpConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
       }
     }
   }
+
 
   "register PSA" must {
     val schemeAdminRegisterUrl = appConfig.schemeAdminRegistrationUrl
@@ -83,7 +84,7 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
 
-      val result = schemeConnector.registerPSA(inputRequestData)
+      val result = etmpConnector.registerPSA(inputRequestData)
       ScalaFutures.whenReady(result) { res =>
         res.status mustBe OK
       }
@@ -94,7 +95,73 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
         thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
-      val result = schemeConnector.registerPSA(invalidData)
+      val result = etmpConnector.registerPSA(invalidData)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe failureResponse.toString()
+      }
+    }
+  }
+
+
+  "Register individual no ID" must {
+    val url = appConfig.registrationNoIdIndividual
+    "return OK when DES/Etmp returns successfully" in {
+      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
+      val successResponse = Json.obj(
+        "processingDate" -> LocalDate.now,
+        "sapNumber" -> "1234567890",
+        "safeId" -> "XE0001234567890"
+      )
+
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
+        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = etmpConnector.registrationNoIdIndividual(validDataRequest)
+      ScalaFutures.whenReady(result) {
+        res =>
+          res.status mustBe OK
+      }
+    }
+    "throw BadRequestException when Etmp throws Bad Request" in {
+      val invalidData = Json.obj("data" -> "invalid")
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
+        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+
+      val result = etmpConnector.registrationNoIdIndividual(invalidData)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe failureResponse.toString()
+      }
+    }
+  }
+
+
+  "Register organisation no ID" must {
+    val url = appConfig.registrationNoIdOrganisation
+    "return OK when DES/Etmp returns successfully" in {
+      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+      val successResponse = Json.obj(
+        "processingDate" -> LocalDate.now,
+        "sapNumber" -> "1234567890",
+        "safeId" -> "XE0001234567890"
+      )
+
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
+        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = etmpConnector.registrationNoIdOrganisation(validDataRequest)
+      ScalaFutures.whenReady(result) {
+        res =>
+          res.status mustBe OK
+      }
+    }
+    "throw BadRequestException when Etmp throws Bad Request" in {
+      val invalidData = Json.obj("data" -> "invalid")
+      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
+        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+
+      val result = etmpConnector.registrationNoIdOrganisation(invalidData)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
@@ -102,3 +169,5 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
     }
   }
 }
+
+

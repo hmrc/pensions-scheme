@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends SchemeConnector {
+class EtmpConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends EtmpConnector {
 
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
     "Content-Type" -> "application/json")
@@ -41,12 +41,27 @@ class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends
 
     http.POST(schemeAdminRegisterUrl, registerData)
   }
-}
 
-@ImplementedBy(classOf[SchemeConnectorImpl])
-trait SchemeConnector {
+  override def registrationNoIdIndividual(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    val schemeAdminRegisterUrl = config.registrationNoIdIndividual
+
+    http.POST(schemeAdminRegisterUrl, registerData)
+  }
+
+  override def registrationNoIdOrganisation(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    val schemeAdminRegisterUrl = config.registrationNoIdOrganisation
+
+    http.POST(schemeAdminRegisterUrl, registerData)
+  }
+}
+@ImplementedBy(classOf[EtmpConnectorImpl])
+trait EtmpConnector {
   def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
+  def registrationNoIdIndividual(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
+  def registrationNoIdOrganisation(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 
