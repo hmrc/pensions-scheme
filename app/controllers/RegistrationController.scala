@@ -17,7 +17,7 @@
 package controllers
 
 import com.google.inject.Inject
-import connector.SchemeConnector
+import connector.RegistrationConnector
 import models.{IndividualOrOrganisation, SuccessResponse}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
@@ -28,7 +28,7 @@ import utils.ErrorHandler
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RegistrationController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
+class RegistrationController @Inject()(registerConnector: RegistrationConnector) extends BaseController with ErrorHandler {
 
   def registerWithId: Action[AnyContent] = Action.async {
     implicit request => {
@@ -41,7 +41,7 @@ class RegistrationController @Inject()(schemeConnector: SchemeConnector) extends
       (idType, idNumber, feJson) match {
         case (Some(id), Some(number), Some(jsValue)) =>
           val registerWithIdData = Json.toJson(jsValue.as[IndividualOrOrganisation])
-          schemeConnector.registerWithId(id, number, registerWithIdData).map { httpResponse =>
+          registerConnector.registerWithId(id, number, registerWithIdData).map { httpResponse =>
             val response = httpResponse.json.as[SuccessResponse]
             Ok(Json.toJson[SuccessResponse](response))
           }

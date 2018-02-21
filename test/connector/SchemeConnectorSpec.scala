@@ -103,38 +103,4 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       }
     }
   }
-
-  "register with id" must {
-    "return OK when Des/ETMP returns successfully" in {
-      val inputRequestData = readJsonFromFile("/data/validRegisterWithIdIndividualRequest.json")
-      val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json")
-
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(appConfig.registerWithIdUrl.format("nino", "AB100100A")),
-        Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(Json.toJson(
-          validSuccessResponse.as[SuccessResponse])))))
-
-      val result = schemeConnector.registerWithId("nino", "AB100100A", inputRequestData)
-      ScalaFutures.whenReady(result) { res =>
-        res.status mustBe OK
-        res.body mustEqual Json.prettyPrint(Json.toJson(validSuccessResponse.as[SuccessResponse]))
-      }
-    }
-
-    "throw BadRequest when DES/ETMP throws Bad Request" in {
-      val invalidData = Json.obj("data" -> "invalid")
-      val failureResponse = Json.toJson(FailureResponse(Some(FailureResponseElement(code = "INVALID_PAYLOAD",
-          reason = "Submission has not passed validation. Invalid PAYLOAD"))))
-
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(appConfig.registerWithIdUrl.format("nino", "AB100100A")),
-        Matchers.eq(invalidData), any())(any(), any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(failureResponse.toString())))
-
-      val result = schemeConnector.registerWithId("nino", "AB100100A", invalidData)
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustEqual failureResponse.toString()
-      }
-    }
-  }
 }
