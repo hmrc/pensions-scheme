@@ -30,13 +30,6 @@ object IndividualType {
   implicit val formats = Json.format[IndividualType]
 }
 
-case class AddressType(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,
-                       addressLine4: Option[String] = None, countryCode: String, postalCode: Option[String] = None)
-
-object AddressType {
-  implicit val formats = Json.format[AddressType]
-}
-
 case class ContactCommDetailsType(primaryPhoneNumber: Option[String] = None, secondaryPhoneNumber: Option[String] = None,
                                   faxNumber: Option[String] = None, emailAddress: Option[String] = None)
 
@@ -46,7 +39,7 @@ object ContactCommDetailsType {
 
 case class SuccessResponse(safeId: String, sapNumber: String, agentReferenceNumber: String, isEditable: Boolean,
                            isAnAgent: Boolean, isAnASAgent: Boolean, isAnIndividual: Boolean, individual: Option[IndividualType] = None,
-                           organisation: Option[OrganisationType] = None, address: AddressType, contactDetails: ContactCommDetailsType)
+                           organisation: Option[OrganisationType] = None, address: Address, contactDetails: ContactCommDetailsType)
 
 object SuccessResponse {
   implicit val formats = Json.format[SuccessResponse]
