@@ -17,7 +17,6 @@
 package connector
 
 import base.SpecBase
-import models.{FailureResponse, FailureResponseElement, SuccessResponse}
 import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -29,7 +28,6 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.mvc.Http.Status.OK
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
