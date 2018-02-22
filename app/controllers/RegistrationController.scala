@@ -22,9 +22,11 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import models.PensionsScheme
+import models.{PensionsScheme, Registrant}
+
 import scala.concurrent.Future
 import utils.ErrorHandler
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class RegistrationController @Inject()(etmpConnector: EtmpConnector) extends BaseController with ErrorHandler {
@@ -33,7 +35,7 @@ class RegistrationController @Inject()(etmpConnector: EtmpConnector) extends Bas
 
     request.body.asJson match {
       case (Some(jsValue)) => {
-        val registrationIndividual = Json.toJson(jsValue.as[PensionsScheme])
+        val registrationIndividual = Json.toJson(jsValue.as[Registrant])
         etmpConnector.registrationNoIdIndividual(registrationIndividual).map { httpResponse =>
           Ok(httpResponse.body)
         }
