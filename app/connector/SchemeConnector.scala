@@ -53,6 +53,14 @@ class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends
     http.POST[JsValue, HttpResponse](schemeAdminRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
   }
+
+  override def listOfSchemes(psaId: String)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    val listOfSchemesUrl = config.listOfSchemesUrl
+    implicit  val hc = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+
+    http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext])
+  }
 }
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
@@ -60,5 +68,7 @@ trait SchemeConnector {
   def registerScheme(psaId: String, registerData: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registerPSA(registerData: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
+  def listOfSchemes(psaId: String)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 

@@ -23,6 +23,7 @@ import org.joda.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers
+import org.mockito.Matchers._
 import org.scalatest.BeforeAndAfter
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.FakeRequest
@@ -122,7 +123,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "reason" -> "Dependent systems are currently not responding."
       )
       when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
-        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), CONFLICT, CONFLICT)))
+        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
@@ -225,6 +226,76 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         e mustBe a[Upstream5xxResponse]
         e.getMessage mustBe serverError.toString()
         verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
+    }
+  }
+
+  "list of schems" must {
+    val fakeRequest = FakeRequest("GET", "/").withHeaders(("psaId", "A2000001"))
+
+    "return OK with list of schems when DES/ETMP returns it successfully" in {
+      val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(Future.successful(
+        HttpResponse(OK, Some(validResponse))))
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result){ res =>
+        status(result) mustBe OK
+        contentAsJson(result) mustEqual validResponse
+        verify(mockSchemeConnector, times(1)).listOfSchemes(any())(any(), any())
+      }
+    }
+
+    "throw BadRequestException when PSAId is not present in the header" in {
+      val result = schemeController.listOfSchemes(FakeRequest("GET", "/"))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe "Bad Request with no Psa Id"
+        verify(mockSchemeConnector, never()).registerScheme(any(),
+          any())(any(), any())
+      }
+    }
+
+    "throw BadRequestException when bad request returned from Des" in {
+      val invalidPayload: JsObject = Json.obj(
+        "code" -> "INVALID_PSAID",
+        "reason" -> "Submission has not passed validation. Invalid parameter PSAID."
+      )
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(
+        Future.failed(new BadRequestException(invalidPayload.toString())))
+
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe invalidPayload.toString()
+        verify(mockSchemeConnector, times(1)).listOfSchemes(Matchers.eq("A2000001"))(Matchers.any(), Matchers.any())
+      }
+    }
+
+    "throw Upstream5xxResponse when UpStream5XXResponse returned" in {
+      val serviceUnavailable: JsObject = Json.obj(
+        "code" -> "SERVICE_UNAVAILABLE",
+        "reason" -> "Dependent systems are currently not responding."
+      )
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(
+        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream5xxResponse]
+        e.getMessage mustBe serviceUnavailable.toString()
+        verify(mockSchemeConnector, times(1)).listOfSchemes(Matchers.eq("A2000001"))(any(), any())
+      }
+    }
+
+    "throw generic exception when any other exception returned from Des" in {
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(
+        Future.failed(new Exception("Generic Exception")))
+
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe "Generic Exception"
+        verify(mockSchemeConnector, times(1)).listOfSchemes(Matchers.eq("A2000001"))(any(), any())
       }
     }
   }

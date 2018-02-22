@@ -4,4 +4,6 @@ POST        /register-scheme             @controllers.SchemeController.registerS
 
 POST        /register-psa                @controllers.SchemeController.registerPSA
 
+GET         /list-of-schemes             @controllers.SchemeController.listOfSchemes
+
 POST        /register-with-id            @controllers.RegistrationController.registerWithId
