@@ -16,7 +16,6 @@
 
 package models
 
-import base.SpecBase
 import models.Address._
 import org.scalatest.{MustMatchers, WordSpecLike}
 import play.api.libs.json.{JsValue, Json}
@@ -24,96 +23,77 @@ import play.api.libs.json.{JsValue, Json}
 import scala.io.Source
 
 class RegistrationNoIDAddress extends WordSpecLike with MustMatchers {
+
   def readJsonFromFile(filePath: String): JsValue = {
     val path = Source.fromURL(getClass.getResource(filePath)).mkString
     Json.parse(path)
   }
+  val ukAddressJson = Json.obj("addressLine1" -> "myhouse",
+    "addressLine2" -> "street1",
+    "addressLine3" -> "street2",
+    "addressLine4" -> "street3",
+    "postalCode" -> "ZZ1 1ZZ",
+    "countryCode" -> "GB"
+  )
+
+  val ukAddressCaseClass= UkAddress(
+    "myhouse",
+    "street1",
+    Some("street2"),
+    Some("street3"),
+    "ZZ1 1ZZ"
+  )
+
+  val foreignAddressJson = Json.obj(
+    "addressLine1" -> "31 Myers Street",
+    "addressLine2" -> "Haddonfield",
+    "addressLine3" -> "Illinois",
+    "addressLine4" -> "USA",
+    "countryCode" -> "US"
+  )
+
+  val foreignAddressCaseClass=ForeignAddress(
+    "31 Myers Street",
+    "Haddonfield",
+    Some("Illinois"),
+    Some("USA"),
+    None, "US"
+  )
 
   "Reads for Address" must {
     "successfully read a UK address" in {
-      val json = Json.obj("addressLine1" -> "myhouse",
-        "addressLine2" -> "street1",
-        "addressLine3" -> "street2",
-        "addressLine4" -> "street3",
-        "postalCode" -> "ZZ1 1ZZ",
-        "countryCode" -> "GB")
 
-      Json.fromJson[Address](json).get mustEqual UkAddress("myhouse", "street1", Some("street2"), Some("street3"), "ZZ1 1ZZ")
+      Json.fromJson[Address](ukAddressJson).get mustEqual ukAddressCaseClass
+
     }
-
     "successfully read a Foreign address" in {
-      val json = Json.obj("addressLine1" -> "31 Myers Street",
-        "addressLine2" -> "Haddonfield",
-        "addressLine3" -> "Illinois",
-        "addressLine4" -> "USA",
-        "countryCode" -> "US")
 
-      Json.fromJson[Address](json).get mustEqual ForeignAddress("31 Myers Street", "Haddonfield", Some("Illinois"), Some("USA"), None, "US")
-
+      Json.fromJson[Address](foreignAddressJson).get mustEqual foreignAddressCaseClass
     }
   }
 
   "Writes for Address" must {
     "successfully write a UK address to JSON" in {
-      val json = Json.obj("addressLine1" -> "myhouse", "addressLine2" -> "street1", "addressLine3" -> "street2", "addressLine4" -> "street3", "postalCode" -> "ZZ1 1ZZ", "countryCode" -> "GB")
-      val address = UkAddress("myhouse", "street1", Some("street2"), Some("street3"), "ZZ1 1ZZ")
-      Json.toJson[Address](address) mustEqual json
+
+      Json.toJson[Address](ukAddressCaseClass) mustEqual ukAddressJson
     }
 
     "successfully write a Foreign address to JSON" in {
-      val json = Json.obj("addressLine1" -> "myhouse", "addressLine2" -> "street1", "addressLine3" -> "street2", "addressLine4" -> "street3", "countryCode" -> "AB")
-      val address = ForeignAddress("myhouse", "street1", Some("street2"), Some("street3"), None, "AB")
-      Json.toJson[Address](address) mustEqual json
+
+      Json.toJson[Address](foreignAddressCaseClass) mustEqual foreignAddressJson
     }
   }
 
   "Reads for Registrant" must {
-    "successfully read a OrganisationRegistrant" in {
-      val json = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
 
-      val indentificationData = Some(IdentificationType(
-        idNumber = "123456",
-        issuingInstitution = "France Institution",
-        issuingCountryCode = "FR")
-      )
-
-      val addressData = UkAddress(addressLine1 = "100, Sutton Street",
-        addressLine2 = "Wokingham",
-        addressLine3 = Some("Surrey"),
-        addressLine4 = Some("London"),
-        postalCode = "DH1 4EJ"
-      )
-
-      val organisationData = Organisation(organisationName = "John")
-
-      val contactDetailsData = ContactDetailsType(
-        phoneNumber = Some("01332752856"),
-        mobileNumber = Some("07782565326"),
-        faxNumber = Some("01332754256"),
-        emailAddress = None
-      )
-
-      Json.fromJson[Registrant](json).get mustEqual OrganisationRegistrant(
-        regime = "FHDDS",
-        acknowledgementReference = "12345678901234567890123456789012",
-        isAnAgent = false,
-        isAGroup = false,
-        identification = indentificationData,
-        organisation = organisationData,
-        address = addressData,
-        contactDetails = contactDetailsData)
-    }
-  }
-
-  "successfully read an IndividualRegistrant" in {
-    val json= readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
     val individualData = Individual(
       firstName = "John",
       None,
       lastName = "Smith",
       dateOfBirth = DateString("1990-04-03")
     )
-    val indentificationData = Some(IdentificationType(
+
+    val identificationData = Some(IdentificationType(
       idNumber = "123456",
       issuingInstitution = "France Institution",
       issuingCountryCode = "FR")
@@ -125,6 +105,7 @@ class RegistrationNoIDAddress extends WordSpecLike with MustMatchers {
       addressLine4 = Some("London"),
       postalCode = "DH1 4EJ"
     )
+    val organisationData = Organisation(organisationName = "John")
 
     val contactDetailsData = ContactDetailsType(
       phoneNumber = Some("01332752856"),
@@ -133,15 +114,54 @@ class RegistrationNoIDAddress extends WordSpecLike with MustMatchers {
       emailAddress = None
     )
 
-    Json.fromJson[Registrant](json) mustEqual IndividualRegistrant(
+    val organisationRegistrantCaseClass = OrganisationRegistrant(
       regime = "FHDDS",
       acknowledgementReference = "12345678901234567890123456789012",
       isAnAgent = false,
       isAGroup = false,
-      individual = individualData,
-      identification = indentificationData,
+      identification = identificationData,
+      organisation = organisationData,
       address = addressData,
       contactDetails = contactDetailsData
     )
+
+    val individualRegistrantCaseClass = IndividualRegistrant(
+      regime = "FHDDS",
+      acknowledgementReference = "12345678901234567890123456789012",
+      isAnAgent = false,
+      isAGroup = false,
+      identification = identificationData,
+      individual = individualData,
+      address = addressData,
+      contactDetails = contactDetailsData
+    )
+
+    "successfully read a OrganisationRegistrant" in {
+      val json = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+
+      Json.fromJson[Registrant](json).get mustEqual organisationRegistrantCaseClass
+    }
+
+    "successfully read an IndividualRegistrant" in {
+      val json = readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
+
+      Json.fromJson[Registrant](json).get mustEqual individualRegistrantCaseClass
+    }
+
+
+    "Writes for Registrant" must {
+
+      "succesfully write a json schema from a Organisation Registrant" in {
+        val json = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+        Json.toJson[Registrant](organisationRegistrantCaseClass) mustEqual json
+      }
+
+      "succesfully write a json schema from a Individual Registrant" in {
+        val json = readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
+
+        Json.toJson[Registrant](individualRegistrantCaseClass) mustEqual json
+
+      }
+    }
   }
 }
