@@ -1,0 +1,10 @@
+{
+  "regime": "PODS",
+  "requiresNameMatch": true,
+  "isAnAgent": true,
+  "individual": {
+    "firstName": "Stephen",
+    "lastName": "Wood",
+    "dateOfBirth": "1990-04-03"
+  }
+}

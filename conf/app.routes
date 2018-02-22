@@ -3,3 +3,5 @@
 POST        /register-scheme             @controllers.SchemeController.registerScheme
 
 POST        /register-psa                @controllers.SchemeController.registerPSA
+
+POST        /register-with-id            @controllers.RegistrationController.registerWithId
