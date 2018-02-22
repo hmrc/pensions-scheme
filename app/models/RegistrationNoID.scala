@@ -156,9 +156,8 @@ object OrganisationRegistrant {
 object Registrant {
 
   implicit val reads: Reads[Registrant] = {
-    IndividualRegistrant.format.map[Registrant](identity) orElse {
+    IndividualRegistrant.format.map[Registrant](identity) orElse
       OrganisationRegistrant.format.map[Registrant](identity)
-    }
   }
   implicit val writes: Writes[Registrant] = Writes {
     case address: IndividualRegistrant =>
