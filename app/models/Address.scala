@@ -18,9 +18,7 @@ package models
 
 import play.api.libs.json._
 
-sealed trait Address {
-
-}
+sealed trait Address
 
 object Address {
   implicit val reads: Reads[Address] = {
