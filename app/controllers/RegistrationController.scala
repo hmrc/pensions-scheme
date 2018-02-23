@@ -18,34 +18,54 @@ package controllers
 
 import com.google.inject.Inject
 import connector.RegistrationConnector
-import models.{IndividualOrOrganisation, SuccessResponse}
-import play.api.libs.json.Json
+import models.{Organisation, SuccessResponse}
+import play.api.libs.json.{JsPath, Json}
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.http.BadRequestException
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions, ConfidenceLevel}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals
+import uk.gov.hmrc.http.{BadRequestException, Upstream4xxResponse}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RegistrationController @Inject()(registerConnector: RegistrationConnector) extends BaseController with ErrorHandler {
+class RegistrationController @Inject()(override val authConnector: AuthConnector,
+                                       registerConnector: RegistrationConnector
+                                      ) extends BaseController with ErrorHandler with AuthorisedFunctions {
 
-  def registerWithId: Action[AnyContent] = Action.async {
+  def registerWithIdIndividual: Action[AnyContent] = Action.async {
     implicit request => {
 
-      val idType = request.headers.get("idType")
-      val idNumber = request.headers.get("idNumber")
-
-      val feJson = request.body.asJson
-
-      (idType, idNumber, feJson) match {
-        case (Some(id), Some(number), Some(jsValue)) =>
-          val registerWithIdData = Json.toJson(jsValue.as[IndividualOrOrganisation])
-          registerConnector.registerWithId(id, number, registerWithIdData).map { httpResponse =>
+      authorised(ConfidenceLevel.L200 and AffinityGroup.Individual).retrieve(Retrievals.nino) {
+        case Some(nino) =>
+          val registerWithIdData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> false, "isAnAgent" -> false)
+          registerConnector.registerWithIdIndividual(nino, registerWithIdData).map { httpResponse =>
             val response = httpResponse.json.as[SuccessResponse]
             Ok(Json.toJson[SuccessResponse](response))
           }
-        case _ => Future.failed(new BadRequestException("Bad Request without proper Id or request body"))
+        case _ =>
+          Future.failed(new Upstream4xxResponse("Nino not found in auth record", UNAUTHORIZED, UNAUTHORIZED))
+      } recoverWith recoverFromError
+    }
+  }
+
+  def registerWithIdOrganisation: Action[AnyContent] = Action.async {
+    implicit request => {
+
+      request.body.asJson match {
+        case Some(jsBody) =>
+          val utr = (jsBody \ "utr").as[String]
+          val registerWithIdData = Json.obj(
+            "regime" -> "PODS", "requiresNameMatch" -> true, "isAnAgent" -> false,
+            "organisation" -> Json.toJson(jsBody.as[Organisation])
+          )
+          registerConnector.registerWithIdOrganisation(utr, registerWithIdData).map { httpResponse =>
+            val response = httpResponse.json.as[SuccessResponse]
+            Ok(Json.toJson[SuccessResponse](response))
+          }
+        case _ =>
+          Future.failed(new BadRequestException("No request body received"))
       }
     } recoverWith recoverFromError
   }

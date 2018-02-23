@@ -30,21 +30,24 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
     "Content-Type" -> "application/json")
 
-  override def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit hc: HeaderCarrier,
-                                                                                       ec: ExecutionContext): Future[HttpResponse] = {
+  override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
+                                                                             ec: ExecutionContext): Future[HttpResponse] = {
     implicit val hc = HeaderCarrier(extraHeaders = desHeader)
-    val registerWithIdUrl = idType match {
-      case "nino" =>
-        config.registerWithIdIndividualUrl.format(idType, idNumber)
-      case _ =>
-        config.registerWithIdOrganisationUrl.format(idType, idNumber)
-    }
+    val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
+    http.POST(registerWithIdUrl, registerData)
+  }
+
+  override def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier,
+                                                                             ec: ExecutionContext): Future[HttpResponse] = {
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
     http.POST(registerWithIdUrl, registerData)
   }
 }
 
 @ImplementedBy(classOf[RegistrationConnectorImpl])
 trait RegistrationConnector {
-  def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 

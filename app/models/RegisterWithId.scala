@@ -16,7 +16,9 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads, Writes}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class Individual(firstName: String, lastName: String, dateOfBirth: Option[String] = None)
 
@@ -27,11 +29,18 @@ object Individual {
 case class Organisation(organisationName: String, organisationType: String)
 
 object Organisation {
-  implicit val formats = Json.format[Organisation]
+  implicit val reads: Reads[Organisation] = (
+    (JsPath \ "organisationName").read[String] and
+    (JsPath \ "organisationType").read[String]
+  )(Organisation.apply _)
+
+  implicit val writes: Writes[Organisation] = (
+    (JsPath \ "organisationName").write[String] and
+      (JsPath \ "organisationType").write[String]
+    )(unlift(Organisation.unapply))
 }
 
-case class IndividualOrOrganisation(regime: Option[String] = None,
-                                    requiresNameMatch: Option[Boolean] = None, isAnAgent: Option[Boolean] = None,
+case class IndividualOrOrganisation(regime: String, requiresNameMatch: Boolean, isAnAgent: Boolean,
                                     individual: Option[Individual] = None, organisation: Option[Organisation] = None)
 
 object IndividualOrOrganisation {
