@@ -57,7 +57,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       }
     }
 
-    "return OK when the registration with id is successful for Company" in {
+    "return OK when the registration with id is successful for Organisation" in {
       val validOrganisationRequest = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json").as[IndividualOrOrganisation])
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json").as[SuccessResponse])
       when(mockRegistrationConnector.registerWithId(Matchers.eq("utr"), Matchers.eq("1000000000"), Matchers.eq(validOrganisationRequest))(

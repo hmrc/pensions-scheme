@@ -46,16 +46,38 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
   before(reset(httpClient))
 
   "register with id" must {
-    "return OK when Des/ETMP returns successfully" in {
+    "return OK when Des/ETMP returns successfully for Individual" in {
       val inputRequestData = readJsonFromFile("/data/validRegisterWithIdIndividualRequest.json")
       val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json")
 
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(appConfig.registerWithIdUrl.format("nino", "AB100100A")),
+      when(httpClient.POST[JsValue, HttpResponse](
+        Matchers.eq(appConfig.registerWithIdIndividualUrl.format("nino", "AB100100A")),
         Matchers.eq(inputRequestData), any())(any(), any(), Matchers.eq(hc), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(Json.toJson(
-          validSuccessResponse.as[SuccessResponse])))))
+        thenReturn(
+          Future.successful(HttpResponse(OK, Some(Json.toJson(
+          validSuccessResponse.as[SuccessResponse]))))
+        )
 
       val result = registrationConnector.registerWithId("nino", "AB100100A", inputRequestData)
+      ScalaFutures.whenReady(result) { res =>
+        res.status mustBe OK
+        res.body mustEqual Json.prettyPrint(Json.toJson(validSuccessResponse.as[SuccessResponse]))
+      }
+    }
+
+    "return OK when Des/ETMP returns successfully for Organisation" in {
+      val inputRequestData = readJsonFromFile("/data/validRegisterWithIdOrganisationRequest.json")
+      val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
+
+      when(httpClient.POST[JsValue, HttpResponse](
+        Matchers.eq(appConfig.registerWithIdOrganisationUrl.format("utr", "1100000000")),
+        Matchers.eq(inputRequestData), any())(any(), any(), Matchers.eq(hc), any())).
+        thenReturn(
+          Future.successful(HttpResponse(OK, Some(Json.toJson(
+          validSuccessResponse.as[SuccessResponse]))))
+        )
+
+      val result = registrationConnector.registerWithId("utr", "1100000000", inputRequestData)
       ScalaFutures.whenReady(result) { res =>
         res.status mustBe OK
         res.body mustEqual Json.prettyPrint(Json.toJson(validSuccessResponse.as[SuccessResponse]))
@@ -67,7 +89,8 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
       val failureResponse = Json.toJson(FailureResponse(Some(FailureResponseElement(code = "INVALID_PAYLOAD",
           reason = "Submission has not passed validation. Invalid PAYLOAD"))))
 
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(appConfig.registerWithIdUrl.format("nino", "AB100100A")),
+      when(httpClient.POST[JsValue, HttpResponse](
+        Matchers.eq(appConfig.registerWithIdIndividualUrl.format("nino", "AB100100A")),
         Matchers.eq(invalidData), any())(any(), any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(failureResponse.toString())))
 

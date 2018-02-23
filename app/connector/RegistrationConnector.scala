@@ -34,8 +34,12 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
 
   override def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit hc: HeaderCarrier,
                                                                                        ec: ExecutionContext): Future[HttpResponse] = {
-    val registerWithIdUrl = config.registerWithIdUrl.format(idType, idNumber)
-
+    val registerWithIdUrl = idType match {
+      case "nino" =>
+        config.registerWithIdIndividualUrl.format(idType, idNumber)
+      case _ =>
+        config.registerWithIdOrganisationUrl.format(idType, idNumber)
+    }
     http.POST(registerWithIdUrl, registerData)
   }
 }
