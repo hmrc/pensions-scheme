@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 
 case class OrganisationType(organisationName: String,
                             isAGroup: Option[Boolean] = None,
-                            organisationType: Option[String] = None)
+                            organisationType: Option[OrganisationTypeEnum.OrganisationType] = None)
 
 object OrganisationType {
   implicit val formats = Json.format[OrganisationType]

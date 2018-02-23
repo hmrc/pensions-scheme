@@ -117,11 +117,6 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
   "register With Id Organisation" must {
     val inputData = Json.obj("utr" -> "1100000000", "organisationName" -> "Test Ltd", "organisationType" -> "LLP")
-    val finalRequestData = Json.obj(
-      "regime" -> "PODS", "requiresNameMatch" -> true, "isAnAgent" -> false,
-      "organisation" -> Json.toJson(Json.obj(
-        "organisationName" -> "Test Ltd", "organisationType" -> "LLP").as[Organisation]
-      ))
     "return OK when the registration with id is successful for Organisation" in {
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json").as[SuccessResponse])
       when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any())(
@@ -131,6 +126,14 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       ScalaFutures.whenReady(result) { res =>
         status(result) mustBe OK
         contentAsJson(result) mustEqual successResponse
+      }
+    }
+
+    "return Bad Request when there is no body in the request" in {
+      val result = registrationController().registerWithIdOrganisation(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustEqual "No request body received for Organisation"
       }
     }
 

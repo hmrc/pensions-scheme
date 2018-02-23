@@ -21,8 +21,6 @@ import config.AppConfig
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import play.Logger
-import java.util.UUID.randomUUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
@@ -34,13 +32,15 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
                                                                              ec: ExecutionContext): Future[HttpResponse] = {
     implicit val hc = HeaderCarrier(extraHeaders = desHeader)
     val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
+
     http.POST(registerWithIdUrl, registerData)
   }
 
   override def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier,
-                                                                             ec: ExecutionContext): Future[HttpResponse] = {
+                                                                              ec: ExecutionContext): Future[HttpResponse] = {
     implicit val hc = HeaderCarrier(extraHeaders = desHeader)
     val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
+
     http.POST(registerWithIdUrl, registerData)
   }
 }
@@ -48,6 +48,7 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
 @ImplementedBy(classOf[RegistrationConnectorImpl])
 trait RegistrationConnector {
   def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
   def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 

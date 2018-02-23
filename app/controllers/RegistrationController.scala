@@ -19,7 +19,7 @@ package controllers
 import com.google.inject.Inject
 import connector.RegistrationConnector
 import models.{Organisation, SuccessResponse}
-import play.api.libs.json.{JsPath, Json}
+import play.api.libs.json.{JsObject, JsPath, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.auth.core.retrieve.Retrievals
@@ -39,8 +39,7 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
 
       authorised(ConfidenceLevel.L200 and AffinityGroup.Individual).retrieve(Retrievals.nino) {
         case Some(nino) =>
-          val registerWithIdData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> false, "isAnAgent" -> false)
-          registerConnector.registerWithIdIndividual(nino, registerWithIdData).map { httpResponse =>
+          registerConnector.registerWithIdIndividual(nino, mandatoryPODSData()).map { httpResponse =>
             val response = httpResponse.json.as[SuccessResponse]
             Ok(Json.toJson[SuccessResponse](response))
           }
@@ -56,17 +55,20 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
       request.body.asJson match {
         case Some(jsBody) =>
           val utr = (jsBody \ "utr").as[String]
-          val registerWithIdData = Json.obj(
-            "regime" -> "PODS", "requiresNameMatch" -> true, "isAnAgent" -> false,
-            "organisation" -> Json.toJson(jsBody.as[Organisation])
-          )
+          val registerWithIdData = mandatoryPODSData(true).as[JsObject] ++
+            Json.obj("organisation" -> Json.toJson(jsBody.as[Organisation]))
+
           registerConnector.registerWithIdOrganisation(utr, registerWithIdData).map { httpResponse =>
             val response = httpResponse.json.as[SuccessResponse]
             Ok(Json.toJson[SuccessResponse](response))
           }
         case _ =>
-          Future.failed(new BadRequestException("No request body received"))
+          Future.failed(new BadRequestException("No request body received for Organisation"))
       }
     } recoverWith recoverFromError
+  }
+
+  private def mandatoryPODSData(requiresNameMatch: Boolean = false): JsValue = {
+    Json.obj("regime" -> "PODS", "requiresNameMatch" -> requiresNameMatch, "isAnAgent" -> false)
   }
 }

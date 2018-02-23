@@ -84,7 +84,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
 
   "register with id organisation" must {
     "return OK when Des/ETMP returns successfully for Organisation" in {
-      val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> false, "isAnAgent" -> false,
+      val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> true, "isAnAgent" -> false,
         "organisation" -> Json.obj(
           "organisationName" -> "Test Ltd",
           "organisationType" -> "LLP"
