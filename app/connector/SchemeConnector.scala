@@ -55,7 +55,7 @@ class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends
   }
 
   override def listOfSchemes(psaId: String)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    val listOfSchemesUrl = config.listOfSchemesUrl
+    val listOfSchemesUrl = config.listOfSchemesUrl.format(psaId)
     implicit  val hc = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
