@@ -90,7 +90,7 @@ class RegistrationNoIDAddress extends WordSpecLike with MustMatchers {
       firstName = "John",
       None,
       lastName = "Smith",
-      dateOfBirth = DateString("1990-04-03")
+      dateOfBirth = "1990-04-03"
     )
 
     val identificationData = Some(IdentificationType(

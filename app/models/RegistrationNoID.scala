@@ -18,12 +18,7 @@ package models
 
 import play.api.libs.json._
 
-sealed trait Address {
-// def addressLine1: String
-// def addressLine2: String
-// def addressLine3: Option[String]
-// def postCode: Option[String]
-}
+sealed trait Address
 
 sealed trait Registrant
 
@@ -106,14 +101,7 @@ object Organisation {
 }
 
 
-case class DateString(dateString:String)
-
-object DateString {
-
-  implicit val format: Format[DateString] = Json.format[DateString]
-}
-
-case class Individual(firstName:String,middleName:Option[String],lastName:String,dateOfBirth:DateString)
+case class Individual(firstName:String,middleName:Option[String],lastName:String,dateOfBirth:String)
 
 
 object Individual {
