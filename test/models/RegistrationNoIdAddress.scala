@@ -22,7 +22,7 @@ import play.api.libs.json.{JsValue, Json}
 
 import scala.io.Source
 
-class RegistrationNoIDAddress extends WordSpecLike with MustMatchers {
+class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
 
   def readJsonFromFile(filePath: String): JsValue = {
     val path = Source.fromURL(getClass.getResource(filePath)).mkString

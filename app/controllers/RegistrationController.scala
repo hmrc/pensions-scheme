@@ -34,15 +34,26 @@ class RegistrationController @Inject()(etmpConnector: EtmpConnector) extends Bas
   def registrationNoIdIndividual: Action[AnyContent] = Action.async { implicit request => {
 
     request.body.asJson match {
-      case (Some(jsValue)) => {
+      case (Some(jsValue)) =>
         val registrationIndividual = Json.toJson(jsValue.as[Registrant])
         etmpConnector.registrationNoIdIndividual(registrationIndividual).map { httpResponse =>
           Ok(httpResponse.body)
         }
-      }
       case _ => Future.failed(new BadRequestException("Bad Request without request body"))
     }
+  } recoverWith recoverFromError
+  }
 
+  def registrationNoIdOrganisation: Action[AnyContent] = Action.async { implicit request => {
+
+    request.body.asJson match {
+      case (Some(jsValue)) =>
+        val registrationOrganisation = Json.toJson(jsValue.as[Registrant])
+        etmpConnector.registrationNoIdOrganisation(registrationOrganisation).map { httpResponse =>
+          Ok(httpResponse.body)
+        }
+      case _ => Future.failed(new BadRequestException("Bad Request without request body"))
+    }
   } recoverWith recoverFromError
   }
 }
