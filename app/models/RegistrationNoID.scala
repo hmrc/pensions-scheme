@@ -45,11 +45,7 @@ object Address {
 
 case class ForeignAddress(addressLine1:String,addressLine2:String,
                      addressLine3:Option[String],addressLine4:Option[String],
-                     postalCode:Option[String],countryCode:String) extends Address {
-
- // override val postCode: Option[String] = postalCode
-}
-
+                     postalCode:Option[String],countryCode:String) extends Address
 object ForeignAddress {
 
   implicit val format: Format[ForeignAddress] = Json.format[ForeignAddress]
@@ -59,10 +55,7 @@ object ForeignAddress {
 case class UkAddress(addressLine1:String,addressLine2:String,
                      addressLine3:Option[String],addressLine4:Option[String],
                      postalCode:String
-                    ) extends Address {
-
- // override val postCode: Option[String] = Some(postalCode)
-}
+                    ) extends Address
 
 object UkAddress {
 
