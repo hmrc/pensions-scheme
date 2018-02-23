@@ -27,8 +27,9 @@ class AppConfig @Inject()(override val runModeConfiguration: Configuration, envi
 
   lazy val schemeRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.register")}"
   lazy val schemeAdminRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.administrator.register")}"
+  lazy val registerWithIdIndividualUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.register.with.id.individual")}"
+  lazy val registerWithIdOrganisationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.register.with.id.organisation")}"
   lazy val listOfSchemesUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.list.of.schemes")}"
-  lazy val registerWithIdUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.register.with.id")}"
   lazy val desEnvironment: String = runModeConfiguration.getString(s"$services.des-hod.env").getOrElse("local")
   lazy val authorization: String = "Bearer " + runModeConfiguration.getString(s"$services.des-hod.authorizationToken").getOrElse("local")
 }

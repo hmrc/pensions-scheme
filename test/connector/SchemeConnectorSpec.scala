@@ -106,8 +106,8 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
 
   "list of schemes" must {
 
-    "return OK with the list of schems response" in {
-      val listOfSchemesUrl = appConfig.listOfSchemesUrl
+    "return OK with the list of schemes response" in {
+      val listOfSchemesUrl = appConfig.listOfSchemesUrl.format("A2000001")
       val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
       when(httpClient.GET[HttpResponse](Matchers.eq(listOfSchemesUrl))(any(), any(), any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(validResponse))))

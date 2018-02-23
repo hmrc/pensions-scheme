@@ -17,23 +17,22 @@
 package models
 
 import play.api.libs.json.Json
+import play.api.libs.json._
+import utils.EnumUtils
 
-case class Individual(firstName: String, lastName: String, dateOfBirth: Option[String] = None)
+object OrganisationTypeEnum extends Enumeration {
+  type OrganisationType = Value
+  val CorporateBody = Value("Corporate Body")
+  val NotSpecified = Value("Not Specified")
+  val LLP = Value("LLP")
+  val Partnership = Value("Partnership")
+  val UnincorporatedBody = Value("Unincorporated Body")
 
-object Individual {
-  implicit val formats = Json.format[Individual]
+  implicit def enumFormats: Format[OrganisationType] = EnumUtils.enumFormat(OrganisationTypeEnum)
 }
 
-case class Organisation(organisationName: String, organisationType: String)
+case class Organisation(organisationName: String, organisationType: OrganisationTypeEnum.OrganisationType)
 
 object Organisation {
   implicit val formats = Json.format[Organisation]
-}
-
-case class IndividualOrOrganisation(regime: Option[String] = None,
-                                    requiresNameMatch: Option[Boolean] = None, isAnAgent: Option[Boolean] = None,
-                                    individual: Option[Individual] = None, organisation: Option[Organisation] = None)
-
-object IndividualOrOrganisation {
-  implicit val formats = Json.format[IndividualOrOrganisation]
 }

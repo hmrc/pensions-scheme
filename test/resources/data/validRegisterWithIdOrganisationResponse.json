@@ -1,10 +1,6 @@
 {
   "safeId": "XE0001234567890",
   "sapNumber": "1234567890",
-  "agentReferenceNumber": "AARN1234567",
-  "isEditable": true,
-  "isAnAgent": false,
-  "isAnASAgent": false,
   "isAnIndividual": false,
   "organisation": {
     "organisationName": "Test Ltd",

@@ -21,8 +21,6 @@ import config.AppConfig
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import play.Logger
-import java.util.UUID.randomUUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
@@ -30,11 +28,18 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
     "Content-Type" -> "application/json")
 
-  implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+  override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
+                                                                             ec: ExecutionContext): Future[HttpResponse] = {
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
 
-  override def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit hc: HeaderCarrier,
-                                                                                       ec: ExecutionContext): Future[HttpResponse] = {
-    val registerWithIdUrl = config.registerWithIdUrl.format(idType, idNumber)
+    http.POST(registerWithIdUrl, registerData)
+  }
+
+  override def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier,
+                                                                              ec: ExecutionContext): Future[HttpResponse] = {
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
 
     http.POST(registerWithIdUrl, registerData)
   }
@@ -42,6 +47,8 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
 
 @ImplementedBy(classOf[RegistrationConnectorImpl])
 trait RegistrationConnector {
-  def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
+  def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 
