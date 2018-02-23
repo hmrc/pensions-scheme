@@ -30,10 +30,9 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
     "Content-Type" -> "application/json")
 
-  implicit val hc = HeaderCarrier(extraHeaders = desHeader)
-
   override def registerWithId(idType: String, idNumber: String, registerData: JsValue)(implicit hc: HeaderCarrier,
                                                                                        ec: ExecutionContext): Future[HttpResponse] = {
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
     val registerWithIdUrl = idType match {
       case "nino" =>
         config.registerWithIdIndividualUrl.format(idType, idNumber)

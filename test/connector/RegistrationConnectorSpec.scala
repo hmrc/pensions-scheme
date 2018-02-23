@@ -52,7 +52,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
 
       when(httpClient.POST[JsValue, HttpResponse](
         Matchers.eq(appConfig.registerWithIdIndividualUrl.format("nino", "AB100100A")),
-        Matchers.eq(inputRequestData), any())(any(), any(), Matchers.eq(hc), any())).
+        Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
         thenReturn(
           Future.successful(HttpResponse(OK, Some(Json.toJson(
           validSuccessResponse.as[SuccessResponse]))))
@@ -71,7 +71,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
 
       when(httpClient.POST[JsValue, HttpResponse](
         Matchers.eq(appConfig.registerWithIdOrganisationUrl.format("utr", "1100000000")),
-        Matchers.eq(inputRequestData), any())(any(), any(), Matchers.eq(hc), any())).
+        Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
         thenReturn(
           Future.successful(HttpResponse(OK, Some(Json.toJson(
           validSuccessResponse.as[SuccessResponse]))))
