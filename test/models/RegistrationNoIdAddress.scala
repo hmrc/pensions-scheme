@@ -16,18 +16,10 @@
 
 package models
 
-import org.scalatest.{MustMatchers, WordSpecLike}
-import play.api.libs.json.{JsValue, Json}
+import base.SpecBase
+import play.api.libs.json.{Json}
 
-import scala.io.Source
-
-class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
-
-  def readJsonFromFile(filePath: String): JsValue = {
-    val path = Source.fromURL(getClass.getResource(filePath)).mkString
-    Json.parse(path)
-  }
-
+class RegistrationNoIdAddress extends SpecBase{
 
   "Reads for Registrant" must {
 

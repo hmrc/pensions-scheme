@@ -46,7 +46,6 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
     "return a success response when valid data is posted" in {
 
-
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now,
         "sapNumber" -> "1234567890",
         "safeId" -> "XE0001234567890"
