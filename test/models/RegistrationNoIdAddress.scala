@@ -28,19 +28,19 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
     val path = Source.fromURL(getClass.getResource(filePath)).mkString
     Json.parse(path)
   }
-  val ukAddressJson = Json.obj("addressLine1" -> "myhouse",
-    "addressLine2" -> "street1",
-    "addressLine3" -> "street2",
-    "addressLine4" -> "street3",
+  val ukAddressJson = Json.obj("addressLine1" -> "Eel Marsh House",
+    "addressLine2" -> "Eel Marsh Island",
+    "addressLine3" -> "Nine Lives Causeway",
+    "addressLine4" -> "Crythin Gifford",
     "postalCode" -> "ZZ1 1ZZ",
     "countryCode" -> "GB"
   )
 
   val ukAddressCaseClass= UkAddress(
-    "myhouse",
-    "street1",
-    Some("street2"),
-    Some("street3"),
+    "Eel Marsh House",
+    "Eel Marsh Island",
+    Some("Nine Lives Causeway"),
+    Some("Crythin Gifford"),
     "ZZ1 1ZZ"
   )
 
