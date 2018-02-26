@@ -31,13 +31,6 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
 
   "Reads for Registrant" must {
 
-    val individualData = Individual(
-      firstName = "John",
-      None,
-      lastName = "Smith",
-      dateOfBirth = "1990-04-03"
-    )
-
     val foreignAddress=ForeignAddress(
       "31 Myers Street",
       "Haddonfield",
@@ -46,19 +39,10 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
       None, "US"
     )
 
-    val identificationData = Some(IdentificationType(
-      idNumber = "123456",
-      issuingInstitution = "France Institution",
-      issuingCountryCode = "FR")
-    )
-
-
     val organisationData = Organisation(organisationName = "John")
 
     val contactDetailsData = ContactDetailsType(
       phoneNumber = Some("01332752856"),
-      mobileNumber = Some("07782565326"),
-      faxNumber = Some("01332754256"),
       emailAddress = None
     )
 
@@ -67,7 +51,6 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
       acknowledgementReference = "12345678901234567890123456789012",
       isAnAgent = false,
       isAGroup = false,
-      identification = identificationData,
       organisation = organisationData,
       address = foreignAddress,
       contactDetails = contactDetailsData

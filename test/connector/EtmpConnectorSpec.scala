@@ -103,40 +103,6 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
     }
   }
 
-
-  "Register individual no ID" must {
-    val url = appConfig.registrationNoIdIndividual
-    "return OK when DES/Etmp returns successfully" in {
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
-      val successResponse = Json.obj(
-        "processingDate" -> LocalDate.now,
-        "sapNumber" -> "1234567890",
-        "safeId" -> "XE0001234567890"
-      )
-
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
-
-      val result = etmpConnector.registrationNoIdIndividual(validDataRequest)
-      ScalaFutures.whenReady(result) {
-        res =>
-          res.status mustBe OK
-      }
-    }
-    "throw BadRequestException when Etmp throws Bad Request" in {
-      val invalidData = Json.obj("data" -> "invalid")
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
-
-      val result = etmpConnector.registrationNoIdIndividual(invalidData)
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe failureResponse.toString()
-      }
-    }
-  }
-
-
   "Register organisation no ID" must {
     val url = appConfig.registrationNoIdOrganisation
     "return OK when DES/Etmp returns successfully" in {

@@ -29,20 +29,11 @@ object ForeignAddress {
 
 
 case class ContactDetailsType(phoneNumber:Option[String],
-                              mobileNumber:Option[String],
-                              faxNumber:Option[String],
                               emailAddress:Option[String])
 
 object ContactDetailsType {
 
   implicit val format: Format[ContactDetailsType] = Json.format[ContactDetailsType]
-}
-
-case class IdentificationType(idNumber:String,issuingInstitution:String,issuingCountryCode:String)
-
-object IdentificationType {
-
-  implicit val format: Format[IdentificationType] = Json.format[IdentificationType]
 }
 
 case class Organisation(organisationName:String)
@@ -52,21 +43,10 @@ object Organisation {
   implicit val format: Format[Organisation] = Json.format[Organisation]
 }
 
-
-case class Individual(firstName:String,middleName:Option[String],lastName:String,dateOfBirth:String)
-
-
-object Individual {
-
-  implicit val format: Format[Individual] = Json.format[Individual]
-}
-
-
 case class OrganisationRegistrant(regime:String,
                                   acknowledgementReference:String,
-                                  isAnAgent:Boolean,
-                                  isAGroup:Boolean,
-                                  identification:Option[IdentificationType],
+                                  isAnAgent:Boolean = false,
+                                  isAGroup:Boolean = false,
                                   organisation:Organisation,
                                   address:ForeignAddress,
                                   contactDetails:ContactDetailsType
