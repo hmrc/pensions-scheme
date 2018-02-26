@@ -42,12 +42,6 @@ class EtmpConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends E
     http.POST(schemeAdminRegisterUrl, registerData)
   }
 
-  override def registrationNoIdIndividual(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    val schemeAdminRegisterUrl = config.registrationNoIdIndividual
-
-    http.POST(schemeAdminRegisterUrl, registerData)
-  }
-
   override def registrationNoIdOrganisation(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
     val schemeAdminRegisterUrl = config.registrationNoIdOrganisation
 
@@ -59,8 +53,6 @@ trait EtmpConnector {
   def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
-
-  def registrationNoIdIndividual(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registrationNoIdOrganisation(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }

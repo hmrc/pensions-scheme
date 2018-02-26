@@ -16,7 +16,9 @@
 
 package models
 
+
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class ForeignAddress(addressLine1:String,addressLine2:String,
                      addressLine3:Option[String],addressLine4:Option[String],
@@ -43,18 +45,39 @@ object Organisation {
   implicit val format: Format[Organisation] = Json.format[Organisation]
 }
 
-case class OrganisationRegistrant(regime:String,
+case class OrganisationRegistrant(
                                   acknowledgementReference:String,
-                                  isAnAgent:Boolean = false,
-                                  isAGroup:Boolean = false,
                                   organisation:Organisation,
                                   address:ForeignAddress,
                                   contactDetails:ContactDetailsType
                                  )
 
 object OrganisationRegistrant {
+  implicit val reads:Reads[OrganisationRegistrant] = Json.reads[OrganisationRegistrant]
 
-  implicit val format: Format[OrganisationRegistrant] = Json.format[OrganisationRegistrant]
+  implicit  val writes:Writes[OrganisationRegistrant] = {
+
+    (
+      (__ \ "regime").write[String] and
+      (__ \ "acknowledgementReference").write[String] and
+      (__ \ "isAnAgent").write[Boolean] and
+      (__ \ "isAGroup").write[Boolean] and
+      (__ \ "organisation").write[Organisation] and
+      (__ \ "address").write[ForeignAddress] and
+      (__ \ "contactDetails").write[ContactDetailsType]
+      ) { o =>
+      (
+        "PODS",
+        o.acknowledgementReference,
+        false,
+        false,
+        o.organisation,
+        o.address,
+        o.contactDetails
+      )
+
+    }
+  }
 }
 
 

@@ -44,7 +44,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
         def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
 
-        val validData = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+        val validData = readJsonFromFile("/data/validRegistrationNoIDOrganisationOutput.json")
         val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now,
           "sapNumber" -> "1234567890",
           "safeId" -> "XE0001234567890"
