@@ -18,54 +18,13 @@ package models
 
 import play.api.libs.json._
 
-sealed trait Address
-
-sealed trait Registrant
-
-object Address {
-
- implicit val reads: Reads[Address] = {
-   import play.api.libs.json._
-   (__ \ "countryCode").read[String].flatMap {
-     case "GB" => {
-       UkAddress.format.map[Address](identity)
-     }
-     case _ =>
-       ForeignAddress.format.map[Address](identity)
-   }
-  }
-
-  implicit val writes: Writes[Address] = Writes {
-    case address: UkAddress =>
-      UkAddress.writes.writes(address)
-    case address: ForeignAddress =>
-      ForeignAddress.format.writes(address)
-  }
-}
-
 case class ForeignAddress(addressLine1:String,addressLine2:String,
                      addressLine3:Option[String],addressLine4:Option[String],
-                     postalCode:Option[String],countryCode:String) extends Address
+                     postalCode:Option[String],countryCode:String)
+
 object ForeignAddress {
 
   implicit val format: Format[ForeignAddress] = Json.format[ForeignAddress]
-}
-
-
-case class UkAddress(addressLine1:String,addressLine2:String,
-                     addressLine3:Option[String],addressLine4:Option[String],
-                     postalCode:String
-                    ) extends Address
-
-object UkAddress {
-
-  implicit val format: Reads[UkAddress] =
-    Json.reads[UkAddress]
-
-  implicit val writes: Writes[UkAddress] = Writes {
-    address =>
-      Json.writes[UkAddress].writes(address) ++ Json.obj("countryCode" -> "GB")
-  }
 }
 
 
@@ -103,50 +62,21 @@ object Individual {
 }
 
 
-case class IndividualRegistrant(regime:String,
-                                acknowledgementReference:String,
-                                isAnAgent:Boolean,
-                                isAGroup:Boolean,
-                                identification:Option[IdentificationType],
-                                individual:Individual,
-                                address:Address,
-                                contactDetails:ContactDetailsType
-                               ) extends Registrant
-
-object IndividualRegistrant {
-
-  implicit val format: Format[IndividualRegistrant] = Json.format[IndividualRegistrant]
-}
-
-
 case class OrganisationRegistrant(regime:String,
                                   acknowledgementReference:String,
                                   isAnAgent:Boolean,
                                   isAGroup:Boolean,
                                   identification:Option[IdentificationType],
                                   organisation:Organisation,
-                                  address:Address,
+                                  address:ForeignAddress,
                                   contactDetails:ContactDetailsType
-                                 ) extends Registrant
+                                 )
 
 object OrganisationRegistrant {
 
   implicit val format: Format[OrganisationRegistrant] = Json.format[OrganisationRegistrant]
 }
 
-object Registrant {
-
-  implicit val reads: Reads[Registrant] = {
-    IndividualRegistrant.format.map[Registrant](identity) orElse
-      OrganisationRegistrant.format.map[Registrant](identity)
-  }
-  implicit val writes: Writes[Registrant] = Writes {
-    case address: IndividualRegistrant =>
-      IndividualRegistrant.format.writes(address)
-    case address: OrganisationRegistrant =>
-      OrganisationRegistrant.format.writes(address)
-  }
-}
 
 
 

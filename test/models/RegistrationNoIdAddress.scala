@@ -16,7 +16,6 @@
 
 package models
 
-import models.Address._
 import org.scalatest.{MustMatchers, WordSpecLike}
 import play.api.libs.json.{JsValue, Json}
 
@@ -28,61 +27,7 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
     val path = Source.fromURL(getClass.getResource(filePath)).mkString
     Json.parse(path)
   }
-  val ukAddressJson = Json.obj("addressLine1" -> "Eel Marsh House",
-    "addressLine2" -> "Eel Marsh Island",
-    "addressLine3" -> "Nine Lives Causeway",
-    "addressLine4" -> "Crythin Gifford",
-    "postalCode" -> "ZZ1 1ZZ",
-    "countryCode" -> "GB"
-  )
 
-  val ukAddressCaseClass= UkAddress(
-    "Eel Marsh House",
-    "Eel Marsh Island",
-    Some("Nine Lives Causeway"),
-    Some("Crythin Gifford"),
-    "ZZ1 1ZZ"
-  )
-
-  val foreignAddressJson = Json.obj(
-    "addressLine1" -> "31 Myers Street",
-    "addressLine2" -> "Haddonfield",
-    "addressLine3" -> "Illinois",
-    "addressLine4" -> "USA",
-    "countryCode" -> "US"
-  )
-
-  val foreignAddressCaseClass=ForeignAddress(
-    "31 Myers Street",
-    "Haddonfield",
-    Some("Illinois"),
-    Some("USA"),
-    None, "US"
-  )
-
-  "Reads for Address" must {
-    "successfully read a UK address" in {
-
-      Json.fromJson[Address](ukAddressJson).get mustEqual ukAddressCaseClass
-
-    }
-    "successfully read a Foreign address" in {
-
-      Json.fromJson[Address](foreignAddressJson).get mustEqual foreignAddressCaseClass
-    }
-  }
-
-  "Writes for Address" must {
-    "successfully write a UK address to JSON" in {
-
-      Json.toJson[Address](ukAddressCaseClass) mustEqual ukAddressJson
-    }
-
-    "successfully write a Foreign address to JSON" in {
-
-      Json.toJson[Address](foreignAddressCaseClass) mustEqual foreignAddressJson
-    }
-  }
 
   "Reads for Registrant" must {
 
@@ -93,18 +38,21 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
       dateOfBirth = "1990-04-03"
     )
 
+    val foreignAddress=ForeignAddress(
+      "31 Myers Street",
+      "Haddonfield",
+      Some("Illinois"),
+      Some("USA"),
+      None, "US"
+    )
+
     val identificationData = Some(IdentificationType(
       idNumber = "123456",
       issuingInstitution = "France Institution",
       issuingCountryCode = "FR")
     )
 
-    val addressData = UkAddress(addressLine1 = "100, Sutton Street",
-      addressLine2 = "Wokingham",
-      addressLine3 = Some("Surrey"),
-      addressLine4 = Some("London"),
-      postalCode = "DH1 4EJ"
-    )
+
     val organisationData = Organisation(organisationName = "John")
 
     val contactDetailsData = ContactDetailsType(
@@ -121,46 +69,21 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
       isAGroup = false,
       identification = identificationData,
       organisation = organisationData,
-      address = addressData,
-      contactDetails = contactDetailsData
-    )
-
-    val individualRegistrantCaseClass = IndividualRegistrant(
-      regime = "FHDDS",
-      acknowledgementReference = "12345678901234567890123456789012",
-      isAnAgent = false,
-      isAGroup = false,
-      identification = identificationData,
-      individual = individualData,
-      address = addressData,
+      address = foreignAddress,
       contactDetails = contactDetailsData
     )
 
     "successfully read a OrganisationRegistrant" in {
       val json = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
 
-      Json.fromJson[Registrant](json).get mustEqual organisationRegistrantCaseClass
+      Json.fromJson[OrganisationRegistrant](json).get mustEqual organisationRegistrantCaseClass
     }
-
-    "successfully read an IndividualRegistrant" in {
-      val json = readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
-
-      Json.fromJson[Registrant](json).get mustEqual individualRegistrantCaseClass
-    }
-
 
     "Writes for Registrant" must {
 
       "succesfully write a json schema from a Organisation Registrant" in {
         val json = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
-        Json.toJson[Registrant](organisationRegistrantCaseClass) mustEqual json
-      }
-
-      "succesfully write a json schema from a Individual Registrant" in {
-        val json = readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
-
-        Json.toJson[Registrant](individualRegistrantCaseClass) mustEqual json
-
+        Json.toJson[OrganisationRegistrant](organisationRegistrantCaseClass) mustEqual json
       }
     }
   }

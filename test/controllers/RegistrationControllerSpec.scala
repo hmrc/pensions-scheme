@@ -20,7 +20,7 @@ import base.SpecBase
 import connector.EtmpConnector
 import org.joda.time.LocalDate
 import org.mockito.Matchers
-import org.mockito.Mockito.{reset, times, verify, when}
+import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
@@ -28,8 +28,9 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{OK, status}
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.{BadRequestException, HttpResponse}
 import play.api.test.Helpers._
+
 import scala.concurrent.Future
 
 class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
@@ -37,39 +38,37 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
   val registrationController = new RegistrationController(mockEtmpConnector)
   before(reset(mockEtmpConnector))
 
-  "registrationNoIdIndividual" in {
-    def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data).withHeaders(("psaId", "A2000001"))
+  "registrationNoIdOrganisation" must {
 
-    val validData = readJsonFromFile("/data/validRegistrationNoIDIndividual.json")
-    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now,
-      "sapNumber" -> "1234567890",
-      "safeId" -> "XE0001234567890"
-    )
-    when(mockEtmpConnector.registrationNoIdIndividual(Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
-      Future.successful(HttpResponse(OK, Some(successResponse))))
-    val result = registrationController.registrationNoIdIndividual(fakeRequest(validData))
-    ScalaFutures.whenReady(result) { res =>
-      status(result) mustBe OK
-      verify(mockEtmpConnector, times(1)).registrationNoIdIndividual(Matchers.eq(validData))(Matchers.any(), Matchers.any())
+      "return a success response when valid data is posted" in {
+
+        def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
+
+        val validData = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+        val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now,
+          "sapNumber" -> "1234567890",
+          "safeId" -> "XE0001234567890"
+        )
+        when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+          Future.successful(HttpResponse(OK, Some(successResponse))))
+        val result = registrationController.registrationNoIdOrganisation(fakeRequest(validData))
+        ScalaFutures.whenReady(result) { res =>
+          status(result) mustBe OK
+          verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(validData))(Matchers.any(), Matchers.any())
+        }
+      }
+
+      "throw BadRequestException when no data is not present in the request" in {
+        val result = registrationController.registrationNoIdOrganisation()(FakeRequest("POST", "/"))
+        ScalaFutures.whenReady(result.failed) { e =>
+          e mustBe a[BadRequestException]
+          e.getMessage mustBe "Bad Request without request body"
+          verify(mockEtmpConnector, never()).registerScheme(Matchers.any(),
+            Matchers.any())(Matchers.any(), Matchers.any())
+        }
+      }
     }
-  }
-
-  "registrationNoIdOrganisation" in {
-    def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data).withHeaders(("psaId", "A2000001"))
-
-    val validData = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
-    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now,
-      "sapNumber" -> "1234567890",
-      "safeId" -> "XE0001234567890"
-    )
-    when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
-      Future.successful(HttpResponse(OK, Some(successResponse))))
-    val result = registrationController.registrationNoIdOrganisation(fakeRequest(validData))
-    ScalaFutures.whenReady(result) { res =>
-      status(result) mustBe OK
-      verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(validData))(Matchers.any(), Matchers.any())
-    }
-  }
 }
+
 
 

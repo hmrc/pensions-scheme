@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import models.{PensionsScheme, Registrant}
+import models.{OrganisationRegistrant}
 
 import scala.concurrent.Future
 import utils.ErrorHandler
@@ -31,24 +31,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class RegistrationController @Inject()(etmpConnector: EtmpConnector) extends BaseController with ErrorHandler {
 
-  def registrationNoIdIndividual: Action[AnyContent] = Action.async { implicit request => {
-
-    request.body.asJson match {
-      case (Some(jsValue)) =>
-        val registrationIndividual = Json.toJson(jsValue.as[Registrant])
-        etmpConnector.registrationNoIdIndividual(registrationIndividual).map { httpResponse =>
-          Ok(httpResponse.body)
-        }
-      case _ => Future.failed(new BadRequestException("Bad Request without request body"))
-    }
-  } recoverWith recoverFromError
-  }
-
   def registrationNoIdOrganisation: Action[AnyContent] = Action.async { implicit request => {
 
     request.body.asJson match {
       case (Some(jsValue)) =>
-        val registrationOrganisation = Json.toJson(jsValue.as[Registrant])
+        val registrationOrganisation = Json.toJson(jsValue.as[OrganisationRegistrant])
         etmpConnector.registrationNoIdOrganisation(registrationOrganisation).map { httpResponse =>
           Ok(httpResponse.body)
         }
