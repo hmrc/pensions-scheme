@@ -54,7 +54,7 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
     )
 
     "successfully read a OrganisationRegistrant" in {
-      val json = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+      val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
 
       Json.fromJson[OrganisationRegistrant](json).get mustEqual organisationRegistrantCaseClass
     }
@@ -62,16 +62,17 @@ class RegistrationNoIdAddress extends WordSpecLike with MustMatchers {
     "Writes for Registrant" must {
 
       "succesfully write a json schema from a Organisation Registrant" in {
-        val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationOutput.json")
+        val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
         Json.toJson[OrganisationRegistrant](organisationRegistrantCaseClass) mustEqual json
       }
     }
 
     "succesfully read an input Json and convert to an Output json" in {
-      val inputJson = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+      val inputJson = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
+      val outputJson = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
+
       val caseClass = Json.fromJson[OrganisationRegistrant](inputJson).get
       caseClass mustEqual organisationRegistrantCaseClass
-      val outputJson = readJsonFromFile("/data/validRegistrationNoIDOrganisationOutput.json")
       Json.toJson[OrganisationRegistrant](caseClass) mustEqual outputJson
     }
   }

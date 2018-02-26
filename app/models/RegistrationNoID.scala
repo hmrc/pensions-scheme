@@ -75,7 +75,6 @@ object OrganisationRegistrant {
         o.address,
         o.contactDetails
       )
-
     }
   }
 }

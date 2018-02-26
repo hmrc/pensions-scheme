@@ -106,7 +106,7 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
   "Register organisation no ID" must {
     val url = appConfig.registrationNoIdOrganisation
     "return OK when DES/Etmp returns successfully" in {
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisation.json")
+      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
       val successResponse = Json.obj(
         "processingDate" -> LocalDate.now,
         "sapNumber" -> "1234567890",

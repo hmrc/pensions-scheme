@@ -44,17 +44,19 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
         def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
 
-        val validData = readJsonFromFile("/data/validRegistrationNoIDOrganisationOutput.json")
+        val dataFromFrontend = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
+        val dataToEmtp= readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
         val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now,
           "sapNumber" -> "1234567890",
           "safeId" -> "XE0001234567890"
         )
-        when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+
+        when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
           Future.successful(HttpResponse(OK, Some(successResponse))))
-        val result = registrationController.registrationNoIdOrganisation(fakeRequest(validData))
+        val result = registrationController.registrationNoIdOrganisation(fakeRequest(dataFromFrontend))
         ScalaFutures.whenReady(result) { res =>
           status(result) mustBe OK
-          verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(validData))(Matchers.any(), Matchers.any())
+          verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
         }
       }
 
