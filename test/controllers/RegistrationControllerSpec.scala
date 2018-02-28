@@ -16,33 +16,37 @@
 
 package controllers
 
+import akka.stream.{Attributes, ClosedShape, Graph, Materializer}
 import base.SpecBase
 import connector.EtmpConnector
+import models.OrganisationRegistrant
 import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import play.api.mvc.AnyContentAsJson
-import play.api.test.FakeRequest
+import play.api.test.{FakeRequest, NoMaterializer}
 import play.api.test.Helpers.{OK, status}
 import uk.gov.hmrc.http.{BadRequestException, HttpResponse, Upstream4xxResponse, Upstream5xxResponse}
 import play.api.test.Helpers._
 
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
 
   val dataFromFrontend = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
-  val dataToEmtp = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
+  val dataToEmtp = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json").as[OrganisationRegistrant]
   val mockEtmpConnector: EtmpConnector = mock[EtmpConnector]
   val registrationController = new RegistrationController(mockEtmpConnector)
   before(reset(mockEtmpConnector))
+  implicit val mat: Materializer = app.materializer
 
   "registrationNoIdOrganisation" must {
-    def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
+    def fakeRequest(data: JsValue): FakeRequest[JsValue] = FakeRequest("POST", "/").withBody(data)
 
     "return a success response when valid data is posted" in {
 
@@ -53,7 +57,8 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
       when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
-      val result = registrationController.registrationNoIdOrganisation(fakeRequest(dataFromFrontend))
+
+      val result = call(registrationController.registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result) { res =>
         status(result) mustBe OK
         verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
@@ -61,10 +66,9 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
 
     "throw BadRequestException when no data is not present in the request" in {
-      val result = registrationController.registrationNoIdOrganisation()(FakeRequest("POST", "/"))
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without request body"
+      val result = call(registrationController.registrationNoIdOrganisation, FakeRequest("POST", "/").withBody(JsNull))
+      ScalaFutures.whenReady(result) { res =>
+        status(result) mustBe BAD_REQUEST
         verify(mockEtmpConnector, never()).registrationNoIdOrganisation(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
@@ -77,7 +81,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new BadRequestException(invalidPayload.toString())))
 
-      val result = registrationController.registrationNoIdOrganisation()(fakeRequest(dataFromFrontend))
+      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
@@ -93,7 +97,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Upstream4xxResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
 
-      val result = registrationController.registrationNoIdOrganisation()(fakeRequest(dataFromFrontend))
+      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream4xxResponse]
         e.getMessage mustBe invalidSubmission.toString()
@@ -109,7 +113,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), CONFLICT, CONFLICT)))
 
-      val result = registrationController.registrationNoIdOrganisation()(fakeRequest(dataFromFrontend))
+      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream5xxResponse]
         e.getMessage mustBe serviceUnavailable.toString()
@@ -121,7 +125,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
-      val result = registrationController.registrationNoIdOrganisation()(fakeRequest(dataFromFrontend))
+      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
         e.getMessage mustBe "Generic Exception"

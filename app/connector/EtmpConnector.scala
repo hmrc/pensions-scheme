@@ -18,6 +18,7 @@ package connector
 
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
+import models.OrganisationRegistrant
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -42,18 +43,20 @@ class EtmpConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends E
     http.POST(schemeAdminRegisterUrl, registerData)
   }
 
-  override def registrationNoIdOrganisation(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+  override def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
     val schemeAdminRegisterUrl = config.registrationNoIdOrganisation
 
-    http.POST(schemeAdminRegisterUrl, registerData)
+    http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], implicitly, implicitly)
   }
 }
+
+
 @ImplementedBy(classOf[EtmpConnectorImpl])
 trait EtmpConnector {
   def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
-  def registrationNoIdOrganisation(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 

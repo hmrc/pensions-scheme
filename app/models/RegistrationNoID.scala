@@ -53,9 +53,11 @@ case class OrganisationRegistrant(
                                  )
 
 object OrganisationRegistrant {
-  implicit val reads:Reads[OrganisationRegistrant] = Json.reads[OrganisationRegistrant]
 
-  implicit  val writes:Writes[OrganisationRegistrant] = {
+  implicit val format: Format[OrganisationRegistrant] = Json.format[OrganisationRegistrant]
+  //implicit val apiReads:Reads[OrganisationRegistrant] = Json.reads[OrganisationRegistrant]
+
+  val apiWrites: Writes[OrganisationRegistrant] = {
 
     (
       (__ \ "regime").write[String] and

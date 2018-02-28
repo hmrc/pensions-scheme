@@ -17,6 +17,7 @@
 package connector
 
 import base.SpecBase
+import models.OrganisationRegistrant
 import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -28,6 +29,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.mvc.Http.Status.OK
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -106,14 +108,14 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
   "Register organisation no ID" must {
     val url = appConfig.registrationNoIdOrganisation
     "return OK when DES/Etmp returns successfully" in {
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
+      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
       val successResponse = Json.obj(
         "processingDate" -> LocalDate.now,
         "sapNumber" -> "1234567890",
         "safeId" -> "XE0001234567890"
       )
 
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
+      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
 
       val result = etmpConnector.registrationNoIdOrganisation(validDataRequest)
@@ -123,11 +125,11 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
       }
     }
     "throw BadRequestException when Etmp throws Bad Request" in {
-      val invalidData = Json.obj("data" -> "invalid")
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
+      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
+      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
         thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
-      val result = etmpConnector.registrationNoIdOrganisation(invalidData)
+      val result = etmpConnector.registrationNoIdOrganisation(validDataRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
