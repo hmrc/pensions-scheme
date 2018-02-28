@@ -17,8 +17,8 @@
 package controllers
 
 import com.google.inject.Inject
-import connector.EtmpConnector
-import models.{PensionSchemeAdministrator, PensionsScheme}
+import connector.SchemeConnector
+import models.{ListOfSchemes, PensionSchemeAdministrator, PensionsScheme}
 import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.http._
@@ -28,17 +28,16 @@ import utils.ErrorHandler
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeController @Inject()(etmpConnector: EtmpConnector) extends BaseController with ErrorHandler {
+class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
 
   def registerScheme: Action[AnyContent] = Action.async { implicit request => {
-
     val psaId = request.headers.get("psaId")
     val feJson = request.body.asJson
 
     (psaId, feJson) match {
       case (Some(psa), Some(jsValue)) =>
         val pensionSchemeData = Json.toJson(jsValue.as[PensionsScheme])
-        etmpConnector.registerScheme(psa, pensionSchemeData).map { httpResponse =>
+        schemeConnector.registerScheme(psa, pensionSchemeData).map { httpResponse =>
           Ok(httpResponse.body)
         }
       case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
@@ -53,10 +52,23 @@ class SchemeController @Inject()(etmpConnector: EtmpConnector) extends BaseContr
     feJson match {
       case Some(jsValue) =>
         val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator])
-        etmpConnector.registerPSA(psa).map {
+        schemeConnector.registerPSA(psa).map {
           httpResponse => Ok(httpResponse.body)
         }
       case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
+    }
+  } recoverWith recoverFromError
+  }
+
+  def listOfSchemes: Action[AnyContent] = Action.async { implicit request => {
+    val psaId = request.headers.get("psaId")
+
+    psaId match {
+      case Some(psa) =>
+        schemeConnector.listOfSchemes(psa).map { httpResponse =>
+          Ok(Json.toJson(httpResponse.json.as[ListOfSchemes]))
+        }
+      case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
     }
   } recoverWith recoverFromError
   }

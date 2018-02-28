@@ -25,18 +25,19 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
+import play.api.http.Status
 import play.api.libs.json.{JsObject, JsValue, Json}
-import play.mvc.Http.Status.OK
+import play.mvc.Http.Status._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
+class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
 
   val httpClient = mock[HttpClient]
-  val etmpConnector = new EtmpConnectorImpl(httpClient, appConfig)
+  val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig)
   implicit val hc = HeaderCarrier()
   val failureResponse: JsObject = Json.obj(
     "code" -> "INVALID_PAYLOAD",
@@ -54,7 +55,7 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
 
-      val result = etmpConnector.registerScheme("A2000001", validData)
+      val result = schemeConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result) { res =>
         res.status mustBe OK
       }
@@ -65,15 +66,14 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
         thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
-      val result = etmpConnector.registerScheme("A2000001", validData)
+      val result = schemeConnector.registerScheme("A2000001", validData)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
       }
     }
   }
-
-
+  
   "register PSA" must {
     val schemeAdminRegisterUrl = appConfig.schemeAdminRegistrationUrl
     "return OK when DES/Etmp returns successfully" in {
@@ -86,7 +86,7 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
 
-      val result = etmpConnector.registerPSA(inputRequestData)
+      val result = schemeConnector.registerPSA(inputRequestData)
       ScalaFutures.whenReady(result) { res =>
         res.status mustBe OK
       }
@@ -97,7 +97,7 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
       when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
         thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
-      val result = etmpConnector.registerPSA(invalidData)
+      val result = schemeConnector.registerPSA(invalidData)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
@@ -105,34 +105,29 @@ class EtmpConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter w
     }
   }
 
-  "Register organisation no ID" must {
-    val url = appConfig.registrationNoIdOrganisation
-    "return OK when DES/Etmp returns successfully" in {
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
-      val successResponse = Json.obj(
-        "processingDate" -> LocalDate.now,
-        "sapNumber" -> "1234567890",
-        "safeId" -> "XE0001234567890"
-      )
+  "list of schemes" must {
 
-      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+    "return OK with the list of schemes response" in {
+      val listOfSchemesUrl = appConfig.listOfSchemesUrl.format("A2000001")
+      val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+      when(httpClient.GET[HttpResponse](Matchers.eq(listOfSchemesUrl))(any(), any(), any())).thenReturn(
+        Future.successful(HttpResponse(OK, Some(validResponse))))
+      val result = schemeConnector.listOfSchemes("A2000001")
 
-      val result = etmpConnector.registrationNoIdOrganisation(validDataRequest)
-      ScalaFutures.whenReady(result) {
-        res =>
-          res.status mustBe OK
+      ScalaFutures.whenReady(result) { res =>
+        res.status mustBe OK
+        res.body mustEqual Json.prettyPrint(validResponse)
       }
     }
-    "throw BadRequestException when Etmp throws Bad Request" in {
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
-      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
 
-      val result = etmpConnector.registrationNoIdOrganisation(validDataRequest)
+    "throw Bad Request when DES/ETMP throws Bad Request" in {
+      when(httpClient.GET[HttpResponse](any())(any(), any(), any())).thenReturn(
+        Future.failed(new BadRequestException(failureResponse.toString())))
+      val result = schemeConnector.listOfSchemes("A2000001")
+
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe failureResponse.toString()
+        e.getMessage mustEqual failureResponse.toString()
       }
     }
   }

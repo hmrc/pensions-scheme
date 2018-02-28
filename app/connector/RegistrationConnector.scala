@@ -25,37 +25,40 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EtmpConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends EtmpConnector {
+class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
 
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
     "Content-Type" -> "application/json")
-  implicit val hc = HeaderCarrier(extraHeaders = desHeader)
 
-  override def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
+  override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
+                                                                             ec: ExecutionContext): Future[HttpResponse] = {
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
 
-    http.POST(schemeRegisterUrl, registerData)
+    http.POST(registerWithIdUrl, registerData)
   }
 
-  override def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    val schemeAdminRegisterUrl = config.schemeAdminRegistrationUrl
+  override def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier,
+                                                                              ec: ExecutionContext): Future[HttpResponse] = {
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
 
-    http.POST(schemeAdminRegisterUrl, registerData)
+    http.POST(registerWithIdUrl, registerData)
   }
 
   override def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    val schemeAdminRegisterUrl = config.registrationNoIdOrganisation
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val schemeAdminRegisterUrl = config.registerWithoutIdOrganisationUrl
 
     http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], implicitly, implicitly)
   }
 }
 
+@ImplementedBy(classOf[RegistrationConnectorImpl])
+trait RegistrationConnector {
+  def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
-@ImplementedBy(classOf[EtmpConnectorImpl])
-trait EtmpConnector {
-  def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
-
-  def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }

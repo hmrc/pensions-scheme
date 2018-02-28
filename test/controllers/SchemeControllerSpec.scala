@@ -17,12 +17,13 @@
 package controllers
 
 import base.SpecBase
-import connector.EtmpConnector
+import connector.SchemeConnector
 import models.PensionSchemeAdministrator
 import org.joda.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers
+import org.mockito.Matchers._
 import org.scalatest.BeforeAndAfter
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.FakeRequest
@@ -34,10 +35,10 @@ import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import scala.concurrent.Future
 
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
-  val mockEtmpConnector: EtmpConnector = mock[EtmpConnector]
-  val schemeController = new SchemeController(mockEtmpConnector)
+  val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
+  val schemeController = new SchemeController(mockSchemeConnector)
 
-  before(reset(mockEtmpConnector))
+  before(reset(mockSchemeConnector))
 
   "registerScheme" must {
 
@@ -46,13 +47,13 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "return OK when the scheme is registered successfully" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
-      when(mockEtmpConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result) { res =>
         status(result) mustBe OK
-        verify(mockEtmpConnector, times(1)).registerScheme(Matchers.eq("A2000001"),
+        verify(mockSchemeConnector, times(1)).registerScheme(Matchers.eq("A2000001"),
           Matchers.eq(validData))(Matchers.any(), Matchers.any())
       }
     }
@@ -64,7 +65,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSAId or request body"
-        verify(mockEtmpConnector, never()).registerScheme(Matchers.any(),
+        verify(mockSchemeConnector, never()).registerScheme(Matchers.any(),
           Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
@@ -74,7 +75,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSAId or request body"
-        verify(mockEtmpConnector, never()).registerScheme(Matchers.any(),
+        verify(mockSchemeConnector, never()).registerScheme(Matchers.any(),
           Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
@@ -85,14 +86,14 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "INVALID_PAYLOAD",
         "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
       )
-      when(mockEtmpConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new BadRequestException(invalidPayload.toString())))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
-        verify(mockEtmpConnector, times(1)).registerScheme(Matchers.any(),
+        verify(mockSchemeConnector, times(1)).registerScheme(Matchers.any(),
           Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
@@ -103,14 +104,14 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "INVALID_SUBMISSION",
         "reason" -> "Duplicate submission acknowledgement reference from remote endpoint returned."
       )
-      when(mockEtmpConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Upstream4xxResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream4xxResponse]
         e.getMessage mustBe invalidSubmission.toString()
-        verify(mockEtmpConnector, times(1)).registerScheme(Matchers.any(),
+        verify(mockSchemeConnector, times(1)).registerScheme(Matchers.any(),
           Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
@@ -121,28 +122,28 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Dependent systems are currently not responding."
       )
-      when(mockEtmpConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
-        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), CONFLICT, CONFLICT)))
+      when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream5xxResponse]
         e.getMessage mustBe serviceUnavailable.toString()
-        verify(mockEtmpConnector, times(1)).registerScheme(Matchers.any(),
+        verify(mockSchemeConnector, times(1)).registerScheme(Matchers.any(),
           Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
     "throw generic exception when any other exception returned from Des" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-      when(mockEtmpConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
         e.getMessage mustBe "Generic Exception"
-        verify(mockEtmpConnector, times(1)).registerScheme(Matchers.any(),
+        verify(mockSchemeConnector, times(1)).registerScheme(Matchers.any(),
           Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
@@ -156,14 +157,14 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val validRequestData = readJsonFromFile("/data/validPsaRequest.json")
       val successResponse = Json.obj("processingDate" -> LocalDate.now, "formBundle" -> "1000000", "psaId" -> "A2000000")
 
-      when(mockEtmpConnector.registerPSA(Matchers.eq(Json.toJson(
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
         validRequestData.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
 
       val result = schemeController.registerPSA(fakeRequest(validRequestData))
       ScalaFutures.whenReady(result) { res =>
         status(result) mustBe OK
-        verify(mockEtmpConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
@@ -171,7 +172,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val invalidRequest = readJsonFromFile("/data/validPsaRequest.json")
       val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD", "reason" -> "Submission has not passed validation. Invalid PAYLOAD.")
 
-      when(mockEtmpConnector.registerPSA(Matchers.eq(Json.toJson(
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
         invalidRequest.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new BadRequestException(failureResponse.toString()))
       )
@@ -179,7 +180,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
-        verify(mockEtmpConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
@@ -188,7 +189,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with no request body"
-        verify(mockEtmpConnector, never()).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+        verify(mockSchemeConnector, never()).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
@@ -198,7 +199,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "INVALID_BUSINESS_PARTNER",
         "reason" -> "Business partner already has active subscription for this regime."
       )
-      when(mockEtmpConnector.registerPSA(Matchers.eq(Json.toJson(
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
         invalidRequest.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Upstream4xxResponse(invalidBusinessPartner.toString(), FORBIDDEN, FORBIDDEN))
       )
@@ -206,7 +207,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream4xxResponse]
         e.getMessage mustBe invalidBusinessPartner.toString()
-        verify(mockEtmpConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
@@ -216,7 +217,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "SERVER_ERROR",
         "reason" -> "DES is currently experiencing problems that require live service intervention."
       )
-      when(mockEtmpConnector.registerPSA(Matchers.eq(Json.toJson(
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
         invalidRequest.as[PensionSchemeAdministrator])))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Upstream5xxResponse(serverError.toString(), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR))
       )
@@ -224,7 +225,77 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream5xxResponse]
         e.getMessage mustBe serverError.toString()
-        verify(mockEtmpConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+        verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
+    }
+  }
+
+  "list of schems" must {
+    val fakeRequest = FakeRequest("GET", "/").withHeaders(("psaId", "A2000001"))
+
+    "return OK with list of schems when DES/ETMP returns it successfully" in {
+      val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(Future.successful(
+        HttpResponse(OK, Some(validResponse))))
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result){ res =>
+        status(result) mustBe OK
+        contentAsJson(result) mustEqual validResponse
+        verify(mockSchemeConnector, times(1)).listOfSchemes(any())(any(), any())
+      }
+    }
+
+    "throw BadRequestException when PSAId is not present in the header" in {
+      val result = schemeController.listOfSchemes(FakeRequest("GET", "/"))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe "Bad Request with no Psa Id"
+        verify(mockSchemeConnector, never()).registerScheme(any(),
+          any())(any(), any())
+      }
+    }
+
+    "throw BadRequestException when bad request returned from Des" in {
+      val invalidPayload: JsObject = Json.obj(
+        "code" -> "INVALID_PSAID",
+        "reason" -> "Submission has not passed validation. Invalid parameter PSAID."
+      )
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(
+        Future.failed(new BadRequestException(invalidPayload.toString())))
+
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe invalidPayload.toString()
+        verify(mockSchemeConnector, times(1)).listOfSchemes(Matchers.eq("A2000001"))(Matchers.any(), Matchers.any())
+      }
+    }
+
+    "throw Upstream5xxResponse when UpStream5XXResponse returned" in {
+      val serviceUnavailable: JsObject = Json.obj(
+        "code" -> "SERVICE_UNAVAILABLE",
+        "reason" -> "Dependent systems are currently not responding."
+      )
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(
+        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream5xxResponse]
+        e.getMessage mustBe serviceUnavailable.toString()
+        verify(mockSchemeConnector, times(1)).listOfSchemes(Matchers.eq("A2000001"))(any(), any())
+      }
+    }
+
+    "throw generic exception when any other exception returned from Des" in {
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(
+        Future.failed(new Exception("Generic Exception")))
+
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe "Generic Exception"
+        verify(mockSchemeConnector, times(1)).listOfSchemes(Matchers.eq("A2000001"))(any(), any())
       }
     }
   }

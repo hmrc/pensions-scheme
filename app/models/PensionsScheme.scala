@@ -18,7 +18,7 @@ package models
 
 import play.api.libs.json.Json
 
-case class AddressAndContactDetails(addressDetails: AddressDetails, contactDetails: ContactDetails)
+case class AddressAndContactDetails(addressDetails: AddressType, contactDetails: ContactDetails)
 
 object AddressAndContactDetails {
   implicit val formats = Json.format[AddressAndContactDetails]
@@ -31,7 +31,14 @@ object PersonalDetails {
   implicit val formats = Json.format[PersonalDetails]
 }
 
-case class CorrespondenceAddressDetails(addressDetails: AddressDetails)
+case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
+                                  previousAddressDetails: Option[AddressType] = None)
+
+object PreviousAddressDetails {
+  implicit val formats = Json.format[PreviousAddressDetails]
+}
+
+case class CorrespondenceAddressDetails(addressDetails: AddressType)
 
 object CorrespondenceAddressDetails {
   implicit val formats = Json.format[CorrespondenceAddressDetails]
@@ -50,7 +57,7 @@ case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boo
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
                                     doesSchemeProvideBenefits: String, schemeEstablishedCountry: String, haveValidBank: Boolean,
                                     insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
-                                    insuranceCompanyAddress: Option[AddressDetails] = None)
+                                    insuranceCompanyAddress: Option[AddressType] = None)
 
 object CustomerAndSchemeDetails {
   implicit val formats = Json.format[CustomerAndSchemeDetails]

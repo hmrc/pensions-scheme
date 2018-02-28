@@ -31,10 +31,10 @@ object IndividualDetailType {
   implicit val formats = Json.format[IndividualDetailType]
 }
 
-case class PensionSchemeAdministratoridentifierStatusType(isExistingPensionSchemaAdministrator: Boolean,
+case class PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator: Boolean,
                                                           existingPensionSchemaAdministratorReference: Option[String] = None)
-object PensionSchemeAdministratoridentifierStatusType {
-  implicit val formats = Json.format[PensionSchemeAdministratoridentifierStatusType]
+object PensionSchemeAdministratorIdentifierStatusType {
+  implicit val formats = Json.format[PensionSchemeAdministratorIdentifierStatusType]
 }
 
 case class NumberOfDirectorOrPartnersType(isMorethanTenDirectors: Option[Boolean] = None,
@@ -43,7 +43,7 @@ object NumberOfDirectorOrPartnersType {
   implicit val formats = Json.format[NumberOfDirectorOrPartnersType]
 }
 
-case class CorrespondenceCommonDetail(addressDetail: AddressDetails, contactDetail: ContactDetails)
+case class CorrespondenceCommonDetail(addressDetail: AddressType, contactDetail: ContactDetails)
 object CorrespondenceCommonDetail {
   implicit val formats = Json.format[CorrespondenceCommonDetail]
 }
@@ -63,8 +63,8 @@ case class PensionSchemeAdministrator(customerType: String, legalStatus: String,
                                       idNumber: Option[String] = None, sapNumber: String, noIdentifier: Boolean,
                                       organisationDetail: Option[OrganisationDetailType] = None,
                                       individualDetail: Option[IndividualDetailType] = None,
-                                      pensionSchemeAdministratoridentifierStatus: PensionSchemeAdministratoridentifierStatusType,
-                                      correspondenceAddressDetail: AddressDetails, correspondenceContactDetail: ContactDetails,
+                                      pensionSchemeAdministratoridentifierStatus: PensionSchemeAdministratorIdentifierStatusType,
+                                      correspondenceAddressDetail: AddressType, correspondenceContactDetail: ContactDetails,
                                       previousAddressDetail: PreviousAddressDetails,
                                       numberOfDirectorOrPartners: Option[NumberOfDirectorOrPartnersType] = None,
                                       directorOrPartnerDetail: Option[List[DirectorOrPartnerDetailTypeItem]] = None)

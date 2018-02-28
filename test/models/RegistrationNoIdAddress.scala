@@ -25,13 +25,13 @@ class RegistrationNoIdAddress extends SpecBase{
 
     val foreignAddress = ForeignAddress(
       "31 Myers Street",
-      "Haddonfield",
+      Some("Haddonfield"),
       Some("Illinois"),
       Some("USA"),
-      None, "US"
+      "US", None
     )
 
-    val organisationData = Organisation(organisationName = "John")
+    val organisationData = OrganisationName(organisationName = "John")
 
     val contactDetailsData = ContactDetailsType(
       phoneNumber = Some("01332752856"),

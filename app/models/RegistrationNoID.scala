@@ -16,19 +16,8 @@
 
 package models
 
-
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-
-case class ForeignAddress(addressLine1:String,addressLine2:String,
-                     addressLine3:Option[String],addressLine4:Option[String],
-                     postalCode:Option[String],countryCode:String)
-
-object ForeignAddress {
-
-  implicit val format: Format[ForeignAddress] = Json.format[ForeignAddress]
-}
-
 
 case class ContactDetailsType(phoneNumber:Option[String],
                               emailAddress:Option[String])
@@ -38,34 +27,32 @@ object ContactDetailsType {
   implicit val format: Format[ContactDetailsType] = Json.format[ContactDetailsType]
 }
 
-case class Organisation(organisationName:String)
+case class OrganisationName(organisationName:String)
 
-object Organisation {
+object OrganisationName {
 
-  implicit val format: Format[Organisation] = Json.format[Organisation]
+  implicit val format: Format[OrganisationName] = Json.format[OrganisationName]
 }
 
 case class OrganisationRegistrant(
                                   acknowledgementReference:String,
-                                  organisation:Organisation,
-                                  address:ForeignAddress,
+                                  organisation:OrganisationName,
+                                  address:Address,
                                   contactDetails:ContactDetailsType
                                  )
 
 object OrganisationRegistrant {
 
   implicit val format: Format[OrganisationRegistrant] = Json.format[OrganisationRegistrant]
-  //implicit val apiReads:Reads[OrganisationRegistrant] = Json.reads[OrganisationRegistrant]
 
   val apiWrites: Writes[OrganisationRegistrant] = {
-
     (
       (__ \ "regime").write[String] and
       (__ \ "acknowledgementReference").write[String] and
       (__ \ "isAnAgent").write[Boolean] and
       (__ \ "isAGroup").write[Boolean] and
-      (__ \ "organisation").write[Organisation] and
-      (__ \ "address").write[ForeignAddress] and
+      (__ \ "organisation").write[OrganisationName] and
+      (__ \ "address").write[Address] and
       (__ \ "contactDetails").write[ContactDetailsType]
       ) { o =>
       (

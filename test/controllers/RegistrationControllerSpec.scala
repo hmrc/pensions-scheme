@@ -16,35 +16,178 @@
 
 package controllers
 
-import akka.stream.{Attributes, ClosedShape, Graph, Materializer}
+import akka.stream.Materializer
 import base.SpecBase
-import connector.EtmpConnector
-import models.OrganisationRegistrant
+import connector.RegistrationConnector
+import models._
 import org.joda.time.LocalDate
 import org.mockito.Matchers
-import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfter
-import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
-import play.api.mvc.AnyContentAsJson
-import play.api.test.{FakeRequest, NoMaterializer}
-import play.api.test.Helpers.{OK, status}
-import uk.gov.hmrc.http.{BadRequestException, HttpResponse, Upstream4xxResponse, Upstream5xxResponse}
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+import org.scalatest.BeforeAndAfter
+import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
+import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
+import uk.gov.hmrc.http._
 
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 
-class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
+class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter {
 
   val dataFromFrontend = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
   val dataToEmtp = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json").as[OrganisationRegistrant]
-  val mockEtmpConnector: EtmpConnector = mock[EtmpConnector]
-  val registrationController = new RegistrationController(mockEtmpConnector)
-  before(reset(mockEtmpConnector))
+
+  val fakeRequest = FakeRequest("POST", "/")
+
+  val mockRegistrationConnector = mock[RegistrationConnector]
+
+  def registrationController(authNino: Option[String] = Some("AB100100A")): RegistrationController = new RegistrationController(
+    new FakeAuthConnector(authNino), mockRegistrationConnector)
+
+  before(reset(mockRegistrationConnector))
   implicit val mat: Materializer = app.materializer
 
+  "register With Id Individual" must {
+    val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> false, "isAnAgent" -> false)
+    "return OK when the registration with id is successful for Individual" in {
+      val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json").as[SuccessResponse])
+      when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq("AB100100A"), Matchers.eq(inputRequestData))(
+        any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = registrationController().registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+      ScalaFutures.whenReady(result) { res =>
+        status(result) mustBe OK
+        contentAsJson(result) mustEqual successResponse
+      }
+    }
+
+    "return Upstream4XXResponse when auth record does not contain Nino" in {
+      val result = registrationController(None).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream4xxResponse]
+        e.getMessage mustBe "Nino not found in auth record"
+        verify(mockRegistrationConnector, never()).registerWithIdIndividual(any(), any())(any(), any())
+      }
+    }
+
+    "throw Upstream4xxResponse when DES/ETMP returns Upstream4xxResponse" in {
+      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
+        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
+      when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq("AB100100A"),
+        Matchers.eq(inputRequestData))(any(), any())).
+        thenReturn(Future.failed(new Upstream4xxResponse(failureResponse.toString(), CONFLICT, CONFLICT)))
+
+      val result = registrationController().registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream4xxResponse]
+        e.getMessage mustBe failureResponse.toString()
+        verify(mockRegistrationConnector, times(1)).registerWithIdIndividual(Matchers.eq("AB100100A"),
+          Matchers.eq(inputRequestData))(any(), any())
+      }
+    }
+
+    "throw Upstream5xxResponse when DES/ETMP returns Upstream5xxResponse" in {
+      val failureResponse = Json.obj("code" -> "SERVER_ERROR",
+        "reason" -> "DES is currently experiencing problems that require live service intervention.")
+      when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq("AB100100A"),
+        Matchers.eq(inputRequestData))(any(), any())).thenReturn(
+        Future.failed(new Upstream5xxResponse(failureResponse.toString(), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+
+      val result = registrationController().registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream5xxResponse]
+        e.getMessage mustBe failureResponse.toString()
+        verify(mockRegistrationConnector, times(1)).registerWithIdIndividual(Matchers.eq("AB100100A"),
+          Matchers.eq(inputRequestData))(any(), any())
+      }
+    }
+
+    "throw generic exception when any other exception returned from Des" in {
+      when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq("AB100100A"),
+        Matchers.eq(inputRequestData))(Matchers.any(), Matchers.any())).thenReturn(Future.failed(new Exception("Generic Exception")))
+
+      val result = registrationController().registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe "Generic Exception"
+        verify(mockRegistrationConnector, times(1)).registerWithIdIndividual(
+          Matchers.eq("AB100100A"), Matchers.eq(inputRequestData))(any(), any())
+      }
+    }
+  }
+
+  "register With Id Organisation" must {
+    val inputData = Json.obj("utr" -> "1100000000", "organisationName" -> "Test Ltd", "organisationType" -> "LLP")
+    "return OK when the registration with id is successful for Organisation" in {
+      val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json").as[SuccessResponse])
+      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any())(
+        any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = registrationController().registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+      ScalaFutures.whenReady(result) { res =>
+        status(result) mustBe OK
+        contentAsJson(result) mustEqual successResponse
+      }
+    }
+
+    "return Bad Request when there is no body in the request" in {
+      val result = registrationController().registerWithIdOrganisation(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustEqual "No request body received for Organisation"
+      }
+    }
+
+    "throw Upstream4xxResponse when DES/ETMP returns Upstream4xxResponse" in {
+      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
+        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
+      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"),
+        any())(any(), any())).
+        thenReturn(Future.failed(new Upstream4xxResponse(failureResponse.toString(), CONFLICT, CONFLICT)))
+
+      val result = registrationController().registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream4xxResponse]
+        e.getMessage mustBe failureResponse.toString()
+        verify(mockRegistrationConnector, times(1)).registerWithIdOrganisation(Matchers.eq("1100000000"),
+          any())(any(), any())
+      }
+    }
+
+    "throw Upstream5xxResponse when DES/ETMP returns Upstream5xxResponse" in {
+      val failureResponse = Json.obj("code" -> "SERVER_ERROR",
+        "reason" -> "DES is currently experiencing problems that require live service intervention.")
+      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"),
+        any())(any(), any())).thenReturn(
+        Future.failed(new Upstream5xxResponse(failureResponse.toString(), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+
+      val result = registrationController().registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream5xxResponse]
+        e.getMessage mustBe failureResponse.toString()
+        verify(mockRegistrationConnector, times(1)).registerWithIdOrganisation(Matchers.eq("1100000000"),
+          any())(any(), any())
+      }
+    }
+
+    "throw generic exception when any other exception returned from Des" in {
+      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"),
+        any())(Matchers.any(), Matchers.any())).thenReturn(Future.failed(new Exception("Generic Exception")))
+
+      val result = registrationController().registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe "Generic Exception"
+        verify(mockRegistrationConnector, times(1)).registerWithIdOrganisation(
+          Matchers.eq("1100000000"), any())(any(), any())
+      }
+    }
+  }
   "registrationNoIdOrganisation" must {
     def fakeRequest(data: JsValue): FakeRequest[JsValue] = FakeRequest("POST", "/").withBody(data)
 
@@ -55,21 +198,21 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         "safeId" -> "XE0001234567890"
       )
 
-      when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockRegistrationConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
 
-      val result = call(registrationController.registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
+      val result = call(registrationController().registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result) { res =>
         status(result) mustBe OK
-        verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
+        verify(mockRegistrationConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
       }
     }
 
     "throw BadRequestException when no data is not present in the request" in {
-      val result = call(registrationController.registrationNoIdOrganisation, FakeRequest("POST", "/").withBody(JsNull))
+      val result = call(registrationController().registrationNoIdOrganisation, FakeRequest("POST", "/").withBody(JsNull))
       ScalaFutures.whenReady(result) { res =>
         status(result) mustBe BAD_REQUEST
-        verify(mockEtmpConnector, never()).registrationNoIdOrganisation(Matchers.any())(Matchers.any(), Matchers.any())
+        verify(mockRegistrationConnector, never()).registrationNoIdOrganisation(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
@@ -78,14 +221,14 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         "code" -> "INVALID_PAYLOAD",
         "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
       )
-      when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockRegistrationConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new BadRequestException(invalidPayload.toString())))
 
-      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
+      val result = call(registrationController().registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
-        verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
+        verify(mockRegistrationConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
       }
     }
 
@@ -94,14 +237,14 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         "code" -> "INVALID_SUBMISSION",
         "reason" -> "Duplicate submission acknowledgement reference from remote endpoint returned."
       )
-      when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockRegistrationConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Upstream4xxResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
 
-      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
+      val result = call(registrationController().registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream4xxResponse]
         e.getMessage mustBe invalidSubmission.toString()
-        verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
+        verify(mockRegistrationConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
       }
     }
 
@@ -110,26 +253,26 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Dependent systems are currently not responding."
       )
-      when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
-        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), CONFLICT, CONFLICT)))
+      when(mockRegistrationConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
+        Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
-      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
+      val result = call(registrationController().registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Upstream5xxResponse]
         e.getMessage mustBe serviceUnavailable.toString()
-        verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
+        verify(mockRegistrationConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
       }
     }
 
     "throw generic exception when any other exception returned from Des" in {
-      when(mockEtmpConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockRegistrationConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
-      val result = call(registrationController.registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
+      val result = call(registrationController().registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
         e.getMessage mustBe "Generic Exception"
-        verify(mockEtmpConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
+        verify(mockRegistrationConnector, times(1)).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
       }
     }
 
@@ -137,5 +280,11 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
   }
 }
 
+class FakeAuthConnector(authNino: Option[String]) extends AuthConnector {
+  def success: Option[String] = authNino
 
-
+  override def authorise[A](predicate: Predicate, retrieval: Retrieval[A])(
+    implicit hc: HeaderCarrier, ec: ExecutionContext): Future[A] = {
+    Future.successful(success.asInstanceOf[A])
+  }
+}

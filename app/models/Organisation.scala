@@ -17,17 +17,22 @@
 package models
 
 import play.api.libs.json.Json
+import play.api.libs.json._
+import utils.EnumUtils
 
-case class AddressDetails(addressType: String, line1: String, line2: String, line3: Option[String],
-                          line4: Option[String], postalCode: Option[String], countryCode: String)
+object OrganisationTypeEnum extends Enumeration {
+  type OrganisationType = Value
+  val CorporateBody = Value("Corporate Body")
+  val NotSpecified = Value("Not Specified")
+  val LLP = Value("LLP")
+  val Partnership = Value("Partnership")
+  val UnincorporatedBody = Value("Unincorporated Body")
 
-object AddressDetails {
-  implicit val formats = Json.format[AddressDetails]
+  implicit def enumFormats: Format[OrganisationType] = EnumUtils.enumFormat(OrganisationTypeEnum)
 }
 
-case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddressDetails: Option[AddressDetails] = None)
+case class Organisation(organisationName: String, organisationType: OrganisationTypeEnum.OrganisationType)
 
-object PreviousAddressDetails {
-  implicit val formats = Json.format[PreviousAddressDetails]
+object Organisation {
+  implicit val formats = Json.format[Organisation]
 }
