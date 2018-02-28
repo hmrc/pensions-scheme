@@ -24,10 +24,12 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
+import play.api.http.Status
 import play.api.libs.json.{JsObject, JsValue, Json}
-import play.mvc.Http.Status.OK
+import play.mvc.Http.Status._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -98,6 +100,33 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
+      }
+    }
+  }
+
+  "list of schemes" must {
+
+    "return OK with the list of schemes response" in {
+      val listOfSchemesUrl = appConfig.listOfSchemesUrl.format("A2000001")
+      val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+      when(httpClient.GET[HttpResponse](Matchers.eq(listOfSchemesUrl))(any(), any(), any())).thenReturn(
+        Future.successful(HttpResponse(OK, Some(validResponse))))
+      val result = schemeConnector.listOfSchemes("A2000001")
+
+      ScalaFutures.whenReady(result) { res =>
+        res.status mustBe OK
+        res.body mustEqual Json.prettyPrint(validResponse)
+      }
+    }
+
+    "throw Bad Request when DES/ETMP throws Bad Request" in {
+      when(httpClient.GET[HttpResponse](any())(any(), any(), any())).thenReturn(
+        Future.failed(new BadRequestException(failureResponse.toString())))
+      val result = schemeConnector.listOfSchemes("A2000001")
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustEqual failureResponse.toString()
       }
     }
   }

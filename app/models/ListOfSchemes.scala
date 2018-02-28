@@ -18,16 +18,16 @@ package models
 
 import play.api.libs.json.Json
 
-case class AddressDetails(addressType: String, line1: String, line2: String, line3: Option[String],
-                          line4: Option[String], postalCode: Option[String], countryCode: String)
+case class SchemeDetail(name: String, referenceNumber: String, schemeStatus: String,
+                        pstr: Option[String] = None, relationShip: String, underAppeal: Option[String] = None)
 
-object AddressDetails {
-  implicit val formats = Json.format[AddressDetails]
+object SchemeDetail {
+  implicit val format = Json.format[SchemeDetail]
 }
 
-case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddressDetails: Option[AddressDetails] = None)
+case class ListOfSchemes(processingDate: String, totalSchemesRegistered: String,
+                         schemeDetail: Option[List[SchemeDetail]] = None)
 
-object PreviousAddressDetails {
-  implicit val formats = Json.format[PreviousAddressDetails]
+object ListOfSchemes {
+  implicit val format = Json.format[ListOfSchemes]
 }

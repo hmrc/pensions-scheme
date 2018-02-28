@@ -18,7 +18,7 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeConnector
-import models.{PensionSchemeAdministrator, PensionsScheme}
+import models.{ListOfSchemes, PensionSchemeAdministrator, PensionsScheme}
 import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.http._
@@ -31,7 +31,6 @@ import scala.concurrent.Future
 class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
 
   def registerScheme: Action[AnyContent] = Action.async { implicit request => {
-
     val psaId = request.headers.get("psaId")
     val feJson = request.body.asJson
 
@@ -47,7 +46,6 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
   }
 
   def registerPSA: Action[AnyContent] = Action.async { implicit request => {
-
     val feJson = request.body.asJson
 
     feJson match {
@@ -57,6 +55,19 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
           httpResponse => Ok(httpResponse.body)
         }
       case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
+    }
+  } recoverWith recoverFromError
+  }
+
+  def listOfSchemes: Action[AnyContent] = Action.async { implicit request => {
+    val psaId = request.headers.get("psaId")
+
+    psaId match {
+      case Some(psa) =>
+        schemeConnector.listOfSchemes(psa).map { httpResponse =>
+          Ok(Json.toJson(httpResponse.json.as[ListOfSchemes]))
+        }
+      case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
     }
   } recoverWith recoverFromError
   }
