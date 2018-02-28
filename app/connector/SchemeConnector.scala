@@ -18,35 +18,47 @@ package connector
 
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import play.Logger
+import java.util.UUID.randomUUID
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends SchemeConnector {
 
-  val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
-    "Content-Type" -> "application/json")
-  implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+  def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
+    val requestId = hc.requestId.map(_.value).getOrElse {
+      Logger.error("No Request Id found while calling register with Id")
+      randomUUID.toString
+    }.replaceAll("(govuk-tax-|-)", "")
 
-  override def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
-
-    http.POST(schemeRegisterUrl, registerData)
+    Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
+      "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
-  override def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    val schemeAdminRegisterUrl = config.schemeAdminRegistrationUrl
+  override def registerScheme(psaId: String, registerData: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.POST(schemeAdminRegisterUrl, registerData)
+    http.POST(schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
+      implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
+  }
+
+  override def registerPSA(registerData: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    val schemeAdminRegisterUrl = config.schemeAdminRegistrationUrl
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+
+    http.POST[JsValue, HttpResponse](schemeAdminRegisterUrl, registerData)(implicitly[Writes[JsValue]],
+      implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
   }
 }
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
-  def registerScheme(psaId: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerScheme(psaId: String, registerData: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
-  def registerPSA(registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerPSA(registerData: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 
