@@ -17,18 +17,27 @@
 package models
 
 import base.SpecBase
-import play.api.libs.json.{Json}
+import play.api.libs.json.{JsObject, Json}
 
 class RegistrationNoIdAddress extends SpecBase{
 
   "Reads for Registrant" must {
 
+    val ukAddress=UkAddress(
+      "Eel Marsh House",
+      Some("Eel Marsh Island"),
+      Some("Nine Lives Causeway"),
+      Some("Crythin Clifford"),
+      "ZZ1 1ZZ",
+      "GB"
+    )
     val foreignAddress = ForeignAddress(
       "31 Myers Street",
       Some("Haddonfield"),
       Some("Illinois"),
       Some("USA"),
-      "US", None
+      "US",
+      None
     )
 
     val organisationData = OrganisationName(organisationName = "John")
@@ -38,24 +47,25 @@ class RegistrationNoIdAddress extends SpecBase{
       emailAddress = None
     )
 
-    val organisationRegistrantCaseClass = OrganisationRegistrant(
+    val organisationRegistrantForeignAddress = OrganisationRegistrant(
       acknowledgementReference = "12345678901234567890123456789012",
       organisation = organisationData,
       address = foreignAddress,
       contactDetails = contactDetailsData
     )
 
-    "successfully read a OrganisationRegistrant" in {
+   "successfully read a OrganisationRegistrant" in {
       val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
 
-      Json.fromJson[OrganisationRegistrant](json).get mustEqual organisationRegistrantCaseClass
+      Json.fromJson[OrganisationRegistrant](json).get mustEqual organisationRegistrantForeignAddress
     }
+
 
     "Writes for Registrant" must {
 
       "succesfully write a json schema from a Organisation Registrant" in {
         val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
-        Json.toJson[OrganisationRegistrant](organisationRegistrantCaseClass)(OrganisationRegistrant.apiWrites) mustEqual json
+        Json.toJson[OrganisationRegistrant](organisationRegistrantForeignAddress)(OrganisationRegistrant.apiWrites) mustEqual json
       }
     }
 
@@ -64,7 +74,7 @@ class RegistrationNoIdAddress extends SpecBase{
       val outputJson = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
 
       val caseClass = Json.fromJson[OrganisationRegistrant](inputJson).get
-      caseClass mustEqual organisationRegistrantCaseClass
+      caseClass mustEqual organisationRegistrantForeignAddress
       Json.toJson[OrganisationRegistrant](caseClass)(OrganisationRegistrant.apiWrites) mustEqual outputJson
     }
   }
