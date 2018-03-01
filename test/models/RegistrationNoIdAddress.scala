@@ -23,14 +23,6 @@ class RegistrationNoIdAddress extends SpecBase{
 
   "Reads for Registrant" must {
 
-    val ukAddress=UkAddress(
-      "Eel Marsh House",
-      Some("Eel Marsh Island"),
-      Some("Nine Lives Causeway"),
-      Some("Crythin Clifford"),
-      "ZZ1 1ZZ",
-      "GB"
-    )
     val foreignAddress = ForeignAddress(
       "31 Myers Street",
       Some("Haddonfield"),
