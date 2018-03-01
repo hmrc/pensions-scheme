@@ -4,9 +4,9 @@ POST        /register/scheme             @controllers.SchemeController.registerS
 
 POST        /register/psa                @controllers.SchemeController.registerPSA
 
-POST       /register/organisation/nonuk   @controllers.RegistrationController.registrationNoIdOrganisation
+POST       /register-with-no-id/organisation   @controllers.RegistrationController.registrationNoIdOrganisation
 
-GET         /list-of-schemes             @controllers.SchemeController.listOfSchemes
+GET         /list-of-schemes                   @controllers.SchemeController.listOfSchemes
 
 POST        /register-with-id/individual                        @controllers.RegistrationController.registerWithIdIndividual
 
