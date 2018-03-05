@@ -1,7 +1,8 @@
 import sbt.Keys._
-import sbt.Tests.{SubProcess, Group}
+import sbt.Tests.{Group, SubProcess}
 import sbt._
 import play.routes.compiler.StaticRoutesGenerator
+import play.sbt.PlayImport.PlayKeys
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import scoverage.ScoverageKeys
 
@@ -34,6 +35,7 @@ trait MicroService {
       libraryDependencies ++= appDependencies,
       retrieveManaged := true,
       evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
+      PlayKeys.devSettings += "play.server.http.port" -> "8203",
       routesGenerator := StaticRoutesGenerator
     )
     .settings(
