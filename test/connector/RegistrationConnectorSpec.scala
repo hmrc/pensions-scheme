@@ -17,7 +17,8 @@
 package connector
 
 import base.SpecBase
-import models.SuccessResponse
+import models.{OrganisationRegistrant, SuccessResponse}
+import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
@@ -117,6 +118,38 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustEqual failureResponse.toString()
+      }
+    }
+  }
+
+  "Register organisation no ID" must {
+    val url = appConfig.registerWithoutIdOrganisationUrl
+    "return OK when DES/Etmp returns successfully" in {
+      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
+      val successResponse = Json.obj(
+        "processingDate" -> LocalDate.now,
+        "sapNumber" -> "1234567890",
+        "safeId" -> "XE0001234567890"
+      )
+
+      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
+        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = registrationConnector.registrationNoIdOrganisation(validDataRequest)
+      ScalaFutures.whenReady(result) {
+        res =>
+          res.status mustBe OK
+      }
+    }
+    "throw BadRequestException when Etmp throws Bad Request" in {
+      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
+      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
+        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+
+      val result = registrationConnector.registrationNoIdOrganisation(validDataRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe failureResponse.toString()
       }
     }
   }

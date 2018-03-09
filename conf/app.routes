@@ -1,10 +1,12 @@
 # microservice specific routes
 
-POST        /register-scheme             @controllers.SchemeController.registerScheme
+POST        /register/scheme             @controllers.SchemeController.registerScheme
 
-POST        /register-psa                @controllers.SchemeController.registerPSA
+POST        /register/psa                @controllers.SchemeController.registerPSA
 
-GET         /list-of-schemes             @controllers.SchemeController.listOfSchemes
+POST       /register-with-no-id/organisation   @controllers.RegistrationController.registrationNoIdOrganisation
+
+GET         /list-of-schemes                   @controllers.SchemeController.listOfSchemes
 
 POST        /register-with-id/individual                        @controllers.RegistrationController.registerWithIdIndividual
 

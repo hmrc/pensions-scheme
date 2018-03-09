@@ -46,6 +46,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
   }
 
   def registerPSA: Action[AnyContent] = Action.async { implicit request => {
+
     val feJson = request.body.asJson
 
     feJson match {

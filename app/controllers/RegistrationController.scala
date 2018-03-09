@@ -18,7 +18,7 @@ package controllers
 
 import com.google.inject.Inject
 import connector.RegistrationConnector
-import models.{Organisation, SuccessResponse}
+import models.{Organisation, OrganisationRegistrant, SuccessResponse}
 import play.api.libs.json.{JsObject, JsPath, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions, ConfidenceLevel}
@@ -71,4 +71,14 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
   private def mandatoryPODSData(requiresNameMatch: Boolean = false): JsValue = {
     Json.obj("regime" -> "PODS", "requiresNameMatch" -> requiresNameMatch, "isAnAgent" -> false)
   }
+
+  def registrationNoIdOrganisation: Action[OrganisationRegistrant] =
+    Action.async(parse.json[OrganisationRegistrant]) {
+      implicit request => {
+        registerConnector.registrationNoIdOrganisation(request.body).map { httpResponse =>
+          Ok(httpResponse.body)
+
+        }
+      } recoverWith recoverFromError
+    }
 }

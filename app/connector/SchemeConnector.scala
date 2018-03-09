@@ -18,6 +18,8 @@ package connector
 
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
+import models.OrganisationRegistrant
+import play.api.libs.json.JsValue
 import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
