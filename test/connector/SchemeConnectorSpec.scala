@@ -17,6 +17,7 @@
 package connector
 
 import base.SpecBase
+import models.OrganisationRegistrant
 import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -72,7 +73,7 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
       }
     }
   }
-
+  
   "register PSA" must {
     val schemeAdminRegisterUrl = appConfig.schemeAdminRegistrationUrl
     "return OK when DES/Etmp returns successfully" in {
@@ -131,3 +132,5 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
     }
   }
 }
+
+

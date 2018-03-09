@@ -18,9 +18,11 @@ package connector
 
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
+import models.OrganisationRegistrant
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
@@ -43,6 +45,13 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
 
     http.POST(registerWithIdUrl, registerData)
   }
+
+  override def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val schemeAdminRegisterUrl = config.registerWithoutIdOrganisationUrl
+
+    http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], implicitly, implicitly)
+  }
 }
 
 @ImplementedBy(classOf[RegistrationConnectorImpl])
@@ -50,5 +59,7 @@ trait RegistrationConnector {
   def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
   def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+
+  def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 }
 
