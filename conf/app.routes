@@ -1,13 +1,14 @@
 # microservice specific routes
 
-POST        /register/scheme             @controllers.SchemeController.registerScheme
+POST        /register-scheme                controllers.SchemeController.registerScheme
+POST        /register-psa                   controllers.SchemeController.registerPSA
+GET         /list-of-schemes                controllers.SchemeController.listOfSchemes
+POST        /register-with-no-id/organisation   @controllers.RegistrationController.registrationNoIdOrganisation
+POST        /register-with-id/individual    controllers.RegistrationController.registerWithIdIndividual
+POST        /register-with-id/organisation  controllers.RegistrationController.registerWithIdOrganisation
 
-POST        /register/psa                @controllers.SchemeController.registerPSA
-
-POST       /register-with-no-id/organisation   @controllers.RegistrationController.registrationNoIdOrganisation
-
-GET         /list-of-schemes                   @controllers.SchemeController.listOfSchemes
-
-POST        /register-with-id/individual                        @controllers.RegistrationController.registerWithIdIndividual
-
-POST        /register-with-id/organisation                      @controllers.RegistrationController.registerWithIdOrganisation
+# answers caching in protected mongo
+GET         /journey-cache/scheme/:id       controllers.SchemeJourneyCacheController.get(id: String)
+POST        /journey-cache/scheme/:id       controllers.SchemeJourneyCacheController.save(id: String)
+GET         /journey-cache/psa/:id          controllers.PSAJourneyCacheController.get(id: String)
+POST        /journey-cache/psa/:id          controllers.PSAJourneyCacheController.save(id: String)
