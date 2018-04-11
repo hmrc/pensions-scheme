@@ -18,20 +18,27 @@ package connector
 
 import com.google.inject.Inject
 import config.AppConfig
-import models.BankDetails.{BankAccount, ModCheckRequest, ModCheckResponse}
+import models.{BankAccount, ValidateBankDetailsRequest, ValidateBankDetailsResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import utils.ErrorHandler
 
-import scala.concurrent.Future
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class BarsConnector @Inject()(http: HttpClient, appConfig: AppConfig) {
 
-  val barsBaseUrl:String = appConfig.barsBaseUrl
+  val barsBaseUrl: String = appConfig.barsBaseUrl
 
-  def validateBankAccount(sortCode: String, accountNumber: String) {
+  def validateBankAccount(sortCode: String, accountNumber: String)(implicit ec: ExecutionContext, hc: HeaderCarrier) {
 
-  val request = ModCheckRequest(BankAccount(sortCode, accountNumber))
-    http.POST[ModCheckRequest, ModCheckResponse](s"$barsBaseUrl/modcheck", request) recoverWith {
-      case _ => Future.successful(ModCheckResponse(false))
+    val request = ValidateBankDetailsRequest(BankAccount(sortCode, accountNumber))
+    http.POST[ValidateBankDetailsRequest, ValidateBankDetailsResponse](s"$barsBaseUrl/validateBankDetails", request).map {
+
+      case ValidateBankDetailsResponse(false, false) => true
+      case _ => Future.successful(false)
+    }.recoverWith {
+      case _ => Future.successful(false)
     }
   }
 }

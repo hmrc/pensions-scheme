@@ -16,12 +16,35 @@
 
 package models
 
-object BankDetails {
+import play.api.libs.json._
 
-  case class BankAccount(sortCode: String, accountNumber: String)
+case class BankAccount(sortCode: String, accountNumber: String)
 
-  case class ModCheckRequest(account: BankAccount)
+case class ValidateBankDetailsRequest(account: BankAccount)
 
-  case class ModCheckResponse(accountNumberWithSortCodeIsValid: Boolean)
+case class ValidateBankDetailsResponse(accountNumberWithSortCodeIsValid: Boolean, sortCodeIsPresentOnEISCD: Boolean)
 
+object BankAccount {
+  implicit val formats = Json.format[BankAccount]
+}
+
+object ValidateBankDetailsRequest {
+  implicit val formats = Json.format[ValidateBankDetailsRequest]
+}
+
+object ValidateBankDetailsResponse {
+
+  implicit val reads: Reads[ValidateBankDetailsResponse] = {
+
+    import play.api.libs.json._
+    import play.api.libs.functional.syntax._
+
+    (
+      (__ \ "accountNumberWithSortCodeIsValid").read[Boolean] and
+      (__ \ "sortCodeIsPresentOnEISCD").read[String].map {
+        case "no" => false
+        case _     => true
+      }
+    ) (ValidateBankDetailsResponse.apply _)
+  }
 }
