@@ -16,22 +16,29 @@
 
 package models
 
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{MustMatchers, OptionValues, WordSpecLike}
+import play.api.libs.json.{JsSuccess, Json}
 
-class BankDetailsSpec extends UnitSpec {
+class BankDetailsSpec extends MustMatchers with WordSpecLike with OptionValues {
 
   "BankDetails reads" should {
 
     "return true when sortCodeIsPresentOnEISCD returns 'yes'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "yes")
 
+      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, true))
     }
 
     "return false when sortCodeIsPresentOnEISCD returns 'no'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "no")
 
+      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, false))
     }
 
-    "return false when sortCodeIsPresentOnEISCD returns 'error'" in {
+    "return true when sortCodeIsPresentOnEISCD returns 'error'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "error")
 
+      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, true))
     }
   }
 }
