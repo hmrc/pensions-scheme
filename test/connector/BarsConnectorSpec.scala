@@ -30,6 +30,8 @@ class BarsConnectorSpec
 
   val notInvalid = false
   val invalid = true
+  val sortCode = "991122"
+  val accountNumber = "12345678"
 
   "BarsConnector after calling invalidBankAccount" should "return invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
     val response = """ {
@@ -50,7 +52,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount("", "").map { response =>
+    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
       response shouldBe invalid
     }
 
@@ -75,7 +77,7 @@ class BarsConnectorSpec
       )
 
       val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount("", "").map { response =>
+      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
         response shouldBe notInvalid
       }
 
@@ -100,7 +102,7 @@ class BarsConnectorSpec
       )
 
       val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount("", "").map { response =>
+      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
         response shouldBe notInvalid
       }
     }
@@ -125,7 +127,7 @@ class BarsConnectorSpec
       )
 
       val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount("", "").map { response =>
+      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
         response shouldBe notInvalid
       }
     }
@@ -145,10 +147,43 @@ class BarsConnectorSpec
       )
 
       val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount("", "").map { response =>
+      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
         response shouldBe notInvalid
       }
     }
 
-  override protected def portConfigKey: String = "microservice.services.bank-account-reputation.port"
+  it should "pass the Content-Type header" in {
+    val response = """ {
+        "accountNumberWithSortCodeIsValid": true,
+        "nonStandardAccountDetailsRequiredForBacs": "no",
+        "sortCodeIsPresentOnEISCD":"yes",
+        "supportsBACS":"yes"
+      } """
+
+    val headerName = "Content-Type"
+    val headerValue = "Content-Type"
+
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .withHeader(headerName, equalTo(headerValue))
+        .willReturn(
+          serverError()
+            .withStatus(Status.OK)
+            .withHeader("Content-Type", "application/json")
+
+            .withBody(response)
+        )
+    )
+
+    val connector = injector.instanceOf[BarsConnector]
+    connector.invalidBankAccount(sortCode, accountNumber).map { _ =>
+      succeed
+    }
+  }
+
+  it should "return pass the correct sortcode and account number" in {
+    pending
+  }
+
+    override protected def portConfigKey: String = "microservice.services.bank-account-reputation.port"
 }
