@@ -30,22 +30,18 @@ class BarsConnector @Inject()(http: HttpClient, appConfig: AppConfig) {
   val barsBaseUrl: String = appConfig.barsBaseUrl
 
   val invalid = true
-  val valid = false
+  val notInvalid = false
 
   def invalidBankAccount(sortCode: String, accountNumber: String)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Boolean] = {
 
     val request = ValidateBankDetailsRequest(BankAccount(sortCode, accountNumber))
     http.POST[ValidateBankDetailsRequest, ValidateBankDetailsResponse](s"$barsBaseUrl/validateBankDetails", request).map {
-
       case ValidateBankDetailsResponse(false, false) => invalid
-      case x => {
-        println("\n\n value:"+x)
-        valid
-      }
+      case _ => notInvalid
     } recoverWith {
       case t =>
         Logger.error("Exception calling bank reputation service", t)
-        Future.successful(valid)
+        Future.successful(notInvalid)
     }
   }
 }
