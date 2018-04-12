@@ -36,7 +36,8 @@ class BarsConnectorSpec
   val accountNumber = "12345678"
 
   "BarsConnector after calling invalidBankAccount" should "return invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
-    val response = """ {
+    val response =
+      """ {
         "accountNumberWithSortCodeIsValid": false,
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"no",
@@ -60,102 +61,106 @@ class BarsConnectorSpec
 
   }
 
-    it should "return not invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
-      val response = """ {
+  it should "return not invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
+    val response =
+      """ {
         "accountNumberWithSortCodeIsValid": true,
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"no",
         "supportsBACS":"yes"
       } """
 
-      server.stubFor(
-        post(urlEqualTo("/validateBankDetails"))
-          .willReturn(
-            aResponse()
-              .withStatus(Status.OK)
-              .withHeader("Content-Type", "application/json")
-              .withBody(response)
-          )
-      )
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.OK)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+        )
+    )
 
-      val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
-        response shouldBe notInvalid
-      }
-
+    val connector = injector.instanceOf[BarsConnector]
+    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+      response shouldBe notInvalid
     }
 
-    it should "return not invalid if accountNumberWithSortCode is notInvalid and can't check sort code on EISCID" in {
-      val response = """ {
+  }
+
+  it should "return not invalid if accountNumberWithSortCode is notInvalid and can't check sort code on EISCID" in {
+    val response =
+      """ {
         "accountNumberWithSortCodeIsValid": true,
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"error",
         "supportsBACS":"yes"
       } """
 
-      server.stubFor(
-        post(urlEqualTo("/validateBankDetails"))
-          .willReturn(
-            aResponse()
-              .withStatus(Status.OK)
-              .withHeader("Content-Type", "application/json")
-              .withBody(response)
-          )
-      )
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.OK)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+        )
+    )
 
-      val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
-        response shouldBe notInvalid
-      }
+    val connector = injector.instanceOf[BarsConnector]
+    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+      response shouldBe notInvalid
     }
+  }
 
-    it should "return not invalid if accountNumberWithSortCode is notInvalid and sort code is found on EISCID" in {
+  it should "return not invalid if accountNumberWithSortCode is notInvalid and sort code is found on EISCID" in {
 
-      val response = """ {
+    val response =
+      """ {
         "accountNumberWithSortCodeIsValid": true,
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"yes",
         "supportsBACS":"yes"
       } """
 
-      server.stubFor(
-        post(urlEqualTo("/validateBankDetails"))
-          .willReturn(
-            aResponse()
-                .withStatus(Status.OK)
-                  .withHeader("Content-Type", "application/json")
-                      .withBody(response)
-          )
-      )
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.OK)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+        )
+    )
 
-      val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
-        response shouldBe notInvalid
-      }
+    val connector = injector.instanceOf[BarsConnector]
+    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+      response shouldBe notInvalid
     }
+  }
 
-    it should "return not invalid when BARS returns a failure" in {
+  it should "return not invalid when BARS returns a failure" in {
 
-      val errorResponse = "error"
+    val errorResponse = "error"
 
-      server.stubFor(
-        post(urlEqualTo("/validateBankDetails"))
-          .willReturn(
-            serverError()
-                .withStatus(Status.BAD_REQUEST)
-                  .withHeader("Content-Type", "application/json")
-                      .withBody(errorResponse)
-          )
-      )
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .willReturn(
+          serverError()
+            .withStatus(Status.BAD_REQUEST)
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse)
+        )
+    )
 
-      val connector = injector.instanceOf[BarsConnector]
-      connector.invalidBankAccount(sortCode, accountNumber).map { response =>
-        response shouldBe notInvalid
-      }
+    val connector = injector.instanceOf[BarsConnector]
+    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+      response shouldBe notInvalid
     }
+  }
 
   it should "pass the Content-Type header" in {
-    val response = """ {
+    val response =
+      """ {
         "accountNumberWithSortCodeIsValid": true,
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"yes",
@@ -163,7 +168,7 @@ class BarsConnectorSpec
       } """
 
     val headerName = "Content-Type"
-    val headerValue = "Content-Type"
+    val headerValue = "application/json"
 
     server.stubFor(
       post(urlEqualTo("/validateBankDetails"))
@@ -186,8 +191,39 @@ class BarsConnectorSpec
   }
 
   it should "return pass the correct sortcode and account number" in {
-    pending
+    val request =
+      """{
+      "account": {
+        "sortCode": "991122",
+        "accountNumber": "12345678"
+      }
+    }"""
+
+
+    val response =
+      """ {
+        "accountNumberWithSortCodeIsValid": true,
+        "nonStandardAccountDetailsRequiredForBacs": "no",
+        "sortCodeIsPresentOnEISCD":"yes",
+        "supportsBACS":"yes"
+      } """
+
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .withRequestBody(equalToJson(request))
+        .willReturn(
+          serverError()
+            .withStatus(Status.OK)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+        )
+    )
+
+    val connector = injector.instanceOf[BarsConnector]
+    connector.invalidBankAccount(sortCode, accountNumber).map { _ =>
+      succeed
+    }
   }
 
-    override protected def portConfigKey: String = "microservice.services.bank-account-reputation.port"
+  override protected def portConfigKey: String = "microservice.services.bank-account-reputation.port"
 }
