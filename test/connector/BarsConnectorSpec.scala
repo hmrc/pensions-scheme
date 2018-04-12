@@ -22,6 +22,8 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.Status
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext
+
 
 class BarsConnectorSpec
   extends AsyncFlatSpec with Matchers with OptionValues with WireMockHelper {
@@ -170,13 +172,15 @@ class BarsConnectorSpec
           serverError()
             .withStatus(Status.OK)
             .withHeader("Content-Type", "application/json")
-
             .withBody(response)
         )
     )
 
+    val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq((headerName, headerValue)))
+    val ec: ExecutionContext = implicitly[ExecutionContext]
+
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber).map { _ =>
+    connector.invalidBankAccount(sortCode, accountNumber)(ec, hc).map { _ =>
       succeed
     }
   }

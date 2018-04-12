@@ -38,7 +38,7 @@ class BankDetailsSpec extends MustMatchers with WordSpecLike with OptionValues {
     "return true when sortCodeIsPresentOnEISCD returns 'error'" in {
       val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "error")
 
-      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, true))
+      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, false))
     }
   }
 }
