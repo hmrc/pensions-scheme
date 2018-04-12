@@ -24,6 +24,7 @@ class AppConfig @Inject()(override val runModeConfiguration: Configuration, envi
   override protected def mode = environment.mode
 
   lazy val baseURL: String = baseUrl("des-hod")
+  lazy val barsBaseUrl: String = baseUrl("bank-account-reputation")
 
   lazy val schemeRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.register")}"
   lazy val schemeAdminRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.administrator.register")}"
@@ -33,4 +34,5 @@ class AppConfig @Inject()(override val runModeConfiguration: Configuration, envi
   lazy val listOfSchemesUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.list.of.schemes")}"
   lazy val desEnvironment: String = runModeConfiguration.getString(s"$services.des-hod.env").getOrElse("local")
   lazy val authorization: String = "Bearer " + runModeConfiguration.getString(s"$services.des-hod.authorizationToken").getOrElse("local")
+
 }
