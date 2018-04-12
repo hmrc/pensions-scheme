@@ -19,10 +19,9 @@ package connector
 import com.google.inject.Inject
 import config.AppConfig
 import models.{BankAccount, ValidateBankDetailsRequest, ValidateBankDetailsResponse}
+import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import utils.ErrorHandler
-
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,15 +29,23 @@ class BarsConnector @Inject()(http: HttpClient, appConfig: AppConfig) {
 
   val barsBaseUrl: String = appConfig.barsBaseUrl
 
-  def validateBankAccount(sortCode: String, accountNumber: String)(implicit ec: ExecutionContext, hc: HeaderCarrier) {
+  val invalid = true
+  val valid = false
+
+  def invalidBankAccount(sortCode: String, accountNumber: String)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Boolean] = {
 
     val request = ValidateBankDetailsRequest(BankAccount(sortCode, accountNumber))
     http.POST[ValidateBankDetailsRequest, ValidateBankDetailsResponse](s"$barsBaseUrl/validateBankDetails", request).map {
 
-      case ValidateBankDetailsResponse(false, false) => true
-      case _ => Future.successful(false)
-    }.recoverWith {
-      case _ => Future.successful(false)
+      case ValidateBankDetailsResponse(false, false) => invalid
+      case x => {
+        println("\n\n value:"+x)
+        valid
+      }
+    } recoverWith {
+      case t =>
+        Logger.error("Exception calling bank reputation service", t)
+        Future.successful(valid)
     }
   }
 }

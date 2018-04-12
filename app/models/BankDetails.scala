@@ -42,8 +42,8 @@ object ValidateBankDetailsResponse {
     (
       (__ \ "accountNumberWithSortCodeIsValid").read[Boolean] and
       (__ \ "sortCodeIsPresentOnEISCD").read[String].map {
-        case "no" => false
-        case _     => true
+        case "yes" => true
+        case _     => false
       }
     ) (ValidateBankDetailsResponse.apply _)
   }
