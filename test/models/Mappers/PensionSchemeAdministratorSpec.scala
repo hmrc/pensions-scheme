@@ -1,6 +1,6 @@
 package models.Mappers
 
-import models._
+import models.{NumberOfDirectorOrPartnersType, _}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Json
 import play.api.libs.functional.syntax._
@@ -52,9 +52,30 @@ class PensionSchemeAdministratorSpec extends WordSpec with MustMatchers with Opt
 
         result.idNumber mustEqual Some("TestIdNumber")
       }
+
+      "We have a moreThanTenDirectors flag" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input + ("moreThanTenDirectors" -> JsBoolean(true)))(apiReads).asOpt.value
+
+        result.numberOfDirectorOrPartners.value.isMorethanTenDirectors.value mustEqual true
+      }
+    }
+
+    "Map NumberOfDirectorOrPartnersType correctly" when {
+      "we have moreThanTenDirectors flag" in {
+        val input = Json.obj("moreThanTenDirectors" -> JsBoolean(true))
+        val result = Json.fromJson[NumberOfDirectorOrPartnersType](input)(numberOfDirectorOrPartnersTypeReads).asOpt.value
+
+        result.isMorethanTenDirectors mustEqual Some(true)
+      }
     }
   }
 
+  val numberOfDirectorOrPartnersTypeReads : Reads[NumberOfDirectorOrPartnersType] = {
+    (
+      (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
+      (JsPath \ "moreThanTenPartners").readNullable[Boolean]
+    )(NumberOfDirectorOrPartnersType.apply _)
+  }
 
   val apiReads: Reads[PensionSchemeAdministrator] = (
     (JsPath \ "legalStatus").read[String] and
@@ -62,14 +83,16 @@ class PensionSchemeAdministratorSpec extends WordSpec with MustMatchers with Opt
       (JsPath \ "noIdentifier").read[Boolean] and
       (JsPath \ "customerType").read[String] and
       (JsPath \ "idType").readNullable[String] and
-      (JsPath \ "idNumber").readNullable[String]
-    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber) => PensionSchemeAdministrator(
+      (JsPath \ "idNumber").readNullable[String] and
+      JsPath.read(Reads.optionWithNull(numberOfDirectorOrPartnersTypeReads))
+    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber, numberOfDirectorOrPartners) => PensionSchemeAdministrator(
     customerType = customerType,
     legalStatus = legalStatus,
     sapNumber = sapNumber,
     noIdentifier = noIdentifier,
     idType = idType,
     idNumber = idNumber,
+    numberOfDirectorOrPartners = numberOfDirectorOrPartners,
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
     correspondenceAddressDetail = UkAddressType(addressType = "", line1 = "", line2 = "", countryCode = "", postalCode = ""),
     correspondenceContactDetail = ContactDetails(telephone = "", email = ""),
