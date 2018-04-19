@@ -16,7 +16,7 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads}
 
 case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
                                   vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None)
@@ -64,7 +64,8 @@ case class PensionSchemeAdministrator(customerType: String, legalStatus: String,
                                       organisationDetail: Option[OrganisationDetailType] = None,
                                       individualDetail: Option[IndividualDetailType] = None,
                                       pensionSchemeAdministratoridentifierStatus: PensionSchemeAdministratorIdentifierStatusType,
-                                      correspondenceAddressDetail: AddressType, correspondenceContactDetail: ContactDetails,
+                                      correspondenceAddressDetail: AddressType,
+                                      correspondenceContactDetail: ContactDetails,
                                       previousAddressDetail: PreviousAddressDetails,
                                       numberOfDirectorOrPartners: Option[NumberOfDirectorOrPartnersType] = None,
                                       directorOrPartnerDetail: Option[List[DirectorOrPartnerDetailTypeItem]] = None)
