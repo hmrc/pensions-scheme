@@ -67,6 +67,13 @@ class PensionSchemeAdministratorSpec extends WordSpec with MustMatchers with Opt
 
         result.isMorethanTenDirectors mustEqual Some(true)
       }
+
+      "we have moreThanTenPartners flag" in {
+        val input = Json.obj("moreThanTenPartners" -> JsBoolean(true))
+        val result = Json.fromJson[NumberOfDirectorOrPartnersType](input)(numberOfDirectorOrPartnersTypeReads).asOpt.value
+
+        result.isMorethanTenPartners mustEqual Some(true)
+      }
     }
   }
 
