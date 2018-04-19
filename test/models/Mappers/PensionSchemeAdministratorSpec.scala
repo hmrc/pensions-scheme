@@ -41,6 +41,17 @@ class PensionSchemeAdministratorSpec extends WordSpec with MustMatchers with Opt
         result.customerType mustEqual "TestCustomer"
       }
 
+      "We have a valid idType" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input + ("idType" -> JsString("TestId")))(apiReads).asOpt.value
+
+        result.idType mustEqual Some("TestId")
+      }
+
+      "We have a valid idNumber" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input + ("idNumber" -> JsString("TestIdNumber")))(apiReads).asOpt.value
+
+        result.idNumber mustEqual Some("TestIdNumber")
+      }
     }
   }
 
@@ -49,11 +60,16 @@ class PensionSchemeAdministratorSpec extends WordSpec with MustMatchers with Opt
     (JsPath \ "legalStatus").read[String] and
       (JsPath \ "sapNumber").read[String] and
       (JsPath \ "noIdentifier").read[Boolean] and
-      (JsPath \ "customerType").read[String]
-    ) ((legalStatus, sapNumber, noIdentifier, customerType) => PensionSchemeAdministrator(customerType = customerType,
+      (JsPath \ "customerType").read[String] and
+      (JsPath \ "idType").readNullable[String] and
+      (JsPath \ "idNumber").readNullable[String]
+    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber) => PensionSchemeAdministrator(
+    customerType = customerType,
     legalStatus = legalStatus,
     sapNumber = sapNumber,
     noIdentifier = noIdentifier,
+    idType = idType,
+    idNumber = idNumber,
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
     correspondenceAddressDetail = UkAddressType(addressType = "", line1 = "", line2 = "", countryCode = "", postalCode = ""),
     correspondenceContactDetail = ContactDetails(telephone = "", email = ""),
