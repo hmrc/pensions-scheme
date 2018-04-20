@@ -16,7 +16,8 @@
 
 package models
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.{JsPath, Json, Reads, Writes}
+import play.api.libs.functional.syntax._
 
 case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
                                   vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None)
