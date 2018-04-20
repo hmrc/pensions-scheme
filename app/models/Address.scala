@@ -38,6 +38,18 @@ object Address {
     case address: ForeignAddress =>
       ForeignAddress.format.writes(address)
   }
+
+  val commonAddressElementsReads : Reads[(String,Option[String],Option[String],Option[String],String)] = (
+    (JsPath \ "lines").read[List[String]] and
+      (JsPath \ "country" \ "name").read[String]
+    )((lines, countryCode) => {
+    val addressLines = lines.size match {
+      case 2 => List(Some(lines(0)),Some(lines(1)),None, None)
+      case 3 => List(Some(lines(0)),Some(lines(1)),Some(lines(2)), None)
+      case 4 => List(Some(lines(0)),Some(lines(1)),Some(lines(2)),Some(lines(3)))
+    }
+    (addressLines(0).get,addressLines(1),addressLines(2),addressLines(3),countryCode)
+  })
 }
 
 case class UkAddress(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,
@@ -52,16 +64,10 @@ object UkAddress {
   }
 
   val apiReads : Reads[UkAddress] = (
-    (JsPath \ "lines").read[List[String]] and
-      (JsPath \ "country" \ "name").read[String] and
+    JsPath.read(Address.commonAddressElementsReads) and
       (JsPath \ "postcode").read[String]
-    )((lines, countryCode, postCode) =>  {
-    val addressLines = lines.size match {
-      case 2 => List(Some(lines(0)),Some(lines(1)),None, None)
-      case 3 => List(Some(lines(0)),Some(lines(1)),Some(lines(2)), None)
-      case 4 => List(Some(lines(0)),Some(lines(1)),Some(lines(2)),Some(lines(3)))
-    }
-    UkAddress(addressLines.head.get,addressLines(1),addressLines(2),addressLines(3),countryCode,postalCode = postCode)
+    )((common, postCode) =>  {
+    UkAddress(common._1,common._2,common._3,common._4,common._5,postalCode = postCode)
   })
 }
 
@@ -69,6 +75,13 @@ case class ForeignAddress(addressLine1: String, addressLine2: Option[String] = N
                           addressLine4: Option[String] = None, countryCode: String, postalCode: Option[String] = None) extends Address
 
 object ForeignAddress {
-  implicit val format: OFormat[ForeignAddress] = Json.format[ForeignAddress]
+  implicit val format: Format[ForeignAddress] = Json.format[ForeignAddress]
+
+  val apiReads : Reads[ForeignAddress] = (
+    JsPath.read(Address.commonAddressElementsReads) and
+      (JsPath \ "postcode").readNullable[String]
+    )((common, postCode) =>  {
+    ForeignAddress(common._1,common._2,common._3,common._4,common._5,postalCode = postCode)
+  })
 }
 
