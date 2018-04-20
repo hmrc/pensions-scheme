@@ -16,7 +16,8 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsPath, Json, Reads}
+import play.api.libs.functional.syntax._
 
 case class AddressAndContactDetails(addressDetails: AddressType, contactDetails: ContactDetails)
 
@@ -36,6 +37,14 @@ case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
 
 object PreviousAddressDetails {
   implicit val formats = Json.format[PreviousAddressDetails]
+
+  val apiReads : Reads[PreviousAddressDetails] = (
+    (JsPath \ "companyAddressYears").read[String] and
+      (JsPath \ "").readNullable[String]
+  )((addressLast12Months,_)=>{
+    val isAddressLast12Months= if (addressLast12Months == "under_a_year") true else false
+    PreviousAddressDetails(isAddressLast12Months)
+  })
 }
 
 case class CorrespondenceAddressDetails(addressDetails: AddressType)
