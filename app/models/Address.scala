@@ -17,6 +17,7 @@
 package models
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 sealed trait Address
 
@@ -49,6 +50,19 @@ object UkAddress {
     address =>
       Json.writes[UkAddress].writes(address) ++ Json.obj("countryCode" -> "GB")
   }
+
+  val apiReads : Reads[UkAddress] = (
+    (JsPath \ "lines").read[List[String]] and
+      (JsPath \ "country" \ "name").read[String] and
+      (JsPath \ "postcode").read[String]
+    )((lines, countryCode, postCode) =>  {
+    val addressLines = lines.size match {
+      case 2 => List(Some(lines(0)),Some(lines(1)),None, None)
+      case 3 => List(Some(lines(0)),Some(lines(1)),Some(lines(2)), None)
+      case 4 => List(Some(lines(0)),Some(lines(1)),Some(lines(2)),Some(lines(3)))
+    }
+    UkAddress(addressLines.head.get,addressLines(1),addressLines(2),addressLines(3),countryCode,postalCode = postCode)
+  })
 }
 
 case class ForeignAddress(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,
