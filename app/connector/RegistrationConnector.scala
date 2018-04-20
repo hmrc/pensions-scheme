@@ -16,53 +16,154 @@
 
 package connector
 
-import java.util.UUID
-
+import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
-import models.OrganisationRegistrant
+import models.{OrganisationRegistrant, SuccessResponse, UkAddress, User}
+import play.api.Logger
 import play.api.libs.json.JsValue
+import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import play.api.Logger
 
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
-class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
+class RegistrationConnectorImpl @Inject()(
+                                           http: HttpClient,
+                                           config: AppConfig,
+                                           auditService: AuditService
+                                         ) extends RegistrationConnector with RawReads {
 
-  val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
-    "Content-Type" -> "application/json")
+  private val desHeader = Seq(
+    "Environment" -> config.desEnvironment,
+    "Authorization" -> config.authorization,
+    "Content-Type" -> "application/json"
+  )
 
-  override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
-                                                                             ec: ExecutionContext): Future[HttpResponse] = {
+  override def registerWithIdIndividual(nino: String, user: User, registerData: JsValue)
+                                       (implicit
+                                        hc: HeaderCarrier,
+                                        ec: ExecutionContext,
+                                        request: RequestHeader
+                                       ): Future[HttpResponse] = {
+
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader)
+
     val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
 
     Logger.debug(s"[Pensions-Scheme-Header-Carrier]-${desHeader.toString()}")
 
-    http.POST(registerWithIdUrl, registerData,desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
+    val result = http.POST(registerWithIdUrl, registerData,desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
+
+    result andThen {
+      sendPSARegistrationEvent(true, user, "Individual", withIdIsUk)
+    }
+
   }
 
-  override def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier,
-                                                                              ec: ExecutionContext): Future[HttpResponse] = {
+  private def sendPSARegistrationEvent(withId: Boolean, user: User, psaType: String, isUk: JsValue => Option[Boolean])
+      (implicit request: RequestHeader, ec: ExecutionContext): PartialFunction[Try[HttpResponse], Unit] = {
+
+    case Success(httpResponse) =>
+      auditService.sendEvent(
+        PSARegistration(
+          withId = withId,
+          externalId = user.externalId,
+          psaType = psaType,
+          found = true,
+          isUk = isUk(httpResponse.json)
+        )
+      )
+    case Failure(_: NotFoundException) =>
+      auditService.sendEvent(
+        PSARegistration(
+          withId = withId,
+          externalId = user.externalId,
+          psaType = psaType,
+          found = false,
+          isUk = None
+        )
+      )
+    case Failure(t) =>
+      Logger.error("Error in registration connector", t)
+
+  }
+
+  private def withIdIsUk(response: JsValue): Option[Boolean] = {
+
+    response.validate[SuccessResponse].fold(
+      _ => None,
+      success => success.address match {
+        case _: UkAddress => Some(true)
+        case _ => Some(false)
+      }
+    )
+
+  }
+
+  override def registerWithIdOrganisation(utr: String, user: User, registerData: JsValue)(implicit
+                                                                                          hc: HeaderCarrier,
+                                                                                          ec: ExecutionContext,
+                                                                                          request: RequestHeader): Future[HttpResponse] = {
     val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
+    val psaType: String = organisationPsaType(registerData)
 
-    http.POST(registerWithIdUrl, registerData, desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
+    val result = http.POST(registerWithIdUrl, registerData, desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
+
+    result andThen {
+      sendPSARegistrationEvent(true, user, psaType, withIdIsUk)
+    }
+
   }
 
-  override def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+  private def organisationPsaType(registerData: JsValue): String = {
+    (registerData \ "organisation" \ "organisationType").validate[String].fold(
+      _ => "Unknown",
+      organisationType => organisationType
+    )
+  }
+
+  override def registrationNoIdOrganisation(user: User, registerData: OrganisationRegistrant)(implicit
+                                                                                  hc: HeaderCarrier,
+                                                                                  ec: ExecutionContext,
+                                                                                  request: RequestHeader): Future[HttpResponse] = {
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader)
     val schemeAdminRegisterUrl = config.registerWithoutIdOrganisationUrl
 
-    http.POST(schemeAdminRegisterUrl, registerData, desHeader)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], HeaderCarrier(), implicitly)
+    val result = http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], implicitly, implicitly)
+
+    result andThen {
+      sendPSARegistrationEvent(false, user, "Organisation", noIdIsUk(registerData))
+    }
+
   }
+
+  private def noIdIsUk(organisation: OrganisationRegistrant)(response: JsValue): Option[Boolean] = {
+    organisation.address match {
+      case _: UkAddress => Some(true)
+      case _ => Some(false)
+    }
+  }
+
 }
 
 @ImplementedBy(classOf[RegistrationConnectorImpl])
 trait RegistrationConnector {
-  def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerWithIdIndividual(nino: String, user: User, registerData: JsValue)(implicit
+                                                                                hc: HeaderCarrier,
+                                                                                ec: ExecutionContext,
+                                                                                request: RequestHeader): Future[HttpResponse]
 
-  def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registerWithIdOrganisation(utr: String, user: User, registerData: JsValue)(implicit
+                                                                                 hc: HeaderCarrier,
+                                                                                 ec: ExecutionContext,
+                                                                                 request: RequestHeader): Future[HttpResponse]
 
-  def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
+  def registrationNoIdOrganisation(user: User, registerData: OrganisationRegistrant)(implicit
+                                                                         hc: HeaderCarrier,
+                                                                         ec: ExecutionContext,
+                                                                         request: RequestHeader): Future[HttpResponse]
 }
-
