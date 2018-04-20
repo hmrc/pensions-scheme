@@ -29,7 +29,8 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         "legalStatus" -> "Individual",
         "sapNumber" -> "NumberTest",
         "noIdentifier" -> JsBoolean(true),
-        "customerType" -> "TestCustomer"
+        "customerType" -> "TestCustomer",
+        "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com")
       )
 
       "We have a valid legalStatus" in {
@@ -79,6 +80,12 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
         result.numberOfDirectorOrPartners mustEqual None
       }
+
+      "We have contact details" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+
+        result.correspondenceContactDetail.telephone mustBe "07592113"
+      }
     }
   }
 
@@ -89,8 +96,9 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       (JsPath \ "customerType").read[String] and
       (JsPath \ "idType").readNullable[String] and
       (JsPath \ "idNumber").readNullable[String] and
-      (JsPath \ "moreThanTenDirectors").readNullable[Boolean]
-    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber, isThereMoreThanTenDirectors) => PensionSchemeAdministrator(
+      (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
+      (JsPath \ "contactDetails").read(ContactDetails.apiReads)
+    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber, isThereMoreThanTenDirectors, contactDetails) => PensionSchemeAdministrator(
     customerType = customerType,
     legalStatus = legalStatus,
     sapNumber = sapNumber,
@@ -100,7 +108,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(c=>NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(c))),
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
     correspondenceAddressDetail = UkAddressType(addressType = "", line1 = "", line2 = "", countryCode = "", postalCode = ""),
-    correspondenceContactDetail = ContactDetails(telephone = "", email = ""),
+    correspondenceContactDetail = contactDetails,
     previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   ))
 }
