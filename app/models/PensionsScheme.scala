@@ -33,17 +33,17 @@ object PersonalDetails {
 }
 
 case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddressDetails: Option[AddressType] = None)
+                                  previousAddressDetails: Option[Address] = None)
 
 object PreviousAddressDetails {
   implicit val formats = Json.format[PreviousAddressDetails]
 
   val apiReads : Reads[PreviousAddressDetails] = (
     (JsPath \ "companyAddressYears").read[String] and
-      (JsPath \ "").readNullable[String]
-  )((addressLast12Months,_)=>{
+      (JsPath \ "companyPreviousAddress").readNullable[Address]
+  )((addressLast12Months,address)=>{
     val isAddressLast12Months= if (addressLast12Months == "under_a_year") true else false
-    PreviousAddressDetails(isAddressLast12Months)
+    PreviousAddressDetails(isAddressLast12Months,address)
   })
 }
 

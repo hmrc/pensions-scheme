@@ -24,11 +24,11 @@ sealed trait Address
 object Address {
   implicit val reads: Reads[Address] = {
     import play.api.libs.json._
-    (__ \ "countryCode").read[String].flatMap {
+    (__ \ "country" \ "name").read[String].flatMap {
       case "GB" =>
-        UkAddress.format.map[Address](identity)
+        UkAddress.apiReads.map(c=>c.asInstanceOf[Address])
       case _ =>
-        ForeignAddress.format.map[Address](identity)
+        ForeignAddress.apiReads.map(c=>c.asInstanceOf[Address])
     }
   }
 
@@ -67,7 +67,7 @@ object UkAddress {
     JsPath.read(Address.commonAddressElementsReads) and
       (JsPath \ "postcode").read[String]
     )((common, postCode) =>  {
-    UkAddress(common._1,common._2,common._3,common._4,common._5,postalCode = postCode)
+    UkAddress(common._1,common._2,common._3,common._4,common._5, postCode)
   })
 }
 
@@ -81,7 +81,7 @@ object ForeignAddress {
     JsPath.read(Address.commonAddressElementsReads) and
       (JsPath \ "postcode").readNullable[String]
     )((common, postCode) =>  {
-    ForeignAddress(common._1,common._2,common._3,common._4,common._5,postalCode = postCode)
+    ForeignAddress(common._1,common._2,common._3,common._4,common._5, postCode)
   })
 }
 

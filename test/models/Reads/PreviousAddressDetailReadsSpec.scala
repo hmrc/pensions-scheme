@@ -16,11 +16,11 @@
 
 package models.Reads
 
-import models.{PreviousAddressDetails, UkAddress}
+import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
-class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with OptionValues {
+class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "JSON payload with previous address details" should {
     "Map to a valid previousAddressDetails payload correctly" when {
       "we have a companyAddressYears flag as true" in {
@@ -46,7 +46,16 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
 
         val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads)
 
-        ???
+        result.previousAddressDetails.value.asInstanceOf[UkAddress].countryCode mustBe ukAddressSample.countryCode
+      }
+
+      "we have a non UK address with no postcode" in {
+        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"->  Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
+          "country" -> JsObject(Map("name" -> JsString("IT")))))
+
+        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads)
+
+        result.previousAddressDetails.value.asInstanceOf[ForeignAddress].postalCode mustBe None
       }
     }
   }
