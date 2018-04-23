@@ -107,7 +107,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     idNumber = idNumber,
     numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(c=>NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(c))),
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
-    correspondenceAddressDetail = UkAddressType(addressType = "", line1 = "", line2 = "", countryCode = "", postalCode = ""),
+    correspondenceAddressDetail = UkAddress("", Some(""), countryCode = "", postalCode = ""),
     correspondenceContactDetail = contactDetails,
     previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   ))

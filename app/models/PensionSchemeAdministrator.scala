@@ -44,7 +44,7 @@ object NumberOfDirectorOrPartnersType {
   implicit val formats = Json.format[NumberOfDirectorOrPartnersType]
 }
 
-case class CorrespondenceCommonDetail(addressDetail: AddressType, contactDetail: ContactDetails)
+case class CorrespondenceCommonDetail(addressDetail: Address, contactDetail: ContactDetails)
 object CorrespondenceCommonDetail {
   implicit val formats = Json.format[CorrespondenceCommonDetail]
 }
@@ -65,7 +65,7 @@ case class PensionSchemeAdministrator(customerType: String, legalStatus: String,
                                       organisationDetail: Option[OrganisationDetailType] = None,
                                       individualDetail: Option[IndividualDetailType] = None,
                                       pensionSchemeAdministratoridentifierStatus: PensionSchemeAdministratorIdentifierStatusType,
-                                      correspondenceAddressDetail: AddressType,
+                                      correspondenceAddressDetail: Address,
                                       correspondenceContactDetail: ContactDetails,
                                       previousAddressDetail: PreviousAddressDetails,
                                       numberOfDirectorOrPartners: Option[NumberOfDirectorOrPartnersType] = None,

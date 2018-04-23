@@ -19,7 +19,7 @@ package models
 import play.api.libs.json.{JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
 
-case class AddressAndContactDetails(addressDetails: AddressType, contactDetails: ContactDetails)
+case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
 
 object AddressAndContactDetails {
   implicit val formats = Json.format[AddressAndContactDetails]
@@ -47,7 +47,7 @@ object PreviousAddressDetails {
   })
 }
 
-case class CorrespondenceAddressDetails(addressDetails: AddressType)
+case class CorrespondenceAddressDetails(addressDetails: Address)
 
 object CorrespondenceAddressDetails {
   implicit val formats = Json.format[CorrespondenceAddressDetails]
@@ -66,7 +66,7 @@ case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boo
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
                                     doesSchemeProvideBenefits: String, schemeEstablishedCountry: String, haveValidBank: Boolean,
                                     insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
-                                    insuranceCompanyAddress: Option[AddressType] = None)
+                                    insuranceCompanyAddress: Option[Address] = None)
 
 object CustomerAndSchemeDetails {
   implicit val formats = Json.format[CustomerAndSchemeDetails]
