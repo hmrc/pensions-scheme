@@ -97,41 +97,46 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
       }
 
       "We have a different address format" when {
-        "we have a UK address" when {
+        "we have common address elements" when {
           val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
             "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
           "with addressLine 1" in {
-            val result = address.as[UkAddress](UkAddress.apiReads)
+            val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeTwoAddressElementsReads)
 
-            result.addressLine1 mustBe ukAddressSample.addressLine1
+            result._1 mustBe ukAddressSample.addressLine1
           }
 
           "with addressLine 2" in {
-            val result = address.as[UkAddress](UkAddress.apiReads)
+            val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeTwoAddressElementsReads)
 
-            result.addressLine2 mustBe ukAddressSample.addressLine2
+            result._2 mustBe ukAddressSample.addressLine2
           }
 
           "with addressLine 3" in {
-            val result = address.as[UkAddress](UkAddress.apiReads)
+            val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeTwoAddressElementsReads)
 
-            result.addressLine3 mustBe ukAddressSample.addressLine3
+            result._3 mustBe ukAddressSample.addressLine3
           }
 
           "with addressLine 4" in {
-            val result = address.as[UkAddress](UkAddress.apiReads)
+            val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeTwoAddressElementsReads)
 
-            result.addressLine4 mustBe ukAddressSample.addressLine4
+            result._4 mustBe ukAddressSample.addressLine4
           }
 
           "with countryCode" in {
-            val result = address.as[UkAddress](UkAddress.apiReads)
+            val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeTwoAddressElementsReads)
 
-            result.countryCode mustBe ukAddressSample.countryCode
+            result._5 mustBe ukAddressSample.countryCode
           }
+        }
 
+        "we have a UK address" when {
           "with postal code" in {
+            val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+              "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
+
             val result = address.as[UkAddress](UkAddress.apiReads)
 
             result.postalCode mustBe ukAddressSample.postalCode
@@ -140,36 +145,6 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
 
         "we have a non UK address" when {
           val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "countryCode" -> JsString("IT"))
-
-          "with addressLine 1" in {
-            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
-
-            result.addressLine1 mustBe nonUkAddressSample.addressLine1
-          }
-
-          "with addressLine 2" in {
-            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
-
-            result.addressLine2 mustBe nonUkAddressSample.addressLine2
-          }
-
-          "with addressLine 3" in {
-            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
-
-            result.addressLine3 mustBe nonUkAddressSample.addressLine3
-          }
-
-          "with addressLine 4" in {
-            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
-
-            result.addressLine4 mustBe nonUkAddressSample.addressLine4
-          }
-
-          "with countryCode" in {
-            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
-
-            result.countryCode mustBe nonUkAddressSample.countryCode
-          }
 
           "with no postal code" in {
             val result = address.as[ForeignAddress](ForeignAddress.apiReads)
