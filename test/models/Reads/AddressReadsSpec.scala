@@ -98,13 +98,43 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
 
       "We have a different address format" when {
         "we have a UK address" when {
-          "with addressLine 1" in {
-            val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
-              "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
+          val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+            "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
+          "with addressLine 1" in {
             val result = address.as[UkAddress](UkAddress.apiReads)
 
             result.addressLine1 mustBe ukAddressSample.addressLine1
+          }
+
+          "with addressLine 2" in {
+            val result = address.as[UkAddress](UkAddress.apiReads)
+
+            result.addressLine2 mustBe ukAddressSample.addressLine2
+          }
+
+          "with addressLine 3" in {
+            val result = address.as[UkAddress](UkAddress.apiReads)
+
+            result.addressLine3 mustBe ukAddressSample.addressLine3
+          }
+
+          "with addressLine 4" in {
+            val result = address.as[UkAddress](UkAddress.apiReads)
+
+            result.addressLine4 mustBe ukAddressSample.addressLine4
+          }
+
+          "with countryCode" in {
+            val result = address.as[UkAddress](UkAddress.apiReads)
+
+            result.countryCode mustBe ukAddressSample.countryCode
+          }
+
+          "with postal code" in {
+            val result = address.as[UkAddress](UkAddress.apiReads)
+
+            result.postalCode mustBe ukAddressSample.postalCode
           }
         }
       }

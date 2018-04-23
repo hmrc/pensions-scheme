@@ -72,8 +72,12 @@ object UkAddress {
 
   val apiAddressTypeTwoReads : Reads[UkAddress] = (
     (JsPath \ "addressLine1").read[String] and
-      (JsPath \ "").read[String]
-  )((line1,_)=>UkAddress(line1,None,None,None,"test","test"))
+      (JsPath \ "addressLine2").readNullable[String] and
+      (JsPath \ "addressLine3").readNullable[String] and
+      (JsPath \ "addressLine4").readNullable[String] and
+      (JsPath \ "countryCode").read[String] and
+      (JsPath \ "postalCode").read[String]
+    )((line1,line2,line3,line4,countryCode,postalCode)=>UkAddress(line1,line2,line3,line4,countryCode,postalCode))
 
   val apiReads : Reads[UkAddress] = JsPath.read(apiAddressTypeOneReads) | JsPath.read(apiAddressTypeTwoReads)
 }
