@@ -137,6 +137,54 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
             result.postalCode mustBe ukAddressSample.postalCode
           }
         }
+
+        "we have a non UK address" when {
+          val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "countryCode" -> JsString("IT"))
+
+          "with addressLine 1" in {
+            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+
+            result.addressLine1 mustBe nonUkAddressSample.addressLine1
+          }
+
+          "with addressLine 2" in {
+            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+
+            result.addressLine2 mustBe nonUkAddressSample.addressLine2
+          }
+
+          "with addressLine 3" in {
+            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+
+            result.addressLine3 mustBe nonUkAddressSample.addressLine3
+          }
+
+          "with addressLine 4" in {
+            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+
+            result.addressLine4 mustBe nonUkAddressSample.addressLine4
+          }
+
+          "with countryCode" in {
+            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+
+            result.countryCode mustBe nonUkAddressSample.countryCode
+          }
+
+          "with no postal code" in {
+            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+
+            result.postalCode mustBe None
+          }
+
+          "with postal code" in {
+            val input = (address + ("postalCode" -> JsString("NE1")))
+
+            val result =  input.as[ForeignAddress](ForeignAddress.apiReads)
+
+            result.postalCode mustBe nonUkAddressSample.postalCode
+          }
+        }
       }
     }
   }

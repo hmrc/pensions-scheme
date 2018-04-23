@@ -16,6 +16,7 @@
 
 package models
 
+import models.UkAddress.{apiAddressTypeOneReads, apiAddressTypeTwoReads}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
@@ -88,11 +89,23 @@ case class ForeignAddress(addressLine1: String, addressLine2: Option[String] = N
 object ForeignAddress {
   implicit val format: Format[ForeignAddress] = Json.format[ForeignAddress]
 
-  val apiReads : Reads[ForeignAddress] = (
+  val apiAddressTypeTwoReads : Reads[ForeignAddress] = (
+    (JsPath \ "addressLine1").read[String] and
+      (JsPath \ "addressLine2").readNullable[String] and
+      (JsPath \ "addressLine3").readNullable[String] and
+      (JsPath \ "addressLine4").readNullable[String] and
+      (JsPath \ "countryCode").read[String] and
+      (JsPath \ "postalCode").readNullable[String]
+    )((line1,line2,line3,line4,countryCode,postalCode)=>ForeignAddress(line1,line2,line3,line4,countryCode,postalCode))
+
+
+  val apiAddressTypeOneReads : Reads[ForeignAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
       (JsPath \ "postcode").readNullable[String]
     )((common, postCode) =>  {
     ForeignAddress(common._1,common._2,common._3,common._4,common._5, postCode)
   })
+
+  val apiReads : Reads[ForeignAddress] = JsPath.read(apiAddressTypeOneReads) | JsPath.read(apiAddressTypeTwoReads)
 }
 
