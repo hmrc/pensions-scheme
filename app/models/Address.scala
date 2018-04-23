@@ -63,12 +63,19 @@ object UkAddress {
       Json.writes[UkAddress].writes(address) ++ Json.obj("countryCode" -> "GB")
   }
 
-  val apiReads : Reads[UkAddress] = (
+  val apiAddressTypeOneReads : Reads[UkAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
       (JsPath \ "postcode").read[String]
     )((common, postCode) =>  {
     UkAddress(common._1,common._2,common._3,common._4,common._5, postCode)
   })
+
+  val apiAddressTypeTwoReads : Reads[UkAddress] = (
+    (JsPath \ "addressLine1").read[String] and
+      (JsPath \ "").read[String]
+  )((line1,_)=>UkAddress(line1,None,None,None,"test","test"))
+
+  val apiReads : Reads[UkAddress] = JsPath.read(apiAddressTypeOneReads) | JsPath.read(apiAddressTypeTwoReads)
 }
 
 case class ForeignAddress(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,

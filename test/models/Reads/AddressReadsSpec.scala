@@ -95,6 +95,19 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
           result.postalCode mustBe None
         }
       }
+
+      "We have a different address format" when {
+        "we have a UK address" when {
+          "with addressLine 1" in {
+            val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+              "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
+
+            val result = address.as[UkAddress](UkAddress.apiReads)
+
+            result.addressLine1 mustBe ukAddressSample.addressLine1
+          }
+        }
+      }
     }
   }
 }
