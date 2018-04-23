@@ -72,9 +72,9 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
             "country" -> JsObject(Map("name" -> JsString("GB"))),
             "postcode" -> JsString("NE1"))
 
-          val result = input.as[UkAddress](UkAddress.apiReads)
+          val result = input.as[Address]
 
-          result.postalCode mustBe ukAddressSample.postalCode
+          result.asInstanceOf[UkAddress].postalCode mustBe ukAddressSample.postalCode
         }
       }
 
@@ -83,16 +83,16 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
           "country" -> JsObject(Map("name" -> JsString("IT"))))
 
         "We have a postCode" in {
-          val result = (address + ("postcode" -> JsString("NE1"))).as[ForeignAddress](ForeignAddress.apiReads)
+          val result = (address + ("postcode" -> JsString("NE1"))).as[Address]
 
-          result.postalCode mustBe nonUkAddressSample.postalCode
+          result.asInstanceOf[ForeignAddress].postalCode mustBe nonUkAddressSample.postalCode
         }
 
 
         "We don't have a postCode" in {
-          val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+          val result = address.as[Address]
 
-          result.postalCode mustBe None
+          result.asInstanceOf[ForeignAddress].postalCode mustBe None
         }
       }
 
@@ -137,9 +137,9 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
             val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
               "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
-            val result = address.as[UkAddress](UkAddress.apiReads)
+            val result = address.as[Address]
 
-            result.postalCode mustBe ukAddressSample.postalCode
+            result.asInstanceOf[UkAddress].postalCode mustBe ukAddressSample.postalCode
           }
         }
 
@@ -147,17 +147,17 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
           val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "countryCode" -> JsString("IT"))
 
           "with no postal code" in {
-            val result = address.as[ForeignAddress](ForeignAddress.apiReads)
+            val result = address.as[Address]
 
-            result.postalCode mustBe None
+            result.asInstanceOf[ForeignAddress].postalCode mustBe None
           }
 
           "with postal code" in {
             val input = (address + ("postalCode" -> JsString("NE1")))
 
-            val result =  input.as[ForeignAddress](ForeignAddress.apiReads)
+            val result =  input.as[Address]
 
-            result.postalCode mustBe nonUkAddressSample.postalCode
+            result.asInstanceOf[ForeignAddress].postalCode mustBe nonUkAddressSample.postalCode
           }
         }
       }
