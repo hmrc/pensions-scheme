@@ -16,28 +16,28 @@
 
 package models.Reads
 
-import models.{Address, ForeignAddress, UkAddress}
+import models.{Address, ForeignAddress, Samples, UkAddress}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
-class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues {
+class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "A JSON Payload with an address" should {
     "Map correctly to an Address type" when {
       "We have common elements of an address for a UK and NON UK address" when {
-        val input = Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
+        val address = Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
           "country" -> JsObject(Map("name" -> JsString("GB"))),
-          "postcode" -> JsString("Test"))
+          "postcode" -> JsString("NE1"))
 
         "We have line 1 in the address" in {
-          val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
 
-          result._1 mustBe "line1"
+          result._1 mustBe ukAddressSample.addressLine1
         }
 
         "We have line 2 in the address" in {
-          val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
 
-          result._2.value mustBe "line2"
+          result._2 mustBe ukAddressSample.addressLine2
         }
 
         "We have line 3 in the address" in {
@@ -46,7 +46,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues {
             "postcode" -> JsString("Test"))
           val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
 
-          result._3.value mustBe "line3"
+          result._3 mustBe ukAddressSample.addressLine3
         }
 
         "We have line 4 in the address" in {
@@ -55,13 +55,13 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues {
             "postcode" -> JsString("Test"))
           val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
 
-          result._4.value mustBe "line4"
+          result._4 mustBe ukAddressSample.addressLine4
         }
 
         "We have a countryCode" in {
-          val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
 
-          result._5 mustBe "GB"
+          result._5 mustBe ukAddressSample.countryCode
         }
       }
 
@@ -70,11 +70,11 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues {
         "We have a postCode" in {
           val input = Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
             "country" -> JsObject(Map("name" -> JsString("GB"))),
-            "postcode" -> JsString("Test"))
+            "postcode" -> JsString("NE1"))
 
           val result = input.as[UkAddress](UkAddress.apiReads)
 
-          result.postalCode mustBe "Test"
+          result.postalCode mustBe ukAddressSample.postalCode
         }
       }
 
@@ -83,9 +83,9 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues {
           "country" -> JsObject(Map("name" -> JsString("IT"))))
 
         "We have a postCode" in {
-          val result = (address + ("postcode" -> JsString("Test"))).as[ForeignAddress](ForeignAddress.apiReads)
+          val result = (address + ("postcode" -> JsString("NE1"))).as[ForeignAddress](ForeignAddress.apiReads)
 
-          result.postalCode.value mustBe "Test"
+          result.postalCode mustBe nonUkAddressSample.postalCode
         }
 
 
