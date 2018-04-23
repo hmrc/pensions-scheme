@@ -29,13 +29,13 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
           "postcode" -> JsString("NE1"))
 
         "We have line 1 in the address" in {
-          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeOneAddressElementsReads)
 
           result._1 mustBe ukAddressSample.addressLine1
         }
 
         "We have line 2 in the address" in {
-          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeOneAddressElementsReads)
 
           result._2 mustBe ukAddressSample.addressLine2
         }
@@ -44,7 +44,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
           val input = Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"),JsString("line3"))),
             "country" -> JsObject(Map("name" -> JsString("GB"))),
             "postcode" -> JsString("Test"))
-          val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeOneAddressElementsReads)
 
           result._3 mustBe ukAddressSample.addressLine3
         }
@@ -53,13 +53,13 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
           val input = Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"),JsString("line3"),JsString("line4"))),
             "country" -> JsObject(Map("name" -> JsString("GB"))),
             "postcode" -> JsString("Test"))
-          val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = input.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeOneAddressElementsReads)
 
           result._4 mustBe ukAddressSample.addressLine4
         }
 
         "We have a countryCode" in {
-          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonAddressElementsReads)
+          val result = address.as[(String,Option[String],Option[String],Option[String],String)](Address.commonTypeOneAddressElementsReads)
 
           result._5 mustBe ukAddressSample.countryCode
         }
