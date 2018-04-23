@@ -23,15 +23,23 @@ import play.api.libs.functional.syntax._
 sealed trait Address
 
 object Address {
-  implicit val reads: Reads[Address] = {
-    import play.api.libs.json._
-    (__ \ "country" \ "name").read[String].flatMap {
-      case "GB" =>
-        UkAddress.apiReads.map(c=>c.asInstanceOf[Address])
-      case _ =>
-        ForeignAddress.apiReads.map(c=>c.asInstanceOf[Address])
-    }
+
+
+  val addressTypeOneReads: Reads[Address] = (__ \ "country" \ "name").read[String].flatMap {
+    case "GB" =>
+      UkAddress.apiReads.map(c=>c.asInstanceOf[Address])
+    case _ =>
+      ForeignAddress.apiReads.map(c=>c.asInstanceOf[Address])
   }
+
+  val addressTypeTwoReads : Reads[Address] = (__ \ "countryCode").read[String].flatMap {
+    case "GB" =>
+      UkAddress.apiReads.map(c=>c.asInstanceOf[Address])
+    case _ =>
+      ForeignAddress.apiReads.map(c=>c.asInstanceOf[Address])
+  }
+
+  implicit val reads: Reads[Address] = JsPath.read(addressTypeOneReads) | JsPath.read(addressTypeTwoReads)
 
   implicit val writes: Writes[Address] = Writes {
     case address: UkAddress =>
