@@ -119,6 +119,13 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
     }
   }
 
+  val directorPersonalDetailsReads : Reads[(String,String,Option[String],DateTime)] = (
+    (JsPath \ "firstName").read[String] and
+      (JsPath \ "lastName").read[String] and
+      (JsPath \ "middleName").readNullable[String] and
+      (JsPath \ "dateOfBirth").read[DateTime]
+  )((name,lastName,middleName,dateOfBirth) => (name,lastName,middleName,dateOfBirth))
+
   def directorReferenceReads(referenceFlag : String, referenceName: String) : Reads[(Option[Boolean],Option[String],Option[String])] = (
     (JsPath \ referenceFlag).readNullable[Boolean] and
       (JsPath \ referenceName).readNullable[String] and
@@ -126,19 +133,16 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
     )((hasNino,nino,reason)=>(hasNino,nino,reason))
 
   val apiReads : Reads[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath \ "directorDetails" \ "firstName").read[String] and
-      (JsPath \ "directorDetails" \ "lastName").read[String] and
-      (JsPath \ "directorDetails" \ "middleName").readNullable[String] and
-      (JsPath \ "directorDetails" \ "dateOfBirth").read[DateTime] and
+    (JsPath \ "directorDetails").read(directorPersonalDetailsReads) and
       (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino","nino")) and
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr","utr"))
-  )((name,lastName,middleName,dateOfBirth,ninoDetails,utrDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
+  )((directorPersonalDetails,ninoDetails,utrDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
     entityType = "",
     title = None,
-    firstName = name,
-    middleName = middleName,
-    lastName = lastName,
-    dateOfBirth = dateOfBirth,
+    firstName = directorPersonalDetails._1,
+    middleName = directorPersonalDetails._3,
+    lastName = directorPersonalDetails._2,
+    dateOfBirth = directorPersonalDetails._4,
     referenceOrNino = ninoDetails.flatMap(details => if (details._1.fold(false)(c=>c)) details._2 else None),
     noNinoReason = ninoDetails.flatMap(details => if (details._1.fold(false)(c=>c) == false) details._3 else None),
     utr = utrDetails.flatMap(details => if (details._1.fold(false)(c=>c)) details._2 else None),
