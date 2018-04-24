@@ -16,6 +16,7 @@
 
 package models
 
+import org.joda.time.DateTime
 import play.api.libs.json.{JsPath, Json, Reads, Writes}
 import play.api.libs.functional.syntax._
 
@@ -51,7 +52,7 @@ object CorrespondenceCommonDetail {
 
 case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: String, title: Option[String] = None,
                                            firstName: String, middleName: Option[String] = None, lastName: String,
-                                           dateOfBirth: String, referenceOrNino: Option[String] = None,
+                                           dateOfBirth: DateTime, referenceOrNino: Option[String] = None,
                                            noNinoReason: Option[String] = None, utr: Option[String] = None,
                                            noUtrReason: Option[String] = None,
                                            correspondenceCommonDetail: Option[CorrespondenceCommonDetail] = None,
