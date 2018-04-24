@@ -73,8 +73,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
             "lastName" -> JsString("Doe"),
             "middleName" -> JsString("Does Does"),
             "dateOfBirth" -> JsString("2019-01-31")),
-            "directorNino" -> Json.obj("hasNino" -> JsBoolean(false), "reason" -> JsString("he can't find it")),
-            "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(false)))
+            "directorNino" -> Json.obj("hasNino" -> JsBoolean(false), "reason" -> JsString("he can't find it")))
 
           "Nino is not displayed" in {
             val result = directors.as[DirectorOrPartnerDetailTypeItem](apiReads)
@@ -102,7 +101,6 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
             "lastName" -> JsString("Doe"),
             "middleName" -> JsString("Does Does"),
             "dateOfBirth" -> JsString("2019-01-31")),
-            "directorNino" -> Json.obj("hasNino" -> JsBoolean(false)),
             "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(false), "reason" -> JsString("he can't find it")))
 
           "Utr is not displayed" in {
@@ -121,31 +119,32 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
     }
   }
 
+  def directorReferenceReads(referenceFlag : String, referenceName: String) : Reads[(Option[Boolean],Option[String],Option[String])] = (
+    (JsPath \ referenceFlag).readNullable[Boolean] and
+      (JsPath \ referenceName).readNullable[String] and
+      (JsPath \ "reason").readNullable[String]
+    )((hasNino,nino,reason)=>(hasNino,nino,reason))
+
   val apiReads : Reads[DirectorOrPartnerDetailTypeItem] = (
     (JsPath \ "directorDetails" \ "firstName").read[String] and
       (JsPath \ "directorDetails" \ "lastName").read[String] and
       (JsPath \ "directorDetails" \ "middleName").readNullable[String] and
       (JsPath \ "directorDetails" \ "dateOfBirth").read[DateTime] and
-      (JsPath \ "directorNino" \ "hasNino").readNullable[Boolean] and
-      (JsPath \ "directorNino" \ "nino").readNullable[String] and
-      (JsPath \ "directorNino" \ "reason").readNullable[String] and
-      (JsPath \ "directorUtr" \ "hasUtr").readNullable[Boolean] and
-      (JsPath \ "directorUtr" \ "utr").readNullable[String] and
-      (JsPath \ "directorUtr" \ "reason").readNullable[String]
-  )((name,lastName,middleName,dateOfBirth,hasNino,nino,reasonForNoNino, hasUtr,utr,reasonForNoUtr)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
+      (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino","nino")) and
+      (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr","utr"))
+  )((name,lastName,middleName,dateOfBirth,ninoDetails,utrDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
     entityType = "",
     title = None,
     firstName = name,
     middleName = middleName,
     lastName = lastName,
     dateOfBirth = dateOfBirth,
-    referenceOrNino = if (hasNino.fold(false)(c=>c)) nino else None,
-    noNinoReason = if (hasNino.fold(false)(c=>c) == false) reasonForNoNino else None,
-    utr = if (hasUtr.fold(false)(c=>c)) utr else None,
-    noUtrReason = if (hasUtr.fold(false)(c=>c) == false) reasonForNoUtr else None,
+    referenceOrNino = ninoDetails.flatMap(details => if (details._1.fold(false)(c=>c)) details._2 else None),
+    noNinoReason = ninoDetails.flatMap(details => if (details._1.fold(false)(c=>c) == false) details._3 else None),
+    utr = utrDetails.flatMap(details => if (details._1.fold(false)(c=>c)) details._2 else None),
+    noUtrReason = utrDetails.flatMap(details => if (details._1.fold(false)(c=>c) == false) details._3 else None),
     correspondenceCommonDetail = None,
     previousAddressDetail = None))
-
 
   val director = DirectorOrPartnerDetailTypeItem(sequenceId = "",
     entityType = "",
