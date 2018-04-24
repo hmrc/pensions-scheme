@@ -48,6 +48,11 @@ object NumberOfDirectorOrPartnersType {
 case class CorrespondenceCommonDetail(addressDetail: Address, contactDetail: ContactDetails)
 object CorrespondenceCommonDetail {
   implicit val formats = Json.format[CorrespondenceCommonDetail]
+
+  val apiReads : Reads[CorrespondenceCommonDetail] = (
+    (JsPath \ "directorContactDetails").read(ContactDetails.apiReads) and
+      (JsPath \ "directorAddress").read[Address]
+    )((contactDetails,address)=>CorrespondenceCommonDetail(address,contactDetails))
 }
 
 case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: String, title: Option[String] = None,

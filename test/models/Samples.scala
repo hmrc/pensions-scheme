@@ -18,13 +18,6 @@ package models
 
 trait Samples {
 
-  /*
-          "legalStatus" -> "Individual",
-        "sapNumber" -> "NumberTest",
-        "noIdentifier" -> JsBoolean(true),
-        "customerType" -> "TestCustomer",
-        "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com")
-   */
 
   val nonUkAddressSample = ForeignAddress("line1",Some("line2"), Some("line3"),Some("line4"),"IT",Some("NE1"))
   val ukAddressSample = UkAddress("line1",Some("line2"), Some("line3"),Some("line4"),"GB","NE1")
@@ -45,5 +38,7 @@ trait Samples {
     previousAddressDetail = previousAddressDetailsSample,
     numberOfDirectorOrPartners = Some(numberOfDirectorOrPartnersSample),
     directorOrPartnerDetail = None)
+  val correspondenceCommonDetails = CorrespondenceCommonDetail(nonUkAddressSample,contactDetailsSample)
+
 
 }
