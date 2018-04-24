@@ -26,7 +26,7 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
       "we have a companyAddressYears flag as true" in {
         val input = Json.obj("companyAddressYears" -> JsString("under_a_year"))
 
-        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads)
+        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 
         result.isPreviousAddressLast12Month mustBe true
       }
@@ -34,7 +34,7 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
       "we have a companyAddressYears flag as false" in {
         val input = Json.obj("companyAddressYears" -> JsString("over_a_year"))
 
-        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads)
+        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 
         result.isPreviousAddressLast12Month mustBe false
       }
@@ -44,7 +44,7 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
           "country" -> JsObject(Map("name" -> JsString("GB"))),
           "postcode" -> JsString("Test")))
 
-        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads)
+        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 
         result.previousAddressDetails.value.asInstanceOf[UkAddress].countryCode mustBe ukAddressSample.countryCode
       }
@@ -53,7 +53,7 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
         val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"->  Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
           "country" -> JsObject(Map("name" -> JsString("IT")))))
 
-        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads)
+        val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 
         result.previousAddressDetails.value.asInstanceOf[ForeignAddress].postalCode mustBe None
       }

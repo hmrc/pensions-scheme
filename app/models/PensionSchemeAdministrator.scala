@@ -56,7 +56,7 @@ case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: Strin
                                            noNinoReason: Option[String] = None, utr: Option[String] = None,
                                            noUtrReason: Option[String] = None,
                                            correspondenceCommonDetail: Option[CorrespondenceCommonDetail] = None,
-                                           previousAddressDetail: Option[PreviousAddressDetails] = None)
+                                           previousAddressDetail: PreviousAddressDetails)
 object DirectorOrPartnerDetailTypeItem {
   implicit val formats = Json.format[DirectorOrPartnerDetailTypeItem]
 }

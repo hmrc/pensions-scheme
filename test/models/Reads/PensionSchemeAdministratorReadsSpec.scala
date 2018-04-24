@@ -111,7 +111,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       (JsPath \ "idNumber").readNullable[String] and
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
       (JsPath \ "contactDetails").read(ContactDetails.apiReads) and
-      (JsPath).read[PreviousAddressDetails](PreviousAddressDetails.apiReads) and
+      (JsPath).read(PreviousAddressDetails.apiReads("company")) and
       (JsPath \ "companyAddressId").read[Address]
     ) ((legalStatus, sapNumber, noIdentifier, customerType, idType,
         idNumber, isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress) => PensionSchemeAdministrator(
