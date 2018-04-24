@@ -16,17 +16,17 @@
 
 package models.Reads
 
-import models.{DirectorOrPartnerDetailTypeItem, ForeignAddress, PreviousAddressDetails}
+import models.{Reads => _, _}
 import org.joda.time.DateTime
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 
-class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatchers with OptionValues {
+class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "JSON Payload of a Director" should  {
     "Map correctly into a DirectorOrPartnerDetailTypeItem" when {
-
+      
       val directors = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
         "lastName" -> JsString("Doe"),
         "middleName" -> JsString("Does Does"),
@@ -34,7 +34,9 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
         "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
         "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
         "directorAddressYears" -> JsString("over_a_year")
-      )
+      ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
+        Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
+          "country" -> JsObject(Map("name" -> JsString("IT")))))
 
       "We have director user details" when {
         "We have a first name" in {
@@ -75,7 +77,9 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
             "middleName" -> JsString("Does Does"),
             "dateOfBirth" -> JsString("2019-01-31")),
             "directorNino" -> Json.obj("hasNino" -> JsBoolean(false), "reason" -> JsString("he can't find it")),
-            "directorAddressYears" -> JsString("over_a_year"))
+            "directorAddressYears" -> JsString("over_a_year")) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
+            Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
+              "country" -> JsObject(Map("name" -> JsString("IT")))))
 
           "Nino is not displayed" in {
             val result = directors.as[DirectorOrPartnerDetailTypeItem](apiReads)
@@ -104,7 +108,9 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
             "middleName" -> JsString("Does Does"),
             "dateOfBirth" -> JsString("2019-01-31")),
             "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(false), "reason" -> JsString("he can't find it")),
-            "directorAddressYears" -> JsString("over_a_year"))
+            "directorAddressYears" -> JsString("over_a_year")) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
+            Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
+              "country" -> JsObject(Map("name" -> JsString("IT")))))
 
           "Utr is not displayed" in {
             val result = directors.as[DirectorOrPartnerDetailTypeItem](apiReads)
@@ -131,6 +137,17 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
         result.previousAddressDetail mustBe expectedDirector.previousAddressDetail
       }
+
+      "We have a correspondence common detail" in {
+        val directorWithCorrespondenceCommonDetail = directors + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
+          Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"),JsString("line3"),JsString("line4"))),
+          "country" -> JsObject(Map("name" -> JsString("IT"))), "postcode" -> JsString("NE1")))
+
+        val result = directorWithCorrespondenceCommonDetail.as[DirectorOrPartnerDetailTypeItem](apiReads)
+        val expectedDirector = director.copy(correspondenceCommonDetail = correspondenceCommonDetails)
+
+        result.correspondenceCommonDetail mustBe expectedDirector.correspondenceCommonDetail
+      }
     }
   }
 
@@ -141,42 +158,28 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
       (JsPath \ "dateOfBirth").read[DateTime]
   )((name,lastName,middleName,dateOfBirth) => (name,lastName,middleName,dateOfBirth))
 
-  def directorReferenceReads(referenceFlag : String, referenceName: String) : Reads[(Option[Boolean],Option[String],Option[String])] = (
-    (JsPath \ referenceFlag).readNullable[Boolean] and
+  def directorReferenceReads(referenceFlag : String, referenceName: String) : Reads[(Option[String],Option[String])] = (
       (JsPath \ referenceName).readNullable[String] and
       (JsPath \ "reason").readNullable[String]
-    )((hasNino,nino,reason)=>(hasNino,nino,reason))
+    )((referenceNumber,reason)=>(referenceNumber,reason))
 
   val apiReads : Reads[DirectorOrPartnerDetailTypeItem] = (
     (JsPath \ "directorDetails").read(directorPersonalDetailsReads) and
       (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino","nino")) and
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr","utr")) and
-      (JsPath).read(PreviousAddressDetails.apiReads("director"))
-  )((directorPersonalDetails,ninoDetails,utrDetails,previousAddress)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
+      (JsPath).read(PreviousAddressDetails.apiReads("director")) and
+      (JsPath).read(CorrespondenceCommonDetail.apiReads)
+  )((directorPersonalDetails,ninoDetails,utrDetails,previousAddress, addressCommonDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
     entityType = "",
     title = None,
     firstName = directorPersonalDetails._1,
     middleName = directorPersonalDetails._3,
     lastName = directorPersonalDetails._2,
     dateOfBirth = directorPersonalDetails._4,
-    referenceOrNino = ninoDetails.flatMap(details => if (details._1.fold(false)(c=>c)) details._2 else None),
-    noNinoReason = ninoDetails.flatMap(details => if (details._1.fold(false)(c=>c) == false) details._3 else None),
-    utr = utrDetails.flatMap(details => if (details._1.fold(false)(c=>c)) details._2 else None),
-    noUtrReason = utrDetails.flatMap(details => if (details._1.fold(false)(c=>c) == false) details._3 else None),
-    correspondenceCommonDetail = None,
+    referenceOrNino = ninoDetails.flatMap(_._1),
+    noNinoReason = ninoDetails.flatMap(_._2),
+    utr = utrDetails.flatMap(_._1),
+    noUtrReason = utrDetails.flatMap(_._2),
+    correspondenceCommonDetail = addressCommonDetails,
     previousAddressDetail = previousAddress))
-
-  val director = DirectorOrPartnerDetailTypeItem(sequenceId = "",
-    entityType = "",
-    title = None,
-    firstName = "John",
-    middleName = Some("Does Does"),
-    lastName = "Doe",
-    dateOfBirth = DateTime.parse("2019-01-31"),
-    referenceOrNino = Some("SL211111A"),
-    noNinoReason = Some("he can't find it"),
-    utr = Some("123456789"),
-    noUtrReason = Some("he can't find it"),
-    correspondenceCommonDetail = None,
-    previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false))
 }

@@ -18,7 +18,6 @@ package models.Reads
 
 import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 class CorrespondenceCommonDetailReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
@@ -26,7 +25,8 @@ class CorrespondenceCommonDetailReadsSpec extends WordSpec with MustMatchers wit
     "correclty parse to a CorrespondenceCommonDetails object" when {
       val details = Json.obj("directorContactDetails" -> Json.obj("email" -> "test@test.com",
         "phone" -> "07592113"),
-        "directorAddress" -> Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"),JsString("line3"),JsString("line4"))), "postcode" -> JsString("NE1"), "country" -> Json.obj("name" -> JsString("IT"))))
+        "directorAddress" -> Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"),JsString("line3"),
+          JsString("line4"))), "postcode" -> JsString("NE1"), "country" -> Json.obj("name" -> JsString("IT"))))
       "We have Contact Details" in {
         val result = details.as[CorrespondenceCommonDetail](CorrespondenceCommonDetail.apiReads)
 

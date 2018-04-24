@@ -16,6 +16,8 @@
 
 package models
 
+import org.joda.time.DateTime
+
 trait Samples {
 
 
@@ -39,6 +41,19 @@ trait Samples {
     numberOfDirectorOrPartners = Some(numberOfDirectorOrPartnersSample),
     directorOrPartnerDetail = None)
   val correspondenceCommonDetails = CorrespondenceCommonDetail(nonUkAddressSample,contactDetailsSample)
+  val director = DirectorOrPartnerDetailTypeItem(sequenceId = "",
+    entityType = "",
+    title = None,
+    firstName = "John",
+    middleName = Some("Does Does"),
+    lastName = "Doe",
+    dateOfBirth = DateTime.parse("2019-01-31"),
+    referenceOrNino = Some("SL211111A"),
+    noNinoReason = Some("he can't find it"),
+    utr = Some("123456789"),
+    noUtrReason = Some("he can't find it"),
+    correspondenceCommonDetail = correspondenceCommonDetails,
+    previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false))
 
 
 }
