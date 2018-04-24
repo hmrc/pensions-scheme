@@ -64,6 +64,38 @@ case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: Strin
                                            previousAddressDetail: PreviousAddressDetails)
 object DirectorOrPartnerDetailTypeItem {
   implicit val formats = Json.format[DirectorOrPartnerDetailTypeItem]
+
+  val directorPersonalDetailsReads : Reads[(String,String,Option[String],DateTime)] = (
+    (JsPath \ "firstName").read[String] and
+      (JsPath \ "lastName").read[String] and
+      (JsPath \ "middleName").readNullable[String] and
+      (JsPath \ "dateOfBirth").read[DateTime]
+    )((name,lastName,middleName,dateOfBirth) => (name,lastName,middleName,dateOfBirth))
+
+  def directorReferenceReads(referenceFlag : String, referenceName: String) : Reads[(Option[String],Option[String])] = (
+    (JsPath \ referenceName).readNullable[String] and
+      (JsPath \ "reason").readNullable[String]
+    )((referenceNumber,reason)=>(referenceNumber,reason))
+
+  val apiReads : Reads[DirectorOrPartnerDetailTypeItem] = (
+    (JsPath \ "directorDetails").read(directorPersonalDetailsReads) and
+      (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino","nino")) and
+      (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr","utr")) and
+      (JsPath).read(PreviousAddressDetails.apiReads("director")) and
+      (JsPath).read(CorrespondenceCommonDetail.apiReads)
+    )((directorPersonalDetails,ninoDetails,utrDetails,previousAddress, addressCommonDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
+    entityType = "",
+    title = None,
+    firstName = directorPersonalDetails._1,
+    middleName = directorPersonalDetails._3,
+    lastName = directorPersonalDetails._2,
+    dateOfBirth = directorPersonalDetails._4,
+    referenceOrNino = ninoDetails.flatMap(_._1),
+    noNinoReason = ninoDetails.flatMap(_._2),
+    utr = utrDetails.flatMap(_._1),
+    noUtrReason = utrDetails.flatMap(_._2),
+    correspondenceCommonDetail = addressCommonDetails,
+    previousAddressDetail = previousAddress))
 }
 
 case class PensionSchemeAdministrator(customerType: String, legalStatus: String, idType: Option[String] = None,
