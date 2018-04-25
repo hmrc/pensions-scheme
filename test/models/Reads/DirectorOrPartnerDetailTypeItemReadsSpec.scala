@@ -122,6 +122,12 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
         result.entityType mustBe director.entityType
       }
 
+      "We have a sequence id" in {
+        val result = directors.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+
+        result.sequenceId mustBe "0"
+      }
+
       "We have a previous address detail" in {
         val directorWithPreviousAddress: JsValue = directors +
           ("directorAddressYears" -> JsString("under_a_year")) +
