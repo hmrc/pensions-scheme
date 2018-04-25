@@ -16,7 +16,7 @@
 
 package models.Reads
 
-import models.{Address, ForeignAddress, Samples, UkAddress}
+import models.{Address, InternationalAddress, Samples, UkAddress}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
@@ -85,14 +85,14 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
         "We have a postCode" in {
           val result = (address + ("postcode" -> JsString("NE1"))).as[Address]
 
-          result.asInstanceOf[ForeignAddress].postalCode mustBe nonUkAddressSample.postalCode
+          result.asInstanceOf[InternationalAddress].postalCode mustBe nonUkAddressSample.postalCode
         }
 
 
         "We don't have a postCode" in {
           val result = address.as[Address]
 
-          result.asInstanceOf[ForeignAddress].postalCode mustBe None
+          result.asInstanceOf[InternationalAddress].postalCode mustBe None
         }
       }
 
@@ -149,7 +149,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
           "with no postal code" in {
             val result = address.as[Address]
 
-            result.asInstanceOf[ForeignAddress].postalCode mustBe None
+            result.asInstanceOf[InternationalAddress].postalCode mustBe None
           }
 
           "with postal code" in {
@@ -157,7 +157,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
 
             val result =  input.as[Address]
 
-            result.asInstanceOf[ForeignAddress].postalCode mustBe nonUkAddressSample.postalCode
+            result.asInstanceOf[InternationalAddress].postalCode mustBe nonUkAddressSample.postalCode
           }
         }
       }

@@ -20,7 +20,7 @@ import org.joda.time.DateTime
 
 trait Samples {
 
-  val nonUkAddressSample = ForeignAddress("line1",Some("line2"), Some("line3"),Some("line4"),"IT",Some("NE1"))
+  val nonUkAddressSample = InternationalAddress("line1",Some("line2"), Some("line3"),Some("line4"),"IT",Some("NE1"))
   val ukAddressSample = UkAddress("line1",Some("line2"), Some("line3"),Some("line4"),"GB","NE1")
   val numberOfDirectorOrPartnersSample = NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(true))
   val previousAddressDetailsSample = PreviousAddressDetails(isPreviousAddressLast12Month = false)

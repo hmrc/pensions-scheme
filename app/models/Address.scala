@@ -22,37 +22,18 @@ import play.api.libs.json._
 sealed trait Address
 
 object Address {
-  /*{
-      "lines" : [
-          "test test",
-          "test 2"
-      ],
-      "town" : "test 2",
-      "county" : "test 2",
-      "postcode" : "NE21 2LG",
-      "country" : {
-          "name" : "GB"
-      }
-    }*/
-  val addressTypeOneReads: Reads[Address] = (__ \ "country" \ "name").read[String].flatMap(c => getRightTypeOfReadsBasedOnCountry[UkAddress, ForeignAddress](UkAddress.apiAddressTypeOneReads, ForeignAddress.apiAddressTypeOneReads, c))
-
-  /* {
-        "addressLine1" : "100 SuttonStreet",
-        "addressLine2" : "Wokingham",
-        "addressLine3" : "Surrey",
-        "addressLine4" : "London",
-        "postalCode" : "DH14EJ",
-        "countryCode" : "GB"
-    }*/
-  val addressTypeTwoReads: Reads[Address] = (__ \ "countryCode").read[String].flatMap(c => getRightTypeOfReadsBasedOnCountry[UkAddress, ForeignAddress](UkAddress.apiAddressTypeTwoReads, ForeignAddress.apiAddressTypeTwoReads, c))
+  val addressTypeOneReads: Reads[Address] = (__ \ "country" \ "name").read[String].flatMap(countryCode =>
+    getRightTypeOfReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeOneReads, InternationalAddress.apiAddressTypeOneReads, countryCode))
+  val addressTypeTwoReads: Reads[Address] = (__ \ "countryCode").read[String].flatMap(countryCode =>
+    getRightTypeOfReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeTwoReads, InternationalAddress.apiAddressTypeTwoReads, countryCode))
 
   implicit val reads: Reads[Address] = JsPath.read(addressTypeOneReads) | JsPath.read(addressTypeTwoReads)
 
   implicit val writes: Writes[Address] = Writes {
     case address: UkAddress =>
       UkAddress.writes.writes(address)
-    case address: ForeignAddress =>
-      ForeignAddress.format.writes(address)
+    case address: InternationalAddress =>
+      InternationalAddress.format.writes(address)
   }
 
   val commonTypeOneAddressElementsReads: Reads[(String, Option[String], Option[String], Option[String], String)] = (
@@ -109,23 +90,23 @@ object UkAddress {
     ) ((common, postalCode) => UkAddress(common._1, common._2, common._3, common._4, common._5, postalCode))
 }
 
-case class ForeignAddress(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,
-                          addressLine4: Option[String] = None, countryCode: String, postalCode: Option[String] = None) extends Address
+case class InternationalAddress(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,
+                                addressLine4: Option[String] = None, countryCode: String, postalCode: Option[String] = None) extends Address
 
-object ForeignAddress {
-  implicit val format: Format[ForeignAddress] = Json.format[ForeignAddress]
+object InternationalAddress {
+  implicit val format: Format[InternationalAddress] = Json.format[InternationalAddress]
 
-  val apiAddressTypeTwoReads: Reads[ForeignAddress] = (
+  val apiAddressTypeTwoReads: Reads[InternationalAddress] = (
     JsPath.read(Address.commonTypeTwoAddressElementsReads) and
       (JsPath \ "postalCode").readNullable[String]
-    ) ((common, postalCode) => ForeignAddress(common._1, common._2, common._3, common._4, common._5, postalCode))
+    ) ((common, postalCode) => InternationalAddress(common._1, common._2, common._3, common._4, common._5, postalCode))
 
 
-  val apiAddressTypeOneReads: Reads[ForeignAddress] = (
+  val apiAddressTypeOneReads: Reads[InternationalAddress] = (
     JsPath.read(Address.commonTypeOneAddressElementsReads) and
       (JsPath \ "postcode").readNullable[String]
     ) ((common, postCode) => {
-    ForeignAddress(common._1, common._2, common._3, common._4, common._5, postCode)
+    InternationalAddress(common._1, common._2, common._3, common._4, common._5, postCode)
   })
 }
 

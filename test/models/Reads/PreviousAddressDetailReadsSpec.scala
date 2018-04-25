@@ -55,7 +55,7 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
 
         val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 
-        result.previousAddressDetails.value.asInstanceOf[ForeignAddress].postalCode mustBe None
+        result.previousAddressDetails.value.asInstanceOf[InternationalAddress].postalCode mustBe None
       }
     }
   }

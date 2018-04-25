@@ -117,7 +117,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
           "country" -> JsObject(Map("name" -> JsString("IT")))))
 
         val result = directorWithPreviousAddress.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
-        val expectedDirector = director.copy(previousAddressDetail = PreviousAddressDetails(true,Some(ForeignAddress("line1",Some("line2"),countryCode = "IT"))))
+        val expectedDirector = director.copy(previousAddressDetail = PreviousAddressDetails(true,Some(InternationalAddress("line1",Some("line2"),countryCode = "IT"))))
 
         result.previousAddressDetail mustBe expectedDirector.previousAddressDetail
       }
