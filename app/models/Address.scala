@@ -23,9 +23,9 @@ sealed trait Address
 
 object Address {
   val addressTypeOneReads: Reads[Address] = (__ \ "country" \ "name").read[String].flatMap(countryCode =>
-    getRightTypeOfReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeOneReads, InternationalAddress.apiAddressTypeOneReads, countryCode))
+    getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeOneReads, InternationalAddress.apiAddressTypeOneReads, countryCode))
   val addressTypeTwoReads: Reads[Address] = (__ \ "countryCode").read[String].flatMap(countryCode =>
-    getRightTypeOfReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeTwoReads, InternationalAddress.apiAddressTypeTwoReads, countryCode))
+    getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeTwoReads, InternationalAddress.apiAddressTypeTwoReads, countryCode))
 
   implicit val reads: Reads[Address] = JsPath.read(addressTypeOneReads) | JsPath.read(addressTypeTwoReads)
 
@@ -56,13 +56,8 @@ object Address {
       (JsPath \ "countryCode").read[String]
     ) ((line1, line2, line3, line4, countryCode) => (line1, line2, line3, line4, countryCode))
 
-  private def getRightTypeOfReadsBasedOnCountry[T, B](ukAddressReads: Reads[T], nonUkAddressReads: Reads[B], test: String) = {
-    test match {
-      case "GB" =>
-        ukAddressReads.map(c => c.asInstanceOf[Address])
-      case _ =>
-        nonUkAddressReads.map(c => c.asInstanceOf[Address])
-    }
+  private def getReadsBasedOnCountry[T, B](ukAddressReads: Reads[T], nonUkAddressReads: Reads[B], countryCode: String) = {
+    if (countryCode == "GB") ukAddressReads.map(c => c.asInstanceOf[Address]) else nonUkAddressReads.map(c => c.asInstanceOf[Address])
   }
 }
 
