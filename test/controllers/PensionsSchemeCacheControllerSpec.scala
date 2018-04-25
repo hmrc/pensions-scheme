@@ -33,7 +33,7 @@ import uk.gov.hmrc.http.UnauthorizedException
 
 import scala.concurrent.Future
 
-class JourneyCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with OneAppPerSuite {
+class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with OneAppPerSuite {
 
   implicit lazy val mat: Materializer = app.materializer
 
@@ -41,13 +41,13 @@ class JourneyCacheControllerSpec extends WordSpec with MustMatchers with Mockito
     "mongodb.pensions-scheme-cache.maxSize" -> 512000
   )
 
-  private class JourneyCacheControllerImpl(
+  private class PensionsSchemeCacheControllerImpl(
                                             repo: PensionsSchemeCacheRepository,
                                             authConnector: AuthConnector
-                                          ) extends JourneyCacheController(configuration, repo, authConnector)
+                                          ) extends PensionsSchemeCacheController(configuration, repo, authConnector)
 
-  def controller(repo: PensionsSchemeCacheRepository, authConnector: AuthConnector): JourneyCacheController = {
-    new JourneyCacheControllerImpl(repo, authConnector)
+  def controller(repo: PensionsSchemeCacheRepository, authConnector: AuthConnector): PensionsSchemeCacheController = {
+    new PensionsSchemeCacheControllerImpl(repo, authConnector)
   }
 
   ".get" must {

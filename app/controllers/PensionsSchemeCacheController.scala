@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-abstract class JourneyCacheController (
+abstract class PensionsSchemeCacheController(
                                         config: Configuration,
                                         repository: PensionsSchemeCacheRepository,
                                         val authConnector: AuthConnector
