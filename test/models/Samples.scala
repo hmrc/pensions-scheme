@@ -16,6 +16,8 @@
 
 package models
 
+import java.time.LocalDate
+
 import org.joda.time.DateTime
 
 trait Samples {
@@ -46,7 +48,7 @@ trait Samples {
     firstName = "John",
     middleName = Some("Does Does"),
     lastName = "Doe",
-    dateOfBirth = DateTime.parse("2019-01-31"),
+    dateOfBirth = LocalDate.parse("2019-01-31"),
     referenceOrNino = Some("SL211111A"),
     noNinoReason = Some("he can't find it"),
     utr = Some("123456789"),

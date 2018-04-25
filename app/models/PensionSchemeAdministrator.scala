@@ -16,6 +16,8 @@
 
 package models
 
+import java.time.LocalDate
+
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, Reads}
@@ -57,7 +59,7 @@ object CorrespondenceCommonDetail {
 
 case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: String, title: Option[String] = None,
                                            firstName: String, middleName: Option[String] = None, lastName: String,
-                                           dateOfBirth: DateTime, referenceOrNino: Option[String] = None,
+                                           dateOfBirth: LocalDate, referenceOrNino: Option[String] = None,
                                            noNinoReason: Option[String] = None, utr: Option[String] = None,
                                            noUtrReason: Option[String] = None,
                                            correspondenceCommonDetail: CorrespondenceCommonDetail,
@@ -65,11 +67,11 @@ case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: Strin
 object DirectorOrPartnerDetailTypeItem {
   implicit val formats = Json.format[DirectorOrPartnerDetailTypeItem]
 
-  val directorPersonalDetailsReads : Reads[(String,String,Option[String],DateTime)] = (
+  val directorPersonalDetailsReads : Reads[(String,String,Option[String],LocalDate)] = (
     (JsPath \ "firstName").read[String] and
       (JsPath \ "lastName").read[String] and
       (JsPath \ "middleName").readNullable[String] and
-      (JsPath \ "dateOfBirth").read[DateTime]
+      (JsPath \ "dateOfBirth").read[LocalDate]
     )((name,lastName,middleName,dateOfBirth) => (name,lastName,middleName,dateOfBirth))
 
   def directorReferenceReads(referenceFlag : String, referenceName: String) : Reads[(Option[String],Option[String])] = (
