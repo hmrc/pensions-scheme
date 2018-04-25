@@ -27,7 +27,7 @@ object Address {
   val addressTypeTwoReads: Reads[Address] = (__ \ "countryCode").read[String].flatMap(countryCode =>
     getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeTwoReads, InternationalAddress.apiAddressTypeTwoReads, countryCode))
 
-  implicit val reads: Reads[Address] = JsPath.read(addressTypeOneReads) | JsPath.read(addressTypeTwoReads)
+  implicit val reads: Reads[Address] =  addressTypeOneReads orElse addressTypeTwoReads
 
   implicit val writes: Writes[Address] = Writes {
     case address: UkAddress =>
