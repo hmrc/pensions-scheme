@@ -60,6 +60,12 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
           result.dateOfBirth mustBe director.dateOfBirth
         }
+
+        "We don't have Title" in {
+          val result = directors.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+
+          result.title mustBe None
+        }
       }
 
       "We have director NINO details" when {

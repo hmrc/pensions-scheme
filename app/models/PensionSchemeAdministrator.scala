@@ -87,7 +87,7 @@ object DirectorOrPartnerDetailTypeItem {
       (JsPath).read(CorrespondenceCommonDetail.apiReads)
     )((directorPersonalDetails,ninoDetails,utrDetails,previousAddress, addressCommonDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "", //TODO: Missing mapping
     entityType = "", //TODO: Missing mapping
-    title = None, //TODO: Missing mapping
+    title = None,
     firstName = directorPersonalDetails._1,
     middleName = directorPersonalDetails._3,
     lastName = directorPersonalDetails._2,
