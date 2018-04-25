@@ -22,6 +22,19 @@ import play.api.libs.json._
 sealed trait Address
 
 object Address {
+
+  /*{
+      "lines" : [
+          "test test",
+          "test 2"
+      ],
+      "town" : "test 2",
+      "county" : "test 2",
+      "postcode" : "NE21 2LG",
+      "country" : {
+          "name" : "GB"
+      }
+    }*/
   val addressTypeOneReads: Reads[Address] = (__ \ "country" \ "name").read[String].flatMap {
     case "GB" =>
       UkAddress.apiAddressTypeOneReads.map(c=>c.asInstanceOf[Address])
@@ -29,6 +42,14 @@ object Address {
       ForeignAddress.apiAddressTypeOneReads.map(c=>c.asInstanceOf[Address])
   }
 
+  /* {
+        "addressLine1" : "100 SuttonStreet",
+        "addressLine2" : "Wokingham",
+        "addressLine3" : "Surrey",
+        "addressLine4" : "London",
+        "postalCode" : "DH14EJ",
+        "countryCode" : "GB"
+    }*/
   val addressTypeTwoReads : Reads[Address] = (__ \ "countryCode").read[String].flatMap {
     case "GB" =>
       UkAddress.apiAddressTypeTwoReads.map(c=>c.asInstanceOf[Address])

@@ -17,10 +17,8 @@
 package models.Reads
 
 import models.{Reads => _, _}
-import org.joda.time.DateTime
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 
 class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
@@ -71,27 +69,20 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
           result.referenceOrNino mustBe director.referenceOrNino
         }
 
-        "Has nino flag is set to false" when {
-          val directors = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
-            "lastName" -> JsString("Doe"),
-            "middleName" -> JsString("Does Does"),
-            "dateOfBirth" -> JsString("2019-01-31")),
-            "directorNino" -> Json.obj("hasNino" -> JsBoolean(false), "reason" -> JsString("he can't find it")),
-            "directorAddressYears" -> JsString("over_a_year")) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-            Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
-              "country" -> JsObject(Map("name" -> JsString("IT")))))
+        "We don't have a nino" in {
+          val directorNoNino = directors + ("directorNino" -> Json.obj("hasNino" -> JsBoolean(false)))
 
-          "Nino is not displayed" in {
-            val result = directors.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+          val result = directorNoNino.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
 
-            result.referenceOrNino mustBe None
-          }
+          result.referenceOrNino mustBe None
+        }
 
-          "We have a reason for not having nino" in {
-            val result = directors.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+        "We have a reason for not having nino" in {
+          val directorNoNino = directors + ("directorNino" -> Json.obj("reason" -> JsString("he can't find it")))
 
-            result.noNinoReason mustBe director.noNinoReason
-          }
+          val result = directorNoNino.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+
+          result.noNinoReason mustBe director.noNinoReason
         }
       }
 
@@ -102,27 +93,20 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
           result.utr mustBe director.utr
         }
 
-        "Has utr flag is set to false" when {
-          val directors = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
-            "lastName" -> JsString("Doe"),
-            "middleName" -> JsString("Does Does"),
-            "dateOfBirth" -> JsString("2019-01-31")),
-            "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(false), "reason" -> JsString("he can't find it")),
-            "directorAddressYears" -> JsString("over_a_year")) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-            Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
-              "country" -> JsObject(Map("name" -> JsString("IT")))))
+        "There is no UTR" in {
+          val directorNoUtr = directors + ("directorUtr" -> Json.obj("hasUtr" -> JsBoolean(false)))
 
-          "Utr is not displayed" in {
-            val result = directors.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+          val result = directorNoUtr.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
 
-            result.utr mustBe None
-          }
+          result.utr mustBe None
+        }
 
-          "We have a reason for not having utr" in {
-            val result = directors.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+        "We have a reason for not having utr" in {
+          val directorNoUtr = directors + ("directorUtr" -> Json.obj("reason" -> JsString("he can't find it")))
 
-            result.noUtrReason mustBe director.noUtrReason
-          }
+          val result = directorNoUtr.as[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.apiReads)
+
+          result.noUtrReason mustBe director.noUtrReason
         }
       }
 

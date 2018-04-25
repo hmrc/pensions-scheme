@@ -103,12 +103,12 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
   }
 
   val apiReads: Reads[PensionSchemeAdministrator] = (
-    (JsPath \ "legalStatus").read[String] and
-      (JsPath \ "sapNumber").read[String] and
-      (JsPath \ "noIdentifier").read[Boolean] and
-      (JsPath \ "customerType").read[String] and
-      (JsPath \ "idType").readNullable[String] and
-      (JsPath \ "idNumber").readNullable[String] and
+    (JsPath \ "legalStatus").read[String] and //TODO: Missing mapping
+      (JsPath \ "sapNumber").read[String] and //TODO: Missing mapping
+      (JsPath \ "noIdentifier").read[Boolean] and //TODO: Missing mapping
+      (JsPath \ "customerType").read[String] and //TODO: Missing mapping
+      (JsPath \ "idType").readNullable[String] and //TODO: Missing mapping
+      (JsPath \ "idNumber").readNullable[String] and //TODO: Missing mapping
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
       (JsPath \ "contactDetails").read(ContactDetails.apiReads) and
       (JsPath).read(PreviousAddressDetails.apiReads("company")) and

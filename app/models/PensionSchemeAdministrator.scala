@@ -17,8 +17,8 @@
 package models
 
 import org.joda.time.DateTime
-import play.api.libs.json.{JsPath, Json, Reads, Writes}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Json, Reads}
 
 case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
                                   vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None)
@@ -83,9 +83,9 @@ object DirectorOrPartnerDetailTypeItem {
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr","utr")) and
       (JsPath).read(PreviousAddressDetails.apiReads("director")) and
       (JsPath).read(CorrespondenceCommonDetail.apiReads)
-    )((directorPersonalDetails,ninoDetails,utrDetails,previousAddress, addressCommonDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "",
-    entityType = "",
-    title = None,
+    )((directorPersonalDetails,ninoDetails,utrDetails,previousAddress, addressCommonDetails)=>DirectorOrPartnerDetailTypeItem(sequenceId = "", //TODO: Missing mapping
+    entityType = "", //TODO: Missing mapping
+    title = None, //TODO: Missing mapping
     firstName = directorPersonalDetails._1,
     middleName = directorPersonalDetails._3,
     lastName = directorPersonalDetails._2,
