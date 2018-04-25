@@ -20,11 +20,12 @@ import com.google.inject.Inject
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
 
-class SchemeJourneyCacheRepository @Inject() (
-                                               config: Configuration,
-                                               component: ReactiveMongoComponent
-                                             ) extends PensionsSchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.scheme-journey.name"),
-  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-journey.timeToLiveInSeconds")),
+class PSANameCacheRepository @Inject() (
+                                            config: Configuration,
+                                            component: ReactiveMongoComponent
+                                          ) extends PensionsSchemeCacheRepository(
+  config.underlying.getString("mongodb.pensions-scheme-cache.psa-name.name"),
+  None,
   component
 )
+

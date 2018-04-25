@@ -23,9 +23,9 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 class PSAJourneyCacheRepository @Inject() (
                                                config: Configuration,
                                                component: ReactiveMongoComponent
-                                             ) extends JourneyCacheRepository(
-  config.underlying.getString("mongodb.journey-cache.psa.name"),
-  config.underlying.getInt("mongodb.journey-cache.psa.timeToLiveInSeconds"),
+                                             ) extends PensionsSchemeCacheRepository(
+  config.underlying.getString("mongodb.pensions-scheme-cache.psa-journey.name"),
+  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.psa-journey.timeToLiveInSeconds")),
   component
 )
 
