@@ -1,0 +1,65 @@
+/*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package models.Reads
+
+import play.api.libs.functional.syntax._
+import models.{OrganisationDetailType, Samples}
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import play.api.libs.json.{JsPath, JsString, Json, Reads}
+
+class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionValues with Samples {
+  "A JSON Payload containing organisation detials" should {
+    "Map correctly to an OrganisationDetailTypeSpec" when {
+      val companyDetails = Json.obj("companyDetails" -> Json.obj("companyName" -> JsString("Company Test"),
+        "vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
+        "companyRegistrationNumber" -> JsString("CRN11111"))
+
+      "We have a name" in {
+        val result = companyDetails.as[OrganisationDetailType](apiReads)
+
+        result.name mustBe companySample.name
+      }
+
+      "We have VAT registration number" in {
+        val result = companyDetails.as[OrganisationDetailType](apiReads)
+
+        result.vatRegistrationNumber mustBe companySample.vatRegistrationNumber
+      }
+
+      "We have a PAYE employer reference number" in {
+        val result = companyDetails.as[OrganisationDetailType](apiReads)
+
+        result.payeReference mustBe companySample.payeReference
+      }
+
+      "We have a Company Registration Number" in {
+        val result = companyDetails.as[OrganisationDetailType](apiReads)
+
+        result.crnNumber mustBe companySample.crnNumber
+      }
+    }
+  }
+
+  val apiReads : Reads[OrganisationDetailType] = (
+    (JsPath \ "companyDetails" \ "companyName").readNullable[String] and
+      (JsPath \ "companyDetails" \ "vatRegistrationNumber").readNullable[String] and
+        (JsPath \ "companyDetails" \ "payeEmployerReferenceNumber").readNullable[String] and
+      (JsPath \ "companyRegistrationNumber").readNullable[String]
+  )((name,vatNumber, payeNumber, crnNumber)=>OrganisationDetailType(name,vatRegistrationNumber = vatNumber,payeReference = payeNumber,crnNumber = crnNumber))
+
+  val companySample = OrganisationDetailType(Some("Company Test"),vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
+}
