@@ -16,9 +16,10 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsPath, Json, Reads}
+import play.api.libs.functional.syntax._
 
-case class AddressAndContactDetails(addressDetails: AddressType, contactDetails: ContactDetails)
+case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
 
 object AddressAndContactDetails {
   implicit val formats = Json.format[AddressAndContactDetails]
@@ -32,13 +33,21 @@ object PersonalDetails {
 }
 
 case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddressDetails: Option[AddressType] = None)
+                                  previousAddressDetails: Option[Address] = None)
 
 object PreviousAddressDetails {
   implicit val formats = Json.format[PreviousAddressDetails]
+
+  def apiReads(typeOfAddressDetail: String) : Reads[PreviousAddressDetails] = (
+    (JsPath \ s"${typeOfAddressDetail}AddressYears").read[String] and
+      (JsPath \ s"${typeOfAddressDetail}PreviousAddress").readNullable[Address]
+  )((addressLast12Months,address)=>{
+    val isAddressLast12Months= if (addressLast12Months == "under_a_year") true else false
+    PreviousAddressDetails(isAddressLast12Months,address)
+  })
 }
 
-case class CorrespondenceAddressDetails(addressDetails: AddressType)
+case class CorrespondenceAddressDetails(addressDetails: Address)
 
 object CorrespondenceAddressDetails {
   implicit val formats = Json.format[CorrespondenceAddressDetails]
@@ -57,7 +66,7 @@ case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boo
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
                                     doesSchemeProvideBenefits: String, schemeEstablishedCountry: String, haveValidBank: Boolean,
                                     insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
-                                    insuranceCompanyAddress: Option[AddressType] = None)
+                                    insuranceCompanyAddress: Option[Address] = None)
 
 object CustomerAndSchemeDetails {
   implicit val formats = Json.format[CustomerAndSchemeDetails]

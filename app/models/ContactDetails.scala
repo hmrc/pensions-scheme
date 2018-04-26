@@ -16,10 +16,17 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{Json, Reads, _}
 
 case class ContactDetails(telephone: String, mobileNumber: Option[String] = None, fax: Option[String] = None, email: String)
 
 object ContactDetails {
   implicit val formats = Json.format[ContactDetails]
+  val apiReads: Reads[ContactDetails] = (
+    (JsPath \ "phone").read[String] and
+      (JsPath \ "email").read[String]
+    ) ((phone, email) => ContactDetails(phone,email = email)
+  )
 }

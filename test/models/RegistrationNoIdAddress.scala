@@ -23,7 +23,7 @@ class RegistrationNoIdAddress extends SpecBase{
 
   "Reads for Registrant" must {
 
-    val foreignAddress = ForeignAddress(
+    val internationalAddress = InternationalAddress(
       "31 Myers Street",
       Some("Haddonfield"),
       Some("Illinois"),
@@ -39,17 +39,17 @@ class RegistrationNoIdAddress extends SpecBase{
       emailAddress = None
     )
 
-    val organisationRegistrantForeignAddress = OrganisationRegistrant(
+    val organisationRegistrantInternationalAddress = OrganisationRegistrant(
       acknowledgementReference = "12345678901234567890123456789012",
       organisation = organisationData,
-      address = foreignAddress,
+      address = internationalAddress,
       contactDetails = contactDetailsData
     )
 
    "successfully read a OrganisationRegistrant" in {
       val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
 
-      Json.fromJson[OrganisationRegistrant](json).get mustEqual organisationRegistrantForeignAddress
+      Json.fromJson[OrganisationRegistrant](json).get mustEqual organisationRegistrantInternationalAddress
     }
 
 
@@ -57,7 +57,7 @@ class RegistrationNoIdAddress extends SpecBase{
 
       "succesfully write a json schema from a Organisation Registrant" in {
         val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
-        Json.toJson[OrganisationRegistrant](organisationRegistrantForeignAddress)(OrganisationRegistrant.apiWrites) mustEqual json
+        Json.toJson[OrganisationRegistrant](organisationRegistrantInternationalAddress)(OrganisationRegistrant.apiWrites) mustEqual json
       }
     }
 
@@ -66,7 +66,7 @@ class RegistrationNoIdAddress extends SpecBase{
       val outputJson = readJsonFromFile("/data/validRegistrationNoIDOrganisationToEMTP.json")
 
       val caseClass = Json.fromJson[OrganisationRegistrant](inputJson).get
-      caseClass mustEqual organisationRegistrantForeignAddress
+      caseClass mustEqual organisationRegistrantInternationalAddress
       Json.toJson[OrganisationRegistrant](caseClass)(OrganisationRegistrant.apiWrites) mustEqual outputJson
     }
   }
