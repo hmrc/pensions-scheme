@@ -15,13 +15,12 @@
     "haveValidBank": true,
     "insuranceCompanyName": "XZY - Co. -Ltd",
     "insuranceCompanyAddress": {
-      "addressType": "UK",
-      "line1": "abcdefg",
-      "line2": "abcdef",
-      "line3": "abcd",
-      "line4": "abcdefghijklmno",
-      "postalCode": "B5 9EX",
-      "countryCode": "UK"
+      "addressLine1" : "100 SuttonStreet",
+      "addressLine2" : "Wokingham",
+      "addressLine3" : "Surrey",
+      "addressLine4" : "London",
+      "postalCode" : "DH14EJ",
+      "countryCode" : "GB"
     },
     "policyNumber": "12345678"
   },
@@ -40,13 +39,12 @@
     "pensionAdviserName": "abcdef",
     "addressAndContactDetails": {
       "addressDetails": {
-        "addressType": "UK",
-        "line1": "abcdefg",
-        "line2": "abcdef",
-        "line3": "abcd",
-        "line4": "abcdefghijklmno",
-        "postalCode": "B5 9EX",
-        "countryCode": "UK"
+        "addressLine1" : "100 SuttonStreet",
+        "addressLine2" : "Wokingham",
+        "addressLine3" : "Surrey",
+        "addressLine4" : "London",
+        "postalCode" : "DH14EJ",
+        "countryCode" : "GB"
       },
       "contactDetails": {
         "telephone": "7889129814",
@@ -78,13 +76,12 @@
       "haveMoreThanTenDirectorOrPartner": false,
       "correspondenceAddressDetails": {
         "addressDetails": {
-          "addressType": "UK",
-          "line1": "abcdefg",
-          "line2": "abcdef",
-          "line3": "abcd",
-          "line4": "abcdefghijklmno",
-          "postalCode": "B5 9EX",
-          "countryCode": "UK"
+          "addressLine1" : "100 SuttonStreet",
+          "addressLine2" : "Wokingham",
+          "addressLine3" : "Surrey",
+          "addressLine4" : "London",
+          "postalCode" : "DH14EJ",
+          "countryCode" : "GB"
         }
       },
       "correspondenceContactDetails": {
@@ -98,13 +95,12 @@
       "previousAddressDetails": {
         "isPreviousAddressLast12Month": true,
         "previousAddressDetails": {
-          "addressType": "UK",
-          "line1": "abcdefg",
-          "line2": "abcdef",
-          "line3": "abcd",
-          "line4": "abcdefghijklmno",
-          "postalCode": "B5 9EX",
-          "countryCode": "UK"
+          "addressLine1" : "100 SuttonStreet",
+          "addressLine2" : "Wokingham",
+          "addressLine3" : "Surrey",
+          "addressLine4" : "London",
+          "postalCode" : "DH14EJ",
+          "countryCode" : "GB"
         }
       }
     }
