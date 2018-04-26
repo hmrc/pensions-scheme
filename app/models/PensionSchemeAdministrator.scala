@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
+import play.api.libs.json
 import play.api.libs.json.{JsPath, JsResult, JsSuccess, JsValue, Json, Reads}
 
 case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
@@ -72,12 +73,12 @@ case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: Strin
 object DirectorOrPartnerDetailTypeItem {
   implicit val formats = Json.format[DirectorOrPartnerDetailTypeItem]
 
-  val apiReads: Reads[Seq[DirectorOrPartnerDetailTypeItem]] = Reads {
+  val apiReads: Reads[List[DirectorOrPartnerDetailTypeItem]] = json.Reads {
     json =>
       json.validate[Seq[JsValue]].flatMap(elements => {
         val directors: Seq[JsResult[DirectorOrPartnerDetailTypeItem]] = elements.zipWithIndex.map(director => director._1.
           validate[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.directorReads(director._2)))
-        directors.foldLeft[JsResult[Seq[DirectorOrPartnerDetailTypeItem]]](JsSuccess(Seq.empty)) {
+        directors.foldLeft[JsResult[List[DirectorOrPartnerDetailTypeItem]]](JsSuccess(List.empty)) {
           (directors, currentDirector) => {
             for {
               sequenceOfDirectors <- directors

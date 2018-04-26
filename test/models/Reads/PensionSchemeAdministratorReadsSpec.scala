@@ -99,6 +99,25 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
         result.correspondenceAddressDetail mustBe pensionSchemeAdministratorSample.correspondenceAddressDetail
       }
+
+      "We have a director" in {
+        val director = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
+          "lastName" -> JsString("Doe"),
+          "middleName" -> JsString("Does Does"),
+          "dateOfBirth" -> JsString("2019-01-31")),
+          "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
+          "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
+          "directorAddressYears" -> JsString("over_a_year")
+        ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
+          Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
+            "country" -> JsObject(Map("name" -> JsString("IT")))))
+
+        val directors = JsArray(Seq(director,director))
+        val pensionSchemeAdministrator = input + ("directors" -> directors)
+        val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(apiReads).asOpt.value
+
+        result.directorOrPartnerDetail.value.head.sequenceId mustBe directorSample.sequenceId
+      }
     }
   }
 
@@ -112,9 +131,10 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
       (JsPath \ "contactDetails").read(ContactDetails.apiReads) and
       (JsPath).read(PreviousAddressDetails.apiReads("company")) and
-      (JsPath \ "companyAddressId").read[Address]
+      (JsPath \ "companyAddressId").read[Address] and
+      (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads)
     ) ((legalStatus, sapNumber, noIdentifier, customerType, idType,
-        idNumber, isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress) => PensionSchemeAdministrator(
+        idNumber, isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors) => PensionSchemeAdministrator(
     customerType = customerType,
     legalStatus = legalStatus,
     sapNumber = sapNumber,
@@ -125,5 +145,6 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
     correspondenceAddressDetail = correspondenceAddress,
     correspondenceContactDetail = contactDetails,
-    previousAddressDetail = previousAddressDetails))
+    previousAddressDetail = previousAddressDetails,
+    directorOrPartnerDetail = directors))
 }

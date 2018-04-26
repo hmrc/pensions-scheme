@@ -42,7 +42,7 @@ trait Samples {
     numberOfDirectorOrPartners = Some(numberOfDirectorOrPartnersSample),
     directorOrPartnerDetail = None)
   val correspondenceCommonDetails = CorrespondenceCommonDetail(nonUkAddressSample,contactDetailsSample)
-  val directorSample = DirectorOrPartnerDetailTypeItem(sequenceId = "",
+  val directorSample = DirectorOrPartnerDetailTypeItem(sequenceId = "0",
     entityType = "Director",
     title = None,
     firstName = "John",
