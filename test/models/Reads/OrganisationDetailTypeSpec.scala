@@ -24,9 +24,8 @@ import play.api.libs.json.{JsPath, JsString, Json, Reads}
 class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "A JSON Payload containing organisation detials" should {
     "Map correctly to an OrganisationDetailTypeSpec" when {
-      val companyDetails = Json.obj("companyDetails" -> Json.obj("companyName" -> JsString("Company Test"),
-        "vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
-        "companyRegistrationNumber" -> JsString("CRN11111"))
+      val companyDetails = Json.obj("companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
+        "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
 
       "We have a name" in {
         val result = companyDetails.as[OrganisationDetailType](apiReads)
@@ -55,7 +54,7 @@ class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionV
   }
 
   val apiReads : Reads[OrganisationDetailType] = (
-    (JsPath \ "companyDetails" \ "companyName").readNullable[String] and
+    (JsPath \ "businessDetails" \ "companyName").readNullable[String] and
       (JsPath \ "companyDetails" \ "vatRegistrationNumber").readNullable[String] and
         (JsPath \ "companyDetails" \ "payeEmployerReferenceNumber").readNullable[String] and
       (JsPath \ "companyRegistrationNumber").readNullable[String]
