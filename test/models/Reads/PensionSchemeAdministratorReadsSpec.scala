@@ -130,10 +130,10 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have individual details" in {
-        val inputWithIndividualDetails = (input + ("individualDetails" -> Json.obj("firstName" -> JsString("John"),
+        val inputWithIndividualDetails = input + ("individualDetails" -> Json.obj("firstName" -> JsString("John"),
           "lastName" -> JsString("Doe"),
           "middleName" -> JsString("Does Does"),
-          "dateOfBirth" -> JsString("2019-01-31"))))
+          "dateOfBirth" -> JsString("2019-01-31")))
 
         val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(apiReads).asOpt.value
 
