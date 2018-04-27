@@ -115,20 +115,13 @@ object DirectorOrPartnerDetailTypeItem {
       })
   }
 
-  val directorPersonalDetailsReads: Reads[(String, String, Option[String], LocalDate)] = (
-    (JsPath \ "firstName").read[String] and
-      (JsPath \ "lastName").read[String] and
-      (JsPath \ "middleName").readNullable[String] and
-      (JsPath \ "dateOfBirth").read[LocalDate]
-    ) ((name, lastName, middleName, dateOfBirth) => (name, lastName, middleName, dateOfBirth))
-
   def directorReferenceReads(referenceFlag: String, referenceName: String): Reads[(Option[String], Option[String])] = (
     (JsPath \ referenceName).readNullable[String] and
       (JsPath \ "reason").readNullable[String]
     ) ((referenceNumber, reason) => (referenceNumber, reason))
 
   def directorReads(index: Int): Reads[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath \ "directorDetails").read(directorPersonalDetailsReads) and
+    (JsPath \ "directorDetails").read(IndividualDetailType.apiReads) and
       (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino", "nino")) and
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr", "utr")) and
       (JsPath).read(PreviousAddressDetails.apiReads("director")) and
@@ -136,10 +129,10 @@ object DirectorOrPartnerDetailTypeItem {
     ) ((directorPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) => DirectorOrPartnerDetailTypeItem(sequenceId = index.toString,
     entityType = "Director",
     title = None,
-    firstName = directorPersonalDetails._1,
-    middleName = directorPersonalDetails._3,
-    lastName = directorPersonalDetails._2,
-    dateOfBirth = directorPersonalDetails._4,
+    firstName = directorPersonalDetails.firstName,
+    middleName = directorPersonalDetails.middleName,
+    lastName = directorPersonalDetails.lastName,
+    dateOfBirth = directorPersonalDetails.dateOfBirth,
     referenceOrNino = ninoDetails.flatMap(_._1),
     noNinoReason = ninoDetails.flatMap(_._2),
     utr = utrDetails.flatMap(_._1),

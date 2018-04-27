@@ -17,13 +17,9 @@
 package models.Reads
 
 
-import java.time.LocalDate
-
-import models.{DirectorOrPartnerDetailTypeItem, IndividualDetailType, OrganisationDetailType, Samples}
+import models.{IndividualDetailType, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.functional.syntax._
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsPath, JsString, Json, Reads}
+import play.api.libs.json.{JsString, Json}
 
 class IndividualDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "A JSON payload containing the details of an individual" should {

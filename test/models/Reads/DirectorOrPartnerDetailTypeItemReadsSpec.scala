@@ -51,34 +51,10 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
         }
 
 
-        "We have a first name" in {
+        "We have individual details" in {
           val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
 
           result.head.firstName mustBe directorSample.firstName
-        }
-
-        "We have a last name" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.head.lastName mustBe directorSample.lastName
-        }
-
-        "We have a middle name " in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.head.middleName mustBe directorSample.middleName
-        }
-
-        "We have a date of birth" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.head.dateOfBirth mustBe directorSample.dateOfBirth
-        }
-
-        "We don't have Title" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.head.title mustBe None
         }
       }
 
