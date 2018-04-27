@@ -50,6 +50,33 @@ class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionV
 
         result.crnNumber mustBe companySample.crnNumber
       }
+
+      "We have no company details" in {
+        val orgDetailsWithNoCompanyDetails = companyDetails - "companyDetails"
+
+        val result = orgDetailsWithNoCompanyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+
+        result.vatRegistrationNumber mustBe None
+      }
+
+
+      "We have no VAT registration number" in {
+        val companyDetails = Json.obj("companyDetails" -> Json.obj("payeEmployerReferenceNumber" -> JsString("PAYE11111")),
+          "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
+
+        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+
+        result.vatRegistrationNumber mustBe None
+      }
+
+      "We have no payeEmployerReferenceNumber" in {
+        val companyDetails = Json.obj("companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("PAYE11111")),
+          "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
+
+        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+
+        result.payeReference mustBe None
+      }
     }
   }
 }

@@ -29,13 +29,25 @@ case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option
 object OrganisationDetailType {
   implicit val formats = Json.format[OrganisationDetailType]
 
+  val companyDetailsReads : Reads[Option[(Option[String],Option[String])]] = (
+    (JsPath \ "vatRegistrationNumber").readNullable[String] and
+      (JsPath \ "payeEmployerReferenceNumber").readNullable[String]
+  )((vatRegistrationNumber,payeEmployerReferenceNumber) => {
+    (vatRegistrationNumber,payeEmployerReferenceNumber) match {
+      case (None,None) => None
+      case _ => Some(vatRegistrationNumber,payeEmployerReferenceNumber)
+    }
+  })
+
+
   val apiReads : Reads[OrganisationDetailType] = (
     (JsPath \ "businessDetails" \ "companyName").readNullable[String] and
-      (JsPath \ "companyDetails" \ "vatRegistrationNumber").readNullable[String] and
-      (JsPath \ "companyDetails" \ "payeEmployerReferenceNumber").readNullable[String] and
+      (JsPath \ "companyDetails").readNullable(companyDetailsReads) and
       (JsPath \ "companyRegistrationNumber").readNullable[String]
-    )((name,vatNumber, payeNumber, crnNumber)=>
-    OrganisationDetailType(name,vatRegistrationNumber = vatNumber,payeReference = payeNumber,crnNumber = crnNumber))
+    )((name, companyDetails: Option[Option[(Option[String], Option[String])]], crnNumber)=>
+    OrganisationDetailType(name,vatRegistrationNumber =  companyDetails.flatMap(c=>c.flatMap(c=>c._1)),
+      payeReference = companyDetails.flatMap(c=>c.flatMap(c=>c._2)),
+      crnNumber = crnNumber))
 }
 
 case class IndividualDetailType(title: Option[String] = None, firstName: String, middleName: Option[String] = None,
