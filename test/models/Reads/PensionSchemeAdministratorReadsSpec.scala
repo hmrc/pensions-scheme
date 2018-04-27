@@ -128,6 +128,17 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
         result.organisationDetail.value.crnNumber mustBe companySample.crnNumber
       }
+
+      "We have individual details" in {
+        val inputWithIndividualDetails = (input + ("individualDetails" -> Json.obj("firstName" -> JsString("John"),
+          "lastName" -> JsString("Doe"),
+          "middleName" -> JsString("Does Does"),
+          "dateOfBirth" -> JsString("2019-01-31"))))
+
+        val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(apiReads).asOpt.value
+
+        result.individualDetail.value.dateOfBirth mustBe individualSample.dateOfBirth
+      }
     }
   }
 
@@ -143,9 +154,10 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       (JsPath).read(PreviousAddressDetails.apiReads("company")) and
       (JsPath \ "companyAddressId").read[Address] and
       (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
-      (JsPath).read(OrganisationDetailType.apiReads)
+      (JsPath).read(OrganisationDetailType.apiReads) and
+      (JsPath \ "individualDetails").readNullable(IndividualDetailType.apiReads)
     ) ((legalStatus, sapNumber, noIdentifier, customerType, idType,
-        idNumber, isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, orgDetails) => PensionSchemeAdministrator(
+        idNumber, isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, orgDetails, individualDetails) => PensionSchemeAdministrator(
     customerType = customerType,
     legalStatus = legalStatus,
     sapNumber = sapNumber,
@@ -158,5 +170,6 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     correspondenceContactDetail = contactDetails,
     previousAddressDetail = previousAddressDetails,
     directorOrPartnerDetail = directors,
-    organisationDetail = Some(orgDetails)))
+    organisationDetail = Some(orgDetails),
+    individualDetail = individualDetails))
 }
