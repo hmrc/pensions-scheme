@@ -16,7 +16,7 @@
 
 package controllers
 
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.mvc.{Action, AnyContent, RawBuffer}
 import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
@@ -47,8 +47,10 @@ abstract class PensionsSchemeCacheController(
   def get(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        repository.get(id).map {
-          _.map(Ok(_))
+        Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
+        repository.get(id).map { response =>
+          Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
+          response.map{Ok(_)}
             .getOrElse(NotFound)
         }
       }
