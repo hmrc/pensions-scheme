@@ -16,10 +16,9 @@
 
 package models.Reads
 
-import play.api.libs.functional.syntax._
 import models.{OrganisationDetailType, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsPath, JsString, Json, Reads}
+import play.api.libs.json.{JsString, Json}
 
 class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "A JSON Payload containing organisation detials" should {
