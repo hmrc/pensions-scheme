@@ -28,37 +28,28 @@ class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionV
         "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
 
       "We have a name" in {
-        val result = companyDetails.as[OrganisationDetailType](apiReads)
+        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
 
         result.name mustBe companySample.name
       }
 
       "We have VAT registration number" in {
-        val result = companyDetails.as[OrganisationDetailType](apiReads)
+        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
 
         result.vatRegistrationNumber mustBe companySample.vatRegistrationNumber
       }
 
       "We have a PAYE employer reference number" in {
-        val result = companyDetails.as[OrganisationDetailType](apiReads)
+        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
 
         result.payeReference mustBe companySample.payeReference
       }
 
       "We have a Company Registration Number" in {
-        val result = companyDetails.as[OrganisationDetailType](apiReads)
+        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
 
         result.crnNumber mustBe companySample.crnNumber
       }
     }
   }
-
-  val apiReads : Reads[OrganisationDetailType] = (
-    (JsPath \ "businessDetails" \ "companyName").readNullable[String] and
-      (JsPath \ "companyDetails" \ "vatRegistrationNumber").readNullable[String] and
-        (JsPath \ "companyDetails" \ "payeEmployerReferenceNumber").readNullable[String] and
-      (JsPath \ "companyRegistrationNumber").readNullable[String]
-  )((name,vatNumber, payeNumber, crnNumber)=>OrganisationDetailType(name,vatRegistrationNumber = vatNumber,payeReference = payeNumber,crnNumber = crnNumber))
-
-  val companySample = OrganisationDetailType(Some("Company Test"),vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
 }

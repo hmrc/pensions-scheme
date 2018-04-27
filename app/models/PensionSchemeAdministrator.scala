@@ -28,6 +28,14 @@ case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option
 
 object OrganisationDetailType {
   implicit val formats = Json.format[OrganisationDetailType]
+
+  val apiReads : Reads[OrganisationDetailType] = (
+    (JsPath \ "businessDetails" \ "companyName").readNullable[String] and
+      (JsPath \ "companyDetails" \ "vatRegistrationNumber").readNullable[String] and
+      (JsPath \ "companyDetails" \ "payeEmployerReferenceNumber").readNullable[String] and
+      (JsPath \ "companyRegistrationNumber").readNullable[String]
+    )((name,vatNumber, payeNumber, crnNumber)=>
+    OrganisationDetailType(name,vatRegistrationNumber = vatNumber,payeReference = payeNumber,crnNumber = crnNumber))
 }
 
 case class IndividualDetailType(title: Option[String] = None, firstName: String, middleName: Option[String] = None,

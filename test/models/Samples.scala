@@ -55,6 +55,7 @@ trait Samples {
     noUtrReason = Some("he can't find it"),
     correspondenceCommonDetail = correspondenceCommonDetails,
     previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false))
+  val companySample = OrganisationDetailType(Some("Company Test"),vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
 
 
 }
