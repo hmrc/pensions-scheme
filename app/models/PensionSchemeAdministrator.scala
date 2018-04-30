@@ -18,8 +18,8 @@ package models
 
 import java.time.LocalDate
 
-import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
+import play.api.libs.json
 import play.api.libs.json.{JsPath, JsResult, JsSuccess, JsValue, Json, Reads}
 
 case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
@@ -27,13 +27,40 @@ case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option
 
 object OrganisationDetailType {
   implicit val formats = Json.format[OrganisationDetailType]
+
+  val companyDetailsReads: Reads[Option[(Option[String], Option[String])]] = (
+    (JsPath \ "vatRegistrationNumber").readNullable[String] and
+      (JsPath \ "payeEmployerReferenceNumber").readNullable[String]
+    ) ((vatRegistrationNumber, payeEmployerReferenceNumber) => {
+    (vatRegistrationNumber, payeEmployerReferenceNumber) match {
+      case (None, None) => None
+      case _ => Some(vatRegistrationNumber, payeEmployerReferenceNumber)
+    }
+  })
+
+
+  val apiReads: Reads[OrganisationDetailType] = (
+    (JsPath \ "businessDetails" \ "companyName").readNullable[String] and
+      (JsPath \ "companyDetails").readNullable(companyDetailsReads) and
+      (JsPath \ "companyRegistrationNumber").readNullable[String]
+    ) ((name, companyDetails: Option[Option[(Option[String], Option[String])]], crnNumber) =>
+    OrganisationDetailType(name, vatRegistrationNumber = companyDetails.flatMap(c => c.flatMap(c => c._1)),
+      payeReference = companyDetails.flatMap(c => c.flatMap(c => c._2)),
+      crnNumber = crnNumber))
 }
 
 case class IndividualDetailType(title: Option[String] = None, firstName: String, middleName: Option[String] = None,
-                                lastName: String, dateOfBirth: String)
+                                lastName: String, dateOfBirth: LocalDate)
 
 object IndividualDetailType {
   implicit val formats = Json.format[IndividualDetailType]
+
+  val apiReads: Reads[IndividualDetailType] = (
+    (JsPath \ "firstName").read[String] and
+      (JsPath \ "lastName").read[String] and
+      (JsPath \ "middleName").readNullable[String] and
+      (JsPath \ "dateOfBirth").read[LocalDate]
+    ) ((name, lastName, middleName, dateOfBirth) => IndividualDetailType(None,name, middleName, lastName, dateOfBirth))
 }
 
 case class PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator: Boolean,
@@ -72,12 +99,12 @@ case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: Strin
 object DirectorOrPartnerDetailTypeItem {
   implicit val formats = Json.format[DirectorOrPartnerDetailTypeItem]
 
-  val apiReads: Reads[Seq[DirectorOrPartnerDetailTypeItem]] = Reads {
+  val apiReads: Reads[List[DirectorOrPartnerDetailTypeItem]] = json.Reads {
     json =>
       json.validate[Seq[JsValue]].flatMap(elements => {
         val directors: Seq[JsResult[DirectorOrPartnerDetailTypeItem]] = elements.zipWithIndex.map(director => director._1.
           validate[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.directorReads(director._2)))
-        directors.foldLeft[JsResult[Seq[DirectorOrPartnerDetailTypeItem]]](JsSuccess(Seq.empty)) {
+        directors.foldLeft[JsResult[List[DirectorOrPartnerDetailTypeItem]]](JsSuccess(List.empty)) {
           (directors, currentDirector) => {
             for {
               sequenceOfDirectors <- directors
@@ -88,20 +115,13 @@ object DirectorOrPartnerDetailTypeItem {
       })
   }
 
-  val directorPersonalDetailsReads: Reads[(String, String, Option[String], LocalDate)] = (
-    (JsPath \ "firstName").read[String] and
-      (JsPath \ "lastName").read[String] and
-      (JsPath \ "middleName").readNullable[String] and
-      (JsPath \ "dateOfBirth").read[LocalDate]
-    ) ((name, lastName, middleName, dateOfBirth) => (name, lastName, middleName, dateOfBirth))
-
   def directorReferenceReads(referenceFlag: String, referenceName: String): Reads[(Option[String], Option[String])] = (
     (JsPath \ referenceName).readNullable[String] and
       (JsPath \ "reason").readNullable[String]
     ) ((referenceNumber, reason) => (referenceNumber, reason))
 
-  def directorReads(index : Int): Reads[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath \ "directorDetails").read(directorPersonalDetailsReads) and
+  def directorReads(index: Int): Reads[DirectorOrPartnerDetailTypeItem] = (
+    (JsPath \ "directorDetails").read(IndividualDetailType.apiReads) and
       (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino", "nino")) and
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr", "utr")) and
       (JsPath).read(PreviousAddressDetails.apiReads("director")) and
@@ -109,10 +129,10 @@ object DirectorOrPartnerDetailTypeItem {
     ) ((directorPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) => DirectorOrPartnerDetailTypeItem(sequenceId = index.toString,
     entityType = "Director",
     title = None,
-    firstName = directorPersonalDetails._1,
-    middleName = directorPersonalDetails._3,
-    lastName = directorPersonalDetails._2,
-    dateOfBirth = directorPersonalDetails._4,
+    firstName = directorPersonalDetails.firstName,
+    middleName = directorPersonalDetails.middleName,
+    lastName = directorPersonalDetails.lastName,
+    dateOfBirth = directorPersonalDetails.dateOfBirth,
     referenceOrNino = ninoDetails.flatMap(_._1),
     noNinoReason = ninoDetails.flatMap(_._2),
     utr = utrDetails.flatMap(_._1),
