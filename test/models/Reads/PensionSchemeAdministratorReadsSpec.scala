@@ -25,7 +25,7 @@ import play.api.libs.json.{Json, _}
 class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "JSON Payload of a PSA" should {
     "Map to a valid PensionSchemeAdministrator object" when {
-      val input = Json.obj("registrationInfo" -> Json.obj("legalStatus" -> "Individual",
+      val input = Json.obj("registrationInfo" -> Json.obj("legalStatus" -> "Limited Company",
         "sapNumber" -> "NumberTest",
         "noIdentifier" -> JsBoolean(true),
         "customerType" -> "TestCustomer",
@@ -134,11 +134,38 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         val inputWithIndividualDetails = input + ("individualDetails" -> Json.obj("firstName" -> JsString("John"),
           "lastName" -> JsString("Doe"),
           "middleName" -> JsString("Does Does"),
-          "dateOfBirth" -> JsString("2019-01-31")))
+          "dateOfBirth" -> JsString("2019-01-31"))) + ("registrationInfo" -> Json.obj("legalStatus" -> "Individual",
+          "sapNumber" -> "NumberTest",
+          "noIdentifier" -> JsBoolean(true),
+          "customerType" -> "TestCustomer",
+          "idType" -> JsString("TestId"),
+          "idNumber" -> JsString("TestIdNumber"))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
 
         val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(apiReads).asOpt.value
 
         result.individualDetail.value.dateOfBirth mustBe individualSample.dateOfBirth
+      }
+
+      "We have organisation details but no individual details" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+
+        result.individualDetail mustBe None
+      }
+
+      "We have individual details but no organisation details" in {
+        val inputWithIndividualDetails = input + ("individualDetails" -> Json.obj("firstName" -> JsString("John"),
+          "lastName" -> JsString("Doe"),
+          "middleName" -> JsString("Does Does"),
+          "dateOfBirth" -> JsString("2019-01-31"))) + ("registrationInfo" -> Json.obj("legalStatus" -> "Individual",
+          "sapNumber" -> "NumberTest",
+          "noIdentifier" -> JsBoolean(true),
+          "customerType" -> "TestCustomer",
+          "idType" -> JsString("TestId"),
+          "idNumber" -> JsString("TestIdNumber"))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
+
+        val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(apiReads).asOpt.value
+
+        result.organisationDetail mustBe None
       }
     }
   }
@@ -159,9 +186,8 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       (JsPath).read(PreviousAddressDetails.apiReads("company")) and
       (JsPath \ "companyAddressId").read[Address] and
       (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
-      (JsPath).read(OrganisationDetailType.apiReads) and
-      (JsPath \ "individualDetails").readNullable(IndividualDetailType.apiReads)
-    ) ((registrationInfo,isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, orgDetails, individualDetails) => PensionSchemeAdministrator(
+      (JsPath).read(TransactionDetail.apiReads)
+    ) ((registrationInfo,isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, transactionDetails) => PensionSchemeAdministrator(
     customerType = registrationInfo._4,
     legalStatus = registrationInfo._1,
     sapNumber = registrationInfo._2,
@@ -174,6 +200,6 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     correspondenceContactDetail = contactDetails,
     previousAddressDetail = previousAddressDetails,
     directorOrPartnerDetail = directors,
-    organisationDetail = Some(orgDetails),
-    individualDetail = individualDetails))
+    organisationDetail = if (registrationInfo._1 == "Limited Company") Some(transactionDetails.asInstanceOf[OrganisationDetailType]) else None,
+    individualDetail = if (registrationInfo._1 == "Individual") Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None))
 }

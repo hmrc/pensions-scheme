@@ -28,7 +28,7 @@ trait Samples {
   val previousAddressDetailsSample = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   val contactDetailsSample = ContactDetails("07592113",email="test@test.com")
   val pensionSchemeAdministratorSample = PensionSchemeAdministrator(customerType = "TestCustomer",
-    legalStatus = "Individual",
+    legalStatus = "Limited Company",
     sapNumber = "NumberTest",
     noIdentifier = true,
     idType = Some("TestId"),

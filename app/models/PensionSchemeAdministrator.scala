@@ -22,8 +22,17 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json
 import play.api.libs.json.{JsPath, JsResult, JsSuccess, JsValue, Json, Reads}
 
+trait TransactionDetail
+
+object TransactionDetail {
+  val companyDetailsReads : Reads[TransactionDetail] = (JsPath).read[OrganisationDetailType](OrganisationDetailType.apiReads).map(c=>c.asInstanceOf[TransactionDetail])
+  val individualDetailsReads : Reads[TransactionDetail] = (JsPath \ "individualDetails").read[IndividualDetailType](IndividualDetailType.apiReads).map(c=>c.asInstanceOf[TransactionDetail])
+
+  val apiReads : Reads[TransactionDetail] = companyDetailsReads orElse individualDetailsReads
+}
+
 case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
-                                  vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None)
+                                  vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None) extends TransactionDetail
 
 object OrganisationDetailType {
   implicit val formats = Json.format[OrganisationDetailType]
@@ -50,7 +59,7 @@ object OrganisationDetailType {
 }
 
 case class IndividualDetailType(title: Option[String] = None, firstName: String, middleName: Option[String] = None,
-                                lastName: String, dateOfBirth: LocalDate)
+                                lastName: String, dateOfBirth: LocalDate) extends TransactionDetail
 
 object IndividualDetailType {
   implicit val formats = Json.format[IndividualDetailType]
