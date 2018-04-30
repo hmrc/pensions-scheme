@@ -167,6 +167,14 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
         result.organisationDetail mustBe None
       }
+
+      "We have individual with Individual Contact Details" in {
+        val expectedContactDetails = contactDetailsSample.copy(telephone = "11111")
+        val individiualContactDetails = ("individualContactDetails" -> Json.obj("phone" -> "11111", "email" -> "test@test.com"))
+        val result = Json.fromJson[PensionSchemeAdministrator](input + individiualContactDetails - "contactDetails")(apiReads).asOpt.value
+
+        result.correspondenceContactDetail.telephone mustBe expectedContactDetails.telephone
+      }
     }
   }
 
@@ -182,11 +190,11 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
   val apiReads: Reads[PensionSchemeAdministrator] = (
     (JsPath \ "registrationInfo").read(registrationInfoReads) and
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
-      (JsPath \ "contactDetails").read(ContactDetails.apiReads) and
+      ((JsPath \ "contactDetails").read(ContactDetails.apiReads) orElse (JsPath \ "individualContactDetails").read(ContactDetails.apiReads)) and
       (JsPath).read(PreviousAddressDetails.apiReads("company")) and
       (JsPath \ "companyAddressId").read[Address] and
       (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
-      (JsPath).read(TransactionDetail.apiReads)
+      (JsPath).read(PSADetail.apiReads)
     ) ((registrationInfo,isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, transactionDetails) => PensionSchemeAdministrator(
     customerType = registrationInfo._4,
     legalStatus = registrationInfo._1,
