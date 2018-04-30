@@ -25,11 +25,12 @@ import play.api.libs.json.{Json, _}
 class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "JSON Payload of a PSA" should {
     "Map to a valid PensionSchemeAdministrator object" when {
-      val input = Json.obj(
-        "legalStatus" -> "Individual",
+      val input = Json.obj("registrationInfo" -> Json.obj("legalStatus" -> "Individual",
         "sapNumber" -> "NumberTest",
         "noIdentifier" -> JsBoolean(true),
         "customerType" -> "TestCustomer",
+        "idType" -> JsString("TestId"),
+        "idNumber" -> JsString("TestIdNumber")),
         "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com"),
         "companyAddressYears" -> JsString("over_a_year"),
         "companyAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"),"addressLine2" -> JsString("line2"),"addressLine3" -> JsString("line3"),
@@ -63,13 +64,13 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have a valid idType" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input + ("idType" -> JsString("TestId")))(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
 
         result.idType mustEqual pensionSchemeAdministratorSample.idType
       }
 
       "We have a valid idNumber" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input + ("idNumber" -> JsString("TestIdNumber")))(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
 
         result.idNumber mustEqual pensionSchemeAdministratorSample.idNumber
       }
@@ -142,13 +143,17 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     }
   }
 
+  val registrationInfoReads : Reads[(String,String,Boolean,String,Option[String],Option[String])] = (
+    (JsPath \"legalStatus").read[String] and
+      (JsPath \ "sapNumber").read[String] and
+      (JsPath \ "noIdentifier").read[Boolean] and
+      (JsPath \ "customerType").read[String] and
+      (JsPath \ "idType").readNullable[String] and
+      (JsPath \ "idNumber").readNullable[String]
+  )((legalStatus,sapNumber,noIdentifier,customerType,idType,idNumber) => (legalStatus,sapNumber,noIdentifier,customerType,idType,idNumber))
+
   val apiReads: Reads[PensionSchemeAdministrator] = (
-    (JsPath \ "legalStatus").read[String] and //TODO: Missing mapping
-      (JsPath \ "sapNumber").read[String] and //TODO: Missing mapping
-      (JsPath \ "noIdentifier").read[Boolean] and //TODO: Missing mapping
-      (JsPath \ "customerType").read[String] and //TODO: Missing mapping
-      (JsPath \ "idType").readNullable[String] and //TODO: Missing mapping
-      (JsPath \ "idNumber").readNullable[String] and //TODO: Missing mapping
+    (JsPath \ "registrationInfo").read(registrationInfoReads) and
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
       (JsPath \ "contactDetails").read(ContactDetails.apiReads) and
       (JsPath).read(PreviousAddressDetails.apiReads("company")) and
@@ -156,14 +161,13 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
       (JsPath).read(OrganisationDetailType.apiReads) and
       (JsPath \ "individualDetails").readNullable(IndividualDetailType.apiReads)
-    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType,
-        idNumber, isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, orgDetails, individualDetails) => PensionSchemeAdministrator(
-    customerType = customerType,
-    legalStatus = legalStatus,
-    sapNumber = sapNumber,
-    noIdentifier = noIdentifier,
-    idType = idType,
-    idNumber = idNumber,
+    ) ((registrationInfo,isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, orgDetails, individualDetails) => PensionSchemeAdministrator(
+    customerType = registrationInfo._4,
+    legalStatus = registrationInfo._1,
+    sapNumber = registrationInfo._2,
+    noIdentifier = registrationInfo._3,
+    idType = registrationInfo._5,
+    idNumber = registrationInfo._6,
     numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(c=>NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(c))),
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
     correspondenceAddressDetail = correspondenceAddress,
