@@ -170,7 +170,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
       "We have individual with Individual Contact Details" in {
         val expectedContactDetails = contactDetailsSample.copy(telephone = "11111")
-        val individiualContactDetails = ("individualContactDetails" -> Json.obj("phone" -> "11111", "email" -> "test@test.com"))
+        val individiualContactDetails = "individualContactDetails" -> Json.obj("phone" -> "11111", "email" -> "test@test.com")
         val result = Json.fromJson[PensionSchemeAdministrator](input + individiualContactDetails - "contactDetails")(apiReads).asOpt.value
 
         result.correspondenceContactDetail.telephone mustBe expectedContactDetails.telephone
@@ -178,8 +178,8 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
       "We have an individual address" in {
         val expectedIndividualAddress = ukAddressSample.copy(addressLine1 = "Test 123 St")
-        val individualCorrespondenceAddress = ("individualAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
-          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))))
+        val individualCorrespondenceAddress = "individualAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
+          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB")))
         val result = Json.fromJson[PensionSchemeAdministrator](input + individualCorrespondenceAddress - "companyAddressId")(apiReads).asOpt.value
 
         result.correspondenceAddressDetail.asInstanceOf[UkAddress].addressLine1 mustBe expectedIndividualAddress.addressLine1
