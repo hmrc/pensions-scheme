@@ -33,8 +33,8 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         "idNumber" -> JsString("TestIdNumber")),
         "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com"),
         "companyAddressYears" -> JsString("over_a_year"),
-        "companyAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"),"addressLine2" -> JsString("line2"),"addressLine3" -> JsString("line3"),
-          "addressLine4" -> JsString("line4"),"postalCode" -> JsString("NE1"),"countryCode" -> JsString("GB"))),
+        "companyAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
+          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))),
         "companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
         "companyRegistrationNumber" -> JsString("CRN11111"),
         "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
@@ -113,11 +113,11 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
           "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
           "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
           "directorAddressYears" -> JsString("over_a_year")
-        ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-          Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
+        ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress" ->
+          Json.obj("lines" -> JsArray(Seq(JsString("line1"), JsString("line2"))),
             "country" -> JsObject(Map("name" -> JsString("IT")))))
 
-        val directors = JsArray(Seq(director,director))
+        val directors = JsArray(Seq(director, director))
         val pensionSchemeAdministrator = input + ("directors" -> directors)
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(apiReads).asOpt.value
 
@@ -178,40 +178,48 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
       "We have an individual address" in {
         val expectedIndividualAddress = ukAddressSample.copy(addressLine1 = "Test 123 St")
-        val individualCorrespondenceAddress = ("individualAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"),"addressLine2" -> JsString("line2"),"addressLine3" -> JsString("line3"),
-          "addressLine4" -> JsString("line4"),"postalCode" -> JsString("NE1"),"countryCode" -> JsString("GB"))))
+        val individualCorrespondenceAddress = ("individualAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
+          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))))
         val result = Json.fromJson[PensionSchemeAdministrator](input + individualCorrespondenceAddress - "companyAddressId")(apiReads).asOpt.value
 
         result.correspondenceAddressDetail.asInstanceOf[UkAddress].addressLine1 mustBe expectedIndividualAddress.addressLine1
       }
+
+      "We have an individual previous address" in {
+        val expectedIndividualPreviousAddress = previousAddressDetailsSample.copy(isPreviousAddressLast12Month = false, None)
+        val individualPreviousAddress = "individualAddressYears" -> JsString("over_a_year")
+        val result = Json.fromJson[PensionSchemeAdministrator](input + individualPreviousAddress - "companyAddressYears")(apiReads).asOpt.value
+
+        result.previousAddressDetail.isPreviousAddressLast12Month mustBe expectedIndividualPreviousAddress.isPreviousAddressLast12Month
+      }
     }
   }
 
-  val registrationInfoReads : Reads[(String,String,Boolean,String,Option[String],Option[String])] = (
-    (JsPath \"legalStatus").read[String] and
+  val registrationInfoReads: Reads[(String, String, Boolean, String, Option[String], Option[String])] = (
+    (JsPath \ "legalStatus").read[String] and
       (JsPath \ "sapNumber").read[String] and
       (JsPath \ "noIdentifier").read[Boolean] and
       (JsPath \ "customerType").read[String] and
       (JsPath \ "idType").readNullable[String] and
       (JsPath \ "idNumber").readNullable[String]
-  )((legalStatus,sapNumber,noIdentifier,customerType,idType,idNumber) => (legalStatus,sapNumber,noIdentifier,customerType,idType,idNumber))
+    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber) => (legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber))
 
   val apiReads: Reads[PensionSchemeAdministrator] = (
     (JsPath \ "registrationInfo").read(registrationInfoReads) and
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
       ((JsPath \ "contactDetails").read(ContactDetails.apiReads) orElse (JsPath \ "individualContactDetails").read(ContactDetails.apiReads)) and
-      (JsPath).read(PreviousAddressDetails.apiReads("company")) and
+      ((JsPath).read(PreviousAddressDetails.apiReads("company")) orElse (JsPath).read(PreviousAddressDetails.apiReads("individual"))) and
       ((JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address]) and
       (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
       (JsPath).read(PSADetail.apiReads)
-    ) ((registrationInfo,isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, transactionDetails) => PensionSchemeAdministrator(
+    ) ((registrationInfo, isThereMoreThanTenDirectors, contactDetails, previousAddressDetails, correspondenceAddress, directors, transactionDetails) => PensionSchemeAdministrator(
     customerType = registrationInfo._4,
     legalStatus = registrationInfo._1,
     sapNumber = registrationInfo._2,
     noIdentifier = registrationInfo._3,
     idType = registrationInfo._5,
     idNumber = registrationInfo._6,
-    numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(c=>NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(c))),
+    numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(c => NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(c))),
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
     correspondenceAddressDetail = correspondenceAddress,
     correspondenceContactDetail = contactDetails,
