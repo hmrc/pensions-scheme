@@ -28,7 +28,7 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
   "A JSON Payload containing a declaration" should {
     "Map correctly a Pension Scheme Administrator Declaration Type" when {
 
-      val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationFitAndProper" -> JsBoolean(true))
+      val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationFitAndProper" -> JsBoolean(true), "declarationWorkingKnowledge" -> JsString("workingKnowledge"))
 
       "We have a declaration field" when {
         "It is true then boxes 1,2,3 and 4 are true" in {
@@ -55,11 +55,37 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
 
         result.box7 mustBe true
       }
+
+      "We have a declarationWorkingKnowledge field" when {
+        "set as 'workingKnowledge'" in {
+          val result = declaration.as[PensionSchemeAdministratorDeclarationType](apiReads)
+
+          result.box5.value mustBe true
+        }
+
+        "set as 'adviser'" in {
+          val workingKnowledge = "declarationWorkingKnowledge" -> JsString("adviser")
+          val result = (declaration + workingKnowledge).as[PensionSchemeAdministratorDeclarationType](apiReads)
+
+          result.box6.value mustBe true
+        }
+      }
     }
   }
 
   val apiReads : Reads[PensionSchemeAdministratorDeclarationType] = (
     (JsPath \ "declaration").read[Boolean] and
-      (JsPath \ "declarationFitAndProper").read[Boolean]
-  )((declaration,fitAndProperSection)=>PensionSchemeAdministratorDeclarationType(declaration,declaration,declaration,declaration,None,None,fitAndProperSection,None))
+      (JsPath \ "declarationFitAndProper").read[Boolean] and
+      (JsPath \ "declarationWorkingKnowledge").read[String]
+  )((declarationSectionOneToFour,declarationSectionSeven, workingKnowledge)=> {
+    val declarationOutput = PensionSchemeAdministratorDeclarationType(declarationSectionOneToFour,declarationSectionOneToFour,
+      declarationSectionOneToFour,declarationSectionOneToFour,None,None,declarationSectionSeven,None)
+
+    if (workingKnowledge == "workingKnowledge") {
+      declarationOutput.copy(box5 = Some(true))
+    }
+    else{
+      declarationOutput.copy(box6 = Some(true))
+    }
+  })
 }
