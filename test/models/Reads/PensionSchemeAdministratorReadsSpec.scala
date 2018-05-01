@@ -219,7 +219,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     noIdentifier = registrationInfo._3,
     idType = registrationInfo._5,
     idNumber = registrationInfo._6,
-    numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(c => NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(c))),
+    numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(isMoreThanTenDirectors => NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(isMoreThanTenDirectors))),
     pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
     correspondenceAddressDetail = correspondenceAddress,
     correspondenceContactDetail = contactDetails,
