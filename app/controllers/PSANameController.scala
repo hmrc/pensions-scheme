@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package repositories
+package controllers
 
 import com.google.inject.Inject
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
+import repositories.PSANameCacheRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
-class SchemeJourneyCacheRepository @Inject() (
-                                               config: Configuration,
-                                               component: ReactiveMongoComponent
-                                             ) extends PensionsSchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.scheme-journey.name"),
-  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-journey.timeToLiveInSeconds")),
-  component
-)
+class PSANameController @Inject() (
+                                    config: Configuration,
+                                    repository: PSANameCacheRepository,
+                                    authConnector: AuthConnector
+                                  ) extends PensionsSchemeCacheController(config, repository, authConnector)

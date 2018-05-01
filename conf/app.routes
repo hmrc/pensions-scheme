@@ -12,3 +12,7 @@ GET         /journey-cache/scheme/:id       controllers.SchemeJourneyCacheContro
 POST        /journey-cache/scheme/:id       controllers.SchemeJourneyCacheController.save(id: String)
 GET         /journey-cache/psa/:id          controllers.PSAJourneyCacheController.get(id: String)
 POST        /journey-cache/psa/:id          controllers.PSAJourneyCacheController.save(id: String)
+
+GET         /psa-name/:id                   controllers.PSANameController.get(id: String)
+POST        /psa-name/:id                   controllers.PSANameController.save(id: String)
+

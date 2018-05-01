@@ -16,22 +16,22 @@
 
 package controllers
 
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.mvc.{Action, AnyContent, RawBuffer}
-import repositories.JourneyCacheRepository
+import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-abstract class JourneyCacheController (
+abstract class PensionsSchemeCacheController(
                                         config: Configuration,
-                                        repository: JourneyCacheRepository,
+                                        repository: PensionsSchemeCacheRepository,
                                         val authConnector: AuthConnector
                                       ) extends BaseController with AuthorisedFunctions {
 
-  private val maxSize: Int = config.underlying.getInt("mongodb.journey-cache.maxSize")
+  private val maxSize: Int = config.underlying.getInt("mongodb.pensions-scheme-cache.maxSize")
 
   def save(id: String): Action[RawBuffer] = Action.async(parse.raw(maxSize, maxSize)) {
     implicit request =>
@@ -47,8 +47,10 @@ abstract class JourneyCacheController (
   def get(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        repository.get(id).map {
-          _.map(Ok(_))
+        Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
+        repository.get(id).map { response =>
+          Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
+          response.map{Ok(_)}
             .getOrElse(NotFound)
         }
       }
