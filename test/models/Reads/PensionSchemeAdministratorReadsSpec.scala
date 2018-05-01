@@ -30,7 +30,8 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         "noIdentifier" -> JsBoolean(true),
         "customerType" -> "TestCustomer",
         "idType" -> JsString("TestId"),
-        "idNumber" -> JsString("TestIdNumber")),
+        "idNumber" -> JsString("TestIdNumber"),
+        "isExistingPSA" -> JsBoolean(false)),
         "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com"),
         "companyAddressYears" -> JsString("over_a_year"),
         "companyAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
@@ -139,7 +140,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
           "noIdentifier" -> JsBoolean(true),
           "customerType" -> "TestCustomer",
           "idType" -> JsString("TestId"),
-          "idNumber" -> JsString("TestIdNumber"))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
+          "idNumber" -> JsString("TestIdNumber"), "isExistingPSA" -> JsBoolean(false))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
 
         val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(apiReads).asOpt.value
 
@@ -161,7 +162,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
           "noIdentifier" -> JsBoolean(true),
           "customerType" -> "TestCustomer",
           "idType" -> JsString("TestId"),
-          "idNumber" -> JsString("TestIdNumber"))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
+          "idNumber" -> JsString("TestIdNumber"),"isExistingPSA" -> JsBoolean(false))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
 
         val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(apiReads).asOpt.value
 
@@ -192,17 +193,54 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
         result.previousAddressDetail.isPreviousAddressLast12Month mustBe expectedIndividualPreviousAddress.isPreviousAddressLast12Month
       }
+
+      "The user is not an existing PSA user" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+
+        result.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator mustBe pensionSchemeAdministratorSample.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator
+      }
+
+      "The user is an existing PSA user with no previous reference" in {
+         val registrationInfo = "registrationInfo" -> Json.obj("legalStatus" -> "Limited Company",
+           "sapNumber" -> "NumberTest",
+           "noIdentifier" -> JsBoolean(true),
+           "customerType" -> "TestCustomer",
+           "idType" -> JsString("TestId"),
+           "idNumber" -> JsString("TestIdNumber"),
+           "isExistingPSA" -> JsBoolean(true))
+
+        val result = Json.fromJson[PensionSchemeAdministrator](input + registrationInfo)(apiReads).asOpt.value
+
+        result.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator mustBe true
+      }
+
+      "The user is an existing PSA user with previous reference number" in {
+        val registrationInfo = "registrationInfo" -> Json.obj("legalStatus" -> "Limited Company",
+          "sapNumber" -> "NumberTest",
+          "noIdentifier" -> JsBoolean(true),
+          "customerType" -> "TestCustomer",
+          "idType" -> JsString("TestId"),
+          "idNumber" -> JsString("TestIdNumber"),
+          "isExistingPSA" -> JsBoolean(true),
+          "existingPSAId" -> JsString("TestId"))
+
+        val result = Json.fromJson[PensionSchemeAdministrator](input + registrationInfo)(apiReads).asOpt.value
+
+        result.pensionSchemeAdministratoridentifierStatus.existingPensionSchemaAdministratorReference mustBe Some("TestId")
+      }
     }
   }
 
-  val registrationInfoReads: Reads[(String, String, Boolean, String, Option[String], Option[String])] = (
+  val registrationInfoReads: Reads[(String, String, Boolean, String, Option[String], Option[String], PensionSchemeAdministratorIdentifierStatusType)] = (
     (JsPath \ "legalStatus").read[String] and
       (JsPath \ "sapNumber").read[String] and
       (JsPath \ "noIdentifier").read[Boolean] and
       (JsPath \ "customerType").read[String] and
       (JsPath \ "idType").readNullable[String] and
-      (JsPath \ "idNumber").readNullable[String]
-    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber) => (legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber))
+      (JsPath \ "idNumber").readNullable[String] and
+      (JsPath \ "isExistingPSA").read[Boolean] and
+      (JsPath \ "existingPSAId").readNullable[String]
+    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber, isExistingPSA, existingPSAId) => (legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber, PensionSchemeAdministratorIdentifierStatusType(isExistingPSA,existingPSAId)))
 
   val apiReads: Reads[PensionSchemeAdministrator] = (
     (JsPath \ "registrationInfo").read(registrationInfoReads) and
@@ -220,7 +258,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
     idType = registrationInfo._5,
     idNumber = registrationInfo._6,
     numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(isMoreThanTenDirectors => NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(isMoreThanTenDirectors))),
-    pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
+    pensionSchemeAdministratoridentifierStatus = registrationInfo._7,
     correspondenceAddressDetail = correspondenceAddress,
     correspondenceContactDetail = contactDetails,
     previousAddressDetail = previousAddressDetails,

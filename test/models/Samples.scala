@@ -35,7 +35,7 @@ trait Samples {
     idNumber = Some("TestIdNumber"),
     organisationDetail = None,
     individualDetail = None,
-    pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(true),
+    pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(false),
     correspondenceAddressDetail = ukAddressSample,
     correspondenceContactDetail = contactDetailsSample,
     previousAddressDetail = previousAddressDetailsSample,
