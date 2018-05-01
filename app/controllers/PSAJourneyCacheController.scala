@@ -25,4 +25,4 @@ class PSAJourneyCacheController @Inject() (
                                             config: Configuration,
                                             repository: PSAJourneyCacheRepository,
                                             authConnector: AuthConnector
-                                          ) extends JourneyCacheController(config, repository, authConnector)
+                                          ) extends PensionsSchemeCacheController(config, repository, authConnector)

@@ -25,4 +25,4 @@ class SchemeJourneyCacheController @Inject() (
                                                config: Configuration,
                                                repository: SchemeJourneyCacheRepository,
                                                authConnector: AuthConnector
-                                             ) extends JourneyCacheController(config, repository, authConnector)
+                                             ) extends PensionsSchemeCacheController(config, repository, authConnector)

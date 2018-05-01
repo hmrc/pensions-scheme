@@ -29,9 +29,9 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.{ExecutionContext, Future}
 
-abstract class JourneyCacheRepository(
+abstract class PensionsSchemeCacheRepository(
                                        index: String,
-                                       ttl: Int,
+                                       ttl: Option[Int],
                                        component: ReactiveMongoComponent
                                      ) extends ReactiveRepository[JsValue, BSONObjectID](
     index,
@@ -60,12 +60,21 @@ abstract class JourneyCacheRepository(
 
   ensureIndex(fieldName, createdIndexName, ttl)
 
-  private def ensureIndex(field: String, indexName: String, ttl: Int): Future[Boolean] = {
+  private def ensureIndex(field: String, indexName: String, ttl: Option[Int]): Future[Boolean] = {
 
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    collection.indexesManager.ensure(Index(Seq((field, IndexType.Ascending)), Some(indexName),
-      options = BSONDocument(expireAfterSeconds -> ttl))) map {
+    val defaultIndex: Index = Index(Seq((field, IndexType.Ascending)), Some(indexName))
+
+    val index: Index = ttl.fold(defaultIndex){ ttl =>
+      Index(
+        Seq((field, IndexType.Ascending)),
+        Some(indexName),
+        options = BSONDocument(expireAfterSeconds -> ttl)
+      )
+    }
+
+    collection.indexesManager.ensure(index) map {
       result => {
         Logger.debug(s"set [$indexName] with value $ttl -> result : $result")
         result

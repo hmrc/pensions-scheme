@@ -27,34 +27,34 @@ import org.scalatestplus.play.OneAppPerSuite
 import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.JourneyCacheRepository
+import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.UnauthorizedException
 
 import scala.concurrent.Future
 
-class JourneyCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with OneAppPerSuite {
+class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with OneAppPerSuite {
 
   implicit lazy val mat: Materializer = app.materializer
 
   private val configuration = Configuration(
-    "mongodb.journey-cache.maxSize" -> 512000
+    "mongodb.pensions-scheme-cache.maxSize" -> 512000
   )
 
-  private class JourneyCacheControllerImpl(
-                                            repo: JourneyCacheRepository,
+  private class PensionsSchemeCacheControllerImpl(
+                                            repo: PensionsSchemeCacheRepository,
                                             authConnector: AuthConnector
-                                          ) extends JourneyCacheController(configuration, repo, authConnector)
+                                          ) extends PensionsSchemeCacheController(configuration, repo, authConnector)
 
-  def controller(repo: JourneyCacheRepository, authConnector: AuthConnector): JourneyCacheController = {
-    new JourneyCacheControllerImpl(repo, authConnector)
+  def controller(repo: PensionsSchemeCacheRepository, authConnector: AuthConnector): PensionsSchemeCacheController = {
+    new PensionsSchemeCacheControllerImpl(repo, authConnector)
   }
 
   ".get" must {
 
     "return 200 and the relevant data when it exists" in {
 
-      val repo = mock[JourneyCacheRepository]
+      val repo = mock[PensionsSchemeCacheRepository]
       val authConnector = mock[AuthConnector]
 
       when(repo.get(eqTo("foo"))(any())) thenReturn Future.successful {
@@ -71,7 +71,7 @@ class JourneyCacheControllerSpec extends WordSpec with MustMatchers with Mockito
 
     "return 404 when the data doesn't exist" in {
 
-      val repo = mock[JourneyCacheRepository]
+      val repo = mock[PensionsSchemeCacheRepository]
       val authConnector = mock[AuthConnector]
 
       when(repo.get(eqTo("foo"))(any())) thenReturn Future.successful {
@@ -87,7 +87,7 @@ class JourneyCacheControllerSpec extends WordSpec with MustMatchers with Mockito
 
     "throw an exception when the repository call fails" in {
 
-      val repo = mock[JourneyCacheRepository]
+      val repo = mock[PensionsSchemeCacheRepository]
       val authConnector = mock[AuthConnector]
 
       when(repo.get(eqTo("foo"))(any())) thenReturn Future.failed {
@@ -105,7 +105,7 @@ class JourneyCacheControllerSpec extends WordSpec with MustMatchers with Mockito
 
     "throw an exception when the call is not authorised" in {
 
-      val repo = mock[JourneyCacheRepository]
+      val repo = mock[PensionsSchemeCacheRepository]
       val authConnector = mock[AuthConnector]
 
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
@@ -124,7 +124,7 @@ class JourneyCacheControllerSpec extends WordSpec with MustMatchers with Mockito
 
     "return 200 when the request body can be parsed and passed to the repository successfully" in {
 
-      val repo = mock[JourneyCacheRepository]
+      val repo = mock[PensionsSchemeCacheRepository]
       val authConnector = mock[AuthConnector]
 
       when(repo.upsert(eqTo("foo"), eqTo("foo".getBytes()))(any())) thenReturn Future.successful(true)
@@ -137,7 +137,7 @@ class JourneyCacheControllerSpec extends WordSpec with MustMatchers with Mockito
 
     "return 413 when the request body cannot be parsed" in {
 
-      val repo = mock[JourneyCacheRepository]
+      val repo = mock[PensionsSchemeCacheRepository]
       val authConnector = mock[AuthConnector]
 
       when(repo.upsert(any(), any())(any())) thenReturn Future.successful(true)
@@ -150,7 +150,7 @@ class JourneyCacheControllerSpec extends WordSpec with MustMatchers with Mockito
 
     "throw an exception when the call is not authorised" in {
 
-      val repo = mock[JourneyCacheRepository]
+      val repo = mock[PensionsSchemeCacheRepository]
       val authConnector = mock[AuthConnector]
 
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
