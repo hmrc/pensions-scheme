@@ -16,10 +16,22 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsPath, Json, Reads, __}
+import play.api.libs.functional.syntax._
 
 case class PensionAdvisorDetail(name: String, addressDetail: Address, contactDetail: ContactDetails)
 
 object PensionAdvisorDetail {
   implicit val formats = Json.format[PensionAdvisorDetail]
+
+  val apiReads : Reads[Option[PensionAdvisorDetail]] = (
+    (JsPath \ "advisorDetails").readNullable((__ \ "name").readNullable[String]) and
+      (JsPath \ "advisorAddress").readNullable[Address] and
+      (JsPath \ "advisorDetails").readNullable(ContactDetails.apiReads)
+    )((name,address,contactDetails)=>  {
+    (name,address,contactDetails) match {
+      case (Some(name),Some(address),Some(contactDetails)) => Some(PensionAdvisorDetail(name.get,address,contactDetails))
+      case _=> None
+    }
+  })
 }

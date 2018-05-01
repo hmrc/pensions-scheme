@@ -64,10 +64,24 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
         }
 
         "set as 'adviser'" in {
-          val workingKnowledge = "declarationWorkingKnowledge" -> JsString("adviser")
-          val result = (declaration + workingKnowledge).as[PensionSchemeAdministratorDeclarationType](apiReads)
+          val adviserDeclaration = "declarationWorkingKnowledge" -> JsString("adviser")
+
+          val result = (declaration + adviserDeclaration).as[PensionSchemeAdministratorDeclarationType](apiReads)
 
           result.box6.value mustBe true
+        }
+
+        "set as 'adviser' containing adviser details" in {
+          val advisorDetails = "advisorDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com")
+
+          val advisorAddress = "advisorAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+            "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
+
+          val workingKnowledge = "declarationWorkingKnowledge" -> JsString("adviser")
+          val result = (declaration + workingKnowledge + advisorDetails + advisorAddress).as[PensionSchemeAdministratorDeclarationType](apiReads)
+
+          result.box6.value mustBe true
+          result.pensionAdvisorDetail.value mustBe pensionAdvisorSample
         }
       }
     }
@@ -76,8 +90,9 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
   val apiReads : Reads[PensionSchemeAdministratorDeclarationType] = (
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "declarationFitAndProper").read[Boolean] and
-      (JsPath \ "declarationWorkingKnowledge").read[String]
-  )((declarationSectionOneToFour,declarationSectionSeven, workingKnowledge)=> {
+      (JsPath \ "declarationWorkingKnowledge").read[String] and
+       Reads.optionWithNull(PensionAdvisorDetail.apiReads)
+  )((declarationSectionOneToFour,declarationSectionSeven, workingKnowledge, advisorDetail)=> {
     val declarationOutput = PensionSchemeAdministratorDeclarationType(declarationSectionOneToFour,declarationSectionOneToFour,
       declarationSectionOneToFour,declarationSectionOneToFour,None,None,declarationSectionSeven,None)
 
@@ -85,7 +100,7 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
       declarationOutput.copy(box5 = Some(true))
     }
     else{
-      declarationOutput.copy(box6 = Some(true))
+      declarationOutput.copy(box6 = Some(true),pensionAdvisorDetail = advisorDetail.flatten)
     }
   })
 }
