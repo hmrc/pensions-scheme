@@ -102,6 +102,14 @@ object CorrespondenceCommonDetail {
     ) ((contactDetails, address) => CorrespondenceCommonDetail(address, contactDetails))
 }
 
+
+
+
+
+
+
+
+
 case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: String, title: Option[String] = None,
                                            firstName: String, middleName: Option[String] = None, lastName: String,
                                            dateOfBirth: LocalDate, referenceOrNino: Option[String] = None,
