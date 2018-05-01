@@ -32,7 +32,7 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
 
       "We have a declaration field" when {
         "It is true then boxes 1,2,3 and 4 are true" in {
-          val result = declaration.as[PensionSchemeAdministratorDeclarationType](apiReads)
+          val result = declaration.as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
 
           result.box1 mustBe true
           result.box2 mustBe true
@@ -41,7 +41,7 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
         }
 
         "It is false then boxes 1,2,3, and 4 will be false" in {
-          val result = (declaration + ("declaration" -> JsBoolean(false))).as[PensionSchemeAdministratorDeclarationType](apiReads)
+          val result = (declaration + ("declaration" -> JsBoolean(false))).as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
 
           result.box1 mustBe false
           result.box2 mustBe false
@@ -51,14 +51,14 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "We have a fitAndProper declaration field" in {
-        val result = declaration.as[PensionSchemeAdministratorDeclarationType](apiReads)
+        val result = declaration.as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
 
         result.box7 mustBe true
       }
 
       "We have a declarationWorkingKnowledge field" when {
         "set as 'workingKnowledge'" in {
-          val result = declaration.as[PensionSchemeAdministratorDeclarationType](apiReads)
+          val result = declaration.as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
 
           result.box5.value mustBe true
         }
@@ -66,7 +66,7 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
         "set as 'adviser'" in {
           val adviserDeclaration = "declarationWorkingKnowledge" -> JsString("adviser")
 
-          val result = (declaration + adviserDeclaration).as[PensionSchemeAdministratorDeclarationType](apiReads)
+          val result = (declaration + adviserDeclaration).as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
 
           result.box6.value mustBe true
         }
@@ -78,7 +78,7 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
             "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
           val workingKnowledge = "declarationWorkingKnowledge" -> JsString("adviser")
-          val result = (declaration + workingKnowledge + advisorDetails + advisorAddress).as[PensionSchemeAdministratorDeclarationType](apiReads)
+          val result = (declaration + workingKnowledge + advisorDetails + advisorAddress).as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
 
           result.box6.value mustBe true
           result.pensionAdvisorDetail.value mustBe pensionAdvisorSample
@@ -86,21 +86,4 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
     }
   }
-
-  val apiReads : Reads[PensionSchemeAdministratorDeclarationType] = (
-    (JsPath \ "declaration").read[Boolean] and
-      (JsPath \ "declarationFitAndProper").read[Boolean] and
-      (JsPath \ "declarationWorkingKnowledge").read[String] and
-       Reads.optionWithNull(PensionAdvisorDetail.apiReads)
-  )((declarationSectionOneToFour,declarationSectionSeven, workingKnowledge, advisorDetail)=> {
-    val declarationOutput = PensionSchemeAdministratorDeclarationType(declarationSectionOneToFour,declarationSectionOneToFour,
-      declarationSectionOneToFour,declarationSectionOneToFour,None,None,declarationSectionSeven,None)
-
-    if (workingKnowledge == "workingKnowledge") {
-      declarationOutput.copy(box5 = Some(true))
-    }
-    else{
-      declarationOutput.copy(box6 = Some(true),pensionAdvisorDetail = advisorDetail.flatten)
-    }
-  })
 }

@@ -16,7 +16,11 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsPath, Json, Reads}
+import play.api.libs.functional.syntax._
+import play.api.libs.json
+
+
 
 case class PensionSchemeAdministratorDeclarationType(box1: Boolean, box2: Boolean, box3: Boolean, box4: Boolean,
                                                      box5: Option[Boolean], box6: Option[Boolean], box7: Boolean,
@@ -24,4 +28,21 @@ case class PensionSchemeAdministratorDeclarationType(box1: Boolean, box2: Boolea
 
 object PensionSchemeAdministratorDeclarationType {
   implicit val formats = Json.format[PensionSchemeAdministratorDeclarationType]
+
+  val apiReads : Reads[PensionSchemeAdministratorDeclarationType] = (
+    (JsPath \ "declaration").read[Boolean] and
+      (JsPath \ "declarationFitAndProper").read[Boolean] and
+      (JsPath \ "declarationWorkingKnowledge").read[String] and
+      json.Reads.optionWithNull(PensionAdvisorDetail.apiReads)
+    )((declarationSectionOneToFour,declarationSectionSeven, workingKnowledge, advisorDetail)=> {
+    val declarationOutput = PensionSchemeAdministratorDeclarationType(declarationSectionOneToFour,declarationSectionOneToFour,
+      declarationSectionOneToFour,declarationSectionOneToFour,None,None,declarationSectionSeven,None)
+
+    if (workingKnowledge == "workingKnowledge") {
+      declarationOutput.copy(box5 = Some(true))
+    }
+    else{
+      declarationOutput.copy(box6 = Some(true),pensionAdvisorDetail = advisorDetail.flatten)
+    }
+  })
 }
