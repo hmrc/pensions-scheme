@@ -18,8 +18,6 @@ package models.Reads
 
 import models.{Reads => _, _}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
 import play.api.libs.json.{Json, _}
 
 

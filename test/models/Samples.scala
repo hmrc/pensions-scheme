@@ -27,6 +27,7 @@ trait Samples {
   val numberOfDirectorOrPartnersSample = NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(true))
   val previousAddressDetailsSample = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   val contactDetailsSample = ContactDetails("07592113",email="test@test.com")
+  val declarationSample = PensionSchemeAdministratorDeclarationType(true,true,true,true,Some(true),None,true,None)
   val pensionSchemeAdministratorSample = PensionSchemeAdministrator(customerType = "TestCustomer",
     legalStatus = "Limited Company",
     sapNumber = "NumberTest",
@@ -40,7 +41,7 @@ trait Samples {
     correspondenceContactDetail = contactDetailsSample,
     previousAddressDetail = previousAddressDetailsSample,
     numberOfDirectorOrPartners = Some(numberOfDirectorOrPartnersSample),
-    directorOrPartnerDetail = None)
+    directorOrPartnerDetail = None,declaration= declarationSample)
   val correspondenceCommonDetails = CorrespondenceCommonDetail(nonUkAddressSample,contactDetailsSample)
   val directorSample = DirectorOrPartnerDetailTypeItem(sequenceId = "0",
     entityType = "Director",
