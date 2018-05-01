@@ -77,6 +77,11 @@ case class PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchem
 
 object PensionSchemeAdministratorIdentifierStatusType {
   implicit val formats = Json.format[PensionSchemeAdministratorIdentifierStatusType]
+
+  val apiReads : Reads[PensionSchemeAdministratorIdentifierStatusType] = (
+    (JsPath \ "isExistingPSA").read[Boolean] and
+      (JsPath \ "existingPSAId").readNullable[String]
+    )((isExistingPSA,existingPSAId) => PensionSchemeAdministratorIdentifierStatusType(isExistingPSA,existingPSAId))
 }
 
 case class NumberOfDirectorOrPartnersType(isMorethanTenDirectors: Option[Boolean] = None,
