@@ -22,8 +22,17 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json
 import play.api.libs.json.{JsPath, JsResult, JsSuccess, JsValue, Json, Reads}
 
+trait PSADetail
+
+object PSADetail {
+  val companyDetailsReads : Reads[PSADetail] = (JsPath).read[OrganisationDetailType](OrganisationDetailType.apiReads).map(c=>c.asInstanceOf[PSADetail])
+  val individualDetailsReads : Reads[PSADetail] = (JsPath \ "individualDetails").read[IndividualDetailType](IndividualDetailType.apiReads).map(c=>c.asInstanceOf[PSADetail])
+
+  val apiReads : Reads[PSADetail] = companyDetailsReads orElse individualDetailsReads
+}
+
 case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
-                                  vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None)
+                                  vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None) extends PSADetail
 
 object OrganisationDetailType {
   implicit val formats = Json.format[OrganisationDetailType]
@@ -50,7 +59,7 @@ object OrganisationDetailType {
 }
 
 case class IndividualDetailType(title: Option[String] = None, firstName: String, middleName: Option[String] = None,
-                                lastName: String, dateOfBirth: LocalDate)
+                                lastName: String, dateOfBirth: LocalDate) extends PSADetail
 
 object IndividualDetailType {
   implicit val formats = Json.format[IndividualDetailType]
@@ -68,6 +77,11 @@ case class PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchem
 
 object PensionSchemeAdministratorIdentifierStatusType {
   implicit val formats = Json.format[PensionSchemeAdministratorIdentifierStatusType]
+
+  val apiReads : Reads[PensionSchemeAdministratorIdentifierStatusType] = (
+    (JsPath \ "isExistingPSA").read[Boolean] and
+      (JsPath \ "existingPSAId").readNullable[String]
+    )((isExistingPSA,existingPSAId) => PensionSchemeAdministratorIdentifierStatusType(isExistingPSA,existingPSAId))
 }
 
 case class NumberOfDirectorOrPartnersType(isMorethanTenDirectors: Option[Boolean] = None,
@@ -87,6 +101,14 @@ object CorrespondenceCommonDetail {
       (JsPath \ "directorAddress").read[Address]
     ) ((contactDetails, address) => CorrespondenceCommonDetail(address, contactDetails))
 }
+
+
+
+
+
+
+
+
 
 case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: String, title: Option[String] = None,
                                            firstName: String, middleName: Option[String] = None, lastName: String,
@@ -150,8 +172,45 @@ case class PensionSchemeAdministrator(customerType: String, legalStatus: String,
                                       correspondenceContactDetail: ContactDetails,
                                       previousAddressDetail: PreviousAddressDetails,
                                       numberOfDirectorOrPartners: Option[NumberOfDirectorOrPartnersType] = None,
-                                      directorOrPartnerDetail: Option[List[DirectorOrPartnerDetailTypeItem]] = None)
+                                      directorOrPartnerDetail: Option[List[DirectorOrPartnerDetailTypeItem]] = None,
+                                      declaration: PensionSchemeAdministratorDeclarationType)
 
 object PensionSchemeAdministrator {
   implicit val formats = Json.format[PensionSchemeAdministrator]
+
+  val registrationInfoReads: Reads[(String, String, Boolean, String, Option[String], Option[String])] = (
+    (JsPath \ "legalStatus").read[String] and
+      (JsPath \ "sapNumber").read[String] and
+      (JsPath \ "noIdentifier").read[Boolean] and
+      (JsPath \ "customerType").read[String] and
+      (JsPath \ "idType").readNullable[String] and
+      (JsPath \ "idNumber").readNullable[String]
+    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber) => (legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber))
+
+  val apiReads: Reads[PensionSchemeAdministrator] = (
+    (JsPath \ "registrationInfo").read(registrationInfoReads) and
+      (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
+      ((JsPath \ "contactDetails").read(ContactDetails.apiReads) orElse (JsPath \ "individualContactDetails").read(ContactDetails.apiReads)) and
+      ((JsPath).read(PreviousAddressDetails.apiReads("company")) orElse (JsPath).read(PreviousAddressDetails.apiReads("individual"))) and
+      ((JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address]) and
+      (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
+      (JsPath).read(PSADetail.apiReads) and
+      (JsPath \ "existingPSA").read(PensionSchemeAdministratorIdentifierStatusType.apiReads) and
+      (JsPath).read(PensionSchemeAdministratorDeclarationType.apiReads)
+    ) ((registrationInfo, isThereMoreThanTenDirectors, contactDetails, previousAddressDetails, correspondenceAddress, directors, transactionDetails, isExistingPSA, declaration) => PensionSchemeAdministrator(
+    customerType = registrationInfo._4,
+    legalStatus = registrationInfo._1,
+    sapNumber = registrationInfo._2,
+    noIdentifier = registrationInfo._3,
+    idType = registrationInfo._5,
+    idNumber = registrationInfo._6,
+    numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(isMoreThanTenDirectors => NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(isMoreThanTenDirectors))),
+    pensionSchemeAdministratoridentifierStatus = isExistingPSA,
+    correspondenceAddressDetail = correspondenceAddress,
+    correspondenceContactDetail = contactDetails,
+    previousAddressDetail = previousAddressDetails,
+    directorOrPartnerDetail = directors,
+    organisationDetail = if (registrationInfo._1 == "Limited Company") Some(transactionDetails.asInstanceOf[OrganisationDetailType]) else None,
+    individualDetail = if (registrationInfo._1 == "Individual") Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None,
+    declaration = declaration))
 }

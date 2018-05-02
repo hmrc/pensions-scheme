@@ -33,8 +33,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
         "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
         "directorAddressYears" -> JsString("over_a_year")
       ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-        Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
-          "country" -> JsObject(Map("name" -> JsString("IT")))))
+        Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "country" -> JsString("IT")))
 
       val directors = JsArray(Seq(director,director))
 
@@ -114,8 +113,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
       "We have a previous address detail" in {
         val directorWithPreviousAddress = directors.value :+ (director + ("directorAddressYears" -> JsString("under_a_year")) +
-          ("directorPreviousAddress"->  Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
-            "country" -> JsObject(Map("name" -> JsString("IT"))))))
+          ("directorPreviousAddress"->  Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "country" -> JsString("IT"))))
 
 
         val result = JsArray(directorWithPreviousAddress).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
@@ -126,8 +124,8 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
       "We have a correspondence common detail" in {
         val directorWithCorrespondenceCommonDetail = directors.value :+ (director + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-          Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"),JsString("line3"),JsString("line4"))),
-          "country" -> JsObject(Map("name" -> JsString("IT"))), "postcode" -> JsString("NE1"))))
+          Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+            "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT"))))
 
         val result = JsArray(directorWithCorrespondenceCommonDetail).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
         val expectedDirector = directorSample.copy(correspondenceCommonDetail = correspondenceCommonDetails)

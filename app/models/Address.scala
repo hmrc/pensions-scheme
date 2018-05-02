@@ -22,12 +22,8 @@ import play.api.libs.json._
 sealed trait Address
 
 object Address {
-  val addressTypeOneReads: Reads[Address] = (__ \ "country" \ "name").read[String].flatMap(countryCode =>
-    getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeOneReads, InternationalAddress.apiAddressTypeOneReads, countryCode))
-  val addressTypeTwoReads: Reads[Address] = (__ \ "countryCode").read[String].flatMap(countryCode =>
-    getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiAddressTypeTwoReads, InternationalAddress.apiAddressTypeTwoReads, countryCode))
-
-  implicit val reads: Reads[Address] =  addressTypeOneReads orElse addressTypeTwoReads
+  implicit val reads: Reads[Address] =  ((__ \ "countryCode").read[String] orElse (__ \ "country").read[String]).flatMap(countryCode =>
+    getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiReads, InternationalAddress.apiReads, countryCode))
 
   implicit val writes: Writes[Address] = Writes {
     case address: UkAddress =>
@@ -36,24 +32,12 @@ object Address {
       InternationalAddress.format.writes(address)
   }
 
-  val commonTypeOneAddressElementsReads: Reads[(String, Option[String], Option[String], Option[String], String)] = (
-    (JsPath \ "lines").read[List[String]] and
-      (JsPath \ "country" \ "name").read[String]
-    ) ((lines, countryCode) => {
-    val addressLines = lines.size match {
-      case 2 => List(Some(lines(0)), Some(lines(1)), None, None)
-      case 3 => List(Some(lines(0)), Some(lines(1)), Some(lines(2)), None)
-      case 4 => List(Some(lines(0)), Some(lines(1)), Some(lines(2)), Some(lines(3)))
-    }
-    (addressLines(0).get, addressLines(1), addressLines(2), addressLines(3), countryCode)
-  })
-
-  val commonTypeTwoAddressElementsReads: Reads[(String, Option[String], Option[String], Option[String], String)] = (
+  val commonAddressElementsReads: Reads[(String, Option[String], Option[String], Option[String], String)] = (
     (JsPath \ "addressLine1").read[String] and
       (JsPath \ "addressLine2").readNullable[String] and
       (JsPath \ "addressLine3").readNullable[String] and
       (JsPath \ "addressLine4").readNullable[String] and
-      (JsPath \ "countryCode").read[String]
+      ((JsPath \ "countryCode").read[String] orElse (JsPath \ "country").read[String])
     ) ((line1, line2, line3, line4, countryCode) => (line1, line2, line3, line4, countryCode))
 
   private def getReadsBasedOnCountry[T, B](ukAddressReads: Reads[T], nonUkAddressReads: Reads[B], countryCode: String) = {
@@ -72,16 +56,9 @@ object UkAddress {
       Json.writes[UkAddress].writes(address) ++ Json.obj("countryCode" -> "GB")
   }
 
-  val apiAddressTypeOneReads: Reads[UkAddress] = (
-    JsPath.read(Address.commonTypeOneAddressElementsReads) and
-      (JsPath \ "postcode").read[String]
-    ) ((common, postCode) => {
-    UkAddress(common._1, common._2, common._3, common._4, common._5, postCode)
-  })
-
-  val apiAddressTypeTwoReads: Reads[UkAddress] = (
-    JsPath.read(Address.commonTypeTwoAddressElementsReads) and
-      (JsPath \ "postalCode").read[String]
+  val apiReads: Reads[UkAddress] = (
+    JsPath.read(Address.commonAddressElementsReads) and
+      ((JsPath \ "postalCode").read[String] orElse (JsPath \ "postcode").read[String])
     ) ((common, postalCode) => UkAddress(common._1, common._2, common._3, common._4, common._5, postalCode))
 }
 
@@ -91,17 +68,20 @@ case class InternationalAddress(addressLine1: String, addressLine2: Option[Strin
 object InternationalAddress {
   implicit val format: Format[InternationalAddress] = Json.format[InternationalAddress]
 
-  val apiAddressTypeTwoReads: Reads[InternationalAddress] = (
-    JsPath.read(Address.commonTypeTwoAddressElementsReads) and
-      (JsPath \ "postalCode").readNullable[String]
-    ) ((common, postalCode) => InternationalAddress(common._1, common._2, common._3, common._4, common._5, postalCode))
-
-
-  val apiAddressTypeOneReads: Reads[InternationalAddress] = (
-    JsPath.read(Address.commonTypeOneAddressElementsReads) and
+  val apiReads: Reads[InternationalAddress] = (
+    JsPath.read(Address.commonAddressElementsReads) and
+      (JsPath \ "postalCode").readNullable[String] and
       (JsPath \ "postcode").readNullable[String]
-    ) ((common, postCode) => {
+    ) ((common, postCodeFormat1, postCodeFormat2) => {
+
+    val postCode : Option[String] = (postCodeFormat1,postCodeFormat2) match {
+      case (Some(postCodeFormat1),None) => Some(postCodeFormat1)
+      case (None, Some(postCodeFormat2)) => Some(postCodeFormat2)
+      case _ => None
+    }
+
     InternationalAddress(common._1, common._2, common._3, common._4, common._5, postCode)
   })
+
 }
 

@@ -25,8 +25,8 @@ class CorrespondenceCommonDetailReadsSpec extends WordSpec with MustMatchers wit
     "correclty parse to a CorrespondenceCommonDetails object" when {
       val details = Json.obj("directorContactDetails" -> Json.obj("email" -> "test@test.com",
         "phone" -> "07592113"),
-        "directorAddress" -> Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"),JsString("line3"),
-          JsString("line4"))), "postcode" -> JsString("NE1"), "country" -> Json.obj("name" -> JsString("IT"))))
+        "directorAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT")))
       "We have Contact Details" in {
         val result = details.as[CorrespondenceCommonDetail](CorrespondenceCommonDetail.apiReads)
 

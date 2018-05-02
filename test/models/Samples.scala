@@ -27,20 +27,21 @@ trait Samples {
   val numberOfDirectorOrPartnersSample = NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(true))
   val previousAddressDetailsSample = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   val contactDetailsSample = ContactDetails("07592113",email="test@test.com")
+  val declarationSample = PensionSchemeAdministratorDeclarationType(true,true,true,true,Some(true),None,true,None)
   val pensionSchemeAdministratorSample = PensionSchemeAdministrator(customerType = "TestCustomer",
-    legalStatus = "Individual",
+    legalStatus = "Limited Company",
     sapNumber = "NumberTest",
     noIdentifier = true,
     idType = Some("TestId"),
     idNumber = Some("TestIdNumber"),
     organisationDetail = None,
     individualDetail = None,
-    pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(true),
+    pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(false),
     correspondenceAddressDetail = ukAddressSample,
     correspondenceContactDetail = contactDetailsSample,
     previousAddressDetail = previousAddressDetailsSample,
     numberOfDirectorOrPartners = Some(numberOfDirectorOrPartnersSample),
-    directorOrPartnerDetail = None)
+    directorOrPartnerDetail = None,declaration= declarationSample)
   val correspondenceCommonDetails = CorrespondenceCommonDetail(nonUkAddressSample,contactDetailsSample)
   val directorSample = DirectorOrPartnerDetailTypeItem(sequenceId = "0",
     entityType = "Director",
@@ -57,4 +58,5 @@ trait Samples {
     previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false))
   val companySample = OrganisationDetailType(Some("Company Test"),vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
   val individualSample = IndividualDetailType(firstName = "John",middleName = Some("Does Does"), lastName = "Doe",dateOfBirth = LocalDate.parse("2019-01-31"))
+  val pensionAdvisorSample = PensionAdvisorDetail("John",ukAddressSample,contactDetailsSample)
 }

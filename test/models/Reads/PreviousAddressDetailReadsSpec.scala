@@ -40,9 +40,8 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
       }
 
       "we have a GB address" in {
-        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"->  Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
-          "country" -> JsObject(Map("name" -> JsString("GB"))),
-          "postcode" -> JsString("Test")))
+        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"-> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("GB")))
 
         val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 
@@ -50,8 +49,8 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
       }
 
       "we have a non UK address with no postcode" in {
-        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"->  Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
-          "country" -> JsObject(Map("name" -> JsString("IT")))))
+        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"-> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"country" -> JsString("IT")))
 
         val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 

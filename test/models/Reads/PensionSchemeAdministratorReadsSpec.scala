@@ -25,81 +25,85 @@ import play.api.libs.json.{Json, _}
 class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "JSON Payload of a PSA" should {
     "Map to a valid PensionSchemeAdministrator object" when {
-      val input = Json.obj(
-        "legalStatus" -> "Individual",
+      val input = Json.obj("existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(false)), "registrationInfo" -> Json.obj("legalStatus" -> "Limited Company",
         "sapNumber" -> "NumberTest",
         "noIdentifier" -> JsBoolean(true),
         "customerType" -> "TestCustomer",
+        "idType" -> JsString("TestId"),
+        "idNumber" -> JsString("TestIdNumber")),
         "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com"),
         "companyAddressYears" -> JsString("over_a_year"),
-        "companyAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"),"addressLine2" -> JsString("line2"),"addressLine3" -> JsString("line3"),
-          "addressLine4" -> JsString("line4"),"postalCode" -> JsString("NE1"),"countryCode" -> JsString("GB"))),
+        "companyAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
+          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))),
         "companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
         "companyRegistrationNumber" -> JsString("CRN11111"),
-        "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
+        "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")),
+        "declaration" -> JsBoolean(true),
+        "declarationFitAndProper" -> JsBoolean(true),
+        "declarationWorkingKnowledge" -> "workingKnowledge")
 
       "We have a valid legalStatus" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.legalStatus mustEqual pensionSchemeAdministratorSample.legalStatus
       }
 
       "We have a valid sapNumber" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.sapNumber mustEqual pensionSchemeAdministratorSample.sapNumber
       }
 
       "We have a valid noIdentifier" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.noIdentifier mustEqual pensionSchemeAdministratorSample.noIdentifier
       }
 
       "We have valid customerType" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.customerType mustEqual pensionSchemeAdministratorSample.customerType
       }
 
       "We have a valid idType" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input + ("idType" -> JsString("TestId")))(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.idType mustEqual pensionSchemeAdministratorSample.idType
       }
 
       "We have a valid idNumber" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input + ("idNumber" -> JsString("TestIdNumber")))(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.idNumber mustEqual pensionSchemeAdministratorSample.idNumber
       }
 
       "We have a moreThanTenDirectors flag" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input + ("moreThanTenDirectors" -> JsBoolean(true)))(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input + ("moreThanTenDirectors" -> JsBoolean(true)))(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.numberOfDirectorOrPartners.value.isMorethanTenDirectors mustEqual pensionSchemeAdministratorSample.numberOfDirectorOrPartners.value.isMorethanTenDirectors
       }
 
       "We don't have moreThanTenDirectors flag" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.numberOfDirectorOrPartners mustEqual None
       }
 
       "We have contact details" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.correspondenceContactDetail.telephone mustBe pensionSchemeAdministratorSample.correspondenceContactDetail.telephone
       }
 
       "We have previous address details" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.previousAddressDetail.isPreviousAddressLast12Month mustBe pensionSchemeAdministratorSample.previousAddressDetail.isPreviousAddressLast12Month
       }
 
       "We have correspondence address" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.correspondenceAddressDetail mustBe pensionSchemeAdministratorSample.correspondenceAddressDetail
       }
@@ -112,19 +116,19 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
           "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
           "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
           "directorAddressYears" -> JsString("over_a_year")
-        ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-          Json.obj("lines" -> JsArray(Seq(JsString("line1"),JsString("line2"))),
-            "country" -> JsObject(Map("name" -> JsString("IT")))))
+        ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress" ->
+          Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+            "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT")))
 
-        val directors = JsArray(Seq(director,director))
+        val directors = JsArray(Seq(director, director))
         val pensionSchemeAdministrator = input + ("directors" -> directors)
-        val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.directorOrPartnerDetail.value.head.sequenceId mustBe directorSample.sequenceId
       }
 
       "We have organisation details" in {
-        val result = Json.fromJson[PensionSchemeAdministrator](input)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.organisationDetail.value.crnNumber mustBe companySample.crnNumber
       }
@@ -133,43 +137,90 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         val inputWithIndividualDetails = input + ("individualDetails" -> Json.obj("firstName" -> JsString("John"),
           "lastName" -> JsString("Doe"),
           "middleName" -> JsString("Does Does"),
-          "dateOfBirth" -> JsString("2019-01-31")))
+          "dateOfBirth" -> JsString("2019-01-31"))) + ("registrationInfo" -> Json.obj("legalStatus" -> "Individual",
+          "sapNumber" -> "NumberTest",
+          "noIdentifier" -> JsBoolean(true),
+          "customerType" -> "TestCustomer",
+          "idType" -> JsString("TestId"),
+          "idNumber" -> JsString("TestIdNumber"))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
 
-        val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(apiReads).asOpt.value
+        val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.individualDetail.value.dateOfBirth mustBe individualSample.dateOfBirth
       }
+
+      "We have organisation details but no individual details" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.individualDetail mustBe None
+      }
+
+      "We have individual details but no organisation details" in {
+        val inputWithIndividualDetails = input + ("individualDetails" -> Json.obj("firstName" -> JsString("John"),
+          "lastName" -> JsString("Doe"),
+          "middleName" -> JsString("Does Does"),
+          "dateOfBirth" -> JsString("2019-01-31"))) + ("registrationInfo" -> Json.obj("legalStatus" -> "Individual",
+          "sapNumber" -> "NumberTest",
+          "noIdentifier" -> JsBoolean(true),
+          "customerType" -> "TestCustomer",
+          "idType" -> JsString("TestId"),
+          "idNumber" -> JsString("TestIdNumber"))) - "businessDetails" - "companyDetails" - "companyRegistrationNumber"
+
+        val result = Json.fromJson[PensionSchemeAdministrator](inputWithIndividualDetails)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.organisationDetail mustBe None
+      }
+
+      "We have individual with Individual Contact Details" in {
+        val expectedContactDetails = contactDetailsSample.copy(telephone = "11111")
+        val individiualContactDetails = "individualContactDetails" -> Json.obj("phone" -> "11111", "email" -> "test@test.com")
+        val result = Json.fromJson[PensionSchemeAdministrator](input + individiualContactDetails - "contactDetails")(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.correspondenceContactDetail.telephone mustBe expectedContactDetails.telephone
+      }
+
+      "We have an individual address" in {
+        val expectedIndividualAddress = ukAddressSample.copy(addressLine1 = "Test 123 St")
+        val individualCorrespondenceAddress = "individualAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
+          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB")))
+        val result = Json.fromJson[PensionSchemeAdministrator](input + individualCorrespondenceAddress - "companyAddressId")(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.correspondenceAddressDetail.asInstanceOf[UkAddress].addressLine1 mustBe expectedIndividualAddress.addressLine1
+      }
+
+      "We have an individual previous address" in {
+        val expectedIndividualPreviousAddress = previousAddressDetailsSample.copy(isPreviousAddressLast12Month = false, None)
+        val individualPreviousAddress = "individualAddressYears" -> JsString("over_a_year")
+        val result = Json.fromJson[PensionSchemeAdministrator](input + individualPreviousAddress - "companyAddressYears")(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.previousAddressDetail.isPreviousAddressLast12Month mustBe expectedIndividualPreviousAddress.isPreviousAddressLast12Month
+      }
+
+      "The user is not an existing PSA user" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator mustBe pensionSchemeAdministratorSample.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator
+      }
+
+      "The user is an existing PSA user with no previous reference" in {
+        val existingPSA = "existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(true))
+        val result = Json.fromJson[PensionSchemeAdministrator](input + existingPSA)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator mustBe true
+      }
+
+      "The user is an existing PSA user with previous reference number" in {
+        val existingPSA = "existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(true),"existingPSAId" -> JsString("TestId"))
+        val result = Json.fromJson[PensionSchemeAdministrator](input + existingPSA)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.pensionSchemeAdministratoridentifierStatus.existingPensionSchemaAdministratorReference mustBe Some("TestId")
+      }
+
+      "We have a declaration" in {
+        val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.declaration mustBe pensionSchemeAdministratorSample.declaration
+      }
     }
   }
-
-  val apiReads: Reads[PensionSchemeAdministrator] = (
-    (JsPath \ "legalStatus").read[String] and //TODO: Missing mapping
-      (JsPath \ "sapNumber").read[String] and //TODO: Missing mapping
-      (JsPath \ "noIdentifier").read[Boolean] and //TODO: Missing mapping
-      (JsPath \ "customerType").read[String] and //TODO: Missing mapping
-      (JsPath \ "idType").readNullable[String] and //TODO: Missing mapping
-      (JsPath \ "idNumber").readNullable[String] and //TODO: Missing mapping
-      (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
-      (JsPath \ "contactDetails").read(ContactDetails.apiReads) and
-      (JsPath).read(PreviousAddressDetails.apiReads("company")) and
-      (JsPath \ "companyAddressId").read[Address] and
-      (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
-      (JsPath).read(OrganisationDetailType.apiReads) and
-      (JsPath \ "individualDetails").readNullable(IndividualDetailType.apiReads)
-    ) ((legalStatus, sapNumber, noIdentifier, customerType, idType,
-        idNumber, isThereMoreThanTenDirectors, contactDetails,previousAddressDetails, correspondenceAddress, directors, orgDetails, individualDetails) => PensionSchemeAdministrator(
-    customerType = customerType,
-    legalStatus = legalStatus,
-    sapNumber = sapNumber,
-    noIdentifier = noIdentifier,
-    idType = idType,
-    idNumber = idNumber,
-    numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(c=>NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(c))),
-    pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
-    correspondenceAddressDetail = correspondenceAddress,
-    correspondenceContactDetail = contactDetails,
-    previousAddressDetail = previousAddressDetails,
-    directorOrPartnerDetail = directors,
-    organisationDetail = Some(orgDetails),
-    individualDetail = individualDetails))
 }
