@@ -21,10 +21,10 @@ import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
 
 class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
-
   import CustomerAndSchemeDetailsReadsSpec._
 
   "Json Payload containing Customer and scheme details" must {
+
     "correctly parse to the corresponding CustomerAndSchemeDetailsReads" when {
 
       "we have a valid scheme name" in {
@@ -43,35 +43,37 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         result.otherSchemeStructure mustBe None
       }
 
-      "we have scheme structure as Group Life/Death" in {
-        val result = (dataJson + ("schemeDetails" -> Json.obj(
-          "schemeName" -> "test scheme name",
-          "schemeType" -> Json.obj(
-            "name" -> "group"
-          )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+      "we have scheme structure" that {
+        "is Group Life/Death" in {
+          val result = (dataJson + ("schemeDetails" -> Json.obj(
+            "schemeName" -> "test scheme name",
+            "schemeType" -> Json.obj(
+              "name" -> "group"
+            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-        result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A group life/death in service scheme").schemeStructure
-      }
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A group life/death in service scheme").schemeStructure
+        }
 
-      "we have scheme structure as Body Corporate" in {
-        val result = (dataJson + ("schemeDetails" -> Json.obj(
-          "schemeName" -> "test scheme name",
-          "schemeType" -> Json.obj(
-            "name" -> "corp"
-          )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        "is Body Corporate" in {
+          val result = (dataJson + ("schemeDetails" -> Json.obj(
+            "schemeName" -> "test scheme name",
+            "schemeType" -> Json.obj(
+              "name" -> "corp"
+            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-        result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A body corporate").schemeStructure
-      }
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A body corporate").schemeStructure
+        }
 
-      "we have scheme structure as Other with other Scheme structure" in {
-        val result = (dataJson + ("schemeDetails" -> Json.obj(
-          "schemeName" -> "test scheme name",
-          "schemeType" -> Json.obj(
-            "name" -> "other",
-            "schemeTypeDetails" -> "other details"
-          )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        "is Other with other Scheme structure" in {
+          val result = (dataJson + ("schemeDetails" -> Json.obj(
+            "schemeName" -> "test scheme name",
+            "schemeType" -> Json.obj(
+              "name" -> "other",
+              "schemeTypeDetails" -> "other details"
+            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-        result.schemeStructure mustBe customerDetails.copy(schemeStructure = "Other").schemeStructure
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "Other").schemeStructure
+        }
       }
 
       "we have a valid more than ten trustees flag" in {
@@ -124,29 +126,31 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         result.haveInvalidBank mustBe customerDetails.haveInvalidBank
       }
 
-      "we have a valid insurance company name but no policy number" in {
-        val json = dataJson + ("benefitsInsurer" -> Json.obj(
-          "companyName" -> "my insurance company"))
-        val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-        result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
-        result.policyNumber mustBe None
-      }
+      "we have benefits insurer" that {
+        "is with valid insurance company name but no policy number" in {
+          val json = dataJson + ("benefitsInsurer" -> Json.obj(
+            "companyName" -> "my insurance company"))
+          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
+          result.policyNumber mustBe None
+        }
 
-      "we have a valid policy number but no company name" in {
-        val json = dataJson + ("benefitsInsurer" -> Json.obj(
-          "policyNumber" -> "111"))
-        val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-        result.policyNumber mustBe customerDetails.policyNumber
-        result.insuranceCompanyName mustBe None
-      }
+        "is with valid policy number but no company name" in {
+          val json = dataJson + ("benefitsInsurer" -> Json.obj(
+            "policyNumber" -> "111"))
+          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          result.policyNumber mustBe customerDetails.policyNumber
+          result.insuranceCompanyName mustBe None
+        }
 
-      "we have a valid policy number and insurance company name" in {
-        val json = dataJson + ("benefitsInsurer" -> Json.obj(
-          "companyName" -> "my insurance company",
-          "policyNumber" -> "111"))
-        val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-        result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
-        result.policyNumber mustBe customerDetails.policyNumber
+        "is with valid policy number and insurance company name" in {
+          val json = dataJson + ("benefitsInsurer" -> Json.obj(
+            "companyName" -> "my insurance company",
+            "policyNumber" -> "111"))
+          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
+          result.policyNumber mustBe customerDetails.policyNumber
+        }
       }
 
       "we don't have benefits insurer" in {

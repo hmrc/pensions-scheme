@@ -21,8 +21,9 @@ import connector.BarsConnector
 import models.{BankAccount, PensionsScheme}
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
-import org.mockito.Matchers
-import org.scalatest.concurrent.ScalaFutures
+import org.mockito.Matchers._
+import org.mockito.Matchers.{eq => eqTo}
+import org.scalatest.concurrent.ScalaFutures._
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -30,61 +31,66 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SchemeServiceSpec extends SpecBase with MockitoSugar {
-
-  val mockBarsConnector = mock[BarsConnector]
-  implicit val hc = HeaderCarrier()
-
-  val schemeService = new SchemeService(mockBarsConnector)
+  import SchemeServiceSpec._
 
   "retrievePensionScheme" must {
-    val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json").as[JsObject] + (
-      "uKBankDetails" -> Json.obj(
-        "bankName" -> "my bank name",
-        "accountName" -> "my account name",
-        "sortCode" -> Json.obj(
-          "first" -> "00",
-          "second" -> "11",
-          "third" -> "00"
-        ),
-        "accountNumber" -> "111",
-        "date" -> "2010-02-02"
-      )
-      )
     "return the pension scheme with invalid Bank flag as true if bank account is entered and is an invalid account" in {
-      when(mockBarsConnector.invalidBankAccount(Matchers.eq(BankAccount("001100", "111")))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockBarsConnector.invalidBankAccount(eqTo(BankAccount("001100", "111")))(any(), any())).thenReturn(
         Future.successful(true))
 
       val result = schemeService.retrievePensionScheme(validData)
 
-      ScalaFutures.whenReady(result) { res =>
+      whenReady(result) { res =>
         val resData = validData.as[PensionsScheme]
-        res mustBe resData.copy(customerAndSchemeDetails = resData.customerAndSchemeDetails.copy(haveInvalidBank = true))
-        res.customerAndSchemeDetails.haveInvalidBank mustBe true
+        res mustBe resData.copy(customerAndSchemeDetails = resData.customerAndSchemeDetails.copy(haveInvalidBank = invalidAccount))
+        res.customerAndSchemeDetails.haveInvalidBank mustEqual invalidAccount
       }
     }
 
-    "return the pension scheme with invalid Bank flag as false if bank account is entered and is not an invalid account" in {
-      when(mockBarsConnector.invalidBankAccount(Matchers.eq(BankAccount("001100", "111")))(Matchers.any(), Matchers.any())).thenReturn(
-        Future.successful(false))
+    "return the pension scheme with invalid Bank flag as false" when {
+      "bank account is entered and is not an invalid account" in {
+        when(mockBarsConnector.invalidBankAccount(eqTo(BankAccount("001100", "111")))(any(), any())).thenReturn(
+          Future.successful(false))
 
-      val result = schemeService.retrievePensionScheme(validData)
+        val result = schemeService.retrievePensionScheme(validData)
 
-      ScalaFutures.whenReady(result) { res =>
-        res mustBe validData.as[PensionsScheme]
-        res.customerAndSchemeDetails.haveInvalidBank mustBe false
+        whenReady(result) { res =>
+          res mustBe validData.as[PensionsScheme]
+          res.customerAndSchemeDetails.haveInvalidBank mustEqual notInvalidAccount
+        }
       }
-    }
 
-    "return the pension scheme with invalid Bank flag as false there is no bank account entered" in {
-      val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
+      "there is no bank account entered" in {
+        val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
 
-      val result = schemeService.retrievePensionScheme(validData)
+        val result = schemeService.retrievePensionScheme(validData)
 
-      ScalaFutures.whenReady(result) { res =>
-        res mustBe validData.as[PensionsScheme]
-        res.customerAndSchemeDetails.haveInvalidBank mustBe false
+        whenReady(result) { res =>
+          res mustBe validData.as[PensionsScheme]
+          res.customerAndSchemeDetails.haveInvalidBank mustEqual notInvalidAccount
+        }
       }
     }
   }
+}
 
+object SchemeServiceSpec extends SpecBase with MockitoSugar {
+  val mockBarsConnector = mock[BarsConnector]
+  implicit val hc = HeaderCarrier()
+  val schemeService = new SchemeService(mockBarsConnector)
+  val invalidAccount = true
+  val notInvalidAccount = false
+
+  val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json").as[JsObject] + (
+    "uKBankDetails" -> Json.obj(
+      "bankName" -> "my bank name",
+      "accountName" -> "my account name",
+      "sortCode" -> Json.obj(
+        "first" -> "00",
+        "second" -> "11",
+        "third" -> "00"
+      ),
+      "accountNumber" -> "111",
+      "date" -> "2010-02-02"
+    ))
 }
