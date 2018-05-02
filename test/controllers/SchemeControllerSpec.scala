@@ -149,8 +149,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     }
   }
 
-  //TODO: Fixing as part of hooking up reads.
-  "registerPSA" ignore  {
+  "registerPSA" when  {
 
     def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
 
