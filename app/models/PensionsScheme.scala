@@ -18,6 +18,7 @@ package models
 
 import play.api.libs.json.{JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
+import play.api.libs.json
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
 
@@ -38,12 +39,12 @@ case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
 object PreviousAddressDetails {
   implicit val formats = Json.format[PreviousAddressDetails]
 
-  def apiReads(typeOfAddressDetail: String) : Reads[PreviousAddressDetails] = (
+  def apiReads(typeOfAddressDetail: String): Reads[PreviousAddressDetails] = (
     (JsPath \ s"${typeOfAddressDetail}AddressYears").read[String] and
       (JsPath \ s"${typeOfAddressDetail}PreviousAddress").readNullable[Address]
-  )((addressLast12Months,address)=>{
-    val isAddressLast12Months= if (addressLast12Months == "under_a_year") true else false
-    PreviousAddressDetails(isAddressLast12Months,address)
+    ) ((addressLast12Months, address) => {
+    val isAddressLast12Months = if (addressLast12Months == "under_a_year") true else false
+    PreviousAddressDetails(isAddressLast12Months, address)
   })
 }
 
@@ -79,6 +80,48 @@ case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[B
 
 object PensionSchemeDeclaration {
   implicit val formats = Json.format[PensionSchemeDeclaration]
+
+  val apiReads: Reads[PensionSchemeDeclaration] = (
+    (JsPath \ "declaration").read[Boolean] and
+      (JsPath \ "declarationDormant").readNullable[Boolean] and
+      (JsPath \ "declarationDuties").readNullable[Boolean] and
+      json.Reads.optionWithNull(PensionAdvisorDetail.apiReads)
+    ) ((basicDeclaration, isDormant, declarationDuties, advisorDetails) => {
+    val declarationOutput = PensionSchemeDeclaration(basicDeclaration,
+      basicDeclaration,
+      None, None, None,
+      basicDeclaration,
+      basicDeclaration,
+      basicDeclaration,
+      basicDeclaration,
+      None, None)
+
+    val x = isDormant match {
+      case Some(value) => {
+        if (value) {
+          declarationOutput.copy(box4 = Some(true))
+        }
+        else {
+          declarationOutput.copy(box5 = Some(true))
+        }
+      }
+      case _ => declarationOutput
+    }
+
+    declarationDuties match {
+      case Some(value) => {
+        if (value) {
+          x.copy(box10 = Some(true))
+        }
+        else {
+          x.copy(box11 = Some(true))
+        }
+      }
+      case _ => x
+    }
+  }
+  )
+
 }
 
 case class EstablisherDetails(`type`: String, organisationName: Option[String] = None,
