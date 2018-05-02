@@ -17,6 +17,7 @@
 package models
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class BankAccount(sortCode: String, accountNumber: String)
 
@@ -26,6 +27,14 @@ case class ValidateBankDetailsResponse(accountNumberWithSortCodeIsValid: Boolean
 
 object BankAccount {
   implicit val formats = Json.format[BankAccount]
+
+  implicit def apiReads: Reads[BankAccount] = (
+    (JsPath \ "sortCode" \ "first").read[String] and
+      (JsPath \ "sortCode" \ "second").read[String] and
+      (JsPath \ "sortCode" \ "third").read[String] and
+      (JsPath \ "accountNumber").read[String])(
+    (first, second, third, accountNo) => BankAccount(s"$first$second$third", accountNo)
+  )
 }
 
 object ValidateBankDetailsRequest {
