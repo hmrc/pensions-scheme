@@ -1,9 +1,8 @@
 {
-  "index":"",
   "individualDetails":{
     "firstName":"Stephen",
     "lastName":"Wood",
-    "dateOfBirth" :"2019-01-31"
+    "dateOfBirth":"1990-01-01"
   },
   "individualAddress":{
     "addressLine1":"100 SuttonStreet",
@@ -22,33 +21,15 @@
     "idNumber":"CS700100A"
   },
   "individualDetailsCorrect":true,
-  "individualAddressYears":"under_a_year",
-  "individualPreviousAddress":{
-    "addressLine1":"Emmanuel College",
-    "addressLine2":"Line 2",
-    "postcode":"NE11 0AN",
-    "country":"GB"
-  },
-  "existingPSA": {
-    "isExistingPSA": false,
-  },
+  "individualAddressYears":"over_a_year",
   "individualContactDetails":{
     "email":"test@test.com",
-    "phone":"07222222222"
+    "phone":"3247234"
   },
   "declaration":true,
-  "declarationWorkingKnowledge":"adviser",
-  "advisorDetails":{
-    "name":"John Doe",
-    "email":"john.doe@advisor.de"
-  },
-  "advisorAddress":{
-    "addressLine1":"Fake St",
-    "addressLine2":"Line 2",
-    "addressLine3":"Line 3",
-    "addressLine4":"Line 5",
-    "postcode":"NE11 0AN",
-    "country":"GB"
-  },
-  "declarationFitAndProper":true
+  "declarationWorkingKnowledge":"workingKnowledge",
+  "declarationFitAndProper":true,
+  "existingPSA":{
+    "isExistingPSA":false
+  }
 }
