@@ -45,8 +45,8 @@ object Address {
   }
 }
 
-case class UkAddress(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,
-                     addressLine4: Option[String] = None, countryCode: String, postalCode: String) extends Address
+case class UkAddress(line1: String, line2: Option[String] = None, line3: Option[String] = None,
+                     line4: Option[String] = None, countryCode: String, postalCode: String) extends Address
 
 object UkAddress {
   implicit val format: Reads[UkAddress] = Json.reads[UkAddress]
@@ -62,8 +62,8 @@ object UkAddress {
     ) ((common, postalCode) => UkAddress(common._1, common._2, common._3, common._4, common._5, postalCode))
 }
 
-case class InternationalAddress(addressLine1: String, addressLine2: Option[String] = None, addressLine3: Option[String] = None,
-                                addressLine4: Option[String] = None, countryCode: String, postalCode: Option[String] = None) extends Address
+case class InternationalAddress(line1: String, line2: Option[String] = None, line3: Option[String] = None,
+                                line4: Option[String] = None, countryCode: String, postalCode: Option[String] = None) extends Address
 
 object InternationalAddress {
   implicit val format: Format[InternationalAddress] = Json.format[InternationalAddress]

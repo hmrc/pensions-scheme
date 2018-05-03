@@ -1,90 +1,55 @@
 {
-  "customerType": "UK",
-  "legalStatus": "Individual",
-  "idType": "AA999999A",
-  "idNumber": "AA999999A",
-  "sapNumber" : "0123456789",
-  "noIdentifier": false,
-  "individualDetail": {
-    "title": "Mr",
-    "firstName": "abcdefghijklmnopqrs",
-    "middleName": "abcdefghijklmnopq",
-    "lastName": "abcdefghijk",
-    "dateOfBirth": "2018-12-12"
+  "index":"",
+  "individualDetails":{
+    "firstName":"Stephen",
+    "lastName":"Wood",
+    "dateOfBirth" : "2019-01-31"
   },
-  "pensionSchemeAdministratoridentifierStatus": {
-    "isExistingPensionSchemaAdministrator": false,
-    "existingPensionSchemaAdministratorReference": "01234567"
+  "individualAddress":{
+    "addressLine1":"100 SuttonStreet",
+    "addressLine2":"Wokingham",
+    "addressLine3":"Surrey",
+    "addressLine4":"London",
+    "postalCode":"DH14EJ",
+    "countryCode":"GB"
   },
-  "correspondenceAddressDetail": {
-    "addressLine1" : "100 SuttonStreet",
-    "addressLine2" : "Wokingham",
-    "addressLine3" : "Surrey",
-    "addressLine4" : "London",
-    "postalCode" : "DH14EJ",
-    "countryCode" : "GB"
+  "existingPSA": {
+    "isExistingPSA": false
   },
-  "correspondenceContactDetail": {
-    "telephone": "0044-09876542312",
-    "mobileNumber": "0044-09876542312",
-    "fax": "0044-09876542312",
-    "email": "abc@hmrc.gsi.gov.uk"
+  "registrationInfo":{
+    "legalStatus":"Individual",
+    "sapNumber":"1234567890",
+    "noIdentifier":false,
+    "customerType":"UK",
+    "idType":"NINO",
+    "idNumber":"CS700100A"
   },
-  "previousAddressDetail": {
-    "isPreviousAddressLast12Month": true,
-    "previousAddressDetail": {
-      "addressLine1" : "100 SuttonStreet",
-      "addressLine2" : "Wokingham",
-      "addressLine3" : "Surrey",
-      "addressLine4" : "London",
-      "postalCode" : "DH14EJ",
-      "countryCode" : "GB"
-    }
+  "individualDetailsCorrect":true,
+  "individualAddressYears":"under_a_year",
+  "individualPreviousAddress":{
+    "addressLine1":"Emmanuel College",
+    "addressLine2":"Line 2",
+    "postcode":"NE11 0AN",
+    "country":"GB"
   },
-  "numberOfDirectorOrPartners": {
-    "isMorethanTenDirectors": true,
-    "isMorethanTenPartners": true
+  "individualContactDetails":{
+    "email":"test@test.com",
+    "phone":"07222222222"
   },
-  "directorOrPartnerDetail": [
-    {
-      "sequenceId": "077",
-      "entityType": "Director",
-      "title": "Mr",
-      "firstName": "abcdefghijklmnopqrs",
-      "middleName": "abcdefg",
-      "lastName": "abcdef",
-      "dateOfBirth": "2018-12-12",
-      "referenceOrNino": "abcdefghijklmn",
-      "noNinoReason": "abcdefghijklmnopqrs",
-      "utr": "0123456789",
-      "noUtrReason": "abcdef",
-      "correspondenceCommonDetail": {
-        "addressDetail": {
-          "addressLine1" : "100 SuttonStreet",
-          "addressLine2" : "Wokingham",
-          "addressLine3" : "Surrey",
-          "addressLine4" : "London",
-          "postalCode" : "DH14EJ",
-          "countryCode" : "GB"
-        },
-        "contactDetail": {
-          "telephone": "0044-09876542312",
-          "mobileNumber": "0044-09876542312",
-          "fax": "0044-09876542312",
-          "email": "abc@hmrc.gsi.gov.uk"
-        }
-      },
-      "previousAddressDetail": {
-        "isPreviousAddressLast12Month": false,
-        "previousAddressDetail": {
-          "addressLine1" : "100 SuttonStreet",
-          "addressLine2" : "Wokingham",
-          "addressLine3" : "Surrey",
-          "addressLine4" : "London",
-          "postalCode" : "DH14EJ",
-          "countryCode" : "GB"
-        }
-      }
-    }
-  ]
+  "declaration":true,
+  "declarationWorkingKnowledge":"adviser",
+  "advisorDetails":{
+    "name":"John Doe",
+    "email":"john.doe@advisor.de",
+    "phone":"3483811"
+  },
+  "advisorAddress":{
+    "addressLine1":"Fake St",
+    "addressLine2":"Line 2",
+    "addressLine3":"Line 3",
+    "addressLine4":"Line 5",
+    "postcode":"NE11 0AN",
+    "country":"GB"
+  },
+  "declarationFitAndProper":true
 }

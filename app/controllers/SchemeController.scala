@@ -53,7 +53,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
 
     feJson match {
       case Some(jsValue) =>
-        val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator])
+        val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads))
         schemeConnector.registerPSA(psa).map {
           httpResponse => Ok(httpResponse.body)
         }
