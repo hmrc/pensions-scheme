@@ -12,7 +12,7 @@
     "doesSchemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
     "areBenefitsSecuredContractInsuranceCompany": true,
     "schemeEstablishedCountry": "AD",
-    "haveValidBank": true,
+    "haveInvalidBank": false,
     "insuranceCompanyName": "XZY - Co. -Ltd",
     "insuranceCompanyAddress": {
       "addressLine1" : "100 SuttonStreet",

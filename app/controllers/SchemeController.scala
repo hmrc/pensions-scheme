@@ -19,16 +19,17 @@ package controllers
 import com.google.inject.Inject
 import connector.SchemeConnector
 import models.{ListOfSchemes, PensionSchemeAdministrator, PensionsScheme}
-import play.api.libs.json.Json
+import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
+import service.SchemeService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
+class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService: SchemeService) extends BaseController with ErrorHandler {
 
   def registerScheme: Action[AnyContent] = Action.async { implicit request => {
     val psaId = request.headers.get("psaId")
@@ -36,9 +37,10 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
 
     (psaId, feJson) match {
       case (Some(psa), Some(jsValue)) =>
-        val pensionSchemeData = Json.toJson(jsValue.as[PensionsScheme])
-        schemeConnector.registerScheme(psa, pensionSchemeData).map { httpResponse =>
-          Ok(httpResponse.body)
+        schemeService.retrievePensionScheme(jsValue).flatMap { pensionSchemeData =>
+          schemeConnector.registerScheme(psa, Json.toJson(pensionSchemeData)).map { httpResponse =>
+            Ok(httpResponse.body)
+          }
         }
       case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
     }
@@ -51,7 +53,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
 
     feJson match {
       case Some(jsValue) =>
-        val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator])
+        val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads))
         schemeConnector.registerPSA(psa).map {
           httpResponse => Ok(httpResponse.body)
         }
