@@ -21,6 +21,7 @@ import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
 
 class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
+
   import CustomerAndSchemeDetailsReadsSpec._
 
   "Json Payload containing Customer and scheme details" must {
@@ -37,13 +38,13 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         result.isSchemeMasterTrust mustBe customerDetails.isSchemeMasterTrust
       }
 
-      "we have scheme structure as Single Trust with no other scheme structure" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-        result.schemeStructure mustBe customerDetails.schemeStructure
-        result.otherSchemeStructure mustBe None
-      }
-
       "we have scheme structure" that {
+        "is Single Trust with no other scheme structure" in {
+          val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          result.schemeStructure mustBe customerDetails.schemeStructure
+          result.otherSchemeStructure mustBe None
+        }
+
         "is Group Life/Death" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
@@ -196,7 +197,9 @@ object CustomerAndSchemeDetailsReadsSpec {
     "uKBankAccount" -> true
   )
 
-  val customerDetails = CustomerAndSchemeDetails("test scheme name", false, "A single trust under which all of the assets are held for the benefit of all members of the scheme", Some("other details"), Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", true,
+  val customerDetails = CustomerAndSchemeDetails("test scheme name", false, "A single trust under which all" +
+    " of the assets are held for the benefit of all members of the scheme", Some("other details"),
+    Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", true,
     Some("my insurance company"), Some("111"), Some(UkAddress("ADDRESS LINE 1", Some("ADDRESS LINE 2"),
       Some("ADDRESS LINE 3"), Some("ADDRESS LINE 4"), "GB", "ZZ1 1ZZ")))
 

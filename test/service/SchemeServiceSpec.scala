@@ -23,6 +23,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.mockito.Matchers.{eq => eqTo}
+import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.concurrent.ScalaFutures._
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeServiceSpec extends SpecBase with MockitoSugar {
+class SchemeServiceSpec extends SpecBase with MockitoSugar with PatienceConfiguration {
   import SchemeServiceSpec._
 
   "retrievePensionScheme" must {
