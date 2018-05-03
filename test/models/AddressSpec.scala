@@ -26,64 +26,64 @@ class AddressSpec extends SpecBase  {
       val json = Json.obj("addressLine1" -> "address1", "addressLine2" -> "address2", "addressLine3" -> "address3",
         "addressLine4"->"address4","postalCode" -> "test post code", "countryCode" -> "GB")
 
-      json.as[Address] mustEqual UkAddress(addressLine1 = "address1",addressLine2 = Some("address2"), addressLine3 = Some("address3"),
-        addressLine4=Some("address4"),postalCode = "test post code", countryCode = "GB")
+      json.as[Address] mustEqual UkAddress(line1 = "address1",line2 = Some("address2"), line3 = Some("address3"),
+        line4=Some("address4"),postalCode = "test post code", countryCode = "GB")
     }
 
     "return International Address when the countryCode is not GB and no postal code" in {
       val json = Json.obj("addressLine1" -> "address1", "addressLine2" -> "address2", "addressLine3" -> "address3",
         "addressLine4"->"address4", "countryCode" -> "IN")
 
-      json.as[Address] mustEqual InternationalAddress(addressLine1 = "address1",addressLine2 = Some("address2"), addressLine3 = Some("address3"),
-        addressLine4=Some("address4"),countryCode = "IN")
+      json.as[Address] mustEqual InternationalAddress(line1 = "address1",line2 = Some("address2"), line3 = Some("address3"),
+        line4=Some("address4"),countryCode = "IN")
     }
 
     "return International Address when the countryCode is not GB and with postal code" in {
       val json = Json.obj("addressLine1" -> "address1", "addressLine2" -> "address2", "addressLine3" -> "address3",
         "addressLine4"->"address4", "postalCode"->"test post code", "countryCode" -> "IN")
 
-      json.as[Address] mustEqual InternationalAddress(addressLine1 = "address1",addressLine2 = Some("address2"), addressLine3 = Some("address3"),
-        addressLine4=Some("address4"),postalCode=Some("test post code"),countryCode = "IN")
+      json.as[Address] mustEqual InternationalAddress(line1 = "address1",line2 = Some("address2"), line3 = Some("address3"),
+        line4=Some("address4"),postalCode=Some("test post code"),countryCode = "IN")
     }
   }
 
   "Writes Address" must {
     "return json for UK Address" in {
-      val ukAddress =UkAddress(addressLine1 = "address1",addressLine2 = Some("address2"), addressLine3 = Some("address3"),
-        addressLine4=Some("address4"),postalCode = "test post code", countryCode = "GB")
+      val ukAddress =UkAddress(line1 = "address1",line2 = Some("address2"), line3 = Some("address3"),
+        line4=Some("address4"),postalCode = "test post code", countryCode = "GB")
 
-      val jsonResult =  Json.obj("addressLine1" -> "address1", "addressLine2" -> "address2", "addressLine3" -> "address3",
-        "addressLine4"->"address4","postalCode" -> "test post code", "countryCode" -> "GB")
+      val jsonResult =  Json.obj("line1" -> "address1", "line2" -> "address2", "line3" -> "address3",
+        "line4"->"address4","postalCode" -> "test post code", "countryCode" -> "GB")
 
       Json.toJson[Address](ukAddress) mustEqual jsonResult
     }
 
     "return json for UK Address ensuring country code is GB" in {
-      val ukAddress =UkAddress(addressLine1 = "address1",addressLine2 = Some("address2"), addressLine3 = Some("address3"),
-        addressLine4=Some("address4"),postalCode = "test post code", countryCode = "Non GB Code")
+      val ukAddress =UkAddress(line1 = "address1",line2 = Some("address2"), line3 = Some("address3"),
+        line4=Some("address4"),postalCode = "test post code", countryCode = "Non GB Code")
 
-      val jsonResult =  Json.obj("addressLine1" -> "address1", "addressLine2" -> "address2", "addressLine3" -> "address3",
-        "addressLine4"->"address4","postalCode" -> "test post code", "countryCode" -> "GB")
+      val jsonResult =  Json.obj("line1" -> "address1", "line2" -> "address2", "line3" -> "address3",
+        "line4"->"address4","postalCode" -> "test post code", "countryCode" -> "GB")
 
       Json.toJson[Address](ukAddress) mustEqual jsonResult
     }
 
 
     "return json for International Address with no postal code" in {
-      val internationalAddress =InternationalAddress(addressLine1 = "address1",addressLine2 = Some("address2"), addressLine3 = Some("address3"),
-        addressLine4=Some("address4"),countryCode = "IN")
+      val internationalAddress =InternationalAddress(line1 = "address1",line2 = Some("address2"), line3 = Some("address3"),
+        line4=Some("address4"),countryCode = "IN")
 
-      val jsonResult = Json.obj("addressLine1" -> "address1", "addressLine2" -> "address2", "addressLine3" -> "address3",
-        "addressLine4"->"address4", "countryCode" -> "IN")
+      val jsonResult = Json.obj("line1" -> "address1", "line2" -> "address2", "line3" -> "address3",
+        "line4"->"address4", "countryCode" -> "IN")
       Json.toJson[Address](internationalAddress) mustEqual jsonResult
     }
 
     "return json for International Address with postal code" in {
-      val internationalAddress = InternationalAddress(addressLine1 = "address1",addressLine2 = Some("address2"), addressLine3 = Some("address3"),
-        addressLine4=Some("address4"),postalCode=Some("test post code"),countryCode = "IN")
+      val internationalAddress = InternationalAddress(line1 = "address1",line2 = Some("address2"), line3 = Some("address3"),
+        line4=Some("address4"),postalCode=Some("test post code"),countryCode = "IN")
 
-      val jsonResult= Json.obj("addressLine1" -> "address1", "addressLine2" -> "address2", "addressLine3" -> "address3",
-        "addressLine4"->"address4", "postalCode"->"test post code", "countryCode" -> "IN")
+      val jsonResult= Json.obj("line1" -> "address1", "line2" -> "address2", "line3" -> "address3",
+        "line4"->"address4", "postalCode"->"test post code", "countryCode" -> "IN")
 
       Json.toJson[Address](internationalAddress) mustEqual jsonResult
     }
