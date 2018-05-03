@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
-import models.PensionSchemeAdministrator
+import models.{PensionSchemeAdministrator, PensionsScheme}
 import org.joda.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
@@ -31,12 +31,14 @@ import uk.gov.hmrc.http._
 import play.api.mvc.AnyContentAsJson
 import play.api.test.Helpers._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import service.SchemeService
 
 import scala.concurrent.Future
 
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val schemeController = new SchemeController(mockSchemeConnector)
+  val mockSchemeService: SchemeService = mock[SchemeService]
+  val schemeController = new SchemeController(mockSchemeConnector, mockSchemeService)
 
   before(reset(mockSchemeConnector))
 
@@ -49,6 +51,8 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
       when(mockSchemeConnector.registerScheme(Matchers.eq("A2000001"), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
+      when(mockSchemeService.retrievePensionScheme(Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
+        Future.successful(validData.as[PensionsScheme]))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result) { res =>

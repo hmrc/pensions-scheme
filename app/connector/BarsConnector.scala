@@ -32,9 +32,9 @@ class BarsConnector @Inject()(http: HttpClient, appConfig: AppConfig) {
   val invalid = true
   val notInvalid = false
 
-  def invalidBankAccount(sortCode: String, accountNumber: String)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Boolean] = {
+  def invalidBankAccount(bankAccount: BankAccount)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Boolean] = {
 
-    val request = ValidateBankDetailsRequest(BankAccount(sortCode, accountNumber))
+    val request = ValidateBankDetailsRequest(bankAccount)
     http.POST[ValidateBankDetailsRequest, ValidateBankDetailsResponse](s"$barsBaseUrl/validateBankDetails", request).map {
       case ValidateBankDetailsResponse(false, false) => invalid
       case _ => notInvalid
