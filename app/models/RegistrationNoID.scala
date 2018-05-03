@@ -52,7 +52,7 @@ object OrganisationRegistrant {
       (__ \ "isAnAgent").write[Boolean] and
       (__ \ "isAGroup").write[Boolean] and
       (__ \ "organisation").write[OrganisationName] and
-      (__ \ "address").write[Address] and
+      (__ \ "address").write[Address](Address.defaultWrites) and
       (__ \ "contactDetails").write[ContactDetailsType]
       ) { o =>
       (

@@ -29,7 +29,14 @@ object Address {
     case address: UkAddress =>
       UkAddress.writes.writes(address)
     case address: InternationalAddress =>
-      InternationalAddress.format.writes(address)
+      InternationalAddress.writes.writes(address)
+  }
+
+  val defaultWrites : Writes[Address] = Writes {
+    case address: UkAddress =>
+      UkAddress.defaultWrites.writes(address)
+    case address: InternationalAddress =>
+      InternationalAddress.defaultWrites.writes(address)
   }
 
   val commonAddressElementsReads: Reads[(String, Option[String], Option[String], Option[String], String)] = (
@@ -51,12 +58,7 @@ case class UkAddress(addressLine1: String, addressLine2: Option[String] = None, 
 object UkAddress {
   implicit val format: Reads[UkAddress] = Json.reads[UkAddress]
 
-  implicit val writes: Writes[UkAddress] = Writes {
-    address =>
-      Json.writes[UkAddress].writes(address) ++ Json.obj("countryCode" -> "GB")
-  }
-
-  val writesToDes : Writes[UkAddress] = (
+  implicit val writes: Writes[UkAddress] = (
     (JsPath \ "line1").write[String] and
       (JsPath \ "line2").writeNullable[String] and
       (JsPath \ "line3").writeNullable[String] and
@@ -64,6 +66,8 @@ object UkAddress {
       (JsPath \ "countryCode").write[String] and
       (JsPath \ "postalCode").write[String]
     )(unlift(UkAddress.unapply))
+
+  val defaultWrites : Writes[UkAddress] = Json.writes[UkAddress]
 
   val apiReads: Reads[UkAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
@@ -77,7 +81,7 @@ case class InternationalAddress(addressLine1: String, addressLine2: Option[Strin
 object InternationalAddress {
   implicit val format: Format[InternationalAddress] = Json.format[InternationalAddress]
 
-  val writesToDes : Writes[InternationalAddress] = (
+  implicit val writes : Writes[InternationalAddress] = (
     (JsPath \ "line1").write[String] and
       (JsPath \ "line2").writeNullable[String] and
       (JsPath \ "line3").writeNullable[String] and
@@ -86,6 +90,7 @@ object InternationalAddress {
       (JsPath \ "postalCode").writeNullable[String]
     )(unlift(InternationalAddress.unapply))
 
+  val defaultWrites : Writes[InternationalAddress] = Json.writes[InternationalAddress]
 
   val apiReads: Reads[InternationalAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
