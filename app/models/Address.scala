@@ -56,6 +56,15 @@ object UkAddress {
       Json.writes[UkAddress].writes(address) ++ Json.obj("countryCode" -> "GB")
   }
 
+  val writesToDes : Writes[UkAddress] = (
+    (JsPath \ "line1").write[String] and
+      (JsPath \ "line2").writeNullable[String] and
+      (JsPath \ "line3").writeNullable[String] and
+      (JsPath \ "line4").writeNullable[String] and
+      (JsPath \ "countryCode").write[String] and
+      (JsPath \ "postalCode").write[String]
+    )(unlift(UkAddress.unapply))
+
   val apiReads: Reads[UkAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
       ((JsPath \ "postalCode").read[String] orElse (JsPath \ "postcode").read[String])
@@ -67,6 +76,16 @@ case class InternationalAddress(addressLine1: String, addressLine2: Option[Strin
 
 object InternationalAddress {
   implicit val format: Format[InternationalAddress] = Json.format[InternationalAddress]
+
+  val writesToDes : Writes[InternationalAddress] = (
+    (JsPath \ "line1").write[String] and
+      (JsPath \ "line2").writeNullable[String] and
+      (JsPath \ "line3").writeNullable[String] and
+      (JsPath \ "line4").writeNullable[String] and
+      (JsPath \ "countryCode").write[String] and
+      (JsPath \ "postalCode").writeNullable[String]
+    )(unlift(InternationalAddress.unapply))
+
 
   val apiReads: Reads[InternationalAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
