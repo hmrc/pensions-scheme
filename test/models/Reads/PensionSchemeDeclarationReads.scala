@@ -72,28 +72,32 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
          result.box10 mustBe Some(true)
          result.box11 mustBe None
        }
-       "if we have a duties field and is false" in {
+
+       "set as false and containing 'adviser' details" in {
+
+         val advisorDetails = "adviserDetails" -> Json.obj("adviserName" -> JsString("John"),"phoneNumber" -> "07592113", "emailAddress" -> "test@test.com")
+         val advisorAddress = "adviserAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+           "postcode" -> JsString("NE1"), "country" -> JsString("GB"))
+
+         val name="John"
+         val address=UkAddress("line1",Some("line2"),Some("line3"),Some("line4"),"GB","NE1")
+         val contact=ContactDetails("07592113",None,None,"test@test.com")
+         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsBoolean(true), "declarationDuties" -> JsBoolean(false))
+         val result = (declaration + advisorDetails + advisorAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+         result.box11 mustBe Some(true)
+         result.pensionAdviserName mustBe Some(name)
+         result.addressAndContactDetails mustBe Some(AddressAndContactDetails(address,contact))
+       }
+
+       "if we have a duties field and is false but no contact or name details" in {
          val result = (declaration + ("declarationDuties" -> JsBoolean(false))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
          result.box11 mustBe Some(true)
          result.box10 mustBe None
+         result.addressAndContactDetails mustBe None
+         result.pensionAdviserName mustBe None
+
        }
 
-       "set as true and containing 'adviser' details" in {
-
-         val advisorDetails = "advisorDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com")
-         val advisorAddress = "advisorAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
-           "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
-
-         val name="John"
-         val address=UkAddress("line1",Some("line2"),Some("line3"),Some("line4"),"GB","postalCode")
-         val contact=ContactDetails("07592113",None,None,"test@test.com")
-
-         val result = (declaration + advisorDetails + advisorAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-         result.box11 mustBe Some(true)
-
-         result.pensionAdviserName mustBe name
-         result.addressAndContactDetails mustBe AddressAndContactDetails(address,contact)
-       }
      }
 
    }

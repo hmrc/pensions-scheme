@@ -73,22 +73,73 @@ object CustomerAndSchemeDetails {
   implicit val formats = Json.format[CustomerAndSchemeDetails]
 }
 
+
 case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,
                                     box5: Option[Boolean] = None, box6: Boolean, box7: Boolean, box8: Boolean, box9: Boolean,
                                     box10: Option[Boolean] = None, box11: Option[Boolean] = None, pensionAdviserName: Option[String] = None,
                                     addressAndContactDetails: Option[AddressAndContactDetails] = None)
 
+case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber: String)
+
+object AdviserDetails {
+
+  implicit val formats = Json.format[PensionSchemeDeclaration]
+
+  implicit val readsAdviserDetails: Reads[AdviserDetails] = (
+    (JsPath \ "adviserName").read[String] and
+      (JsPath \ "emailAddress").read[String] and
+      (JsPath \ "phoneNumber").read[String]
+    ) ((name, email, phone) => AdviserDetails(name, email, phone))
+}
 
 object PensionSchemeDeclaration {
+
+  //TODO
+  private implicit val readsAddress: Reads[Address] = (
+    (JsPath \ "addressLine1").read[String] and
+      (JsPath \ "addressLine2").read[String] and
+      (JsPath \ "addressLine3").readNullable[String] and
+      (JsPath \ "addressLine4").readNullable[String] and
+      (JsPath \ "country").read[String] and
+      (JsPath \ "postcode").readNullable[String]
+    ) ((addressLine1, addressLine2, addressLine3, addressLine4, countryCode, postalCode) => {
+    if (countryCode == "GB") {
+      postalCode match {
+        case Some(zip) =>
+          UkAddress(
+            addressLine1,
+            Some(addressLine2),
+            addressLine3,
+            addressLine4,
+            countryCode,
+            zip
+          )
+        case _ =>
+          throw new IllegalArgumentException("Null postcode in UK address")
+      }
+    }
+    else {
+      InternationalAddress(
+        addressLine1,
+        Some(addressLine2),
+        addressLine3,
+        addressLine4,
+        countryCode,
+        postalCode
+      )
+    }
+  })
+
+
   implicit val formats = Json.format[PensionSchemeDeclaration]
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "declarationDormant").readNullable[Boolean] and
-       (JsPath \ "declarationDuties").readNullable[Boolean] and
-        (JsPath \ "adviserDetails\adviserName").readNullable[String] and
-          (JsPath \ "adviserAddress").readNullable[Address]
-    ) ((declaration, declarationDormant, declarationDuties, adviserName, adviserAddress) => {
+      (JsPath \ "declarationDuties").readNullable[Boolean] and
+      (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
+      (JsPath \ "adviserAddress").readNullable[Address]
+    ) ((declaration, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
 
 
     val basicDeclaration = PensionSchemeDeclaration(
@@ -101,7 +152,7 @@ object PensionSchemeDeclaration {
       declaration,
       None, None)
 
-    val dormant=(dec: PensionSchemeDeclaration) => {
+    val dormant = (dec: PensionSchemeDeclaration) => {
       declarationDormant match {
         case Some(value) => {
           if (value) {
@@ -115,28 +166,34 @@ object PensionSchemeDeclaration {
       }
     }
 
-    val decDuties=(dec: PensionSchemeDeclaration) =>{
+    val decDuties = (dec: PensionSchemeDeclaration) => {
       declarationDuties match {
         case Some(value) => {
           if (value) {
             dec.copy(box10 = Some(true))
           }
           else {
-            dec.copy(box11 = Some(true))
-            dec.copy(pensionAdviserName=adviserName)
+            dec.copy(
+              box11 = Some(true),
+              pensionAdviserName = adviserDetails.map(_.adviserName),
+              addressAndContactDetails = {
+                (adviserDetails, adviserAddress) match {
+                  case (Some(contact), Some(address)) =>
+                    Some(AddressAndContactDetails(address, ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)))
+                  case _ => None
+                }
+              }
+            )
           }
         }
         case None => dec
       }
     }
-    val completedDeclaration=dormant andThen decDuties
-
+    val completedDeclaration = dormant andThen decDuties
     completedDeclaration(basicDeclaration)
 
   }
   )
-
-
 }
 
 case class EstablisherDetails(`type`: String, organisationName: Option[String] = None,
