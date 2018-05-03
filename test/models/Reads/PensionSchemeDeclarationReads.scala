@@ -17,7 +17,7 @@
 
 package models.Reads
 
-import models.{PensionSchemeDeclaration, Samples}
+import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsBoolean, JsString, Json}
 
@@ -49,12 +49,12 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
      "if we have a dormant field" when {
        "if we have a company and its dormant field is true" in {
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-
          result.box4 mustBe Some(true)
+         result.box5 mustBe None
        }
        "if we have a company and its dormant field is false" in {
          val result = (declaration + ("declarationDormant" -> JsBoolean(false))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-
+         result.box4 mustBe None
          result.box5 mustBe Some(true)
        }
      }
@@ -69,35 +69,30 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
      "if we have a duties field" when {
        "if we have a duties field and is true" in {
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-
          result.box10 mustBe Some(true)
+         result.box11 mustBe None
        }
        "if we have a duties field and is false" in {
          val result = (declaration + ("declarationDuties" -> JsBoolean(false))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-
          result.box11 mustBe Some(true)
+         result.box10 mustBe None
        }
 
        "set as true and containing 'adviser' details" in {
-         val advisorDetails = "advisorDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com")
 
+         val advisorDetails = "advisorDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com")
          val advisorAddress = "advisorAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
            "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
+         val name="John"
+         val address=UkAddress("line1",Some("line2"),Some("line3"),Some("line4"),"GB","postalCode")
+         val contact=ContactDetails("07592113",None,None,"test@test.com")
+
          val result = (declaration + advisorDetails + advisorAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
          result.box11 mustBe Some(true)
-       //  result.pensionAdvisorDetail.value mustBe pensionAdvisorSample
 
-       }
-
-
-     }
-     "if we do not have a duties field" when {
-       "box 10 and box 11 should be none" in {
-         val result = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsBoolean(true)).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-
-         result.box10 mustBe None
-         result.box11 mustBe None
+         result.pensionAdviserName mustBe name
+         result.addressAndContactDetails mustBe AddressAndContactDetails(address,contact)
        }
      }
 

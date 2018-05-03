@@ -78,49 +78,64 @@ case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[B
                                     box10: Option[Boolean] = None, box11: Option[Boolean] = None, pensionAdviserName: Option[String] = None,
                                     addressAndContactDetails: Option[AddressAndContactDetails] = None)
 
+
 object PensionSchemeDeclaration {
   implicit val formats = Json.format[PensionSchemeDeclaration]
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "declarationDormant").readNullable[Boolean] and
-      (JsPath \ "declarationDuties").readNullable[Boolean] and
-      json.Reads.optionWithNull(PensionAdvisorDetail.apiReads)
-    ) ((basicDeclaration, isDormant, declarationDuties, advisorDetails) => {
-    val declarationOutput = PensionSchemeDeclaration(basicDeclaration,
-      basicDeclaration,
+       (JsPath \ "declarationDuties").readNullable[Boolean] and
+        (JsPath \ "adviserDetails\adviserName").readNullable[String] and
+          (JsPath \ "adviserAddress").readNullable[Address]
+    ) ((declaration, declarationDormant, declarationDuties, adviserName, adviserAddress) => {
+
+
+    val basicDeclaration = PensionSchemeDeclaration(
+      declaration,
+      declaration,
       None, None, None,
-      basicDeclaration,
-      basicDeclaration,
-      basicDeclaration,
-      basicDeclaration,
+      declaration,
+      declaration,
+      declaration,
+      declaration,
       None, None)
 
-    val x = isDormant match {
-      case Some(value) => {
-        if (value) {
-          declarationOutput.copy(box4 = Some(true))
+    val dormant=(dec: PensionSchemeDeclaration) => {
+      declarationDormant match {
+        case Some(value) => {
+          if (value) {
+            dec.copy(box4 = Some(true))
+          }
+          else {
+            dec.copy(box5 = Some(true))
+          }
         }
-        else {
-          declarationOutput.copy(box5 = Some(true))
-        }
+        case None => dec
       }
-      case _ => declarationOutput
     }
 
-    declarationDuties match {
-      case Some(value) => {
-        if (value) {
-          x.copy(box10 = Some(true))
+    val decDuties=(dec: PensionSchemeDeclaration) =>{
+      declarationDuties match {
+        case Some(value) => {
+          if (value) {
+            dec.copy(box10 = Some(true))
+          }
+          else {
+            dec.copy(box11 = Some(true))
+            dec.copy(pensionAdviserName=adviserName)
+          }
         }
-        else {
-          x.copy(box11 = Some(true))
-        }
+        case None => dec
       }
-      case _ => x
     }
+    val completedDeclaration=dormant andThen decDuties
+
+    completedDeclaration(basicDeclaration)
+
   }
   )
+
 
 }
 
