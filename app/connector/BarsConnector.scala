@@ -16,7 +16,7 @@
 
 package connector
 
-import com.google.inject.Inject
+import com.google.inject.{ImplementedBy, Inject, Singleton}
 import config.AppConfig
 import models.{BankAccount, ValidateBankDetailsRequest, ValidateBankDetailsResponse}
 import play.api.Logger
@@ -25,7 +25,13 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class BarsConnector @Inject()(http: HttpClient, appConfig: AppConfig) {
+@ImplementedBy(classOf[BarsConnectorImpl])
+trait BarsConnector {
+  def invalidBankAccount(bankAccount: BankAccount)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Boolean]
+}
+
+@Singleton
+class BarsConnectorImpl @Inject()(http: HttpClient, appConfig: AppConfig) extends BarsConnector {
 
   val barsBaseUrl: String = appConfig.barsBaseUrl
 
@@ -44,4 +50,5 @@ class BarsConnector @Inject()(http: HttpClient, appConfig: AppConfig) {
         Future.successful(notInvalid)
     }
   }
+
 }

@@ -17,28 +17,28 @@
 package models
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
-import play.api.libs.json.{JsPath, Json, Reads}
+import play.api.libs.json.{Format, JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
-import play.api.libs.json
+import utils.Lens
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
 
 object AddressAndContactDetails {
-  implicit val formats = Json.format[AddressAndContactDetails]
+  implicit val formats: Format[AddressAndContactDetails] = Json.format[AddressAndContactDetails]
 }
 
 case class PersonalDetails(title: Option[String] = None, firstName: String, middleName: Option[String] = None,
                            lastName: String, dateOfBirth: String)
 
 object PersonalDetails {
-  implicit val formats = Json.format[PersonalDetails]
+  implicit val formats: Format[PersonalDetails] = Json.format[PersonalDetails]
 }
 
 case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
                                   previousAddressDetail: Option[Address] = None)
 
 object PreviousAddressDetails {
-  implicit val formats = Json.format[PreviousAddressDetails]
+  implicit val formats: Format[PreviousAddressDetails] = Json.format[PreviousAddressDetails]
 
   def apiReads(typeOfAddressDetail: String): Reads[PreviousAddressDetails] = (
     (JsPath \ s"${typeOfAddressDetail}AddressYears").read[String] and
@@ -52,15 +52,14 @@ object PreviousAddressDetails {
 case class CorrespondenceAddressDetails(addressDetails: Address)
 
 object CorrespondenceAddressDetails {
-  implicit val formats = Json.format[CorrespondenceAddressDetails]
+  implicit val formats: Format[CorrespondenceAddressDetails] = Json.format[CorrespondenceAddressDetails]
 }
 
 case class CorrespondenceContactDetails(contactDetails: ContactDetails)
 
 object CorrespondenceContactDetails {
-  implicit val formats = Json.format[CorrespondenceContactDetails]
+  implicit val formats: Format[CorrespondenceContactDetails] = Json.format[CorrespondenceContactDetails]
 }
-
 
 case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: String,
                                     otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,
@@ -71,7 +70,7 @@ case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boo
                                     insuranceCompanyAddress: Option[Address] = None)
 
 object CustomerAndSchemeDetails {
-  implicit val formats = Json.format[CustomerAndSchemeDetails]
+  implicit val formats: Format[CustomerAndSchemeDetails] = Json.format[CustomerAndSchemeDetails]
 
   def insurerReads: Reads[(Option[String], Option[String])] = (
     ((JsPath \ "companyName").readNullable[String] and
@@ -121,7 +120,7 @@ case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber
 
 object AdviserDetails {
 
-  implicit val formats = Json.format[PensionSchemeDeclaration]
+  implicit val formats: Format[PensionSchemeDeclaration] = Json.format[PensionSchemeDeclaration]
 
   implicit val readsAdviserDetails: Reads[AdviserDetails] = (
     (JsPath \ "adviserName").read[String] and
@@ -137,7 +136,7 @@ case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[B
                                     addressAndContactDetails: Option[AddressAndContactDetails] = None)
 object PensionSchemeDeclaration {
 
-  implicit val formats = Json.format[PensionSchemeDeclaration]
+  implicit val formats: Format[PensionSchemeDeclaration] = Json.format[PensionSchemeDeclaration]
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
@@ -211,12 +210,25 @@ case class EstablisherDetails(`type`: String, organisationName: Option[String] =
                               previousAddressDetails: Option[PreviousAddressDetails] = None)
 
 object EstablisherDetails {
-  implicit val formats = Json.format[EstablisherDetails]
+  implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
 }
 
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
                           establisherDetails: List[EstablisherDetails])
 
 object PensionsScheme {
-  implicit val formats = Json.format[PensionsScheme]
+
+  implicit val formats: Format[PensionsScheme] = Json.format[PensionsScheme]
+
+  val pensionSchemeHaveInvalidBank: Lens[PensionsScheme, Boolean] = new Lens[PensionsScheme, Boolean] {
+    override def get: PensionsScheme => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
+
+    override def set: (PensionsScheme, Boolean) => PensionsScheme =
+      (pensionsScheme, haveInvalidBank) =>
+        pensionsScheme.copy(
+          customerAndSchemeDetails =
+            pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = haveInvalidBank)
+        )
+  }
+
 }

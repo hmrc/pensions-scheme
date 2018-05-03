@@ -18,20 +18,20 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
-import models.{PensionSchemeAdministrator, PensionsScheme}
+import models.PensionSchemeAdministrator
 import org.joda.time.LocalDate
-import org.scalatest.mockito.MockitoSugar
-import org.mockito.Mockito._
 import org.mockito.Matchers
 import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
-import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.test.FakeRequest
-import uk.gov.hmrc.http._
-import play.api.mvc.AnyContentAsJson
-import play.api.test.Helpers._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import org.scalatest.mockito.MockitoSugar
+import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.mvc.AnyContentAsJson
+import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import service.SchemeService
+import uk.gov.hmrc.http._
 
 import scala.concurrent.Future
 
@@ -49,10 +49,8 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "return OK when the scheme is registered successfully" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
-      when(mockSchemeConnector.registerScheme(any(),any())(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeService.registerScheme(Matchers.any(), Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
-      when(mockSchemeService.retrievePensionScheme(Matchers.eq(validData))(Matchers.any(), Matchers.any())).thenReturn(
-        Future.successful(validData.as[PensionsScheme]))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result) { res =>
@@ -89,7 +87,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "INVALID_PAYLOAD",
         "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
       )
-      when(mockSchemeConnector.registerScheme(any(),any())(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeService.registerScheme(any(), any())(any(), any())).thenReturn(
         Future.failed(new BadRequestException(invalidPayload.toString())))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
@@ -105,7 +103,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "INVALID_SUBMISSION",
         "reason" -> "Duplicate submission acknowledgement reference from remote endpoint returned."
       )
-      when(mockSchemeConnector.registerScheme(any(),any())(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeService.registerScheme(any(), any())(any(), any())).thenReturn(
         Future.failed(new Upstream4xxResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
@@ -121,7 +119,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Dependent systems are currently not responding."
       )
-      when(mockSchemeConnector.registerScheme(any(),any())(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeService.registerScheme(any(), any())(any(), any())).thenReturn(
         Future.failed(new Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
@@ -133,7 +131,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
     "throw generic exception when any other exception returned from Des" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-      when(mockSchemeConnector.registerScheme(any(),any())(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeService.registerScheme(any(), any())(any(), any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))

@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package base
+package bindings
 
-import config.AppConfig
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Environment
-import play.api.inject.Injector
+import org.scalatest.{FlatSpec, Matchers}
+import play.api.inject.guice.GuiceApplicationBuilder
+import service.{SchemeService, SchemeServiceV1}
 
-trait SpecBase extends PlaySpec with GuiceOneAppPerSuite with JsonFileReader {
-  def injector: Injector = app.injector
+class FeatureBindingsSpec extends FlatSpec with Matchers {
 
-  def environment: Environment = injector.instanceOf[Environment]
+  "SchemeService" should "bind to SchemeServiceV1 when feature.registerSchemeJsonVersion is 'v1'" in {
 
-  def appConfig: AppConfig = injector.instanceOf[AppConfig]
+    val app =
+      new GuiceApplicationBuilder()
+        .configure("feature.registerSchemeJsonVersion" -> "v1")
+        .build()
+
+    val schemeService = app.injector.instanceOf[SchemeService]
+
+    schemeService shouldBe a[SchemeServiceV1]
+
+  }
+
 }

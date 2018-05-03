@@ -18,13 +18,13 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeConnector
-import models.{ListOfSchemes, PensionSchemeAdministrator, PensionsScheme}
+import models.{ListOfSchemes, PensionSchemeAdministrator}
 import play.api.libs.json._
 import play.api.mvc._
+import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
-import service.SchemeService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,11 +37,11 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
 
     (psaId, feJson) match {
       case (Some(psa), Some(jsValue)) =>
-        schemeService.retrievePensionScheme(jsValue).flatMap { pensionSchemeData =>
-          schemeConnector.registerScheme(psa, Json.toJson(pensionSchemeData)).map { httpResponse =>
-            Ok(httpResponse.body)
-          }
+        schemeService.registerScheme(psa, jsValue).map {
+          response =>
+            Ok(response.body)
         }
+
       case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
     }
   } recoverWith recoverFromError
