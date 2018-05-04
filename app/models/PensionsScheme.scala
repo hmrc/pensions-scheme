@@ -141,7 +141,7 @@ object PensionSchemeDeclaration {
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
-      (JsPath \ "declarationDormant").readNullable[Boolean] and
+      (JsPath \ "declarationDormant").readNullable[String] and
       (JsPath \ "declarationDuties").readNullable[Boolean] and
       (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
       (JsPath \ "adviserAddress").readNullable[Address]
@@ -160,7 +160,7 @@ object PensionSchemeDeclaration {
 
     val dormant = (dec: PensionSchemeDeclaration) => {
       declarationDormant.fold(dec)(value => {
-        if (value) {
+        if (value=="no") {
           dec.copy(box4 = Some(true))
         } else {
           dec.copy(box5 = Some(true))

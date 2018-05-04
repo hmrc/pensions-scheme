@@ -23,7 +23,7 @@ import play.api.libs.json.{JsBoolean, JsString, Json}
 class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with OptionValues with Samples {
  "A json payload containing declarations" should {
    "Map correctly to a Declaration model" when {
-     val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsBoolean(true), "declarationDuties" -> JsBoolean(true))
+     val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(true))
      "We have a declaration field" when {
        "It is true then boxes 1,2,6 7,8 and 9 are true" in {
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
@@ -71,7 +71,7 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
          result.box5 mustBe None
        }
        "dormant field is false then box 5 is true and box4 is None" in {
-         val result = (declaration + ("declarationDormant" -> JsBoolean(false))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+         val result = (declaration + ("declarationDormant" -> JsString("yes"))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
          result.box4 mustBe None
          result.box5.value mustBe true
        }
@@ -101,7 +101,7 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
          val name="John"
          val address=UkAddress("line1",Some("line2"),Some("line3"),Some("line4"),"GB","NE1")
          val contact=ContactDetails("07592113",None,None,"test@test.com")
-         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsBoolean(true), "declarationDuties" -> JsBoolean(false))
+         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(false))
          val result = (declaration + advisorDetails + advisorAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
 
          result.box10 mustBe None
