@@ -52,6 +52,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector) extends BaseC
     feJson match {
       case Some(jsValue) =>
         val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads))
+        println(psa)
         schemeConnector.registerPSA(psa).map {
           httpResponse => Ok(httpResponse.body)
         }
