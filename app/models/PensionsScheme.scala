@@ -19,6 +19,7 @@ package models
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.json.{JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
+import play.api.libs.json
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
 
@@ -116,13 +117,87 @@ object CustomerAndSchemeDetails {
   )
 }
 
+case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber: String)
+
+object AdviserDetails {
+
+  implicit val formats = Json.format[PensionSchemeDeclaration]
+
+  implicit val readsAdviserDetails: Reads[AdviserDetails] = (
+    (JsPath \ "adviserName").read[String] and
+      (JsPath \ "emailAddress").read[String] and
+      (JsPath \ "phoneNumber").read[String]
+    ) ((name, email, phone) => AdviserDetails(name, email, phone))
+}
+
+
 case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,
                                     box5: Option[Boolean] = None, box6: Boolean, box7: Boolean, box8: Boolean, box9: Boolean,
                                     box10: Option[Boolean] = None, box11: Option[Boolean] = None, pensionAdviserName: Option[String] = None,
                                     addressAndContactDetails: Option[AddressAndContactDetails] = None)
-
 object PensionSchemeDeclaration {
+
   implicit val formats = Json.format[PensionSchemeDeclaration]
+
+  val apiReads: Reads[PensionSchemeDeclaration] = (
+    (JsPath \ "declaration").read[Boolean] and
+      (JsPath \ "declarationDormant").readNullable[String] and
+      (JsPath \ "declarationDuties").readNullable[Boolean] and
+      (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
+      (JsPath \ "adviserAddress").readNullable[Address]
+    ) ((declaration, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
+
+
+    val basicDeclaration = PensionSchemeDeclaration(
+      declaration,
+      declaration,
+      None, None, None,
+      declaration,
+      declaration,
+      declaration,
+      declaration,
+      None, None)
+
+    val dormant = (dec: PensionSchemeDeclaration) => {
+      declarationDormant.fold(dec)(value => {
+        if (value=="no") {
+          dec.copy(box4 = Some(true))
+        } else {
+          dec.copy(box5 = Some(true))
+        }
+      }
+      )
+    }
+
+    val decDuties = (dec: PensionSchemeDeclaration) => {
+      declarationDuties.fold(dec)(value =>
+        if (value) {
+          dec.copy(box10 = Some(true))
+        }
+        else {
+          dec.copy(
+            box11 = Some(true),
+            pensionAdviserName = adviserDetails.map(_.adviserName),
+            addressAndContactDetails = {
+              (adviserDetails, adviserAddress) match {
+                case (Some(contact), Some(address)) =>
+                  Some(AddressAndContactDetails(
+                    address,
+                    ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)
+                  ))
+                case _ => None
+              }
+            }
+          )
+        }
+      )
+    }
+
+    val completedDeclaration = dormant andThen decDuties
+    completedDeclaration(basicDeclaration)
+
+  }
+  )
 }
 
 case class EstablisherDetails(`type`: String, organisationName: Option[String] = None,
