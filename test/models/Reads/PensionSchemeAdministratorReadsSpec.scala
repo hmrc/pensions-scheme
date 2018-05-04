@@ -180,12 +180,12 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have an individual address" in {
-        val expectedIndividualAddress = ukAddressSample.copy(line1 = "Test 123 St")
+        val expectedIndividualAddress = ukAddressSample.copy(addressLine1 = "Test 123 St")
         val individualCorrespondenceAddress = "individualAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
           "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB")))
         val result = Json.fromJson[PensionSchemeAdministrator](input + individualCorrespondenceAddress - "companyAddressId")(PensionSchemeAdministrator.apiReads).asOpt.value
 
-        result.correspondenceAddressDetail.asInstanceOf[UkAddress].line1 mustBe expectedIndividualAddress.line1
+        result.correspondenceAddressDetail.asInstanceOf[UkAddress].addressLine1 mustBe expectedIndividualAddress.addressLine1
       }
 
       "We have an individual previous address" in {

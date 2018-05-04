@@ -31,25 +31,25 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
         "with addressLine 1" in {
           val result = address.as[(String, Option[String], Option[String], Option[String], String)](Address.commonAddressElementsReads)
 
-          result._1 mustBe ukAddressSample.line1
+          result._1 mustBe ukAddressSample.addressLine1
         }
 
         "with addressLine 2" in {
           val result = address.as[(String, Option[String], Option[String], Option[String], String)](Address.commonAddressElementsReads)
 
-          result._2 mustBe ukAddressSample.line2
+          result._2 mustBe ukAddressSample.addressLine2
         }
 
         "with addressLine 3" in {
           val result = address.as[(String, Option[String], Option[String], Option[String], String)](Address.commonAddressElementsReads)
 
-          result._3 mustBe ukAddressSample.line3
+          result._3 mustBe ukAddressSample.addressLine3
         }
 
         "with addressLine 4" in {
           val result = address.as[(String, Option[String], Option[String], Option[String], String)](Address.commonAddressElementsReads)
 
-          result._4 mustBe ukAddressSample.line4
+          result._4 mustBe ukAddressSample.addressLine4
         }
 
         "with countryCode" in {
