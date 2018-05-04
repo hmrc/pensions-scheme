@@ -160,7 +160,6 @@ object PensionSchemeDeclaration {
 
     val dormant = (dec: PensionSchemeDeclaration) => {
       declarationDormant.fold(dec)(value => {
-        println("HERE" + value)
         if (value) {
           dec.copy(box4 = Some(true))
         } else {

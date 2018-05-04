@@ -67,13 +67,13 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
      "if we have a dormant field" when {
        "dormant field is true then box 4 is true and box5 is None" in {
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-         result.box4 mustBe Some(true)
+         result.box4.value mustBe true
          result.box5 mustBe None
        }
        "dormant field is false then box 5 is true and box4 is None" in {
          val result = (declaration + ("declarationDormant" -> JsBoolean(false))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
          result.box4 mustBe None
-         result.box5 mustBe Some(true)
+         result.box5.value mustBe true
        }
      }
      "if we do not have a dormant field" when {
@@ -87,7 +87,7 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
      "if we have a duties field" when {
        "It is true, then box10 will be true and box11 is None, addressAndContactDetails is None" in {
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-         result.box10 mustBe Some(true)
+         result.box10.value mustBe true
          result.box11 mustBe None
          result.addressAndContactDetails mustBe None
        }
@@ -105,14 +105,14 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
          val result = (declaration + advisorDetails + advisorAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
 
          result.box10 mustBe None
-         result.box11 mustBe Some(true)
+         result.box11.value mustBe true
          result.pensionAdviserName mustBe Some(name)
          result.addressAndContactDetails mustBe Some(AddressAndContactDetails(address,contact))
        }
 
        "if we have a duties field and is false but no contact or name details then addressAndContactDetails be None" in {
          val result = (declaration + ("declarationDuties" -> JsBoolean(false))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-         result.box11 mustBe Some(true)
+         result.box11.value mustBe true
          result.box10 mustBe None
          result.addressAndContactDetails mustBe None
          result.pensionAdviserName mustBe None
