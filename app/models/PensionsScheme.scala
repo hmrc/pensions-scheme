@@ -180,7 +180,10 @@ object PensionSchemeDeclaration {
             addressAndContactDetails = {
               (adviserDetails, adviserAddress) match {
                 case (Some(contact), Some(address)) =>
-                  Some(AddressAndContactDetails(address, ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)))
+                  Some(AddressAndContactDetails(
+                    address,
+                    ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)
+                  ))
                 case _ => None
               }
             }
