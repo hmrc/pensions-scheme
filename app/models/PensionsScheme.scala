@@ -16,6 +16,7 @@
 
 package models
 
+import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.json.{JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
 
@@ -38,12 +39,12 @@ case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
 object PreviousAddressDetails {
   implicit val formats = Json.format[PreviousAddressDetails]
 
-  def apiReads(typeOfAddressDetail: String) : Reads[PreviousAddressDetails] = (
+  def apiReads(typeOfAddressDetail: String): Reads[PreviousAddressDetails] = (
     (JsPath \ s"${typeOfAddressDetail}AddressYears").read[String] and
       (JsPath \ s"${typeOfAddressDetail}PreviousAddress").readNullable[Address]
-  )((addressLast12Months,address)=>{
-    val isAddressLast12Months= if (addressLast12Months == "under_a_year") true else false
-    PreviousAddressDetails(isAddressLast12Months,address)
+    ) ((addressLast12Months, address) => {
+    val isAddressLast12Months = if (addressLast12Months == "under_a_year") true else false
+    PreviousAddressDetails(isAddressLast12Months, address)
   })
 }
 
@@ -60,16 +61,59 @@ object CorrespondenceContactDetails {
 }
 
 
-case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: Option[String] = None,
+case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: String,
                                     otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,
                                     currentSchemeMembers: String, futureSchemeMembers: String, isReguledSchemeInvestment: Boolean,
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
-                                    doesSchemeProvideBenefits: String, schemeEstablishedCountry: String, haveValidBank: Boolean,
+                                    doesSchemeProvideBenefits: String, schemeEstablishedCountry: String, haveInvalidBank: Boolean,
                                     insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
                                     insuranceCompanyAddress: Option[Address] = None)
 
 object CustomerAndSchemeDetails {
   implicit val formats = Json.format[CustomerAndSchemeDetails]
+
+  def insurerReads: Reads[(Option[String], Option[String])] = (
+    ((JsPath \ "companyName").readNullable[String] and
+      (JsPath \ "policyNumber").readNullable[String])
+      ((companyName, policyNumber) => (companyName, policyNumber))
+    )
+
+  def apiReads: Reads[CustomerAndSchemeDetails] = (
+    (JsPath \ "schemeDetails" \ "schemeName").read[String] and
+      (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
+      (JsPath \ "schemeDetails" \ "schemeType" \ "schemeTypeDetails").readNullable[String] and
+      (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
+      (JsPath \ "membership").read[String] and
+      (JsPath \ "membershipFuture").read[String] and
+      (JsPath \ "investmentRegulated").read[Boolean] and
+      (JsPath \ "occupationalPensionScheme").read[Boolean] and
+      (JsPath \ "securedBenefits").read[Boolean] and
+      (JsPath \ "benefits").read[String] and
+      (JsPath \ "schemeEstablishedCountry").read[String] and
+      (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
+      (JsPath \ "insurerAddress").readNullable[Address]
+    ) (
+    (name, schemeType, schemeTypeDetails, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+     occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
+      CustomerAndSchemeDetails(
+        schemeName = name,
+        isSchemeMasterTrust = false,
+        schemeStructure = SchemeType.valueWithName(schemeType),
+        otherSchemeStructure = schemeTypeDetails,
+        haveMoreThanTenTrustee = moreThanTenTrustees,
+        currentSchemeMembers = SchemeMembers.valueWithName(membership),
+        futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),
+        isReguledSchemeInvestment = investmentRegulated,
+        isOccupationalPensionScheme = occupationalPension,
+        areBenefitsSecuredContractInsuranceCompany = securedBenefits,
+        doesSchemeProvideBenefits = Benefits.valueWithName(benefits),
+        schemeEstablishedCountry = country,
+        haveInvalidBank = true,
+        insuranceCompanyName = benefitsInsurer.flatMap(_._1),
+        policyNumber = benefitsInsurer.flatMap(_._2),
+        insuranceCompanyAddress = insurerAddress)
+    }
+  )
 }
 
 case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,

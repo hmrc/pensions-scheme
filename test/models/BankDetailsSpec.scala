@@ -21,7 +21,7 @@ import play.api.libs.json.{JsSuccess, Json}
 
 class BankDetailsSpec extends MustMatchers with WordSpecLike with OptionValues {
 
-  "BankDetails reads" should {
+  "ValidateBankDetailsResponse reads" must {
 
     "return true when sortCodeIsPresentOnEISCD returns 'yes'" in {
       val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "yes")
@@ -39,6 +39,24 @@ class BankDetailsSpec extends MustMatchers with WordSpecLike with OptionValues {
       val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "error")
 
       Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, false))
+    }
+  }
+
+  "Bank Account reads" must {
+    val json = Json.obj(
+      "sortCode" -> Json.obj(
+        "first" -> "00",
+        "second" -> "11",
+        "third" -> "00"
+      ),
+      "accountNumber" -> "111"
+    )
+    "read the sort code successfully" in {
+      json.as[BankAccount](BankAccount.apiReads).sortCode mustEqual "001100"
+    }
+
+    "read the account number successfully" in {
+      json.as[BankAccount](BankAccount.apiReads).accountNumber mustEqual "111"
     }
   }
 }

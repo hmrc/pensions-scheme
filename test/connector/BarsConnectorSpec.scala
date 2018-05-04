@@ -19,6 +19,7 @@ package connector
 import org.scalatest.{AsyncFlatSpec, Matchers, OptionValues}
 import utils.WireMockHelper
 import com.github.tomakehurst.wiremock.client.WireMock._
+import models.BankAccount
 import play.api.http.Status
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -55,7 +56,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
       response shouldBe invalid
     }
 
@@ -81,7 +82,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
       response shouldBe notInvalid
     }
 
@@ -107,7 +108,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
       response shouldBe notInvalid
     }
   }
@@ -133,7 +134,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
       response shouldBe notInvalid
     }
   }
@@ -153,7 +154,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
       response shouldBe notInvalid
     }
   }
@@ -185,7 +186,7 @@ class BarsConnectorSpec
     val ec: ExecutionContext = implicitly[ExecutionContext]
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber)(ec, hc).map { _ =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber))(ec, hc).map { _ =>
       succeed
     }
   }
@@ -220,7 +221,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(sortCode, accountNumber).map { _ =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { _ =>
       succeed
     }
   }
