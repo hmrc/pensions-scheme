@@ -57,7 +57,7 @@ class RegistrationNoIdAddress extends SpecBase{
 
       "succesfully write a json schema from a Organisation Registrant" in {
         val json = readJsonFromFile("/data/validOutput.json")
-        Json.toJson[OrganisationRegistrant](organisationRegistrantInternationalAddress)(OrganisationRegistrant.apiWrites) mustEqual json
+        Json.toJson[OrganisationRegistrant](organisationRegistrantInternationalAddress)(OrganisationRegistrant.apiWrites) mustBe json
       }
     }
 
@@ -67,7 +67,7 @@ class RegistrationNoIdAddress extends SpecBase{
 
       val caseClass = Json.fromJson[OrganisationRegistrant](inputJson).get
       caseClass mustEqual organisationRegistrantInternationalAddress
-      Json.toJson[OrganisationRegistrant](caseClass)(OrganisationRegistrant.apiWrites) mustEqual outputJson
+      Json.toJson[OrganisationRegistrant](caseClass)(OrganisationRegistrant.apiWrites) mustBe outputJson
     }
   }
 }
