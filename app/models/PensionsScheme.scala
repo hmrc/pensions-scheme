@@ -138,43 +138,6 @@ object AdviserDetails {
 
 object PensionSchemeDeclaration {
 
-  //TODO
-  private implicit val readsAddress: Reads[Address] = (
-    (JsPath \ "addressLine1").read[String] and
-      (JsPath \ "addressLine2").read[String] and
-      (JsPath \ "addressLine3").readNullable[String] and
-      (JsPath \ "addressLine4").readNullable[String] and
-      (JsPath \ "country").read[String] and
-      (JsPath \ "postcode").readNullable[String]
-    ) ((addressLine1, addressLine2, addressLine3, addressLine4, countryCode, postalCode) => {
-    if (countryCode == "GB") {
-      postalCode match {
-        case Some(zip) =>
-          UkAddress(
-            addressLine1,
-            Some(addressLine2),
-            addressLine3,
-            addressLine4,
-            countryCode,
-            zip
-          )
-        case _ =>
-          throw new IllegalArgumentException("Null postcode in UK address")
-      }
-    }
-    else {
-      InternationalAddress(
-        addressLine1,
-        Some(addressLine2),
-        addressLine3,
-        addressLine4,
-        countryCode,
-        postalCode
-      )
-    }
-  })
-
-
   implicit val formats = Json.format[PensionSchemeDeclaration]
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
@@ -197,42 +160,35 @@ object PensionSchemeDeclaration {
       None, None)
 
     val dormant = (dec: PensionSchemeDeclaration) => {
-      declarationDormant match {
-        case Some(value) => {
-          if (value) {
-            dec.copy(box4 = Some(true))
-          }
-          else {
-            dec.copy(box5 = Some(true))
-          }
-        }
-        case None => dec
+      declarationDormant.fold(dec)(value => if (value) {
+        dec.copy(box4 = Some(true))
+      } else {
+        dec.copy(box5 = Some(true))
       }
+      )
     }
 
     val decDuties = (dec: PensionSchemeDeclaration) => {
-      declarationDuties match {
-        case Some(value) => {
-          if (value) {
-            dec.copy(box10 = Some(true))
-          }
-          else {
-            dec.copy(
-              box11 = Some(true),
-              pensionAdviserName = adviserDetails.map(_.adviserName),
-              addressAndContactDetails = {
-                (adviserDetails, adviserAddress) match {
-                  case (Some(contact), Some(address)) =>
-                    Some(AddressAndContactDetails(address, ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)))
-                  case _ => None
-                }
-              }
-            )
-          }
+      declarationDuties.fold(dec)(value =>
+        if (value) {
+          dec.copy(box10 = Some(true))
         }
-        case None => dec
-      }
+        else {
+          dec.copy(
+            box11 = Some(true),
+            pensionAdviserName = adviserDetails.map(_.adviserName),
+            addressAndContactDetails = {
+              (adviserDetails, adviserAddress) match {
+                case (Some(contact), Some(address)) =>
+                  Some(AddressAndContactDetails(address, ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)))
+                case _ => None
+              }
+            }
+          )
+        }
+      )
     }
+
     val completedDeclaration = dormant andThen decDuties
     completedDeclaration(basicDeclaration)
 
