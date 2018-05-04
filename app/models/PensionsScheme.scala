@@ -117,12 +117,6 @@ object CustomerAndSchemeDetails {
   )
 }
 
-
-case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,
-                                    box5: Option[Boolean] = None, box6: Boolean, box7: Boolean, box8: Boolean, box9: Boolean,
-                                    box10: Option[Boolean] = None, box11: Option[Boolean] = None, pensionAdviserName: Option[String] = None,
-                                    addressAndContactDetails: Option[AddressAndContactDetails] = None)
-
 case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber: String)
 
 object AdviserDetails {
@@ -136,6 +130,11 @@ object AdviserDetails {
     ) ((name, email, phone) => AdviserDetails(name, email, phone))
 }
 
+
+case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,
+                                    box5: Option[Boolean] = None, box6: Boolean, box7: Boolean, box8: Boolean, box9: Boolean,
+                                    box10: Option[Boolean] = None, box11: Option[Boolean] = None, pensionAdviserName: Option[String] = None,
+                                    addressAndContactDetails: Option[AddressAndContactDetails] = None)
 object PensionSchemeDeclaration {
 
   implicit val formats = Json.format[PensionSchemeDeclaration]
