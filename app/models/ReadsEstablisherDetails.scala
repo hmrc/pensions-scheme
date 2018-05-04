@@ -37,41 +37,6 @@ object ReadsEstablisherDetails {
       (JsPath \ "phoneNumber").read[String]
     )((email, phone) => ContactDetails(telephone = phone, email = email))
 
-  private implicit val readsAddress: Reads[Address] = (
-    (JsPath \ "addressLine1").read[String] and
-    (JsPath \ "addressLine2").read[String] and
-    (JsPath \ "addressLine3").readNullable[String] and
-    (JsPath \ "addressLine4").readNullable[String] and
-    (JsPath \ "country").read[String] and
-    (JsPath \ "postcode").readNullable[String]
-  )((addressLine1, addressLine2, addressLine3, addressLine4, countryCode, postalCode) => {
-    if (countryCode == "GB") {
-      postalCode match {
-        case Some(zip) =>
-          UkAddress(
-            addressLine1,
-            Some(addressLine2),
-            addressLine3,
-            addressLine4,
-            countryCode,
-            zip
-          )
-        case _ =>
-          throw new IllegalArgumentException("Null postcode in UK address")
-      }
-    }
-    else {
-      InternationalAddress(
-        addressLine1,
-        Some(addressLine2),
-        addressLine3,
-        addressLine4,
-        countryCode,
-        postalCode
-      )
-    }
-  })
-
   private implicit val readsPersonalDetails: Reads[PersonalDetails] = (
     (JsPath \ "firstName").read[String] and
     (JsPath \ "middleName").readNullable[String] and
