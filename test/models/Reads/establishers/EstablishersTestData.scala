@@ -97,7 +97,7 @@ object EstablishersTestData {
           Some(
             PreviousAddressDetails(
               isPreviousAddressLast12Month = true,
-              previousAddressDetails = Some(testAddress)
+              previousAddressDetail = Some(testAddress)
             )
           )
         }
@@ -136,7 +136,7 @@ object EstablishersTestData {
           Some(
             PreviousAddressDetails(
               isPreviousAddressLast12Month = true,
-              previousAddressDetails = Some(testAddress)
+              previousAddressDetail = Some(testAddress)
             )
           )
         }

@@ -24,10 +24,7 @@ object ReadsEstablisherDetails {
   private def previousAddressDetails(addressYears: String, previousAddress: Option[Address]): Option[PreviousAddressDetails] = {
     if (addressYears == "under_a_year") {
       Some(
-        PreviousAddressDetails(
-          isPreviousAddressLast12Month = true,
-          previousAddressDetails = previousAddress
-        )
+        PreviousAddressDetails(true,previousAddress)
       )
     }
     else {

@@ -111,19 +111,19 @@ object EstablishersTestJson extends OptionValues {
     address match {
       case a: UkAddress =>
         Json.obj(
-          "addressLine1" -> a.line1,
-          "addressLine2" -> a.line2,
-          "addressLine3" -> a.line3,
-          "addressLine4" -> a.line4,
+          "addressLine1" -> a.addressLine1,
+          "addressLine2" -> a.addressLine2,
+          "addressLine3" -> a.addressLine3,
+          "addressLine4" -> a.addressLine4,
           "postcode" -> a.postalCode,
           "country" -> a.countryCode
         )
       case a: InternationalAddress =>
         Json.obj(
-          "addressLine1" -> a.line1,
-          "addressLine2" -> a.line2,
-          "addressLine3" -> a.line3,
-          "addressLine4" -> a.line4,
+          "addressLine1" -> a.addressLine1,
+          "addressLine2" -> a.addressLine2,
+          "addressLine3" -> a.addressLine3,
+          "addressLine4" -> a.addressLine4,
           "postcode" -> a.postalCode,
           "country" -> a.countryCode
         )
