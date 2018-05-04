@@ -148,7 +148,7 @@ object DirectorOrPartnerDetailTypeItem {
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr", "utr")) and
       (JsPath).read(PreviousAddressDetails.apiReads("director")) and
       (JsPath).read(CorrespondenceCommonDetail.apiReads)
-    ) ((directorPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) => DirectorOrPartnerDetailTypeItem(sequenceId = index.toString,
+    ) ((directorPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) => DirectorOrPartnerDetailTypeItem(sequenceId = f"${index}%03d",
     entityType = "Director",
     title = None,
     firstName = directorPersonalDetails.firstName,

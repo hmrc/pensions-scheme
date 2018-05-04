@@ -49,6 +49,23 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
           result.head.sequenceId mustBe directorSample.sequenceId
         }
 
+        "We have 10 directors" in {
+          val directors = JsArray(Seq.tabulate(10)(_ => director))
+          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
+          result.last.sequenceId mustBe "009"
+        }
+
+        "We have 100 directors" in {
+          val directors = JsArray(Seq.tabulate(100)(_ => director))
+          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
+          result.last.sequenceId mustBe "099"
+        }
+
+        "We have 101 directors" in {
+          val directors = JsArray(Seq.tabulate(101)(_ => director))
+          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
+          result.last.sequenceId mustBe "100"
+        }
 
         "We have individual details" in {
           val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)

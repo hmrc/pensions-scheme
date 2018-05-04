@@ -11,7 +11,8 @@
     "line2": "Haddonfield",
     "line3": "Illinois",
     "line4": "USA",
-    "countryCode": "US"
+    "countryCode": "US",
+    "addressType":"NON-UK"
   },
   "contactDetails": {
     "phoneNumber": "01332752856"

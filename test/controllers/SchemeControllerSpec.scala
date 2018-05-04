@@ -57,7 +57,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result) { res =>
         status(result) mustBe OK
-        contentAsJson(result) mustEqual successResponse
+        contentAsJson(result) mustBe successResponse
       }
     }
 
@@ -144,7 +144,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     }
   }
 
-  "registerPSA" when  {
+  "registerPSA" should  {
 
     def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
 
@@ -153,7 +153,8 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
       val successResponse = Json.obj("processingDate" -> LocalDate.now, "formBundle" -> "1000000", "psaId" -> "A2000000")
 
-      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(validRequestData.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads))))(Matchers.any(), Matchers.any())).thenReturn(
+      when(mockSchemeConnector.registerPSA(Matchers.eq(Json.toJson(
+        validRequestData.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads))))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
 
       val result = schemeController.registerPSA(fakeRequest(validRequestData))

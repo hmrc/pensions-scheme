@@ -35,7 +35,7 @@ object PersonalDetails {
 }
 
 case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddressDetails: Option[Address] = None)
+                                  previousAddressDetail: Option[Address] = None)
 
 object PreviousAddressDetails {
   implicit val formats = Json.format[PreviousAddressDetails]
