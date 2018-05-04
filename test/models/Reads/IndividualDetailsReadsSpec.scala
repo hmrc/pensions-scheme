@@ -25,37 +25,36 @@ class IndividualDetailsReadsSpec extends WordSpec with MustMatchers with OptionV
   "A JSON payload containing the details of an individual" should {
     "Map correctly to an IndividualDetailsType model" when {
 
-      val individual = Json.obj("firstName" -> JsString("John"),
+      val individual = Json.obj("individualDateOfBirth" -> JsString("2019-01-31"), "individualDetails" -> Json.obj("firstName" -> JsString("John"),
         "lastName" -> JsString("Doe"),
-        "middleName" -> JsString("Does Does"),
-        "dateOfBirth" -> JsString("2019-01-31"))
+        "middleName" -> JsString("Does Does")))
 
       "We have a first name" in {
-        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads)
+        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads("individual"))
 
         result.firstName mustBe individualSample.firstName
       }
 
       "We have a last name" in {
-        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads)
+        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads("individual"))
 
         result.lastName mustBe individualSample.lastName
       }
 
       "We have a middle name " in {
-        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads)
+        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads("individual"))
 
         result.middleName mustBe individualSample.middleName
       }
 
       "We have a date of birth" in {
-        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads)
+        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads("individual"))
 
         result.dateOfBirth mustBe individualSample.dateOfBirth
       }
 
       "We don't have a title" in {
-        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads)
+        val result = individual.as[IndividualDetailType](IndividualDetailType.apiReads("individual"))
 
         result.title mustBe None
       }

@@ -26,7 +26,7 @@ trait PSADetail
 
 object PSADetail {
   val companyDetailsReads : Reads[PSADetail] = (JsPath).read[OrganisationDetailType](OrganisationDetailType.apiReads).map(c=>c.asInstanceOf[PSADetail])
-  val individualDetailsReads : Reads[PSADetail] = (JsPath \ "individualDetails").read[IndividualDetailType](IndividualDetailType.apiReads).map(c=>c.asInstanceOf[PSADetail])
+  val individualDetailsReads : Reads[PSADetail] = (JsPath).read[IndividualDetailType](IndividualDetailType.apiReads("individual")).map(c=>c.asInstanceOf[PSADetail])
 
   val apiReads : Reads[PSADetail] = companyDetailsReads orElse individualDetailsReads
 }
@@ -64,11 +64,11 @@ case class IndividualDetailType(title: Option[String] = None, firstName: String,
 object IndividualDetailType {
   implicit val formats = Json.format[IndividualDetailType]
 
-  val apiReads: Reads[IndividualDetailType] = (
-    (JsPath \ "firstName").read[String] and
-      (JsPath \ "lastName").read[String] and
-      (JsPath \ "middleName").readNullable[String] and
-      (JsPath \ "dateOfBirth").read[LocalDate]
+  def apiReads(individualType: String): Reads[IndividualDetailType] = (
+    (JsPath \ s"${individualType}Details" \ "firstName").read[String] and
+      (JsPath \ s"${individualType}Details" \ "lastName").read[String] and
+      (JsPath \ s"${individualType}Details" \ "middleName").readNullable[String] and
+      ((JsPath \ "individualDateOfBirth").read[LocalDate] orElse (JsPath \ s"${individualType}Details" \ "dateOfBirth").read[LocalDate])
     ) ((name, lastName, middleName, dateOfBirth) => IndividualDetailType(None,name, middleName, lastName, dateOfBirth))
 }
 
@@ -143,7 +143,7 @@ object DirectorOrPartnerDetailTypeItem {
     ) ((referenceNumber, reason) => (referenceNumber, reason))
 
   def directorReads(index: Int): Reads[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath \ "directorDetails").read(IndividualDetailType.apiReads) and
+    (JsPath).read(IndividualDetailType.apiReads("director")) and
       (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino", "nino")) and
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr", "utr")) and
       (JsPath).read(PreviousAddressDetails.apiReads("director")) and
