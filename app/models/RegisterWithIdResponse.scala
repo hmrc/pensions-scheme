@@ -65,5 +65,4 @@ object SuccessResponse {
       (JsPath \ "address").write(Address.defaultWrites) and
       (JsPath \ "contactDetails").write[ContactCommDetailsType]
     )(unlift(SuccessResponse.unapply))
-
 }
