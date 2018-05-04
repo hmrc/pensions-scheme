@@ -64,8 +64,15 @@ object UkAddress {
       (JsPath \ "line3").writeNullable[String] and
       (JsPath \ "line4").writeNullable[String] and
       (JsPath \ "countryCode").write[String] and
-      (JsPath \ "postalCode").write[String]
-    )(unlift(UkAddress.unapply))
+      (JsPath \ "postalCode").write[String] and
+      (JsPath \ "addressType").write[String]
+    )(address => (address.addressLine1
+    ,address.addressLine2,
+    address.addressLine3,
+    address.addressLine4,
+    address.countryCode,
+    address.postalCode,
+    "UK"))
 
   val defaultWrites : Writes[UkAddress] = Json.writes[UkAddress]
 
@@ -87,8 +94,15 @@ object InternationalAddress {
       (JsPath \ "line3").writeNullable[String] and
       (JsPath \ "line4").writeNullable[String] and
       (JsPath \ "countryCode").write[String] and
-      (JsPath \ "postalCode").writeNullable[String]
-    )(unlift(InternationalAddress.unapply))
+      (JsPath \ "postalCode").writeNullable[String] and
+      (JsPath \ "addressType").write[String]
+    )(address => (address.addressLine1
+    ,address.addressLine2,
+    address.addressLine3,
+    address.addressLine4,
+    address.countryCode,
+    address.postalCode,
+    "NON-UK"))
 
   val defaultWrites : Writes[InternationalAddress] = Json.writes[InternationalAddress]
 

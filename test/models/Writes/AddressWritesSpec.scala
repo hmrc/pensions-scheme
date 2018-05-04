@@ -51,6 +51,10 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues {
         "with postalcode" in {
           result.toString() must include("postalCode")
         }
+
+        "with an address type of UK" in {
+          result.toString() must include("\"addressType\":\"UK\"")
+        }
       }
 
       "we have an International address" when {
@@ -79,6 +83,10 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues {
 
         "with postalcode" in {
           result.toString() must include("postalCode")
+        }
+
+        "with an address type of Non-UK" in {
+          result.toString() must include("\"addressType\":\"NON-UK\"")
         }
       }
     }
