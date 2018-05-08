@@ -45,7 +45,11 @@ object Address {
       (JsPath \ "addressLine3").readNullable[String] and
       (JsPath \ "addressLine4").readNullable[String] and
       ((JsPath \ "countryCode").read[String] orElse (JsPath \ "country").read[String])
-    ) ((line1, line2, line3, line4, countryCode) => (line1, line2, line3, line4, countryCode))
+    ) ((line1, line2, line3, line4, countryCode) => (line1, line2, line3, line4, getCountryOrTerritoryCode(countryCode)))
+
+  private def getCountryOrTerritoryCode(countryCode: String) = {
+    if (countryCode.contains("territory")) countryCode.split(":").last else countryCode
+  }
 
   private def getReadsBasedOnCountry[T, B](ukAddressReads: Reads[T], nonUkAddressReads: Reads[B], countryCode: String) = {
     if (countryCode == "GB") ukAddressReads.map(c => c.asInstanceOf[Address]) else nonUkAddressReads.map(c => c.asInstanceOf[Address])

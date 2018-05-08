@@ -103,6 +103,14 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
 
           result.asInstanceOf[InternationalAddress].postalCode mustBe nonUkAddressSample.postalCode
         }
+
+        "with territory defined as country code" in {
+          val input = (address + ("countryCode" -> JsString("territory:IT")))
+
+          val result = input.as[Address]
+
+          result.asInstanceOf[InternationalAddress].countryCode mustBe nonUkAddressSample.countryCode
+        }
       }
     }
   }
