@@ -19,16 +19,19 @@ package controllers
 import com.google.inject.Inject
 import connector.RegistrationConnector
 import models.{Organisation, OrganisationRegistrant, SuccessResponse}
-import play.api.libs.json.{JsObject, JsPath, JsValue, Json}
+import play.api.Logger
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions, ConfidenceLevel}
 import uk.gov.hmrc.auth.core.retrieve.Retrievals
 import uk.gov.hmrc.http.{BadRequestException, Upstream4xxResponse}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import utils.responseUtils._
+
+import scala.util.{Failure, Success, Try}
 
 class RegistrationController @Inject()(override val authConnector: AuthConnector,
                                        registerConnector: RegistrationConnector
@@ -40,7 +43,7 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
       authorised(ConfidenceLevel.L200 and AffinityGroup.Individual).retrieve(Retrievals.nino) {
         case Some(nino) =>
           registerConnector.registerWithIdIndividual(nino, mandatoryPODSData()).map { httpResponse =>
-            val response = httpResponse.json.as[SuccessResponse]
+            val response = httpResponse.json.convertTo[SuccessResponse]
             Ok(Json.toJson[SuccessResponse](response))
           }
         case _ =>
@@ -51,16 +54,19 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
 
   def registerWithIdOrganisation: Action[AnyContent] = Action.async {
     implicit request => {
-
       request.body.asJson match {
         case Some(jsBody) =>
-          val utr = (jsBody \ "utr").as[String]
-          val registerWithIdData = mandatoryPODSData(true).as[JsObject] ++
-            Json.obj("organisation" -> Json.toJson(jsBody.as[Organisation]))
-
-          registerConnector.registerWithIdOrganisation(utr, registerWithIdData).map { httpResponse =>
-            val response = httpResponse.json.as[SuccessResponse]
-            Ok(Json.toJson[SuccessResponse](response))
+          Try((jsBody \ "utr").convertTo[String], jsBody.convertTo[Organisation]) match {
+            case Success((utr, org)) =>
+              val registerWithIdData = mandatoryPODSData(true).as[JsObject] ++
+                Json.obj("organisation" -> Json.toJson(org))
+              registerConnector.registerWithIdOrganisation(utr, registerWithIdData).map { httpResponse =>
+                val response = httpResponse.json.convertTo[SuccessResponse]
+                Ok(Json.toJson[SuccessResponse](response))
+              }
+            case Failure(e) =>
+              Logger.warn(s"Bad Request returned from frontend for Register With Id Organisation $e")
+              Future.failed(new BadRequestException(s"Bad Request returned from frontend for Register With Id Organisation $e"))
           }
         case _ =>
           Future.failed(new BadRequestException("No request body received for Organisation"))
@@ -72,13 +78,23 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
     Json.obj("regime" -> "PODS", "requiresNameMatch" -> requiresNameMatch, "isAnAgent" -> false)
   }
 
-  def registrationNoIdOrganisation: Action[OrganisationRegistrant] =
-    Action.async(parse.json[OrganisationRegistrant]) {
-      implicit request => {
-        registerConnector.registrationNoIdOrganisation(request.body).map { httpResponse =>
-          Ok(httpResponse.body)
+  def registrationNoIdOrganisation: Action[AnyContent] = Action.async {
+    implicit request => {
+      request.body.asJson match {
+        case Some(jsBody) =>
+          Try(jsBody.convertTo[OrganisationRegistrant]) match {
+            case Success(orgRegistrant) =>
+              registerConnector.registrationNoIdOrganisation(orgRegistrant).map { httpResponse =>
+                Ok(httpResponse.body)
+              }
+            case Failure(e) =>
+              Logger.warn(s"Bad Request returned from frontend for Register Without Id Organisation $e")
+              Future.failed(new BadRequestException(s"Bad Request returned from frontend for Register Without Id Organisation $e"))
+          }
 
-        }
-      } recoverWith recoverFromError
-    }
+        case _ =>
+          Future.failed(new BadRequestException("No request body received for Organisation"))
+      }
+    } recoverWith recoverFromError
+  }
 }

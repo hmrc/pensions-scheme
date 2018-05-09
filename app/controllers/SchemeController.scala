@@ -19,15 +19,17 @@ package controllers
 import com.google.inject.Inject
 import connector.SchemeConnector
 import models.{ListOfSchemes, PensionSchemeAdministrator}
+import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
-
+import utils.responseUtils._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService: SchemeService) extends BaseController with ErrorHandler {
 
@@ -53,9 +55,15 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
 
     feJson match {
       case Some(jsValue) =>
-        val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads))
-        schemeConnector.registerPSA(psa).map {
-          httpResponse => Ok(httpResponse.body)
+        Try(jsValue.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
+          case Success(jsResult) =>
+            val psa = Json.toJson(jsResult)
+            schemeConnector.registerPSA(psa).map {
+              httpResponse => Ok(httpResponse.body)
+            }
+          case Failure(e) =>
+            Logger.warn(s"Bad Request returned from frontend for PSA $e")
+            Future.failed(new BadRequestException(s"Bad Request returned from frontend for PSA $e"))
         }
       case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
     }
@@ -68,7 +76,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
     psaId match {
       case Some(psa) =>
         schemeConnector.listOfSchemes(psa).map { httpResponse =>
-          Ok(Json.toJson(httpResponse.json.as[ListOfSchemes]))
+          Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
         }
       case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
     }

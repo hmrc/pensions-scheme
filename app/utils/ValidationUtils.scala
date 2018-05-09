@@ -16,6 +16,7 @@
 
 package utils
 
+import play.api.Logger
 import play.api.libs.json.{JsLookupResult, JsResultException, JsValue, Reads}
 
 package object responseUtils {
@@ -25,6 +26,7 @@ package object responseUtils {
       jsValue.validate[A].fold(
         invalid = {
           errors =>
+            Logger.warn(s"Json contains bad data $errors")
             throw JsResultException(errors)
         },
         valid = { response =>
@@ -40,6 +42,20 @@ package object responseUtils {
       jsLookupResult.validateOpt[A].fold(
         invalid = {
           errors =>
+            Logger.warn(s"Json look up contains bad data $errors")
+            throw JsResultException(errors)
+        },
+        valid = { response =>
+          response
+        }
+      )
+    }
+
+    implicit def convertTo[A](implicit rds: Reads[A]): A = {
+      jsLookupResult.validate[A].fold(
+        invalid = {
+          errors =>
+            Logger.warn(s"Json contains bad data $errors")
             throw JsResultException(errors)
         },
         valid = { response =>
