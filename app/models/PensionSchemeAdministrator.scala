@@ -43,10 +43,9 @@ object OrganisationDetailType {
     ) ((vatRegistrationNumber, payeEmployerReferenceNumber) => {
     (vatRegistrationNumber, payeEmployerReferenceNumber) match {
       case (None, None) => None
-      case _ => Some(vatRegistrationNumber, payeEmployerReferenceNumber)
+      case _ => Some((vatRegistrationNumber, payeEmployerReferenceNumber))
     }
   })
-
 
   val apiReads: Reads[OrganisationDetailType] = (
     (JsPath \ "businessDetails" \ "companyName").readNullable[String] and

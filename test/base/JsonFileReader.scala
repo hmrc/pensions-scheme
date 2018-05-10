@@ -16,16 +16,15 @@
 
 package base
 
-import config.AppConfig
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Environment
-import play.api.inject.Injector
+import play.api.libs.json.{JsValue, Json}
 
-trait SpecBase extends PlaySpec with GuiceOneAppPerSuite with JsonFileReader {
-  def injector: Injector = app.injector
+import scala.io.Source
 
-  def environment: Environment = injector.instanceOf[Environment]
+trait JsonFileReader {
 
-  def appConfig: AppConfig = injector.instanceOf[AppConfig]
+  def readJsonFromFile(filePath: String): JsValue = {
+    val path = Source.fromURL(getClass.getResource(filePath)).mkString
+    Json.parse(path)
+  }
+
 }

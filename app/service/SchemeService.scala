@@ -16,26 +16,13 @@
 
 package service
 
-import models.{BankAccount, PensionsScheme}
-import play.api.libs.json.JsValue
-import com.google.inject.Inject
-import connector.BarsConnector
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeService @Inject()(barsConnector: BarsConnector) {
+trait SchemeService {
 
-  def retrievePensionScheme(feJson: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[PensionsScheme] = {
-    val bankDetails = (feJson \ "uKBankDetails").asOpt[BankAccount](BankAccount.apiReads)
+  def registerScheme(psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse]
 
-    bankDetails match {
-      case Some(details) =>
-        barsConnector.invalidBankAccount(details).map { invalidBankAcct =>
-          val pensionScheme = feJson.as[PensionsScheme]
-          pensionScheme.copy(customerAndSchemeDetails = pensionScheme.customerAndSchemeDetails.copy(haveInvalidBank = invalidBankAcct))
-        }
-      case _ =>
-        Future.successful(feJson.as[PensionsScheme])
-    }
-  }
 }

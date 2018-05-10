@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package base
+package utils
 
-import config.AppConfig
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Environment
-import play.api.inject.Injector
-
-trait SpecBase extends PlaySpec with GuiceOneAppPerSuite with JsonFileReader {
-  def injector: Injector = app.injector
-
-  def environment: Environment = injector.instanceOf[Environment]
-
-  def appConfig: AppConfig = injector.instanceOf[AppConfig]
+trait Lens[Model, Property] {
+  def get: Model => Property
+  def set: (Model, Property) => Model
 }
