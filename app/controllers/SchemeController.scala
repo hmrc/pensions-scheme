@@ -25,6 +25,8 @@ import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
+import play.api.Logger
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -50,10 +52,13 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
   def registerPSA: Action[AnyContent] = Action.async { implicit request => {
 
     val feJson = request.body.asJson
+    Logger.info(s"Incoming payload ${feJson}")
 
     feJson match {
       case Some(jsValue) =>
         val psa = Json.toJson(jsValue.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads))
+
+        Logger.info(s"Outgoing payload ${psa}")
         schemeConnector.registerPSA(psa).map {
           httpResponse => Ok(httpResponse.body)
         }
