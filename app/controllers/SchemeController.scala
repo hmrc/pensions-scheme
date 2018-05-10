@@ -26,60 +26,60 @@ import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
-import utils.responseUtils._
+import utils.validationUtils._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService: SchemeService) extends BaseController with ErrorHandler {
 
-  def registerScheme: Action[AnyContent] = Action.async { implicit request => {
-    val psaId = request.headers.get("psaId")
-    val feJson = request.body.asJson
+  def registerScheme: Action[AnyContent] = Action.async {
+    implicit request => {
+      val psaId = request.headers.get("psaId")
+      val feJson = request.body.asJson
 
-    (psaId, feJson) match {
-      case (Some(psa), Some(jsValue)) =>
-        schemeService.registerScheme(psa, jsValue).map {
-          response =>
-            Ok(response.body)
-        }
+      (psaId, feJson) match {
+        case (Some(psa), Some(jsValue)) =>
+          schemeService.registerScheme(psa, jsValue).map {
+            response =>
+              Ok(response.body)
+          }
 
-      case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
-    }
-  } recoverWith recoverFromError
+        case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
+      }
+    } recoverWith recoverFromError
   }
 
-  def registerPSA: Action[AnyContent] = Action.async { implicit request => {
-
-    val feJson = request.body.asJson
-
-    feJson match {
-      case Some(jsValue) =>
-        Try(jsValue.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
-          case Success(jsResult) =>
-            val psa = Json.toJson(jsResult)
-            schemeConnector.registerPSA(psa).map {
-              httpResponse => Ok(httpResponse.body)
-            }
-          case Failure(e) =>
-            Logger.warn(s"Bad Request returned from frontend for PSA $e")
-            Future.failed(new BadRequestException(s"Bad Request returned from frontend for PSA $e"))
-        }
-      case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
-    }
-  } recoverWith recoverFromError
+  def registerPSA: Action[AnyContent] = Action.async {
+    implicit request => {
+      val feJson = request.body.asJson
+      feJson match {
+        case Some(jsValue) =>
+          Try(jsValue.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
+            case Success(jsResult) =>
+              schemeConnector.registerPSA(Json.toJson(jsResult)).map { httpResponse =>
+                Ok(httpResponse.body)
+              }
+            case Failure(e) =>
+              Logger.warn(s"Bad Request returned from frontend for PSA $e")
+              Future.failed(new BadRequestException(s"Bad Request returned from frontend for PSA $e"))
+          }
+        case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
+      }
+    } recoverWith recoverFromError
   }
 
-  def listOfSchemes: Action[AnyContent] = Action.async { implicit request => {
-    val psaId = request.headers.get("psaId")
+  def listOfSchemes: Action[AnyContent] = Action.async {
+    implicit request => {
+      val psaId = request.headers.get("psaId")
 
-    psaId match {
-      case Some(psa) =>
-        schemeConnector.listOfSchemes(psa).map { httpResponse =>
-          Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
-        }
-      case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
-    }
-  } recoverWith recoverFromError
+      psaId match {
+        case Some(psa) =>
+          schemeConnector.listOfSchemes(psa).map { httpResponse =>
+            Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
+          }
+        case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
+      }
+    } recoverWith recoverFromError
   }
 }

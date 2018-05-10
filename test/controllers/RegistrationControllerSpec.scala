@@ -210,16 +210,15 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       }
     }
   }
+
   "registrationNoIdOrganisation" must {
     def fakeRequest(data: JsValue): FakeRequest[JsValue] = FakeRequest("POST", "/").withBody(data)
 
     "return a success response when valid data is posted" in {
-
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now,
         "sapNumber" -> "1234567890",
         "safeId" -> "XE0001234567890"
       )
-
       when(mockRegistrationConnector.registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())).thenReturn(
         Future.successful(HttpResponse(OK, Some(successResponse))))
 
@@ -230,10 +229,20 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       }
     }
 
-    "throw BadRequestException when no data is not present in the request" in {
+    "throw BadRequestException when no data is present in the request" in {
       val result = call(registrationController().registrationNoIdOrganisation, FakeRequest("POST", "/").withBody(JsNull))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
+        verify(mockRegistrationConnector, never()).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
+      }
+    }
+
+    "throw BadRequestException when bad data received in request from frontend" in {
+      val dataFromFrontend = Json.obj("bad" -> "data")
+      val result = call(registrationController().registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        verify(mockRegistrationConnector, never()).registrationNoIdOrganisation(Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any())
       }
     }
 

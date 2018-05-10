@@ -19,7 +19,7 @@ package utils
 import play.api.Logger
 import play.api.libs.json.{JsLookupResult, JsResultException, JsValue, Reads}
 
-package object responseUtils {
+package object validationUtils {
 
   implicit class genResponse(jsValue: JsValue) {
     implicit def convertTo[A](implicit rds: Reads[A]): A = {
@@ -64,5 +64,4 @@ package object responseUtils {
       )
     }
   }
-
 }

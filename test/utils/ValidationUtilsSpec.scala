@@ -18,7 +18,7 @@ package utils
 
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsResultException, Json, OFormat}
-import utils.responseUtils._
+import utils.validationUtils._
 
 class ValidationUtilsSpec extends WordSpec with MustMatchers with OptionValues {
   case class TestDetails(first: String, second: Option[String])

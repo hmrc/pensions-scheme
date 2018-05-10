@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import utils.responseUtils._
+import utils.validationUtils._
 
 import scala.util.{Failure, Success, Try}
 
@@ -39,7 +39,6 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
 
   def registerWithIdIndividual: Action[AnyContent] = Action.async {
     implicit request => {
-
       authorised(ConfidenceLevel.L200 and AffinityGroup.Individual).retrieve(Retrievals.nino) {
         case Some(nino) =>
           registerConnector.registerWithIdIndividual(nino, mandatoryPODSData()).map { httpResponse =>
@@ -47,7 +46,7 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
             Ok(Json.toJson[SuccessResponse](response))
           }
         case _ =>
-          Future.failed(new Upstream4xxResponse("Nino not found in auth record", UNAUTHORIZED, UNAUTHORIZED))
+          Future.failed(Upstream4xxResponse("Nino not found in auth record", UNAUTHORIZED, UNAUTHORIZED))
       } recoverWith recoverFromError
     }
   }
@@ -61,8 +60,7 @@ class RegistrationController @Inject()(override val authConnector: AuthConnector
               val registerWithIdData = mandatoryPODSData(true).as[JsObject] ++
                 Json.obj("organisation" -> Json.toJson(org))
               registerConnector.registerWithIdOrganisation(utr, registerWithIdData).map { httpResponse =>
-                val response = httpResponse.json.convertTo[SuccessResponse]
-                Ok(Json.toJson[SuccessResponse](response))
+                Ok(Json.toJson[SuccessResponse](httpResponse.json.convertTo[SuccessResponse]))
               }
             case Failure(e) =>
               Logger.warn(s"Bad Request returned from frontend for Register With Id Organisation $e")
