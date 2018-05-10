@@ -26,7 +26,8 @@ trait PSADetail
 
 object PSADetail {
   val companyDetailsReads : Reads[PSADetail] = (JsPath).read[OrganisationDetailType](OrganisationDetailType.apiReads).map(c=>c.asInstanceOf[PSADetail])
-  val individualDetailsReads : Reads[PSADetail] = (JsPath).read[IndividualDetailType](IndividualDetailType.apiReads("individual")).map(c=>c.asInstanceOf[PSADetail])
+  val individualDetailsReads : Reads[PSADetail] = (JsPath).read[IndividualDetailType](IndividualDetailType.apiReads("individual")).map(
+    c=>c.asInstanceOf[PSADetail])
 
   val apiReads : Reads[PSADetail] = companyDetailsReads orElse individualDetailsReads
 }
@@ -101,14 +102,6 @@ object CorrespondenceCommonDetail {
     ) ((contactDetails, address) => CorrespondenceCommonDetail(address, contactDetails))
 }
 
-
-
-
-
-
-
-
-
 case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: String, title: Option[String] = None,
                                            firstName: String, middleName: Option[String] = None, lastName: String,
                                            dateOfBirth: LocalDate, referenceOrNino: Option[String] = None,
@@ -147,20 +140,22 @@ object DirectorOrPartnerDetailTypeItem {
       (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr", "utr")) and
       (JsPath).read(PreviousAddressDetails.apiReads("director")) and
       (JsPath).read(CorrespondenceCommonDetail.apiReads)
-    ) ((directorPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) => DirectorOrPartnerDetailTypeItem(sequenceId = f"${index}%03d",
-    entityType = "Director",
-    title = None,
-    firstName = directorPersonalDetails.firstName,
-    middleName = directorPersonalDetails.middleName,
-    lastName = directorPersonalDetails.lastName,
-    dateOfBirth = directorPersonalDetails.dateOfBirth,
-    referenceOrNino = ninoDetails.flatMap(_._1),
-    noNinoReason = ninoDetails.flatMap(_._2),
-    utr = utrDetails.flatMap(_._1),
-    noUtrReason = utrDetails.flatMap(_._2),
-    correspondenceCommonDetail = addressCommonDetails,
-    previousAddressDetail = previousAddress))
-}
+    ) (
+    (directorPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) =>
+      DirectorOrPartnerDetailTypeItem(sequenceId = f"${index}%03d",
+      entityType = "Director",
+      title = None,
+      firstName = directorPersonalDetails.firstName,
+      middleName = directorPersonalDetails.middleName,
+      lastName = directorPersonalDetails.lastName,
+      dateOfBirth = directorPersonalDetails.dateOfBirth,
+      referenceOrNino = ninoDetails.flatMap(_._1),
+      noNinoReason = ninoDetails.flatMap(_._2),
+      utr = utrDetails.flatMap(_._1),
+      noUtrReason = utrDetails.flatMap(_._2),
+      correspondenceCommonDetail = addressCommonDetails,
+      previousAddressDetail = previousAddress))
+  }
 
 case class PensionSchemeAdministrator(customerType: String, legalStatus: String, idType: Option[String] = None,
                                       idNumber: Option[String] = None, sapNumber: String, noIdentifier: Boolean,
@@ -196,20 +191,23 @@ object PensionSchemeAdministrator {
       (JsPath).read(PSADetail.apiReads) and
       (JsPath \ "existingPSA").read(PensionSchemeAdministratorIdentifierStatusType.apiReads) and
       (JsPath).read(PensionSchemeAdministratorDeclarationType.apiReads)
-    ) ((registrationInfo, isThereMoreThanTenDirectors, contactDetails, previousAddressDetails, correspondenceAddress, directors, transactionDetails, isExistingPSA, declaration) => PensionSchemeAdministrator(
-    customerType = registrationInfo._4,
-    legalStatus = registrationInfo._1,
-    sapNumber = registrationInfo._2,
-    noIdentifier = registrationInfo._3,
-    idType = registrationInfo._5,
-    idNumber = registrationInfo._6,
-    numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(isMoreThanTenDirectors => NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(isMoreThanTenDirectors))),
-    pensionSchemeAdministratoridentifierStatus = isExistingPSA,
-    correspondenceAddressDetail = correspondenceAddress,
-    correspondenceContactDetail = contactDetails,
-    previousAddressDetail = previousAddressDetails,
-    directorOrPartnerDetail = directors,
-    organisationDetail = if (registrationInfo._1 == "Limited Company") Some(transactionDetails.asInstanceOf[OrganisationDetailType]) else None,
-    individualDetail = if (registrationInfo._1 == "Individual") Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None,
-    declaration = declaration))
+    ) ((registrationInfo, isThereMoreThanTenDirectors, contactDetails, previousAddressDetails, correspondenceAddress, directors,
+        transactionDetails, isExistingPSA, declaration) =>
+    PensionSchemeAdministrator(
+      customerType = registrationInfo._4,
+      legalStatus = registrationInfo._1,
+      sapNumber = registrationInfo._2,
+      noIdentifier = registrationInfo._3,
+      idType = registrationInfo._5,
+      idNumber = registrationInfo._6,
+      numberOfDirectorOrPartners = isThereMoreThanTenDirectors.map(isMoreThanTenDirectors =>
+        NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(isMoreThanTenDirectors))),
+      pensionSchemeAdministratoridentifierStatus = isExistingPSA,
+      correspondenceAddressDetail = correspondenceAddress,
+      correspondenceContactDetail = contactDetails,
+      previousAddressDetail = previousAddressDetails,
+      directorOrPartnerDetail = directors,
+      organisationDetail = if (registrationInfo._1 == "Limited Company") Some(transactionDetails.asInstanceOf[OrganisationDetailType]) else None,
+      individualDetail = if (registrationInfo._1 == "Individual") Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None,
+      declaration = declaration))
 }

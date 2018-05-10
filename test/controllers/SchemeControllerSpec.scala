@@ -180,11 +180,11 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
     "throw BadRequestException when bad data returned from frontend request" in {
       val invalidRequest = Json.obj("invalid" -> "data")
-      val successResponse = Json.obj("processingDate" -> LocalDate.now, "formBundle" -> "1000000", "psaId" -> "A2000000")
 
       val result = schemeController.registerPSA(fakeRequest(invalidRequest))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
+        verify(mockSchemeConnector, never()).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
@@ -259,7 +259,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       }
     }
 
-    "throw BadRequestException when the invalid data returned from backend" in {
+    "throw BadRequestException when the invalid data returned from DES/ETMP" in {
       val validResponse = Json.obj("invalid" -> "data")
       when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(Future.successful(
         HttpResponse(OK, Some(validResponse))))
