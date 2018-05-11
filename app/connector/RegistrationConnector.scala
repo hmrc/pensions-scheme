@@ -21,6 +21,7 @@ import config.AppConfig
 import models.OrganisationRegistrant
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,25 +33,27 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
 
   override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
                                                                              ec: ExecutionContext): Future[HttpResponse] = {
-    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val headers = hc.copy(authorization = Some(Authorization(config.authorization))).withExtraHeaders(desHeader: _*)
+
     val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
 
-    http.POST(registerWithIdUrl, registerData)
+    http.POST(registerWithIdUrl, registerData)(implicitly,implicitly[HttpReads[HttpResponse]],headers,implicitly)
   }
 
   override def registerWithIdOrganisation(utr: String, registerData: JsValue)(implicit hc: HeaderCarrier,
                                                                               ec: ExecutionContext): Future[HttpResponse] = {
-    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val headers = hc.copy(authorization = Some(Authorization(config.authorization))).withExtraHeaders(desHeader: _*)
+
     val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
 
-    http.POST(registerWithIdUrl, registerData)
+    http.POST(registerWithIdUrl, registerData)(implicitly,implicitly[HttpReads[HttpResponse]],headers,implicitly)
   }
 
   override def registrationNoIdOrganisation(registerData: OrganisationRegistrant)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
-    implicit val hc = HeaderCarrier(extraHeaders = desHeader)
+    val headers = hc.copy(authorization = Some(Authorization(config.authorization))).withExtraHeaders(desHeader: _*)
     val schemeAdminRegisterUrl = config.registerWithoutIdOrganisationUrl
 
-    http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], implicitly, implicitly)
+    http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], headers, implicitly)
   }
 }
 
