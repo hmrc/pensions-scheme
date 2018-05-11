@@ -16,6 +16,8 @@
 
 package connector
 
+import java.util.UUID
+
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.OrganisationRegistrant
@@ -28,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
 
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
-    "Content-Type" -> "application/json")
+    "Content-Type" -> "application/json", "CorrelationId" -> UUID.randomUUID().toString)
 
   override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
                                                                              ec: ExecutionContext): Future[HttpResponse] = {
