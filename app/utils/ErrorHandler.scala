@@ -16,6 +16,7 @@
 
 package utils
 
+import play.api.libs.json.JsResultException
 import play.api.mvc.Result
 import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, Upstream5xxResponse}
 
@@ -24,6 +25,8 @@ import scala.concurrent.Future
 trait ErrorHandler {
 
   def recoverFromError: PartialFunction[Throwable, Future[Result]] = {
+    case e: JsResultException =>
+      Future.failed(new BadRequestException(e.getMessage))
     case e: BadRequestException =>
       Future.failed(new BadRequestException(e.message))
     case e: NotFoundException =>

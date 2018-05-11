@@ -142,7 +142,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     }
   }
 
-  "registerPSA" should  {
+  "registerPSA" should {
 
     def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data)
 
@@ -175,6 +175,16 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         e mustBe a[BadRequestException]
         e.getMessage mustBe failureResponse.toString()
         verify(mockSchemeConnector, times(1)).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
+      }
+    }
+
+    "throw BadRequestException when bad data returned from frontend request" in {
+      val invalidRequest = Json.obj("invalid" -> "data")
+
+      val result = schemeController.registerPSA(fakeRequest(invalidRequest))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        verify(mockSchemeConnector, never()).registerPSA(Matchers.any())(Matchers.any(), Matchers.any())
       }
     }
 
@@ -232,7 +242,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(Future.successful(
         HttpResponse(OK, Some(validResponse))))
       val result = schemeController.listOfSchemes(fakeRequest)
-      ScalaFutures.whenReady(result){ res =>
+      ScalaFutures.whenReady(result) { res =>
         status(result) mustBe OK
         contentAsJson(result) mustEqual validResponse
         verify(mockSchemeConnector, times(1)).listOfSchemes(any())(any(), any())
@@ -246,6 +256,17 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         e.getMessage mustBe "Bad Request with no Psa Id"
         verify(mockSchemeConnector, never()).registerScheme(any(),
           any())(any(), any())
+      }
+    }
+
+    "throw BadRequestException when the invalid data returned from DES/ETMP" in {
+      val validResponse = Json.obj("invalid" -> "data")
+      when(mockSchemeConnector.listOfSchemes(Matchers.eq("A2000001"))(any(), any())).thenReturn(Future.successful(
+        HttpResponse(OK, Some(validResponse))))
+      val result = schemeController.listOfSchemes(fakeRequest)
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        verify(mockSchemeConnector, times(1)).listOfSchemes(any())(any(), any())
       }
     }
 
