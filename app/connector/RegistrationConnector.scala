@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
 
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
-    "Content-Type" -> "application/json")
+    "Content-Type" -> "application/json", "CorrelationId" -> SessionKeys.sessionId)
 
   override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
                                                                              ec: ExecutionContext): Future[HttpResponse] = {
