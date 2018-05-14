@@ -38,9 +38,8 @@ class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) e
                                                                              ec: ExecutionContext): Future[HttpResponse] = {
     val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
 
-    Logger.debug(s"[Pensions-Scheme-Implicit-Header-Carrier]-${desHeader.toString()}")
     Logger.debug(s"[Pensions-Scheme-Header-Carrier]-${desHeader.toString()}")
-    
+
     http.POST(registerWithIdUrl, registerData,desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
   }
 
