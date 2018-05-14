@@ -55,14 +55,14 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
   def registerPSA: Action[AnyContent] = Action.async {
     implicit request => {
       val feJson = request.body.asJson
-      Logger.info(s"Incoming payload ${feJson}")
+      Logger.debug(s"[PSA-Registration-Incoming-Payload]${feJson}")
 
       feJson match {
         case Some(jsValue) =>
           Try(jsValue.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
             case Success(pensionSchemeAdministrator) =>
               val psaJsValue = Json.toJson(pensionSchemeAdministrator)
-              Logger.info(s"Outgoing payload ${psaJsValue}")
+              Logger.debug(s"[PSA-Registration-Outgoing-Payload]${psaJsValue}")
 
               schemeConnector.registerPSA(psaJsValue).map {
                 httpResponse => Ok(httpResponse.body)

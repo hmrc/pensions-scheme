@@ -24,18 +24,23 @@ import models.OrganisationRegistrant
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import play.api.Logger
+
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationConnectorImpl @Inject()(http: HttpClient, config: AppConfig) extends RegistrationConnector {
 
   val desHeader = Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
-    "Content-Type" -> "application/json", "CorrelationId" -> UUID.randomUUID().toString.replaceAll("-",""))
+    "Content-Type" -> "application/json")
 
   override def registerWithIdIndividual(nino: String, registerData: JsValue)(implicit hc: HeaderCarrier,
                                                                              ec: ExecutionContext): Future[HttpResponse] = {
     val registerWithIdUrl = config.registerWithIdIndividualUrl.format(nino)
 
+    Logger.debug(s"[Pensions-Scheme-Implicit-Header-Carrier]-${desHeader.toString()}")
+    Logger.debug(s"[Pensions-Scheme-Header-Carrier]-${desHeader.toString()}")
+    
     http.POST(registerWithIdUrl, registerData,desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
   }
 
