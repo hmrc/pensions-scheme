@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json
-import play.api.libs.json.{JsPath, JsResult, JsSuccess, JsValue, Json, Reads}
+import play.api.libs.json.{JsPath, JsResult, JsSuccess, JsValue, Json, Reads, Writes}
 
 trait PSADetail
 
@@ -113,6 +113,34 @@ case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: Strin
 object DirectorOrPartnerDetailTypeItem {
   implicit val formats = Json.format[DirectorOrPartnerDetailTypeItem]
 
+  val psaSubmissionWrites : Writes[DirectorOrPartnerDetailTypeItem] = (
+    (JsPath \ "sequenceId").write[String] and
+      (JsPath \ "entityType").write[String] and
+      (JsPath \ "title").writeNullable[String] and
+      (JsPath \ "firstName").write[String] and
+      (JsPath \ "middleName").writeNullable[String] and
+      (JsPath \ "lastName").write[String] and
+      (JsPath \ "dateOfBirth").write[LocalDate] and
+      (JsPath \ "referenceOrNino").writeNullable[String] and
+      (JsPath \ "noNinoReason").writeNullable[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "correspondenceCommonDetail").write[CorrespondenceCommonDetail] and
+      (JsPath \ "previousAddressDetail").write(PreviousAddressDetails.psaSubmissionWrites)
+  )(directorOrPartner => (directorOrPartner.sequenceId,
+    directorOrPartner.entityType,
+    directorOrPartner.title,
+    directorOrPartner.firstName,
+    directorOrPartner.middleName,
+    directorOrPartner.lastName,
+    directorOrPartner.dateOfBirth,
+    directorOrPartner.referenceOrNino,
+    directorOrPartner.noNinoReason,
+    directorOrPartner.utr,
+    directorOrPartner.noUtrReason,
+    directorOrPartner.correspondenceCommonDetail,
+    directorOrPartner.previousAddressDetail))
+
   val apiReads: Reads[List[DirectorOrPartnerDetailTypeItem]] = json.Reads {
     json =>
       json.validate[Seq[JsValue]].flatMap(elements => {
@@ -171,6 +199,38 @@ case class PensionSchemeAdministrator(customerType: String, legalStatus: String,
 
 object PensionSchemeAdministrator {
   implicit val formats = Json.format[PensionSchemeAdministrator]
+
+  val psaSubmissionWrites : Writes[PensionSchemeAdministrator] = (
+    (JsPath \ "customerType").write[String] and
+      (JsPath \ "legalStatus").write[String] and
+      (JsPath \ "idType").writeNullable[String] and
+      (JsPath \ "idNumber").writeNullable[String] and
+      (JsPath \ "sapNumber").write[String] and
+      (JsPath \ "noIdentifier").write[Boolean] and
+      (JsPath \ "organisationDetail").writeNullable[OrganisationDetailType] and
+      (JsPath \ "individualDetail").writeNullable[IndividualDetailType] and
+      (JsPath \ "pensionSchemeAdministratoridentifierStatus").write[PensionSchemeAdministratorIdentifierStatusType] and
+      (JsPath \ "correspondenceAddressDetail").write[Address] and
+      (JsPath \ "correspondenceContactDetail").write[ContactDetails] and
+      (JsPath \ "previousAddressDetail").write(PreviousAddressDetails.psaSubmissionWrites) and
+      (JsPath \ "numberOfDirectorOrPartners").writeNullable[NumberOfDirectorOrPartnersType] and
+      (JsPath \ "directorOrPartnerDetail").writeNullable[List[JsValue]] and
+      (JsPath \ "declaration").write[PensionSchemeAdministratorDeclarationType]
+  )(psaSubmission => (psaSubmission.customerType,
+  psaSubmission.legalStatus,
+  psaSubmission.idType,
+  psaSubmission.idNumber,
+  psaSubmission.sapNumber,
+  psaSubmission.noIdentifier,
+  psaSubmission.organisationDetail,
+  psaSubmission.individualDetail,
+  psaSubmission.pensionSchemeAdministratoridentifierStatus,
+  psaSubmission.correspondenceAddressDetail,
+  psaSubmission.correspondenceContactDetail,
+  psaSubmission.previousAddressDetail,
+  psaSubmission.numberOfDirectorOrPartners,
+  psaSubmission.directorOrPartnerDetail.map(directors => directors.map(director=>Json.toJson(director)(DirectorOrPartnerDetailTypeItem.psaSubmissionWrites))),
+  psaSubmission.declaration))
 
   val registrationInfoReads: Reads[(String, String, Boolean, String, Option[String], Option[String])] = (
     (JsPath \ "legalStatus").read[String] and

@@ -17,7 +17,7 @@
 package models
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
-import play.api.libs.json.{Format, JsPath, Json, Reads}
+import play.api.libs.json.{Format, JsPath, Json, Reads, Writes}
 import play.api.libs.functional.syntax._
 import utils.Lens
 
@@ -35,10 +35,15 @@ object PersonalDetails {
 }
 
 case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddressDetail: Option[Address] = None)
+                                  previousAddressDetails: Option[Address] = None)
 
 object PreviousAddressDetails {
   implicit val formats: Format[PreviousAddressDetails] = Json.format[PreviousAddressDetails]
+
+  val psaSubmissionWrites : Writes[PreviousAddressDetails] = (
+    (JsPath \ "isPreviousAddressLast12Month").write[Boolean] and
+      (JsPath \ "previousAddressDetail").writeNullable[Address]
+    )(previousAddress => (previousAddress.isPreviousAddressLast12Month,previousAddress.previousAddressDetails))
 
   def apiReads(typeOfAddressDetail: String): Reads[PreviousAddressDetails] = (
     (JsPath \ s"${typeOfAddressDetail}AddressYears").read[String] and
