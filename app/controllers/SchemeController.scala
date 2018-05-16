@@ -61,7 +61,7 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
         case Some(jsValue) =>
           Try(jsValue.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
             case Success(pensionSchemeAdministrator) =>
-              val psaJsValue = Json.toJson(pensionSchemeAdministrator)
+              val psaJsValue = Json.toJson(pensionSchemeAdministrator)(PensionSchemeAdministrator.psaSubmissionWrites)
               Logger.debug(s"[PSA-Registration-Outgoing-Payload]${psaJsValue}")
 
               schemeConnector.registerPSA(psaJsValue).map {
