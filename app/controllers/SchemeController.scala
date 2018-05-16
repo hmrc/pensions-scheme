@@ -17,23 +17,20 @@
 package controllers
 
 import com.google.inject.Inject
-import connector.SchemeConnector
-import models.{ListOfSchemes, PensionSchemeAdministrator}
+import models.ListOfSchemes
+import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
-import play.api.Logger
-
-
 import utils.validationUtils._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
 
-class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService: SchemeService) extends BaseController with ErrorHandler {
+class SchemeController @Inject()(schemeService: SchemeService) extends BaseController with ErrorHandler {
 
   def registerScheme: Action[AnyContent] = Action.async {
     implicit request => {
@@ -55,21 +52,13 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
   def registerPSA: Action[AnyContent] = Action.async {
     implicit request => {
       val feJson = request.body.asJson
-      Logger.debug(s"[PSA-Registration-Incoming-Payload]${feJson}")
+      Logger.debug(s"[PSA-Registration-Incoming-Payload]$feJson")
 
       feJson match {
         case Some(jsValue) =>
-          Try(jsValue.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
-            case Success(pensionSchemeAdministrator) =>
-              val psaJsValue = Json.toJson(pensionSchemeAdministrator)(PensionSchemeAdministrator.psaSubmissionWrites)
-              Logger.debug(s"[PSA-Registration-Outgoing-Payload]${psaJsValue}")
-
-              schemeConnector.registerPSA(psaJsValue).map {
-                httpResponse => Ok(httpResponse.body)
-              }
-            case Failure(e) =>
-              Logger.warn(s"Bad Request returned from frontend for PSA $e")
-              Future.failed(new BadRequestException(s"Bad Request returned from frontend for PSA $e"))
+          schemeService.registerPSA(jsValue).map {
+            response =>
+              Ok(response.body)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
       }
@@ -80,13 +69,14 @@ class SchemeController @Inject()(schemeConnector: SchemeConnector, schemeService
     implicit request => {
       val psaId = request.headers.get("psaId")
 
-      psaId match {
-        case Some(psa) =>
-          schemeConnector.listOfSchemes(psa).map { httpResponse =>
-            Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
-          }
-        case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
-      }
-    } recoverWith recoverFromError
+    psaId match {
+      case Some(psa) =>
+        schemeService.listOfSchemes(psa).map { httpResponse =>
+          Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
+        }
+      case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
+    }
+  } recoverWith recoverFromError
   }
+
 }

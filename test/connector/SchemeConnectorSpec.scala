@@ -16,8 +16,8 @@
 
 package connector
 
+import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
-import models.OrganisationRegistrant
 import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -25,8 +25,9 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
-import play.api.http.Status
 import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.mvc.{AnyContentAsEmpty, Request}
+import play.api.test.FakeRequest
 import play.mvc.Http.Status._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -36,9 +37,13 @@ import scala.concurrent.Future
 
 class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
 
-  val httpClient = mock[HttpClient]
-  val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig)
-  implicit val hc = HeaderCarrier()
+  private val httpClient = mock[HttpClient]
+
+  val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig, new StubSuccessfulAuditService())
+
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val request: Request[AnyContentAsEmpty.type ] = FakeRequest("", "")
+
   val failureResponse: JsObject = Json.obj(
     "code" -> "INVALID_PAYLOAD",
     "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
@@ -72,8 +77,9 @@ class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter
         e.getMessage mustBe failureResponse.toString()
       }
     }
+
   }
-  
+
   "register PSA" must {
     val schemeAdminRegisterUrl = appConfig.schemeAdminRegistrationUrl
     "return OK when DES/Etmp returns successfully" in {
