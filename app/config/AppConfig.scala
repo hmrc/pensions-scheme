@@ -25,6 +25,7 @@ class AppConfig @Inject()(override val runModeConfiguration: Configuration, envi
 
   lazy val baseURL: String = baseUrl("des-hod")
   lazy val barsBaseUrl: String = baseUrl("bank-account-reputation")
+  lazy val appName: String = runModeConfiguration.underlying.getString("appName")
 
   lazy val schemeRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.register")}"
   lazy val schemeAdminRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.administrator.register")}"

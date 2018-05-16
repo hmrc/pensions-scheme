@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-package service
+package utils
 
-import play.api.libs.json._
-import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait SchemeService {
+class FakeAuthConnector(stubbedResult: Future[_]) extends AuthConnector {
 
-  def registerScheme(psaId: String, json: JsValue)
-      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
-
-  def listOfSchemes(psaId: String)
-      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
-
-  def registerPSA(json: JsValue)
-      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
+  override def authorise[A](predicate: Predicate, retrieval: Retrieval[A])
+                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[A] = {
+    stubbedResult.map(_.asInstanceOf[A])
+  }
 
 }
