@@ -88,7 +88,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
   implicit val mat: Materializer = app.materializer
 
   "register With Id Individual" must {
-    val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> false, "isAnAgent" -> false)
+    val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> false, "isAnAgent" -> false)
     "return OK when the registration with id is successful for Individual" in {
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json").as[SuccessResponse])
       when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq(nino), any(), Matchers.eq(inputRequestData))(

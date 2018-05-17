@@ -83,7 +83,7 @@ class RegistrationController @Inject()(
   }
 
   private def mandatoryPODSData(requiresNameMatch: Boolean = false): JsValue = {
-    Json.obj("regime" -> "PODS", "requiresNameMatch" -> requiresNameMatch, "isAnAgent" -> false)
+    Json.obj("regime" -> "PODA", "requiresNameMatch" -> requiresNameMatch, "isAnAgent" -> false)
   }
 
   def registrationNoIdOrganisation: Action[OrganisationRegistrant] =

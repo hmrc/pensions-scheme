@@ -56,7 +56,7 @@ object OrganisationRegistrant {
       (__ \ "contactDetails").write[ContactDetailsType]
       ) { o =>
       (
-        "PODS",
+        "PODA",
         o.acknowledgementReference,
         false,
         false,
