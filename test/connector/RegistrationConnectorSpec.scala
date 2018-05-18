@@ -61,7 +61,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
   "register with id individual" must {
     "return OK when Des/ETMP returns successfully for Individual" in {
       val user = User("test-external-id", AffinityGroup.Individual)
-      val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> false, "isAnAgent" -> false)
+      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> false, "isAnAgent" -> false)
       val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json")
 
       when(httpClient.POST[JsValue, HttpResponse](
@@ -99,7 +99,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
 
     "send a PSARegistration audit event on success" in {
       val user = User("test-external-id", AffinityGroup.Individual)
-      val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> false, "isAnAgent" -> false)
+      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> false, "isAnAgent" -> false)
       val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json")
 
       when(httpClient.POST[JsValue, HttpResponse](
@@ -176,7 +176,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
   "register with id organisation" must {
     "return OK when Des/ETMP returns successfully for Organisation" in {
       val user = User("test-external-id", AffinityGroup.Organisation)
-      val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> true, "isAnAgent" -> false,
+      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> true, "isAnAgent" -> false,
         "organisation" -> Json.obj(
           "organisationName" -> "Test Ltd",
           "organisationType" -> "LLP"
@@ -215,7 +215,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
 
     "send a PSARegistration audit event on success" in {
       val user = User("test-external-id", AffinityGroup.Organisation)
-      val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> true, "isAnAgent" -> false,
+      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> true, "isAnAgent" -> false,
         "organisation" -> Json.obj(
           "organisationName" -> "Test Ltd",
           "organisationType" -> "LLP"
@@ -245,7 +245,7 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
 
     "send a PSARegistration audit event on not found" in {
       val user = User("test-external-id", AffinityGroup.Organisation)
-      val inputRequestData = Json.obj("regime" -> "PODS", "requiresNameMatch" -> true, "isAnAgent" -> false,
+      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> true, "isAnAgent" -> false,
         "organisation" -> Json.obj(
           "organisationName" -> "Test Ltd",
           "organisationType" -> "LLP"
