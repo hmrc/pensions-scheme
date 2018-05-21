@@ -89,10 +89,19 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
       jsResultException => Future.failed(jsResultException),
       {
         case Some(bankAccount) => isBankAccountInvalid(bankAccount).map {
-          case true => (pensionSchemeHaveInvalidBank.set(pensionsScheme, true), true)
-          case false => (pensionsScheme, true)
+          case true => {
+            Logger.debug("[Invalid-Bank-Account]")
+            (pensionSchemeHaveInvalidBank.set(pensionsScheme, true), true)
+          }
+          case false => {
+            Logger.debug("[Valid-Bank-Account]")
+            (pensionsScheme, true)
+          }
         }
-        case None => Future.successful((pensionsScheme, false))
+        case None => {
+          Logger.debug("[Valid-Bank-Account]")
+          Future.successful((pensionsScheme, false))
+        }
       }
     )
 
