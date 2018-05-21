@@ -95,7 +95,7 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
           }
           case false => {
             Logger.debug("[Valid-Bank-Account]")
-            (pensionsScheme, true)
+            (pensionSchemeHaveInvalidBank.set(pensionsScheme, false), true)
           }
         }
         case None => {
