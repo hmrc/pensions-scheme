@@ -18,8 +18,8 @@ package models
 
 import play.api.libs.json.Json
 
-case class SchemeDetail(name: String, referenceNumber: String, schemeStatus: String,
-                        pstr: Option[String] = None, relationShip: String, underAppeal: Option[String] = None)
+case class SchemeDetail(name: String, referenceNumber: String, schemeStatus: String, openDate: Option[String],
+                        pstr: Option[String] = None, relationShip: Option[String], underAppeal: Option[String] = None)
 
 object SchemeDetail {
   implicit val format = Json.format[SchemeDetail]
