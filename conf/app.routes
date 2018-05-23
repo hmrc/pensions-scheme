@@ -8,10 +8,13 @@ POST        /register-with-id/individual    controllers.RegistrationController.r
 POST        /register-with-id/organisation  controllers.RegistrationController.registerWithIdOrganisation
 
 # answers caching in protected mongo
-GET         /journey-cache/scheme/:id       controllers.SchemeJourneyCacheController.get(id: String)
-POST        /journey-cache/scheme/:id       controllers.SchemeJourneyCacheController.save(id: String)
-GET         /journey-cache/psa/:id          controllers.PSAJourneyCacheController.get(id: String)
-POST        /journey-cache/psa/:id          controllers.PSAJourneyCacheController.save(id: String)
+GET         /journey-cache/scheme/:id               controllers.SchemeJourneyCacheController.get(id: String)
+POST        /journey-cache/scheme/:id               controllers.SchemeJourneyCacheController.save(id: String)
+POST        /journey-cache/scheme/removeAll/:id     controllers.SchemeJourneyCacheController.remove(id: String)
+
+GET         /journey-cache/psa/:id                  controllers.PSAJourneyCacheController.get(id: String)
+POST        /journey-cache/psa/:id                  controllers.PSAJourneyCacheController.save(id: String)
+POST        /journey-cache/psa/removeAll/:id        controllers.PSAJourneyCacheController.remove(id: String)
 
 GET         /psa-name/:id                   controllers.PSANameController.get(id: String)
 POST        /psa-name/:id                   controllers.PSANameController.save(id: String)
