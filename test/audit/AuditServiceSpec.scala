@@ -19,17 +19,15 @@ package audit
 import org.scalatest.{AsyncFlatSpec, Inside, Matchers}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{Format, JsDefined, JsString, Json}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.AuditResult.Disabled
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
-import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
+import uk.gov.hmrc.play.audit.model.DataEvent
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 class AuditServiceSpec extends AsyncFlatSpec with Matchers with Inside {
 
@@ -41,19 +39,15 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with Inside {
 
     val event = TestAuditEvent("test-audit-payload")
 
-    val result = auditService().sendEvent(event)
+    auditService().sendEvent(event)
+
     val sentEvent = FakeAuditConnector.lastSentEvent
 
-    result.map {
-      auditResult =>
-        auditResult shouldBe Disabled
-
-        inside(sentEvent) {
-          case ExtendedDataEvent(auditSource, auditType, _, _, detail, _) =>
-            auditSource shouldBe appName
-            auditType shouldBe "TestAuditEvent"
-            (detail \ "data" \ "payload") shouldBe JsDefined(JsString("test-audit-payload"))
-        }
+    inside(sentEvent) {
+      case DataEvent(auditSource, auditType, _, _, detail, _) =>
+        auditSource shouldBe appName
+        auditType shouldBe "TestAuditEvent"
+        detail should contain("payload" -> "test-audit-payload")
     }
 
   }
@@ -79,23 +73,26 @@ object AuditServiceSpec {
 //noinspection ScalaDeprecation
 object FakeAuditConnector extends AuditConnector {
 
-  private var sentEvent:ExtendedDataEvent = _
+  private var sentEvent: DataEvent = _
 
   override def auditingConfig: AuditingConfig = AuditingConfig(None, false)
 
-  override def sendExtendedEvent(event: ExtendedDataEvent)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuditResult] = {
+  override def sendEvent(event: DataEvent)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuditResult] = {
     sentEvent = event
-    super.sendExtendedEvent(event)
+    super.sendEvent(event)
   }
 
-  def lastSentEvent: ExtendedDataEvent = sentEvent
+  def lastSentEvent: DataEvent = sentEvent
 
 }
 
 case class TestAuditEvent(payload: String) extends AuditEvent {
-  override def auditType: String = "TestAuditEvent"
-}
 
-object TestAuditEvent {
-  implicit val formatsTestAuditEvent: Format[TestAuditEvent] = Json.format[TestAuditEvent]
+  override def auditType: String = "TestAuditEvent"
+
+  override def details: Map[String, String] =
+    Map(
+      "payload" -> payload
+    )
+
 }

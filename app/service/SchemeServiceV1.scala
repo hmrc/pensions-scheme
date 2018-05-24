@@ -40,7 +40,7 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
     jsonToPensionsSchemeModel(json).fold(
       badRequestException => Future.failed(badRequestException),
       validPensionsScheme => {
-        haveInvalidBank(json, validPensionsScheme).flatMap {
+        haveInvalidBank(json, validPensionsScheme, psaId).flatMap {
           case (pensionsScheme, hasBankDetails) => schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
             case Success(_) =>
               sendSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails)
@@ -82,26 +82,23 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
 
   }
 
-  def haveInvalidBank(json: JsValue, pensionsScheme: PensionsScheme)
-                     (implicit ec: ExecutionContext, hc: HeaderCarrier): Future[(PensionsScheme, Boolean)] = {
+  def haveInvalidBank(json: JsValue, pensionsScheme: PensionsScheme, psaId: String)
+                     (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[(PensionsScheme, Boolean)] = {
 
     readBankAccount(json).fold(
       jsResultException => Future.failed(jsResultException),
       {
-        case Some(bankAccount) => isBankAccountInvalid(bankAccount).map {
-          case true => {
+        case Some(bankAccount) => isBankAccountInvalid(bankAccount, psaId).map {
+          case true =>
             Logger.debug("[Invalid-Bank-Account]")
             (pensionSchemeHaveInvalidBank.set(pensionsScheme, true), true)
-          }
-          case false => {
+          case false =>
             Logger.debug("[Valid-Bank-Account]")
             (pensionSchemeHaveInvalidBank.set(pensionsScheme, false), true)
-          }
         }
-        case None => {
+        case None =>
           Logger.debug("[Valid-Bank-Account]")
           Future.successful((pensionsScheme, false))
-        }
       }
     )
 
@@ -120,10 +117,10 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
 
   }
 
-  private def isBankAccountInvalid(bankAccount: BankAccount)
-      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext): Future[Boolean] = {
+  private def isBankAccountInvalid(bankAccount: BankAccount, psaId: String)
+      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, rh: RequestHeader): Future[Boolean] = {
 
-    barsConnector.invalidBankAccount(bankAccount)
+    barsConnector.invalidBankAccount(bankAccount, psaId)
 
   }
 

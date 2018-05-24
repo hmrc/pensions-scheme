@@ -26,6 +26,15 @@ case class PSARegistration(
   isUk: Option[Boolean]
 ) extends AuditEvent {
   override def auditType: String = "PSARegistration"
+
+  override def details: Map[String, String] =
+    Map(
+      "withId" -> withId.toString,
+      "externalId" -> externalId,
+      "psaType" -> psaType,
+      "found" -> found.toString,
+      "isUk" -> isUk.map(_.toString).getOrElse("")
+    )
 }
 
 object PSARegistration {

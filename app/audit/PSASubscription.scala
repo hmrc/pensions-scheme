@@ -24,6 +24,13 @@ case class PSASubscription(
                           legalStatus: String
                           ) extends AuditEvent {
   override def auditType: String = "PSASubscription"
+
+  override def details: Map[String, String] =
+    Map(
+      "existingUser" -> existingUser.toString,
+      "success" -> success.toString,
+      "legalStatus" -> legalStatus
+    )
 }
 
 object PSASubscription {

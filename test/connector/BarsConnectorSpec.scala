@@ -16,11 +16,18 @@
 
 package connector
 
+import audit.{AuditService, BarsCheck}
+import audit.testdoubles.StubSuccessfulAuditService
 import org.scalatest.{AsyncFlatSpec, Matchers, OptionValues}
 import utils.WireMockHelper
 import com.github.tomakehurst.wiremock.client.WireMock._
-import models.BankAccount
+import models.{BankAccount, ValidateBankDetailsRequest}
 import play.api.http.Status
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule
+import play.api.libs.json.Json
+import play.api.mvc.RequestHeader
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
@@ -30,11 +37,15 @@ class BarsConnectorSpec
   extends AsyncFlatSpec with Matchers with OptionValues with WireMockHelper {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val rh: RequestHeader = FakeRequest("", "")
+
+  private val auditService = new StubSuccessfulAuditService()
 
   val notInvalid = false
   val invalid = true
   val sortCode = "991122"
   val accountNumber = "12345678"
+  val psaIdentifier = "test-psa-id"
 
   "BarsConnector after calling invalidBankAccount" should "return invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
     val response =
@@ -56,7 +67,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe invalid
     }
 
@@ -82,7 +93,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe notInvalid
     }
 
@@ -108,7 +119,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe notInvalid
     }
   }
@@ -134,7 +145,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe notInvalid
     }
   }
@@ -154,7 +165,7 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { response =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe notInvalid
     }
   }
@@ -186,7 +197,7 @@ class BarsConnectorSpec
     val ec: ExecutionContext = implicitly[ExecutionContext]
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(BankAccount(sortCode, accountNumber))(ec, hc).map { _ =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier)(ec, hc, rh).map { _ =>
       succeed
     }
   }
@@ -221,10 +232,87 @@ class BarsConnectorSpec
     )
 
     val connector = injector.instanceOf[BarsConnector]
-    connector.invalidBankAccount(BankAccount(sortCode, accountNumber)).map { _ =>
+    connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { _ =>
       succeed
     }
   }
 
+  it should "send an audit event on success" in {
+
+    auditService.reset()
+
+    val response =
+      """ {
+        "accountNumberWithSortCodeIsValid": false,
+        "nonStandardAccountDetailsRequiredForBacs": "no",
+        "sortCodeIsPresentOnEISCD":"no",
+        "supportsBACS":"yes"
+      } """
+
+    val bankAccount = BankAccount(sortCode, accountNumber)
+
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.OK)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+        )
+    )
+
+    val connector = injector.instanceOf[BarsConnector]
+
+    connector.invalidBankAccount(bankAccount, psaIdentifier).map { _ =>
+      auditService.verifySent(
+        BarsCheck(
+          psaIdentifier,
+          Status.OK,
+          ValidateBankDetailsRequest(bankAccount),
+          Some(Json.parse(response: String))
+        )
+      ) shouldBe true
+    }
+
+  }
+
+  it should "send an audit event on failure" in {
+
+    auditService.reset()
+
+    val errorResponse = "error"
+    val bankAccount = BankAccount(sortCode, accountNumber)
+
+    server.stubFor(
+      post(urlEqualTo("/validateBankDetails"))
+        .willReturn(
+          serverError()
+            .withStatus(Status.BAD_REQUEST)
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse)
+        )
+    )
+
+    val connector = injector.instanceOf[BarsConnector]
+
+    connector.invalidBankAccount(bankAccount, psaIdentifier).map { _ =>
+      auditService.verifySent(
+        BarsCheck(
+          psaIdentifier,
+          Status.BAD_REQUEST,
+          ValidateBankDetailsRequest(bankAccount),
+          None
+        )
+      ) shouldBe true
+    }
+
+  }
+
   override protected def portConfigKey: String = "microservice.services.bank-account-reputation.port"
+
+  override protected def bindings: Seq[GuiceableModule] =
+    Seq(
+      bind[AuditService].toInstance(auditService)
+    )
+
 }

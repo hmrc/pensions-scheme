@@ -16,7 +16,24 @@
 
 package audit
 
-trait AuditEvent {
-  def auditType: String
-  def details: Map[String, String]
+import models.ValidateBankDetailsRequest
+import play.api.libs.json.{JsValue, Json}
+
+case class BarsCheck(psaIdentifier: String, status: Int, request: ValidateBankDetailsRequest, response: Option[JsValue]) extends AuditEvent {
+
+  override def auditType: String = "BarsCheck"
+
+  override def details: Map[String, String] =
+    Map(
+      "psaIdentifier" -> psaIdentifier,
+      "status" -> status.toString,
+      "request" -> Json.stringify(Json.toJson(request)),
+      "response" -> {
+        response match {
+          case Some(json) => Json.stringify(json)
+          case None => ""
+        }
+      }
+    )
+
 }

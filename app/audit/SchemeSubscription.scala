@@ -29,6 +29,18 @@ case class SchemeSubscription(
                                hasValidBankDetails: Boolean
                              ) extends AuditEvent {
   override def auditType: String = "SchemeSubscription"
+
+  override def details: Map[String, String] =
+    Map(
+      "psaIdentifier" -> psaIdentifier,
+      "schemeType" -> schemeType.toString,
+      "hasIndividualEstablisher" -> hasIndividualEstablisher.toString,
+      "hasCompanyEstablisher" -> hasCompanyEstablisher.toString,
+      "hasPartnershipEstablisher" -> hasPartnershipEstablisher.toString,
+      "hasDormantCompany" -> hasDormantCompany.toString,
+      "hasBankDetails" -> hasBankDetails.toString,
+      "hasValidBankDetails" -> hasValidBankDetails.toString
+    )
 }
 
 object SchemeSubscription {
