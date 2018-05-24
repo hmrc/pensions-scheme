@@ -36,6 +36,7 @@ class SchemeController @Inject()(schemeService: SchemeService) extends BaseContr
     implicit request => {
       val psaId = request.headers.get("psaId")
       val feJson = request.body.asJson
+      Logger.debug(s"[PSA-Scheme-Incoming-Payload]$feJson")
 
       (psaId, feJson) match {
         case (Some(psa), Some(jsValue)) =>

@@ -71,7 +71,7 @@ class SchemeConnectorImpl @Inject()(
     val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    Logger.debug(s"[PSA-Scheme-Registration] - ${registerData.toString()}")
+    Logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
     http.POST(schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
