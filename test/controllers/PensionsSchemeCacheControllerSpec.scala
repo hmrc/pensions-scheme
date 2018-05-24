@@ -40,6 +40,8 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
   private val configuration = Configuration(
     "mongodb.pensions-scheme-cache.maxSize" -> 512000
   )
+  val repo = mock[PensionsSchemeCacheRepository]
+  val authConnector = mock[AuthConnector]
 
   private class PensionsSchemeCacheControllerImpl(
                                             repo: PensionsSchemeCacheRepository,
@@ -53,14 +55,9 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
   ".get" must {
 
     "return 200 and the relevant data when it exists" in {
-
-      val repo = mock[PensionsSchemeCacheRepository]
-      val authConnector = mock[AuthConnector]
-
       when(repo.get(eqTo("foo"))(any())) thenReturn Future.successful {
         Some(Array.empty[Byte])
       }
-
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
       val result = controller(repo, authConnector).get("foo")(FakeRequest())
@@ -70,14 +67,9 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
     }
 
     "return 404 when the data doesn't exist" in {
-
-      val repo = mock[PensionsSchemeCacheRepository]
-      val authConnector = mock[AuthConnector]
-
       when(repo.get(eqTo("foo"))(any())) thenReturn Future.successful {
         None
       }
-
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
       val result = controller(repo, authConnector).get("foo")(FakeRequest())
@@ -86,14 +78,9 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
     }
 
     "throw an exception when the repository call fails" in {
-
-      val repo = mock[PensionsSchemeCacheRepository]
-      val authConnector = mock[AuthConnector]
-
       when(repo.get(eqTo("foo"))(any())) thenReturn Future.failed {
         new Exception()
       }
-
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
       val result = controller(repo, authConnector).get("foo")(FakeRequest())
@@ -104,10 +91,6 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
     }
 
     "throw an exception when the call is not authorised" in {
-
-      val repo = mock[PensionsSchemeCacheRepository]
-      val authConnector = mock[AuthConnector]
-
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
         new UnauthorizedException("")
       }
@@ -123,10 +106,6 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
   ".save" must {
 
     "return 200 when the request body can be parsed and passed to the repository successfully" in {
-
-      val repo = mock[PensionsSchemeCacheRepository]
-      val authConnector = mock[AuthConnector]
-
       when(repo.upsert(eqTo("foo"), eqTo("foo".getBytes()))(any())) thenReturn Future.successful(true)
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
@@ -136,10 +115,6 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
     }
 
     "return 413 when the request body cannot be parsed" in {
-
-      val repo = mock[PensionsSchemeCacheRepository]
-      val authConnector = mock[AuthConnector]
-
       when(repo.upsert(any(), any())(any())) thenReturn Future.successful(true)
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
@@ -149,15 +124,34 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
     }
 
     "throw an exception when the call is not authorised" in {
-
-      val repo = mock[PensionsSchemeCacheRepository]
-      val authConnector = mock[AuthConnector]
-
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
         new UnauthorizedException("")
       }
 
       val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withRawBody(ByteString("foo")))
+
+      an[UnauthorizedException] must be thrownBy {
+        status(result)
+      }
+    }
+  }
+
+  ".remove" must {
+    "return 200 when the data is removed successfully" in {
+      when(repo.remove(eqTo("foo"))(any())) thenReturn Future.successful(true)
+      when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+
+      val result = controller(repo, authConnector).remove("foo")(FakeRequest())
+
+      status(result) mustEqual OK
+    }
+
+    "throw an exception when the call is not authorised" in {
+      when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+        new UnauthorizedException("")
+      }
+
+      val result = controller(repo, authConnector).remove("foo")(FakeRequest())
 
       an[UnauthorizedException] must be thrownBy {
         status(result)

@@ -103,4 +103,9 @@ abstract class PensionsSchemeCacheRepository(
       }
     }
   }
+
+  def remove(id: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    val selector = BSONDocument("id" -> id)
+    collection.remove(selector).map(_.ok)
+  }
 }

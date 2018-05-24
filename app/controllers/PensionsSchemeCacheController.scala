@@ -55,4 +55,11 @@ abstract class PensionsSchemeCacheController(
         }
       }
   }
+
+  def remove(id: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised() {
+        repository.remove(id).map(_ => Ok)
+      }
+  }
 }
