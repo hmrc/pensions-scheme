@@ -40,7 +40,7 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
 
     val json = bankDetailsJson(invalidAccountNumber)
 
-    testFixture().schemeService.haveInvalidBank(json, pensionsScheme).map {
+    testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId).map {
       case (scheme, hasBankDetails) =>
         scheme.customerAndSchemeDetails.haveInvalidBank shouldBe true
         hasBankDetails shouldBe true
@@ -52,7 +52,7 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
 
     val json = bankDetailsJson(notInvalidAccountNumber)
 
-    testFixture().schemeService.haveInvalidBank(json, pensionsScheme).map {
+    testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId).map {
       case (scheme, hasBankDetails) =>
         scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
         hasBankDetails shouldBe true
@@ -64,7 +64,7 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
 
     val json = Json.obj()
 
-    testFixture().schemeService.haveInvalidBank(json, pensionsScheme).map {
+    testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId).map {
       case (scheme, hasBankDetails) =>
         scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
         hasBankDetails shouldBe false
@@ -79,7 +79,7 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
     )
 
     recoverToSucceededIf[BadRequestException] {
-      testFixture().schemeService.haveInvalidBank(json, pensionsScheme)
+      testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId)
     }
 
   }
@@ -550,7 +550,8 @@ class FakeBarsConnector extends BarsConnector {
 
   import SchemeServiceV1Spec._
 
-  override def invalidBankAccount(bankAccount: BankAccount)(implicit ec: ExecutionContext, hc: HeaderCarrier): Future[Boolean] = {
+  override def invalidBankAccount(bankAccount: BankAccount, psaId: String)
+                                 (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean] = {
     bankAccount match {
       case BankAccount(_, accountNumber) if accountNumber == invalidAccountNumber => Future.successful(true)
       case BankAccount(_, accountNumber) if accountNumber == notInvalidAccountNumber => Future.successful(false)

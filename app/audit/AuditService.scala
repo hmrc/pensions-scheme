@@ -19,12 +19,11 @@ package audit
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import play.api.Logger
-import play.api.libs.json.{JsString, Json, Writes}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
-import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
+import uk.gov.hmrc.play.audit.model.DataEvent
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
@@ -34,44 +33,37 @@ trait AuditService {
 
   def sendEvent[T <: AuditEvent](event: T)(implicit
                                            rh: RequestHeader,
-                                           write: Writes[T],
-                                           ec: ExecutionContext): Future[AuditResult]
+                                           ec: ExecutionContext): Unit
 
 }
 
 class AuditServiceImpl @Inject() (
-                             config: AppConfig,
-                             connector: AuditConnector
-                             ) extends AuditService {
+                                   config: AppConfig,
+                                   connector: AuditConnector
+                                 ) extends AuditService {
 
   private implicit def toHc(request: RequestHeader): AuditHeaderCarrier =
     auditHeaderCarrier(HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session)))
 
   def sendEvent[T <: AuditEvent](event: T)(implicit
                                            rh: RequestHeader,
-                                           write: Writes[T],
-                                           ec: ExecutionContext): Future[AuditResult] = {
+                                           ec: ExecutionContext): Unit = {
 
-    val eventJson = Json.obj(
-      "data" -> event
-    )
-
-    val details = rh.toAuditDetails().foldLeft(eventJson) {
-      case (m, (k, v)) =>
-        m + (k -> JsString(v))
-    }
+    val details = rh.toAuditDetails() ++ event.details
 
     Logger.debug(s"[AuditService][sendEvent] sending ${event.auditType}")
 
-    val result: Future[AuditResult] = connector.sendExtendedEvent(ExtendedDataEvent(
-      auditSource = config.appName,
-      auditType   = event.auditType,
-      tags        = rh.toAuditTags(
-        transactionName = event.auditType,
-        path            = rh.path
-      ),
-      detail      = details
-    ))
+    val result: Future[AuditResult] = connector.sendEvent(
+      DataEvent(
+        auditSource = config.appName,
+        auditType   = event.auditType,
+        tags        = rh.toAuditTags(
+          transactionName = event.auditType,
+          path            = rh.path
+        ),
+        detail      = details
+      )
+    )
 
     result.onSuccess {
       case _ =>
@@ -83,7 +75,6 @@ class AuditServiceImpl @Inject() (
         Logger.error(s"[AuditService][sendEvent] failed to send event ${event.auditType}", e)
     }
 
-    result
   }
 
 }

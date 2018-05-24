@@ -22,6 +22,11 @@ case class SchemeList(
                      psaIdentifier: String
                      )extends AuditEvent {
   override def auditType: String = "SchemeList"
+
+  override def details: Map[String, String] =
+    Map(
+      "psaIdentifier" -> psaIdentifier
+    )
 }
 
 object SchemeList {
