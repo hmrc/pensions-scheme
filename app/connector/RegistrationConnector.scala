@@ -21,12 +21,11 @@ import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.{OrganisationRegistrant, SuccessResponse, UkAddress, User}
 import play.api.Logger
-import play.api.libs.json.JsValue
+import play.api.http.Status
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import play.api.Logger
-
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -59,12 +58,12 @@ class RegistrationConnectorImpl @Inject()(
     val result = http.POST(registerWithIdUrl, registerData,desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
 
     result andThen {
-      sendPSARegistrationEvent(true, user, "Individual", withIdIsUk)
+      sendPSARegistrationEvent(true, user, "Individual", registerData, withIdIsUk)
     }
 
   }
 
-  private def sendPSARegistrationEvent(withId: Boolean, user: User, psaType: String, isUk: JsValue => Option[Boolean])
+  private def sendPSARegistrationEvent(withId: Boolean, user: User, psaType: String, registerData: JsValue, isUk: JsValue => Option[Boolean])
       (implicit request: RequestHeader, ec: ExecutionContext): PartialFunction[Try[HttpResponse], Unit] = {
 
     case Success(httpResponse) =>
@@ -74,7 +73,10 @@ class RegistrationConnectorImpl @Inject()(
           externalId = user.externalId,
           psaType = psaType,
           found = true,
-          isUk = isUk(httpResponse.json)
+          isUk = isUk(httpResponse.json),
+          status = Status.OK,
+          request = registerData,
+          response = Some(httpResponse.json)
         )
       )
     case Failure(_: NotFoundException) =>
@@ -84,7 +86,10 @@ class RegistrationConnectorImpl @Inject()(
           externalId = user.externalId,
           psaType = psaType,
           found = false,
-          isUk = None
+          isUk = None,
+          status = Status.NOT_FOUND,
+          request = registerData,
+          response = None
         )
       )
     case Failure(t) =>
@@ -114,7 +119,7 @@ class RegistrationConnectorImpl @Inject()(
     val result = http.POST(registerWithIdUrl, registerData, desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly)
 
     result andThen {
-      sendPSARegistrationEvent(true, user, psaType, withIdIsUk)
+      sendPSARegistrationEvent(true, user, psaType, registerData, withIdIsUk)
     }
 
   }
@@ -136,7 +141,7 @@ class RegistrationConnectorImpl @Inject()(
     val result = http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], implicitly, implicitly)
 
     result andThen {
-      sendPSARegistrationEvent(false, user, "Organisation", noIdIsUk(registerData))
+      sendPSARegistrationEvent(false, user, "Organisation", Json.toJson(registerData), noIdIsUk(registerData))
     }
 
   }

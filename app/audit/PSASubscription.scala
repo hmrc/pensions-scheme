@@ -16,21 +16,32 @@
 
 package audit
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsValue, Json}
 
 case class PSASubscription(
                           existingUser: Boolean,
-                          success: Boolean,
-                          legalStatus: String
+                          legalStatus: String,
+                          status: Int,
+                          request: JsValue,
+                          response: Option[JsValue]
                           ) extends AuditEvent {
+
   override def auditType: String = "PSASubscription"
 
   override def details: Map[String, String] =
     Map(
       "existingUser" -> existingUser.toString,
-      "success" -> success.toString,
-      "legalStatus" -> legalStatus
+      "legalStatus" -> legalStatus,
+      "status" -> status.toString,
+      "request" -> Json.stringify(request),
+      "response" -> {
+        response match {
+          case Some(json) => Json.stringify(json)
+          case _ => ""
+        }
+      }
     )
+
 }
 
 object PSASubscription {

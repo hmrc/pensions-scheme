@@ -24,9 +24,10 @@ import models.ReadsEstablisherDetails.readsEstablisherDetails
 import models._
 import models.enumeration.SchemeType
 import play.api.Logger
+import play.api.http.Status
 import play.api.libs.json.{JsResultException, JsValue, Json}
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
 import utils.validationUtils._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,8 +43,10 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
       validPensionsScheme => {
         haveInvalidBank(json, validPensionsScheme, psaId).flatMap {
           case (pensionsScheme, hasBankDetails) => schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
-            case Success(_) =>
-              sendSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails)
+            case Success(httpResponse) =>
+              sendSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, Status.OK, Some(httpResponse.json))
+            case Failure(error: HttpException) =>
+              sendSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, error.responseCode, None)
           }
         }
       }
@@ -55,8 +58,10 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
       (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
     schemeConnector.listOfSchemes(psaId) andThen {
-      case Success(_) =>
-        sendSchemeListEvent(psaId)
+      case Success(httpResponse) =>
+        sendSchemeListEvent(psaId, Status.OK, Some(httpResponse.json))
+      case Failure(error: HttpException) =>
+        sendSchemeListEvent(psaId, error.responseCode, None)
     }
 
   }
@@ -124,14 +129,15 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
 
   }
 
-  private def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean)
+  private def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue])
       (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
 
-    auditService.sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails))
+    auditService.sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, status, response))
 
   }
 
-  def translateSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean): SchemeSubscription = {
+  def translateSchemeSubscriptionEvent
+      (psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue]): SchemeSubscription = {
 
     val schemeType = if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
       AuditSchemeType.masterTrust
@@ -153,19 +159,22 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
       hasPartnershipEstablisher = pensionsScheme.establisherDetails.exists(establisher => establisher.`type` == "Partnership"),
       hasDormantCompany = pensionsScheme.pensionSchemeDeclaration.box5.getOrElse(false),
       hasBankDetails = hasBankDetails,
-      hasValidBankDetails = hasBankDetails && !pensionsScheme.customerAndSchemeDetails.haveInvalidBank
+      hasValidBankDetails = hasBankDetails && !pensionsScheme.customerAndSchemeDetails.haveInvalidBank,
+      status = status,
+      request = Json.toJson(pensionsScheme),
+      response = response
     )
 
   }
 
-  private def sendSchemeListEvent(psaId: String)(implicit request: RequestHeader, ec: ExecutionContext): Unit = {
+  private def sendSchemeListEvent(psaId: String, status: Int, response: Option[JsValue])(implicit request: RequestHeader, ec: ExecutionContext): Unit = {
 
-    auditService.sendEvent(SchemeList(psaId))
+    auditService.sendEvent(SchemeList(psaId, status, response))
 
   }
 
   override def registerPSA(json: JsValue)
-                          (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+                          (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, rh: RequestHeader): Future[HttpResponse] = {
 
     Try(json.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
       case Success(pensionSchemeAdministrator) =>
@@ -173,10 +182,10 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
         Logger.debug(s"[PSA-Registration-Outgoing-Payload]$psaJsValue")
 
         schemeConnector.registerPSA(psaJsValue) andThen {
-          case Success(_) =>
-            sendPSASubscriptionEvent(pensionSchemeAdministrator, true)
-          case _ =>
-            sendPSASubscriptionEvent(pensionSchemeAdministrator, false)
+          case Success(httpResponse) =>
+            sendPSASubscriptionEvent(pensionSchemeAdministrator, Status.OK, psaJsValue, Some(httpResponse.json))
+          case Failure(error: HttpException) =>
+            sendPSASubscriptionEvent(pensionSchemeAdministrator, error.responseCode, psaJsValue, None)
         }
 
       case Failure(e) =>
@@ -186,13 +195,16 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
 
   }
 
-  private def sendPSASubscriptionEvent(psa: PensionSchemeAdministrator, success: Boolean)(implicit request: RequestHeader, ec: ExecutionContext): Unit = {
+  private def sendPSASubscriptionEvent(psa: PensionSchemeAdministrator, status: Int, request: JsValue, response: Option[JsValue])
+                                      (implicit rh: RequestHeader, ec: ExecutionContext): Unit = {
 
     auditService.sendEvent(
       PSASubscription(
         existingUser = psa.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator,
-        success = success,
-        legalStatus = psa.legalStatus
+        legalStatus = psa.legalStatus,
+        status = status,
+        request = request,
+        response = response
       )
     )
 
