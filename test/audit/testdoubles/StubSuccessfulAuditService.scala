@@ -28,7 +28,6 @@ class StubSuccessfulAuditService extends AuditService {
 
   override def sendEvent[T <: AuditEvent](event: T)
                                          (implicit rh: RequestHeader, ec: ExecutionContext): Unit = {
-
     events += event
   }
 
@@ -38,6 +37,10 @@ class StubSuccessfulAuditService extends AuditService {
 
   def reset(): Unit = {
     events.clear()
+  }
+
+  def lastEvent: Option[AuditEvent] = {
+    events.lastOption
   }
 
 }

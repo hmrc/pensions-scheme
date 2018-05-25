@@ -30,7 +30,7 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{AnyContentAsEmpty, Request}
 import play.api.test.FakeRequest
-import play.mvc.Http.Status.OK
+import play.mvc.Http.Status._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -120,7 +120,10 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
               externalId = user.externalId,
               psaType = "Individual",
               found = true,
-              isUk = Some(true)
+              isUk = Some(true),
+              status = OK,
+              request = inputRequestData,
+              response = Some(validSuccessResponse)
             )
           ) mustBe true
       }
@@ -147,7 +150,10 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
               externalId = user.externalId,
               psaType = "Individual",
               found = false,
-              isUk = None
+              isUk = None,
+              status = NOT_FOUND,
+              request = invalidData,
+              response = None
             )
           ) mustBe true
       }
@@ -237,7 +243,10 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
               externalId = user.externalId,
               psaType = "LLP",
               found = true,
-              isUk = Some(true)
+              isUk = Some(true),
+              status = OK,
+              request = inputRequestData,
+              response = Some(validSuccessResponse)
             )
           ) mustBe true
       }
@@ -268,7 +277,10 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
               externalId = user.externalId,
               psaType = "LLP",
               found = false,
-              isUk = None
+              isUk = None,
+              status = NOT_FOUND,
+              request = inputRequestData,
+              response = None
             )
           ) mustBe true
       }
@@ -350,7 +362,10 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
               externalId = user.externalId,
               psaType = "Organisation",
               found = true,
-              isUk = Some(false)
+              isUk = Some(false),
+              status = OK,
+              request = Json.toJson(validDataRequest),
+              response = Some(successResponse)
             )
           ) mustBe true
       }
@@ -371,7 +386,10 @@ class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAn
               externalId = user.externalId,
               psaType = "Organisation",
               found = false,
-              isUk = None
+              isUk = None,
+              status = NOT_FOUND,
+              request = Json.toJson(validDataRequest),
+              response = None
             )
           ) mustBe true
       }

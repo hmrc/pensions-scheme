@@ -111,11 +111,16 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
 
     val fixture = testFixture()
 
-    val expected = schemeSubscription.copy(hasIndividualEstablisher = true)
-
     fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
-      _ =>
-        fixture.auditService.verifySent(expected) shouldBe true
+      httpResponse =>
+        val expected = schemeSubscription.copy(
+          hasIndividualEstablisher = true,
+          status = Status.OK,
+          request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
+          response = Some(httpResponse.json)
+        )
+
+        fixture.auditService.lastEvent shouldBe Some(expected)
     }
 
   }
@@ -130,7 +135,14 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
         .map(_ => fail("Expected failure"))
         .recover {
           case _: BadRequestException =>
-            fixture.auditService.verifyNothingSent() shouldBe true
+            val expected = schemeSubscription.copy(
+              hasIndividualEstablisher = true,
+              status = Status.BAD_REQUEST,
+              request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
+              response = None
+            )
+
+            fixture.auditService.lastEvent shouldBe Some(expected)
         }
 
   }
@@ -138,8 +150,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
   "translateSchemeSubscriptionEvent" should "translate a master trust scheme" in {
 
     val scheme = PensionsSchemeIsSchemeMasterTrust.set(pensionsScheme, true)
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription.copy(schemeType = AuditSchemeType.masterTrust)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = AuditSchemeType.masterTrust,
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -148,8 +165,12 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
   it should "translate a single trust scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.single.value)
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -158,8 +179,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
   it should "translate a group Life/Death scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.group.value)
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription.copy(schemeType = AuditSchemeType.groupLifeDeath)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = AuditSchemeType.groupLifeDeath,
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -168,8 +194,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
   it should "translate a body corporate scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.corp.value)
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription.copy(schemeType = AuditSchemeType.bodyCorporate)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = AuditSchemeType.bodyCorporate,
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -178,8 +209,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
   it should "translate an 'other' scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.other.value)
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription.copy(schemeType = AuditSchemeType.other)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = AuditSchemeType.other,
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -191,8 +227,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
       PensionsSchemeSchemeStructure
         .set(pensionsScheme, SchemeType.single.value)
         .copy(establisherDetails = List(establisherDetails("Individual")))
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription.copy(hasIndividualEstablisher = true)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      hasIndividualEstablisher = true,
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -204,8 +245,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
       PensionsSchemeSchemeStructure
         .set(pensionsScheme, SchemeType.single.value)
         .copy(establisherDetails = List(establisherDetails("Company/Org")))
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription.copy(hasCompanyEstablisher = true)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      hasCompanyEstablisher = true,
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -217,8 +263,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
       PensionsSchemeSchemeStructure
         .set(pensionsScheme, SchemeType.single.value)
         .copy(establisherDetails = List(establisherDetails("Partnership")))
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false)
-    val expected = schemeSubscription.copy(hasPartnershipEstablisher = true)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      hasPartnershipEstablisher = true,
+      request = Json.toJson(scheme)
+    )
 
     actual shouldBe expected
 
@@ -231,13 +282,14 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
       pensionSchemeDeclaration = pensionsScheme.pensionSchemeDeclaration.copy(box5 = Some(true))
     )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, true)
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, true, Status.OK, None)
 
     val expected = schemeSubscription.copy(
       schemeType = AuditSchemeType.singleTrust,
       hasDormantCompany = true,
       hasBankDetails = true,
-      hasValidBankDetails = false
+      hasValidBankDetails = false,
+      request = Json.toJson(scheme)
     )
 
     actual shouldBe expected
@@ -259,13 +311,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
     val fixture = testFixture()
 
     fixture.schemeService.listOfSchemes(psaId).map {
-      _ =>
-        fixture.auditService.verifySent(SchemeList(psaId)) shouldBe true
+      httpResponse =>
+        fixture.auditService.verifySent(SchemeList(psaId, Status.OK, Some(httpResponse.json))) shouldBe true
     }
 
   }
 
-  it should "not send on audit event on failure" in {
+  it should "send an audit event on failure" in {
 
     val fixture = testFixture()
 
@@ -275,7 +327,7 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
       .map(_ => fail("Expected failure"))
       .recover {
         case _: BadRequestException =>
-          fixture.auditService.verifyNothingSent() shouldBe true
+          fixture.auditService.verifySent(SchemeList(psaId, Status.BAD_REQUEST, None)) shouldBe true
       }
 
   }
@@ -305,16 +357,20 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
   it should "send an audit event on success" in {
 
     val fixture = testFixture()
+    val requestJson = registerPsaRequestJson(psaJson)
 
     fixture.schemeService.registerPSA(psaJson).map {
-      _ =>
-        fixture.auditService.verifySent(
-          PSASubscription(
-            existingUser = false,
-            success = true,
-            legalStatus = "test-legal-status"
+      httpResponse =>
+        fixture.auditService.lastEvent shouldBe
+          Some(
+            PSASubscription(
+              existingUser = false,
+              legalStatus = "test-legal-status",
+              status = Status.OK,
+              request = requestJson,
+              response = Some(httpResponse.json)
+            )
           )
-        ) shouldBe true
     }
 
   }
@@ -322,6 +378,7 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
   it should "send an audit event on failure" in {
 
     val fixture = testFixture()
+    val requestJson = registerPsaRequestJson(psaJson)
 
     fixture.schemeConnector.setRegisterPsaResponse(Future.failed(new BadRequestException("bad request")))
 
@@ -329,13 +386,16 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
       .map(_ => fail("Expected failure"))
       .recover {
         case _: BadRequestException =>
-          fixture.auditService.verifySent(
-            PSASubscription(
-              existingUser = false,
-              success = false,
-              legalStatus = "test-legal-status"
+          fixture.auditService.lastEvent shouldBe
+            Some(
+              PSASubscription(
+                existingUser = false,
+                legalStatus = "test-legal-status",
+                status = Status.BAD_REQUEST,
+                request = requestJson,
+                response = None
+              )
             )
-          ) shouldBe true
       }
 
   }
@@ -449,7 +509,10 @@ object SchemeServiceV1Spec {
     hasPartnershipEstablisher = false,
     hasDormantCompany = false,
     hasBankDetails = false,
-    hasValidBankDetails = false
+    hasValidBankDetails = false,
+    status = Status.OK,
+    request = Json.obj(),
+    response = None
   )
 
   def establisherDetails(establisherType: String): EstablisherDetails =
@@ -515,6 +578,22 @@ object SchemeServiceV1Spec {
       "formBundle" -> "1121313",
       "psaId" -> "A21999999"
     )
+
+  def registerPsaRequestJson(userAnswersJson: JsValue): JsValue = {
+    val psa = userAnswersJson.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)
+    val requestJson = Json.toJson(psa)(PensionSchemeAdministrator.psaSubmissionWrites)
+
+    requestJson
+  }
+
+  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceV1): JsValue = {
+
+    service.jsonToPensionsSchemeModel(pensionsSchemeJson).fold(
+      ex => throw ex,
+      scheme => Json.toJson(scheme)
+    )
+
+  }
 
 }
 
