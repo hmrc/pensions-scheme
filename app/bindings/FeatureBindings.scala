@@ -34,7 +34,7 @@ package bindings
 
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment, Logger}
-import service.{SchemeService, SchemeServiceV1}
+import service.{SchemeService, SchemeServiceV1, SchemeServiceV2}
 
 class FeatureBindings extends Module {
 
@@ -48,7 +48,13 @@ class FeatureBindings extends Module {
 
     configuration.underlying.getString("feature.registerSchemeJsonVersion") match {
       case "v1" =>
+        Logger.debug("SchemeService bound to SchemeServiceV1")
         Seq(bind[SchemeService].to[SchemeServiceV1])
+
+      case "v2" =>
+        Logger.debug("SchemeService bound to SchemeServiceV2")
+        Seq(bind[SchemeService].to[SchemeServiceV2])
+
       case _ =>
         Logger.warn("No application configuration for feature.registerSchemeJsonVersion, defaulting to 'v1'")
         Seq(bind[SchemeService].to[SchemeServiceV1])

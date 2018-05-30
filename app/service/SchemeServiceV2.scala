@@ -19,10 +19,10 @@ package service
 import audit.{AuditService, SchemeSubscription, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
-import models.PensionsScheme._
-import models.ReadsEstablisherDetails.readsEstablisherDetails
-import models._
+import models.PensionsSchemeV2.pensionSchemeHaveInvalidBank
 import models.enumeration.SchemeType
+import models.{EstablisherDetailsV2 => EstablisherDetails, PensionsSchemeV2 => PensionsScheme, _}
+import models.ReadsEstablisherDetailsV2.{readsEstablisherDetails, readsTrusteeDetails}
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json.{JsResultException, JsValue, Json}
@@ -32,36 +32,40 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, Http
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector, auditService: AuditService)
+class SchemeServiceV2 @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector, auditService: AuditService)
   extends SchemeServiceImpl(schemeConnector, auditService) {
 
   override def registerScheme(psaId: String, json: JsValue)
-      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
-    jsonToPensionsSchemeModel(json).fold(
-      badRequestException => Future.failed(badRequestException),
-      validPensionsScheme => {
-        haveInvalidBank(json, validPensionsScheme, psaId).flatMap {
-          case (pensionsScheme, hasBankDetails) => schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
-            case Success(httpResponse) =>
-              sendSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, Status.OK, Some(httpResponse.json))
-            case Failure(error: HttpException) =>
-              sendSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, error.responseCode, None)
+    transformJsonToModel(json).fold(
+      error => Future.failed(error),
+      validPensionsScheme =>
+        readBankAccount(json).fold(
+          error => Future.failed(error),
+          bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
+            pensionsScheme =>
+              schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
+                case Success(httpResponse) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
+                case Failure(error: HttpException) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
+              }
           }
-        }
-      }
+        )
     )
 
   }
 
-  def jsonToPensionsSchemeModel(json: JsValue): Either[BadRequestException, PensionsScheme] = {
+  private[service] def transformJsonToModel(json: JsValue): Either[BadRequestException, PensionsScheme] = {
 
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
       declaration <- json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-      establishers <- json.validate[Seq[EstablisherDetails]](readsEstablisherDetails)
+      establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
+      trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
     } yield {
-      PensionsScheme(customerAndScheme, declaration, List(establishers: _*))
+      PensionsScheme(customerAndScheme, declaration, establishers, trustees)
     }
 
     result.fold(
@@ -75,29 +79,7 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
 
   }
 
-  def haveInvalidBank(json: JsValue, pensionsScheme: PensionsScheme, psaId: String)
-                     (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[(PensionsScheme, Boolean)] = {
-
-    readBankAccount(json).fold(
-      jsResultException => Future.failed(jsResultException),
-      {
-        case Some(bankAccount) => isBankAccountInvalid(bankAccount, psaId).map {
-          case true =>
-            Logger.debug("[Invalid-Bank-Account]")
-            (pensionSchemeHaveInvalidBank.set(pensionsScheme, true), true)
-          case false =>
-            Logger.debug("[Valid-Bank-Account]")
-            (pensionSchemeHaveInvalidBank.set(pensionsScheme, false), true)
-        }
-        case None =>
-          Logger.debug("[Valid-Bank-Account]")
-          Future.successful((pensionsScheme, false))
-      }
-    )
-
-  }
-
-  private def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {
+  private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {
 
     (json \ "uKBankDetails").validateOpt[BankAccount](BankAccount.apiReads).fold(
       errors => {
@@ -110,18 +92,28 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
 
   }
 
-  private def isBankAccountInvalid(bankAccount: BankAccount, psaId: String)
-      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, rh: RequestHeader): Future[Boolean] = {
+  private[service] def haveInvalidBank(bankAccount: Option[BankAccount], pensionsScheme: PensionsScheme, psaId: String)
+                     (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[PensionsScheme] = {
 
-    barsConnector.invalidBankAccount(bankAccount, psaId)
+    bankAccount match {
+      case Some(details) =>
+        barsConnector.invalidBankAccount(details, psaId).map {
+          case true =>
+            Logger.debug("[Invalid-Bank-Account]")
+            pensionSchemeHaveInvalidBank.set(pensionsScheme, true)
+          case false =>
+            Logger.debug("[Valid-Bank-Account]")
+            pensionSchemeHaveInvalidBank.set(pensionsScheme, false)
+        }
+      case None =>
+        Future.successful(pensionSchemeHaveInvalidBank.set(pensionsScheme, false))
+    }
 
   }
 
-  protected def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue])
-                                           (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
-
+  private def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue])
+                                         (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
     auditService.sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, status, response))
-
   }
 
   private[service] def translateSchemeSubscriptionEvent
@@ -142,9 +134,9 @@ class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector:
     SchemeSubscription(
       psaIdentifier = psaId,
       schemeType = schemeType,
-      hasIndividualEstablisher = pensionsScheme.establisherDetails.exists(establisher => establisher.`type` == "Individual"),
-      hasCompanyEstablisher = pensionsScheme.establisherDetails.exists(establisher => establisher.`type` == "Company/Org"),
-      hasPartnershipEstablisher = pensionsScheme.establisherDetails.exists(establisher => establisher.`type` == "Partnership"),
+      hasIndividualEstablisher = pensionsScheme.establisherDetails.individual.nonEmpty,
+      hasCompanyEstablisher = pensionsScheme.establisherDetails.companyOrOrganization.nonEmpty,
+      hasPartnershipEstablisher = false,
       hasDormantCompany = pensionsScheme.pensionSchemeDeclaration.box5.getOrElse(false),
       hasBankDetails = hasBankDetails,
       hasValidBankDetails = hasBankDetails && !pensionsScheme.customerAndSchemeDetails.haveInvalidBank,

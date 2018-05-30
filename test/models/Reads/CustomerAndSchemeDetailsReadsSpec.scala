@@ -180,7 +180,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
 object CustomerAndSchemeDetailsReadsSpec {
 
-  val dataJson = Json.obj(
+  val dataJson: JsObject = Json.obj(
     "schemeDetails" -> Json.obj(
       "schemeName" -> "test scheme name",
       "schemeType" -> Json.obj(
@@ -199,10 +199,8 @@ object CustomerAndSchemeDetailsReadsSpec {
 
   val customerDetails = CustomerAndSchemeDetails("test scheme name", false, "A single trust under which all" +
     " of the assets are held for the benefit of all members of the scheme", Some("other details"),
-    Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", true,
+    Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", false,
     Some("my insurance company"), Some("111"), Some(UkAddress("ADDRESS LINE 1", Some("ADDRESS LINE 2"),
       Some("ADDRESS LINE 3"), Some("ADDRESS LINE 4"), "GB", "ZZ1 1ZZ")))
 
 }
-
-
