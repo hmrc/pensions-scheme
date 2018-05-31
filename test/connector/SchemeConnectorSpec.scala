@@ -16,127 +16,283 @@
 
 package connector
 
+import audit.AuditService
 import audit.testdoubles.StubSuccessfulAuditService
-import base.SpecBase
-import org.joda.time.LocalDate
-import org.mockito.Matchers
-import org.mockito.Matchers.any
-import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfter
-import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.mvc.{AnyContentAsEmpty, Request}
+import base.JsonFileReader
+import com.github.tomakehurst.wiremock.client.WireMock._
+import org.scalatest.{AsyncWordSpec, MustMatchers, OptionValues, RecoverMethods}
+import play.api.http.Status
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule
+import play.api.libs.json.{JsObject, Json}
+import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
-import play.mvc.Http.Status._
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http._
+import utils.WireMockHelper
+import org.joda.time.LocalDate
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockHelper with OptionValues with RecoverMethods{
 
-class SchemeConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
+  import SchemeConnectorSpec._
 
-  private val httpClient = mock[HttpClient]
+  override protected def portConfigKey: String = "microservice.services.des-hod.port"
 
-  val schemeConnector = new SchemeConnectorImpl(httpClient, appConfig, new StubSuccessfulAuditService())
+  override protected def bindings: Seq[GuiceableModule] =
+    Seq(
+      bind[AuditService].toInstance(auditService)
+    )
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private implicit val request: Request[AnyContentAsEmpty.type ] = FakeRequest("", "")
-
-  val failureResponse: JsObject = Json.obj(
-    "code" -> "INVALID_PAYLOAD",
-    "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
-  )
-
-  before(reset(httpClient))
-
-  "registerScheme" must {
-    val url = appConfig.schemeRegistrationUrl.format("A2000001")
-    "return OK when Des/Etmp returns successfully" in {
+  "SchemeConnector after calling registerScheme" must {
+    val psaId = "test"
+    val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
+   "return 200 Success" in {
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
-      val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
+      server.stubFor(
+        post(urlEqualTo(s"/pension-online/scheme-subscription/$psaId"))
+          .withHeader("Content-Type", equalTo("application/json"))
+          .withRequestBody(equalToJson(Json.stringify(validData)))
+          .willReturn(
+            ok(Json.stringify(successResponse))
+              .withHeader("Content-Type", "application/json")
+          )
+      )
 
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
-
-      val result = schemeConnector.registerScheme("A2000001", validData)
-      ScalaFutures.whenReady(result) { res =>
-        res.status mustBe OK
+      val connector = injector.instanceOf[SchemeConnector]
+      connector.registerScheme(psaId, validData).map { response =>
+        response.status mustBe 200
       }
     }
 
-    "throw BadRequestException when bad request returned from Des/Etmp" in {
-      val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(url), Matchers.eq(validData), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+    "throw UpStream4XXResponse for a 403 INVALID_BUSINESS_PARTNER response" in {
+      server.stubFor(
+        post(urlEqualTo(s"/pension-online/scheme-subscription/$psaId"))
+          .willReturn(
+            forbidden
+              .withHeader("Content-Type", "application/json")
+              .withBody(invalidBusinessPartnerResponse)
+          )
+      )
 
-      val result = schemeConnector.registerScheme("A2000001", validData)
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe failureResponse.toString()
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[Upstream4xxResponse] {
+        connector.registerScheme(psaId, validData)
       }
     }
 
+    "throw UpStream4XXResponse for a 409 DUPLICATE_SUBMISSION response" in {
+      server.stubFor(
+        post(urlEqualTo(s"/pension-online/scheme-subscription/$psaId"))
+          .willReturn(
+            aResponse()
+              .withStatus(Status.CONFLICT)
+              .withHeader("Content-Type", "application/json")
+              .withBody(duplicateSubmissionResponse)
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[Upstream4xxResponse] {
+        connector.registerScheme(psaId, validData)
+      }
+    }
+
+    "throw BadRequestException for a 400 BAD request" in {
+      server.stubFor(
+        post(urlEqualTo(s"/pension-online/scheme-subscription/$psaId"))
+          .willReturn(
+            badRequest
+              .withHeader("Content-Type", "application/json")
+              .withBody("Bad Request")
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[BadRequestException] {
+        connector.registerScheme(psaId, validData)
+      }
+    }
+
+    "throw NotFoundException for a 404 Not Found request" in {
+      server.stubFor(
+        post(urlEqualTo(s"/pension-online/scheme-subscription/$psaId"))
+          .willReturn(
+            notFound
+              .withHeader("Content-Type", "application/json")
+              .withBody("Not Found")
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[NotFoundException] {
+        connector.registerScheme(psaId, validData)
+      }
+    }
   }
 
-  "register PSA" must {
-    val schemeAdminRegisterUrl = appConfig.schemeAdminRegistrationUrl
-    "return OK when DES/Etmp returns successfully" in {
-      val inputRequestData = readJsonFromFile("/data/validPsaRequest.json")
+  "SchemeConnector after calling registerPSA" must {
+    val inputRequestData = readJsonFromFile("/data/validPsaRequest.json")
+    "return 200 Success" in {
       val successResponse = Json.obj(
         "processingDate" -> LocalDate.now,
         "formBundle" -> "1121313",
         "psaId" -> "A21999999"
       )
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+      server.stubFor(
+        post(urlEqualTo("/pension-online/subscription"))
+          .withHeader("Content-Type", equalTo("application/json"))
+          .withRequestBody(equalToJson(Json.stringify(inputRequestData)))
+          .willReturn(
+            ok(Json.stringify(successResponse))
+              .withHeader("Content-Type", "application/json")
+          )
+      )
 
-      val result = schemeConnector.registerPSA(inputRequestData)
-      ScalaFutures.whenReady(result) { res =>
-        res.status mustBe OK
+      val connector = injector.instanceOf[SchemeConnector]
+      connector.registerPSA(inputRequestData).map { response =>
+        response.status mustBe 200
       }
     }
 
-    "throw BadRequestException when DES/Etmp throws Bad Request" in {
-      val invalidData = Json.obj("data" -> "invalid")
-      when(httpClient.POST[JsValue, HttpResponse](Matchers.eq(schemeAdminRegisterUrl), Matchers.eq(invalidData), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+    "throw UpStream4XXResponse for a 403 INVALID_BUSINESS_PARTNER response" in {
+      server.stubFor(
+        post(urlEqualTo("/pension-online/subscription"))
+          .willReturn(
+            forbidden
+              .withHeader("Content-Type", "application/json")
+              .withBody(invalidBusinessPartnerResponse)
+          )
+      )
 
-      val result = schemeConnector.registerPSA(invalidData)
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe failureResponse.toString()
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[Upstream4xxResponse] {
+        connector.registerPSA(inputRequestData)
+      }
+    }
+
+    "throw UpStream4XXResponse for a 409 DUPLICATE_SUBMISSION response" in {
+      server.stubFor(
+        post(urlEqualTo("/pension-online/subscription"))
+          .willReturn(
+            aResponse()
+              .withStatus(Status.CONFLICT)
+              .withHeader("Content-Type", "application/json")
+              .withBody(duplicateSubmissionResponse)
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[Upstream4xxResponse] {
+        connector.registerPSA(inputRequestData)
+      }
+    }
+
+    "throw BadRequestException for a 400 BAD request" in {
+      server.stubFor(
+        post(urlEqualTo("/pension-online/subscription"))
+          .willReturn(
+            badRequest
+              .withHeader("Content-Type", "application/json")
+              .withBody("Bad Request")
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[BadRequestException] {
+        connector.registerPSA(inputRequestData)
+      }
+    }
+
+    "throw NotFoundException for a 404 Not Found request" in {
+      server.stubFor(
+        post(urlEqualTo("/pension-online/subscription"))
+          .willReturn(
+            notFound
+              .withHeader("Content-Type", "application/json")
+              .withBody("Not Found")
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      recoverToSucceededIf[NotFoundException] {
+        connector.registerPSA(inputRequestData)
       }
     }
   }
 
-  "list of schemes" must {
+  "SchemeConnector after calling listOfScheme" must {
+    val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+    val psaId = "test"
 
     "return OK with the list of schemes response" in {
-      val listOfSchemesUrl = appConfig.listOfSchemesUrl.format("A2000001")
-      val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
-      when(httpClient.GET[HttpResponse](Matchers.eq(listOfSchemesUrl))(any(), any(), any())).thenReturn(
-        Future.successful(HttpResponse(OK, Some(validResponse))))
-      val result = schemeConnector.listOfSchemes("A2000001")
+      server.stubFor(
+        get(s"/pension-online/subscription/$psaId/list")
+          .willReturn(
+            ok(Json.stringify(validResponse))
+        )
+      )
 
-      ScalaFutures.whenReady(result) { res =>
-        res.status mustBe OK
-        res.body mustEqual Json.prettyPrint(validResponse)
+      val connector = injector.instanceOf[SchemeConnector]
+      connector.listOfSchemes(psaId).map{ response =>
+        response.status mustBe 200
+        response.body mustEqual Json.stringify(validResponse)
       }
     }
 
-    "throw Bad Request when DES/ETMP throws Bad Request" in {
-      when(httpClient.GET[HttpResponse](any())(any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(failureResponse.toString())))
-      val result = schemeConnector.listOfSchemes("A2000001")
+    "throw Bad Request Exception when DES/ETMP throws BadRequestException " in {
+      server.stubFor(
+        get(s"/pension-online/subscription/$psaId/list")
+          .willReturn(
+            notFound()
+          )
+      )
 
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustEqual failureResponse.toString()
+      val connector = injector.instanceOf[SchemeConnector]
+      recoverToSucceededIf[NotFoundException]{
+        connector.listOfSchemes(psaId)
+      }
+    }
+
+    "throw UpStream5XXResponse when DES/ETMP throws Server error " in {
+      server.stubFor(
+        get(s"/pension-online/subscription/$psaId/list")
+          .willReturn(
+            serverError()
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+      recoverToSucceededIf[Upstream5xxResponse]{
+        connector.listOfSchemes(psaId)
       }
     }
   }
 }
 
+object SchemeConnectorSpec extends JsonFileReader {
+    private implicit val hc: HeaderCarrier = HeaderCarrier()
+    private implicit val rh: RequestHeader = FakeRequest("", "")
+    private val invalidBusinessPartnerResponse =
+      Json.stringify(
+        Json.obj(
+          "code" -> "INVALID_BUSINESS_PARTNER",
+          "reason" -> "test-reason"
+        )
+      )
 
+    private val duplicateSubmissionResponse =
+      Json.stringify(
+        Json.obj(
+          "code" -> "DUPLICATE_SUBMISSION",
+          "reason" -> "test-reason"
+        )
+      )
+  val auditService = new StubSuccessfulAuditService()
+}
