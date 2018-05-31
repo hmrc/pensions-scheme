@@ -18,8 +18,8 @@ package utils
 
 import play.api.libs.json.JsResultException
 import play.api.mvc.Result
-import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, Upstream5xxResponse}
-
+import uk.gov.hmrc.http._
+import play.api.http.Status._
 import scala.concurrent.Future
 
 trait ErrorHandler {
@@ -32,10 +32,22 @@ trait ErrorHandler {
     case e: NotFoundException =>
       Future.failed(new NotFoundException(e.message))
     case e: Upstream4xxResponse =>
-      Future.failed(new Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
+      Future.failed(throwAppropriateException(e))
     case e: Upstream5xxResponse =>
       Future.failed(new Upstream5xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
     case e: Exception =>
       Future.failed(new Exception(e.getMessage))
   }
+
+  def throwAppropriateException(e: Upstream4xxResponse): Exception = {
+    e.upstreamResponseCode match {
+      case (FORBIDDEN) if (e.message.contains("INVALID_BUSINESS_PARTNER")) =>
+        new ForbiddenException(e.message)
+      case CONFLICT if (e.message.contains("DUPLICATE_SUBMISSION")) =>
+        new ConflictException(e.message)
+      case _ =>
+        new Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs)
+    }
+  }
 }
+

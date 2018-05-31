@@ -193,7 +193,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       }
     }
 
-    "throw Upstream4xxResponse when DES/ETMP returns Upstream4xxResponse" in {
+    "throw ForbiddenException when DES/ETMP returns Upstream4xxResponse with status FORBIDDEN" in {
       val invalidRequest = readJsonFromFile("/data/validPsaRequest.json")
       val invalidBusinessPartner: JsObject = Json.obj(
         "code" -> "INVALID_BUSINESS_PARTNER",
@@ -211,8 +211,52 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.registerPSA(fakeRequest(invalidRequest))
 
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream4xxResponse]
+        e mustBe a[ForbiddenException]
         e.getMessage mustBe invalidBusinessPartner.toString()
+        verify(mockSchemeService, times(1)).registerPSA(Matchers.any())(any(), any(), any())
+      }
+    }
+
+    "throw ConflictException when DES/ETMP returns Upstream4xxResponse with status CONFLICT" in {
+      val invalidRequest = readJsonFromFile("/data/validPsaRequest.json")
+      val duplicateSubmission: JsObject = Json.obj(
+        "code" -> "DUPLICATE_SUBMISSION",
+        "reason" -> "Duplicate submission acknowledgement reference from remote endpoint returned."
+      )
+
+      when(
+        mockSchemeService.registerPSA(
+          Matchers.eq(invalidRequest)
+        )(any(), any(), any())
+      ).thenReturn(
+        Future.failed(Upstream4xxResponse(duplicateSubmission.toString(), CONFLICT, CONFLICT))
+      )
+
+      val result = schemeController.registerPSA(fakeRequest(invalidRequest))
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[ConflictException]
+        e.getMessage mustBe duplicateSubmission.toString()
+        verify(mockSchemeService, times(1)).registerPSA(Matchers.any())(any(), any(), any())
+      }
+    }
+
+    "throw Upstream4XXResponse when DES/ETMP returns Upstream4xxResponse with status CONFLICT" in {
+      val invalidRequest = readJsonFromFile("/data/validPsaRequest.json")
+
+      when(
+        mockSchemeService.registerPSA(
+          Matchers.eq(invalidRequest)
+        )(any(), any(), any())
+      ).thenReturn(
+        Future.failed(Upstream4xxResponse("Precondition failed", PRECONDITION_FAILED, PRECONDITION_FAILED))
+      )
+
+      val result = schemeController.registerPSA(fakeRequest(invalidRequest))
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream4xxResponse]
+        e.getMessage mustBe "Precondition failed"
         verify(mockSchemeService, times(1)).registerPSA(Matchers.any())(any(), any(), any())
       }
     }
