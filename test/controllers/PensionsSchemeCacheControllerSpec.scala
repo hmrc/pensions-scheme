@@ -19,12 +19,14 @@ package controllers
 import akka.stream.Materializer
 import akka.util.ByteString
 import org.apache.commons.lang3.RandomUtils
+import org.joda.time.DateTime
 import org.mockito.Matchers.{eq => eqTo, _}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.Configuration
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.PensionsSchemeCacheRepository
@@ -152,6 +154,58 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
       }
 
       val result = controller(repo, authConnector).remove("foo")(FakeRequest())
+
+      an[UnauthorizedException] must be thrownBy {
+        status(result)
+      }
+    }
+  }
+
+  ".lastUpdated" must {
+
+    "return 200 and the relevant data when it exists" in {
+      val date = DateTime.now
+      when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.successful {
+        Some(date)
+      }
+      when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+
+      val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
+
+      status(result) mustEqual OK
+       contentAsJson(result) mustEqual Json.toJson(date.getMillis)
+    }
+
+    "return 404 when the data doesn't exist" in {
+      when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.successful {
+        None
+      }
+      when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+
+      val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
+
+      status(result) mustEqual NOT_FOUND
+    }
+
+    "throw an exception when the repository call fails" in {
+      when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.failed {
+        new Exception()
+      }
+      when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+
+      val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
+
+      an[Exception] must be thrownBy {
+        status(result)
+      }
+    }
+
+    "throw an exception when the call is not authorised" in {
+      when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+        new UnauthorizedException("")
+      }
+
+      val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
       an[UnauthorizedException] must be thrownBy {
         status(result)
