@@ -18,7 +18,7 @@ package bindings
 
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.inject.guice.GuiceApplicationBuilder
-import service.{SchemeService, SchemeServiceV1}
+import service.{SchemeService, SchemeServiceV1, SchemeServiceV2}
 
 class FeatureBindingsSpec extends FlatSpec with Matchers {
 
@@ -32,6 +32,19 @@ class FeatureBindingsSpec extends FlatSpec with Matchers {
     val schemeService = app.injector.instanceOf[SchemeService]
 
     schemeService shouldBe a[SchemeServiceV1]
+
+  }
+
+  it should "bind to SchemeServiceV2 when feature.registerSchemeJsonVersion is 'v2'" in {
+
+    val app =
+      new GuiceApplicationBuilder()
+        .configure("feature.registerSchemeJsonVersion" -> "v2")
+        .build()
+
+    val schemeService = app.injector.instanceOf[SchemeService]
+
+    schemeService shouldBe a[SchemeServiceV2]
 
   }
 

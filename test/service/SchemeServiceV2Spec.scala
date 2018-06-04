@@ -16,13 +16,14 @@
 
 package service
 
-import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
-import models._
+import audit.testdoubles.StubSuccessfulAuditService
+import models.Reads.establishersv2.{CompanyEstablisherBuilder, IndividualBuilder}
 import models.enumeration.SchemeType
+import models.{EstablisherDetailsV2 => EstablisherDetails, PensionsSchemeV2 => PensionsScheme, _}
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import play.api.http.Status
-import play.api.libs.json._
+import play.api.libs.json.{JsSuccess, JsValue, Json}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
@@ -30,68 +31,67 @@ import utils.Lens
 
 import scala.concurrent.Future
 
-class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
+class SchemeServiceV2Spec extends AsyncFlatSpec with Matchers {
 
-  import SchemeServiceV1Spec._
+  import SchemeServiceV2Spec._
   import FakeSchemeConnector._
 
   "haveInvalidBank" should "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
 
-    val json = bankDetailsJson(invalidAccountNumber)
+    val account = bankAccount(invalidAccountNumber)
 
-    testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId).map {
-      case (scheme, hasBankDetails) =>
+    testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
+      scheme =>
         scheme.customerAndSchemeDetails.haveInvalidBank shouldBe true
-        hasBankDetails shouldBe true
     }
 
   }
 
   it should "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
 
-    val json = bankDetailsJson(notInvalidAccountNumber)
+    val account = bankAccount(notInvalidAccountNumber)
 
-    testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId).map {
-      case (scheme, hasBankDetails) =>
+    testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
+      scheme =>
         scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
-        hasBankDetails shouldBe true
     }
 
   }
 
   it should "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
 
-    val json = Json.obj()
-
-    testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId).map {
-      case (scheme, hasBankDetails) =>
+    testFixture().schemeService.haveInvalidBank(None, pensionsScheme, psaId).map {
+      scheme =>
         scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
-        hasBankDetails shouldBe false
     }
 
   }
 
-  it should "return a BadRequestException if the bank details JSON cannot be parsed" in {
+  "readBankAccount" should "return a bank account where it exists in json" in {
 
-    val json = Json.obj(
-      "uKBankDetails" -> Json.obj()
-    )
+    val json = bankDetailsJson(notInvalidAccountNumber)
 
-    recoverToSucceededIf[BadRequestException] {
-      testFixture().schemeService.haveInvalidBank(json, pensionsScheme, psaId)
-    }
+    val actual = testFixture().schemeService.readBankAccount(json)
+    actual shouldBe Right(Some(bankAccount(notInvalidAccountNumber)))
 
   }
 
-  "jsonToPensionsSchemeModel" should "return a pensions scheme object given valid JSON" in {
+  it should "return None where no account exists in json" in {
 
-    testFixture().schemeService.jsonToPensionsSchemeModel(pensionsSchemeJson) shouldBe a[Right[_, PensionsScheme]]
+    val actual = testFixture().schemeService.readBankAccount(Json.obj())
+    actual shouldBe Right(None)
+
+  }
+
+  "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
+
+    testFixture().schemeService.transformJsonToModel(pensionsSchemeJson) shouldBe a[Right[_, PensionsScheme]]
 
   }
 
   it should "return a BadRequestException if the JSON is invalid" in {
 
-    testFixture().schemeService.jsonToPensionsSchemeModel(Json.obj()) shouldBe a[Left[BadRequestException, _]]
+    testFixture().schemeService.transformJsonToModel(Json.obj()) shouldBe a[Left[BadRequestException, _]]
 
   }
 
@@ -131,18 +131,18 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
     fixture.schemeConnector.setRegisterSchemeResponse(Future.failed(new BadRequestException("bad request")))
 
     fixture.schemeService.registerScheme(psaId, pensionsSchemeJson)
-        .map(_ => fail("Expected failure"))
-        .recover {
-          case _: BadRequestException =>
-            val expected = schemeSubscription.copy(
-              hasIndividualEstablisher = true,
-              status = Status.BAD_REQUEST,
-              request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
-              response = None
-            )
+      .map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          val expected = schemeSubscription.copy(
+            hasIndividualEstablisher = true,
+            status = Status.BAD_REQUEST,
+            request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
+            response = None
+          )
 
-            fixture.auditService.lastEvent shouldBe Some(expected)
-        }
+          fixture.auditService.lastEvent shouldBe Some(expected)
+      }
 
   }
 
@@ -225,7 +225,12 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
     val scheme =
       PensionsSchemeSchemeStructure
         .set(pensionsScheme, SchemeType.single.value)
-        .copy(establisherDetails = List(establisherDetails("Individual")))
+        .copy(establisherDetails =
+          EstablisherDetails(
+            companyOrOrganization = Nil,
+            individual = Seq(IndividualBuilder().build())
+          )
+        )
 
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
@@ -243,30 +248,17 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
     val scheme =
       PensionsSchemeSchemeStructure
         .set(pensionsScheme, SchemeType.single.value)
-        .copy(establisherDetails = List(establisherDetails("Company/Org")))
+        .copy(establisherDetails =
+          EstablisherDetails(
+            companyOrOrganization = Seq(CompanyEstablisherBuilder().build()),
+            individual = Nil
+          )
+        )
 
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
       hasCompanyEstablisher = true,
-      request = Json.toJson(scheme)
-    )
-
-    actual shouldBe expected
-
-  }
-
-  it should "translate a scheme with partnership establishers" in {
-
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, SchemeType.single.value)
-        .copy(establisherDetails = List(establisherDetails("Partnership")))
-
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
-
-    val expected = schemeSubscription.copy(
-      hasPartnershipEstablisher = true,
       request = Json.toJson(scheme)
     )
 
@@ -297,23 +289,73 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
 
 }
 
-object SchemeServiceV1Spec {
+object SchemeServiceV2Spec {
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceV1 = new SchemeServiceV1(schemeConnector, barsConnector, auditService)
+    val schemeService: SchemeServiceV2 = new SchemeServiceV2(schemeConnector, barsConnector, auditService)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("", "")
-
   val psaId: String = "test-psa-id"
   val invalidAccountNumber: String = "111"
   val notInvalidAccountNumber: String = "112"
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("", "")
+
+  def bankAccount(accountNumber: String): BankAccount =
+    BankAccount("001100", accountNumber)
+
+  def bankDetailsJson(accountNumber: String ): JsValue =
+    Json.obj(
+      "uKBankDetails" -> Json.obj(
+        "bankName" -> "my bank name",
+        "accountName" -> "my account name",
+        "sortCode" -> Json.obj(
+          "first" -> "00",
+          "second" -> "11",
+          "third" -> "00"
+        ),
+        "accountNumber" -> accountNumber,
+        "date" -> "2010-02-02"
+      )
+    )
+
+  val pensionsScheme = PensionsScheme(
+    CustomerAndSchemeDetails(
+      schemeName = "test-pensions-scheme",
+      isSchemeMasterTrust = false,
+      schemeStructure = SchemeType.single.value,
+      currentSchemeMembers = "test-current-scheme-members",
+      futureSchemeMembers = "test-future-scheme-members",
+      isReguledSchemeInvestment = false,
+      isOccupationalPensionScheme = false,
+      areBenefitsSecuredContractInsuranceCompany = false,
+      doesSchemeProvideBenefits = "test-does-scheme-provide-benefits",
+      schemeEstablishedCountry = "test-scheme-established-country",
+      haveInvalidBank = false
+    ),
+    PensionSchemeDeclaration(
+      box1 = false,
+      box2 = false,
+      box6 = false,
+      box7 = false,
+      box8 = false,
+      box9 = false
+    ),
+    EstablisherDetails(
+      Nil,
+      Nil
+    ),
+    TrusteeDetails(
+      Nil,
+      Nil
+    )
+  )
 
   val pensionsSchemeJson: JsValue = Json.obj(
     "schemeDetails" -> Json.obj(
@@ -353,67 +395,9 @@ object SchemeServiceV1Spec {
     )
   )
 
-  def bankDetailsJson(accountNumber: String ): JsValue =
-    Json.obj(
-      "uKBankDetails" -> Json.obj(
-        "bankName" -> "my bank name",
-        "accountName" -> "my account name",
-        "sortCode" -> Json.obj(
-        "first" -> "00",
-        "second" -> "11",
-        "third" -> "00"
-        ),
-        "accountNumber" -> accountNumber,
-        "date" -> "2010-02-02"
-      )
-    )
+  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceV2): JsValue = {
 
-  val pensionsScheme = PensionsScheme(
-    CustomerAndSchemeDetails(
-      schemeName = "test-pensions-scheme",
-      isSchemeMasterTrust = false,
-      schemeStructure = SchemeType.single.value,
-      currentSchemeMembers = "test-current-scheme-members",
-      futureSchemeMembers = "test-future-scheme-members",
-      isReguledSchemeInvestment = false,
-      isOccupationalPensionScheme = false,
-      areBenefitsSecuredContractInsuranceCompany = false,
-      doesSchemeProvideBenefits = "test-does-scheme-provide-benefits",
-      schemeEstablishedCountry = "test-scheme-established-country",
-      haveInvalidBank = false
-    ),
-    PensionSchemeDeclaration(
-      box1 = false,
-      box2 = false,
-      box6 = false,
-      box7 = false,
-      box8 = false,
-      box9 = false
-    ),
-    List.empty[EstablisherDetails]
-  )
-
-  def establisherDetails(establisherType: String): EstablisherDetails =
-    EstablisherDetails(
-      `type` = establisherType,
-      correspondenceAddressDetails = CorrespondenceAddressDetails(
-        addressDetails = UkAddress(
-          addressLine1 = "test-address-line-1",
-          countryCode = "test-country-code",
-          postalCode = "test-postal-code"
-        )
-      ),
-      correspondenceContactDetails = CorrespondenceContactDetails(
-        contactDetails = ContactDetails(
-          telephone = "test-telephone",
-          email = "test-email"
-        )
-      )
-    )
-
-  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceV1): JsValue = {
-
-    service.jsonToPensionsSchemeModel(pensionsSchemeJson).fold(
+    service.transformJsonToModel(pensionsSchemeJson).fold(
       ex => throw ex,
       scheme => Json.toJson(scheme)
     )
@@ -452,10 +436,4 @@ object SchemeServiceV1Spec {
 
   }
 
-}
-
-case class SchemeRegistrationResponse(processingDate: String, schemeReferenceNumber: String)
-
-object SchemeRegistrationResponse {
-  implicit val formatsSchemeRegistrationResponse: Format[SchemeRegistrationResponse] = Json.format[SchemeRegistrationResponse]
 }

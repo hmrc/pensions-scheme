@@ -113,7 +113,7 @@ object CustomerAndSchemeDetails {
         areBenefitsSecuredContractInsuranceCompany = securedBenefits,
         doesSchemeProvideBenefits = Benefits.valueWithName(benefits),
         schemeEstablishedCountry = country,
-        haveInvalidBank = true,
+        haveInvalidBank = false,
         insuranceCompanyName = benefitsInsurer.flatMap(_._1),
         policyNumber = benefitsInsurer.flatMap(_._2),
         insuranceCompanyAddress = insurerAddress)
@@ -229,6 +229,82 @@ object PensionsScheme {
     override def get: PensionsScheme => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
 
     override def set: (PensionsScheme, Boolean) => PensionsScheme =
+      (pensionsScheme, haveInvalidBank) =>
+        pensionsScheme.copy(
+          customerAndSchemeDetails =
+            pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = haveInvalidBank)
+        )
+  }
+
+}
+
+// Definitions for API V2, which allows multiple establishers and allows links between comapnies and directors
+
+case class Individual(
+  personalDetails: PersonalDetails,
+  referenceOrNino: Option[String] = None,
+  noNinoReason: Option[String] = None,
+  utr: Option[String] = None,
+  noUtrReason: Option[String] = None,
+  correspondenceAddressDetails: CorrespondenceAddressDetails,
+  correspondenceContactDetails: CorrespondenceContactDetails,
+  previousAddressDetails: Option[PreviousAddressDetails] = None
+)
+
+case class CompanyEstablisher (
+  organizationName: String,
+  utr: Option[String] = None,
+  noUtrReason: Option[String] = None,
+  crnNumber: Option[String] = None,
+  noCrnReason: Option[String] = None,
+  vatRegistrationNumber: Option[String] = None,
+  payeReference: Option[String] = None,
+  haveMoreThanTenDirectorOrPartner: Boolean,
+  correspondenceAddressDetails: CorrespondenceAddressDetails,
+  correspondenceContactDetails: CorrespondenceContactDetails,
+  previousAddressDetails: Option[PreviousAddressDetails] = None,
+  directorDetails: Seq[Individual]
+)
+
+case class CompanyTrustee(
+  organizationName: String,
+  utr: Option[String] = None,
+  noUtrReason: Option[String] = None,
+  crnNumber: Option[String] = None,
+  noCrnReason: Option[String] = None,
+  vatRegistrationNumber: Option[String] = None,
+  payeReference: Option[String] = None,
+  correspondenceAddressDetails: CorrespondenceAddressDetails,
+  correspondenceContactDetails: CorrespondenceContactDetails,
+  previousAddressDetails: Option[PreviousAddressDetails] = None
+)
+
+case class TrusteeDetails(
+  individualTrusteeDetail: Seq[Individual],
+  companyTrusteeDetail: Seq[CompanyTrustee]
+)
+
+case class EstablisherDetailsV2(
+  individual: Seq[Individual],
+  companyOrOrganization: Seq[CompanyEstablisher]
+)
+
+case class PensionsSchemeV2(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
+                          establisherDetails: EstablisherDetailsV2, trusteeDetails: TrusteeDetails)
+
+object PensionsSchemeV2 {
+
+  implicit val formatsIndividual: Format[Individual] = Json.format[Individual]
+  implicit val formatsCompanyEstablisher: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
+  implicit val formatsCompanyTrustee: Format[CompanyTrustee] = Json.format[CompanyTrustee]
+  implicit val formatsTrusteeDetails: Format[TrusteeDetails] = Json.format[TrusteeDetails]
+  implicit val formatsEstablisherDetailsV2: Format[EstablisherDetailsV2] = Json.format[EstablisherDetailsV2]
+  implicit val formatsPensionsSchemeV2: Format[PensionsSchemeV2] = Json.format[PensionsSchemeV2]
+
+  val pensionSchemeHaveInvalidBank: Lens[PensionsSchemeV2, Boolean] = new Lens[PensionsSchemeV2, Boolean] {
+    override def get: PensionsSchemeV2 => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
+
+    override def set: (PensionsSchemeV2, Boolean) => PensionsSchemeV2 =
       (pensionsScheme, haveInvalidBank) =>
         pensionsScheme.copy(
           customerAndSchemeDetails =
