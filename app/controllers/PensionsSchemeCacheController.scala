@@ -16,6 +16,7 @@
 
 package controllers
 
+import play.api.libs.json.Json
 import play.api.{Configuration, Logger}
 import play.api.mvc.{Action, AnyContent, RawBuffer}
 import repositories.PensionsSchemeCacheRepository
@@ -51,6 +52,18 @@ abstract class PensionsSchemeCacheController(
         repository.get(id).map { response =>
           Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
           response.map{Ok(_)}
+            .getOrElse(NotFound)
+        }
+      }
+  }
+
+  def lastUpdated(id: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised() {
+        Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
+        repository.getLastUpdated(id).map { response =>
+          Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
+          response.map{date => Ok(Json.toJson(date))}
             .getOrElse(NotFound)
         }
       }

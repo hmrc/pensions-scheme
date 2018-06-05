@@ -104,6 +104,15 @@ abstract class PensionsSchemeCacheRepository(
     }
   }
 
+  def getLastUpdated(id: String)(implicit ec: ExecutionContext): Future[Option[DateTime]] = {
+    collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
+      _.map {
+        dataEntry =>
+          dataEntry.lastUpdated
+      }
+    }
+  }
+
   def remove(id: String)(implicit ec: ExecutionContext): Future[Boolean] = {
     val selector = BSONDocument("id" -> id)
     collection.remove(selector).map(_.ok)
