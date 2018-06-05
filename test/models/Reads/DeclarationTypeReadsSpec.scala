@@ -70,16 +70,16 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
         }
 
         "set as 'adviser' containing adviser details" in {
-          val advisorDetails = "advisorDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com")
+          val adviserDetails = "adviserDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com")
 
-          val advisorAddress = "advisorAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+          val adviserAddress = "adviserAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
             "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
           val workingKnowledge = "declarationWorkingKnowledge" -> JsString("adviser")
-          val result = (declaration + workingKnowledge + advisorDetails + advisorAddress).as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
+          val result = (declaration + workingKnowledge + adviserDetails + adviserAddress).as[PensionSchemeAdministratorDeclarationType](PensionSchemeAdministratorDeclarationType.apiReads)
 
           result.box6.value mustBe true
-          result.pensionAdvisorDetail.value mustBe pensionAdvisorSample
+          result.pensionAdvisorDetail.value mustBe pensionAdviserSample
         }
       }
     }

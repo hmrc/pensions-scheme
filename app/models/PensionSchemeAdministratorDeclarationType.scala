@@ -34,7 +34,7 @@ object PensionSchemeAdministratorDeclarationType {
       (JsPath \ "declarationFitAndProper").read[Boolean] and
       (JsPath \ "declarationWorkingKnowledge").read[String] and
       json.Reads.optionWithNull(PensionAdvisorDetail.apiReads)
-    )((declarationSectionOneToFour,declarationSectionSeven, workingKnowledge, advisorDetail)=> {
+    )((declarationSectionOneToFour,declarationSectionSeven, workingKnowledge, adviserDetail)=> {
     val declarationOutput = PensionSchemeAdministratorDeclarationType(declarationSectionOneToFour,declarationSectionOneToFour,
       declarationSectionOneToFour,declarationSectionOneToFour,None,None,declarationSectionSeven,None)
 
@@ -42,7 +42,7 @@ object PensionSchemeAdministratorDeclarationType {
       declarationOutput.copy(box5 = Some(true))
     }
     else{
-      declarationOutput.copy(box6 = Some(true),pensionAdvisorDetail = advisorDetail.flatten)
+      declarationOutput.copy(box6 = Some(true),pensionAdvisorDetail = adviserDetail.flatten)
     }
   })
 }

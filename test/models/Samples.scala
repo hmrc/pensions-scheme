@@ -58,5 +58,5 @@ trait Samples {
     previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false))
   val companySample = OrganisationDetailType(Some("Company Test"),vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
   val individualSample = IndividualDetailType(firstName = "John",middleName = Some("Does Does"), lastName = "Doe",dateOfBirth = LocalDate.parse("2019-01-31"))
-  val pensionAdvisorSample = PensionAdvisorDetail("John",ukAddressSample,contactDetailsSample)
+  val pensionAdviserSample = PensionAdvisorDetail("John",ukAddressSample,contactDetailsSample)
 }
