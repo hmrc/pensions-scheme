@@ -22,27 +22,27 @@ import play.api.libs.json.{Json, _}
 
 class PensionAdvisorDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
 
-  "A JSON Payload containing a pension advisor detail" should {
+  "A JSON Payload containing a pension adviser detail" should {
     "Map correctly to a valid representation of a PensionAdvisorDetail" when {
-      val input = Json.obj("advisorDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com"), "advisorAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+      val input = Json.obj("adviserDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com"), "adviserAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
         "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB")))
 
       "We have a name" in {
         val result = input.as[Option[PensionAdvisorDetail]](PensionAdvisorDetail.apiReads)
 
-        result.value.name mustBe pensionAdvisorSample.name
+        result.value.name mustBe pensionAdviserSample.name
       }
 
       "We have an address" in {
         val result = input.as[Option[PensionAdvisorDetail]](PensionAdvisorDetail.apiReads)
 
-        result.value.addressDetail mustBe pensionAdvisorSample.addressDetail
+        result.value.addressDetail mustBe pensionAdviserSample.addressDetail
       }
 
-      "We have advisor contact details" in {
+      "We have adviser contact details" in {
         val result = input.as[Option[PensionAdvisorDetail]](PensionAdvisorDetail.apiReads)
 
-        result.value.contactDetail mustBe pensionAdvisorSample.contactDetail
+        result.value.contactDetail mustBe pensionAdviserSample.contactDetail
       }
     }
   }

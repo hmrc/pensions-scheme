@@ -94,15 +94,15 @@ class PensionSchemeDeclarationReads extends WordSpec with MustMatchers with Opti
 
        "It is false and containing 'adviser' details box11 is true, box10 is None and details populated" in {
 
-         val advisorDetails = "adviserDetails" -> Json.obj("adviserName" -> JsString("John"),"phoneNumber" -> "07592113", "emailAddress" -> "test@test.com")
-         val advisorAddress = "adviserAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
+         val adviserDetails = "adviserDetails" -> Json.obj("adviserName" -> JsString("John"),"phoneNumber" -> "07592113", "emailAddress" -> "test@test.com")
+         val adviserAddress = "adviserAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
            "postcode" -> JsString("NE1"), "country" -> JsString("GB"))
 
          val name="John"
          val address=UkAddress("line1",Some("line2"),Some("line3"),Some("line4"),"GB","NE1")
          val contact=ContactDetails("07592113",None,None,"test@test.com")
          val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(false))
-         val result = (declaration + advisorDetails + advisorAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+         val result = (declaration + adviserDetails + adviserAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
 
          result.box10 mustBe None
          result.box11.value mustBe true

@@ -25,9 +25,9 @@ object PensionAdvisorDetail {
   implicit val formats = Json.format[PensionAdvisorDetail]
 
   val apiReads : Reads[Option[PensionAdvisorDetail]] = (
-    (JsPath \ "advisorDetails").readNullable((__ \ "name").readNullable[String]) and
-      (JsPath \ "advisorAddress").readNullable[Address] and
-      (JsPath \ "advisorDetails").readNullable(ContactDetails.apiReads)
+    (JsPath \ "adviserDetails").readNullable((__ \ "name").readNullable[String]) and
+      (JsPath \ "adviserAddress").readNullable[Address] and
+      (JsPath \ "adviserDetails").readNullable(ContactDetails.apiReads)
     )((name,address,contactDetails)=>  {
     (name,address,contactDetails) match {
       case (Some(name),Some(address),Some(contactDetails)) => Some(PensionAdvisorDetail(name.get,address,contactDetails))
