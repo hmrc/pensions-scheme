@@ -17,9 +17,6 @@
 import sbt._
 import play.sbt.PlayImport._
 import play.core.PlayVersion
-import uk.gov.hmrc.SbtAutoBuildPlugin
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
-import uk.gov.hmrc.versioning.SbtGitVersioning
 
 object MicroServiceBuild extends Build with MicroService {
 
@@ -30,11 +27,12 @@ object MicroServiceBuild extends Build with MicroService {
   private val mockitoAllVersion = "1.10.19"
   private val wireMockVersion = "2.15.0"
 
-
   val compile = Seq(
     "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.4.0"
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.4.0",
+    "com.networknt" % "json-schema-validator" % "0.1.19",
+    "com.josephpconley" %% "play-jsonpath" % "2.5.0"
   )
 
   def test(scope: String = "test,it") = Seq(
