@@ -26,8 +26,10 @@ import play.api.libs.json.{JsValue, Writes}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import utils.InvalidPayloadHandler
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Failure
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
@@ -50,7 +52,8 @@ trait SchemeConnector {
 class SchemeConnectorImpl @Inject()(
                                      http: HttpClient,
                                      config: AppConfig,
-                                     auditService: AuditService
+                                     auditService: AuditService,
+                                     invalidPayloadHandler: InvalidPayloadHandler
                                    ) extends SchemeConnector {
 
   def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
@@ -76,6 +79,10 @@ class SchemeConnectorImpl @Inject()(
     http.POST(schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
 
+      .andThen{
+        case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
+          invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
+      }
   }
 
   override def registerPSA(registerData: JsValue)(implicit
@@ -89,6 +96,10 @@ class SchemeConnectorImpl @Inject()(
     http.POST[JsValue, HttpResponse](schemeAdminRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
 
+      .andThen{
+        case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
+          invalidPayloadHandler.logFailures("/resources/schemas/psaSubscription.json", registerData)
+      }
   }
 
   override def listOfSchemes(psaId: String)(implicit

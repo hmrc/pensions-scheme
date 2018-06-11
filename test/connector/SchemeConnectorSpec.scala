@@ -20,7 +20,10 @@ import audit.AuditService
 import audit.testdoubles.StubSuccessfulAuditService
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
+import org.joda.time.LocalDate
 import org.scalatest.{AsyncWordSpec, MustMatchers, OptionValues, RecoverMethods}
+import org.slf4j.event.Level
+import play.api.LoggerLike
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
@@ -28,10 +31,9 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http._
-import utils.WireMockHelper
-import org.joda.time.LocalDate
+import utils.{StubLogger, WireMockHelper}
 
-class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockHelper with OptionValues with RecoverMethods{
+class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockHelper with OptionValues with RecoverMethods {
 
   import SchemeConnectorSpec._
 
@@ -39,13 +41,15 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
 
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
-      bind[AuditService].toInstance(auditService)
+      bind[AuditService].toInstance(auditService),
+      bind[LoggerLike].toInstance(logger)
     )
 
   "SchemeConnector after calling registerScheme" must {
     val psaId = "test"
     val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-   "return 200 Success" in {
+
+    "return 200 Success" in {
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
       server.stubFor(
         post(urlEqualTo(s"/pension-online/scheme-subscription/$psaId"))
@@ -130,6 +134,29 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
       recoverToSucceededIf[NotFoundException] {
         connector.registerScheme(psaId, validData)
       }
+    }
+
+    "log details of an INVALID_PAYLOAD for a 400 BAD request" in {
+      server.stubFor(
+        post(urlEqualTo(s"/pension-online/scheme-subscription/$psaId"))
+          .willReturn(
+            badRequest
+              .withHeader("Content-Type", "application/json")
+              .withBody("INVALID_PAYLOAD")
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      logger.reset()
+
+      connector.registerScheme(psaId, validData).map(_ => fail("Expected failure"))
+        .recover {
+          case _: BadRequestException =>
+            logger.getLogEntries.size mustBe 1
+            logger.getLogEntries.head.level mustBe Level.WARN
+          case _ => fail("Expected BadRequestException")
+        }
     }
   }
 
@@ -225,6 +252,29 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
         connector.registerPSA(inputRequestData)
       }
     }
+
+    "log details of an INVALID_PAYLOAD for a 400 BAD request" in {
+      server.stubFor(
+        post(urlEqualTo("/pension-online/subscription"))
+          .willReturn(
+            badRequest
+              .withHeader("Content-Type", "application/json")
+              .withBody("INVALID_PAYLOAD")
+          )
+      )
+
+      val connector = injector.instanceOf[SchemeConnector]
+
+      logger.reset()
+
+      connector.registerPSA(inputRequestData).map(_ => fail("Expected failure"))
+        .recover {
+          case _: BadRequestException =>
+            logger.getLogEntries.size mustBe 1
+            logger.getLogEntries.head.level mustBe Level.WARN
+          case _ => fail("Expected BadRequestException")
+        }
+    }
   }
 
   "SchemeConnector after calling listOfScheme" must {
@@ -236,11 +286,11 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
         get(s"/pension-online/subscription/$psaId/list")
           .willReturn(
             ok(Json.stringify(validResponse))
-        )
+          )
       )
 
       val connector = injector.instanceOf[SchemeConnector]
-      connector.listOfSchemes(psaId).map{ response =>
+      connector.listOfSchemes(psaId).map { response =>
         response.status mustBe 200
         response.body mustEqual Json.stringify(validResponse)
       }
@@ -255,7 +305,7 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
       )
 
       val connector = injector.instanceOf[SchemeConnector]
-      recoverToSucceededIf[NotFoundException]{
+      recoverToSucceededIf[NotFoundException] {
         connector.listOfSchemes(psaId)
       }
     }
@@ -269,7 +319,7 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
       )
 
       val connector = injector.instanceOf[SchemeConnector]
-      recoverToSucceededIf[Upstream5xxResponse]{
+      recoverToSucceededIf[Upstream5xxResponse] {
         connector.listOfSchemes(psaId)
       }
     }
@@ -277,22 +327,23 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
 }
 
 object SchemeConnectorSpec extends JsonFileReader {
-    private implicit val hc: HeaderCarrier = HeaderCarrier()
-    private implicit val rh: RequestHeader = FakeRequest("", "")
-    private val invalidBusinessPartnerResponse =
-      Json.stringify(
-        Json.obj(
-          "code" -> "INVALID_BUSINESS_PARTNER",
-          "reason" -> "test-reason"
-        )
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val rh: RequestHeader = FakeRequest("", "")
+  private val invalidBusinessPartnerResponse =
+    Json.stringify(
+      Json.obj(
+        "code" -> "INVALID_BUSINESS_PARTNER",
+        "reason" -> "test-reason"
       )
+    )
 
-    private val duplicateSubmissionResponse =
-      Json.stringify(
-        Json.obj(
-          "code" -> "DUPLICATE_SUBMISSION",
-          "reason" -> "test-reason"
-        )
+  private val duplicateSubmissionResponse =
+    Json.stringify(
+      Json.obj(
+        "code" -> "DUPLICATE_SUBMISSION",
+        "reason" -> "test-reason"
       )
+    )
   val auditService = new StubSuccessfulAuditService()
+  val logger = new StubLogger()
 }

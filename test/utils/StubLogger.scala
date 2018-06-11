@@ -21,13 +21,15 @@ import org.slf4j.{Logger, Marker}
 import play.api.LoggerLike
 
 //noinspection NotImplementedCode
+//scalastyle:off number.of.methods
 class StubLogger(name: String = "Application") extends LoggerLike {
-
   case class LogEntry(level: Level, msg: String)
 
   private var logEntries: Seq[LogEntry] = Seq.empty
 
   def getLogEntries: Seq[LogEntry] = logEntries
+
+  def reset(): Unit = logEntries = Seq.empty
 
   override val logger: Logger = new Logger {
     override def getName: String = name
