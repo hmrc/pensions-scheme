@@ -18,6 +18,7 @@ package service
 
 import audit.{AuditService, SchemeSubscription, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
+import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
 import models.PensionsScheme._
 import models.ReadsEstablisherDetails.readsEstablisherDetails
@@ -32,8 +33,9 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, Http
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector, auditService: AuditService)
-  extends SchemeServiceImpl(schemeConnector, auditService) {
+class SchemeServiceV1 @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector,
+                                auditService: AuditService, appConfig: AppConfig)
+  extends SchemeServiceImpl(schemeConnector, auditService, appConfig) {
 
   override def registerScheme(psaId: String, json: JsValue)
       (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {

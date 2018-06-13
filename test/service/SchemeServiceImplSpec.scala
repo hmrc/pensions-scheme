@@ -18,6 +18,7 @@ package service
 
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{PSASubscription, SchemeList}
+import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
 import models._
 import org.joda.time.LocalDate
@@ -141,13 +142,13 @@ class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers {
 
 }
 
-object SchemeServiceImplSpec {
+object SchemeServiceImplSpec extends SpecBase {
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(schemeConnector, auditService) {
+    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(schemeConnector, auditService, appConfig) {
       override def registerScheme(psaId: String, json: JsValue)
                                  (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
         throw new NotImplementedError()
@@ -173,7 +174,7 @@ object SchemeServiceImplSpec {
       "phone" -> "test-phone",
       "email" -> "test-email"
     ),
-    "individualAddress" -> Json.obj(
+    "individualContactAddress" -> Json.obj(
       "addressLine1" -> "test-address-line-1",
       "countryCode" -> "GB",
       "postalCode" -> "test-postal-code"
@@ -193,6 +194,7 @@ object SchemeServiceImplSpec {
   )
 
   def registerPsaRequestJson(userAnswersJson: JsValue): JsValue = {
+    implicit val contactAddressEnabled: Boolean = true
     val psa = userAnswersJson.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)
     val requestJson = Json.toJson(psa)(PensionSchemeAdministrator.psaSubmissionWrites)
 
