@@ -47,6 +47,13 @@ object Address {
       ((JsPath \ "countryCode").read[String] orElse (JsPath \ "country").read[String])
     ) ((line1, line2, line3, line4, countryCode) => (line1, line2, line3, line4, getCountryOrTerritoryCode(countryCode)))
 
+  val commonAddressWrites : Writes[(String,Option[String],Option[String],Option[String])] = (
+    (JsPath \ "line1").write[String] and
+      (JsPath \ "line2").writeNullable[String] and
+      (JsPath \ "line3").writeNullable[String] and
+      (JsPath \ "line4").writeNullable[String])(elements => (elements._1.replace("&","and"),elements._2.map(c=>c.replace("&","and")),
+    elements._3.map(c=>c.replace("&","and")),elements._4.map(c=>c.replace("&","and"))))
+
   private def getCountryOrTerritoryCode(countryCode: String) = {
     if (countryCode.contains("territory")) countryCode.split(":").last.trim() else countryCode
   }
@@ -63,19 +70,13 @@ object UkAddress {
   implicit val format: Reads[UkAddress] = Json.reads[UkAddress]
 
   implicit val writes: Writes[UkAddress] = (
-    (JsPath \ "line1").write[String] and
-      (JsPath \ "line2").writeNullable[String] and
-      (JsPath \ "line3").writeNullable[String] and
-      (JsPath \ "line4").writeNullable[String] and
+    JsPath.write(Address.commonAddressWrites) and
       (JsPath \ "countryCode").write[String] and
       (JsPath \ "postalCode").write[String] and
       (JsPath \ "addressType").write[String]
-    )(address => (address.addressLine1
-    ,address.addressLine2,
-    address.addressLine3,
-    address.addressLine4,
-    address.countryCode,
-    address.postalCode,
+    )(ukAddress => ((ukAddress.addressLine1,ukAddress.addressLine2, ukAddress.addressLine3, ukAddress.addressLine4),
+    ukAddress.countryCode,
+    ukAddress.postalCode,
     "UK"))
 
   val defaultWrites : Writes[UkAddress] = Json.writes[UkAddress]
@@ -93,19 +94,13 @@ object InternationalAddress {
   implicit val format: Format[InternationalAddress] = Json.format[InternationalAddress]
 
   implicit val writes : Writes[InternationalAddress] = (
-    (JsPath \ "line1").write[String] and
-      (JsPath \ "line2").writeNullable[String] and
-      (JsPath \ "line3").writeNullable[String] and
-      (JsPath \ "line4").writeNullable[String] and
+      JsPath.write(Address.commonAddressWrites) and
       (JsPath \ "countryCode").write[String] and
       (JsPath \ "postalCode").writeNullable[String] and
       (JsPath \ "addressType").write[String]
-    )(address => (address.addressLine1
-    ,address.addressLine2,
-    address.addressLine3,
-    address.addressLine4,
-    address.countryCode,
-    address.postalCode,
+    )(internationalAddress => ((internationalAddress.addressLine1,internationalAddress.addressLine2,internationalAddress.addressLine3,internationalAddress.addressLine4),
+    internationalAddress.countryCode,
+    internationalAddress.postalCode,
     "NON-UK"))
 
   val defaultWrites : Writes[InternationalAddress] = Json.writes[InternationalAddress]
