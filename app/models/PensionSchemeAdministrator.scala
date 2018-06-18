@@ -241,12 +241,16 @@ object PensionSchemeAdministrator {
       (JsPath \ "idNumber").readNullable[String]
     ) ((legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber) => (legalStatus, sapNumber, noIdentifier, customerType, idType, idNumber))
 
-  val apiReads: Reads[PensionSchemeAdministrator] = (
+  def apiReads(implicit contactAddressEnabled: Boolean): Reads[PensionSchemeAdministrator] = (
     (JsPath \ "registrationInfo").read(registrationInfoReads) and
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
       ((JsPath \ "contactDetails").read(ContactDetails.apiReads) orElse (JsPath \ "individualContactDetails").read(ContactDetails.apiReads)) and
       ((JsPath).read(PreviousAddressDetails.apiReads("company")) orElse (JsPath).read(PreviousAddressDetails.apiReads("individual"))) and
-      ((JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address]) and
+      (if(contactAddressEnabled){
+        ((JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualContactAddress").read[Address])
+      } else {
+        ((JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address])
+      }) and
       (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
       (JsPath).read(PSADetail.apiReads) and
       (JsPath \ "existingPSA").read(PensionSchemeAdministratorIdentifierStatusType.apiReads) and

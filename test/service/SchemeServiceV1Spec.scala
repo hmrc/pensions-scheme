@@ -18,6 +18,7 @@ package service
 
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
+import base.SpecBase
 import models._
 import models.enumeration.SchemeType
 import org.scalatest.{AsyncFlatSpec, Matchers}
@@ -297,13 +298,13 @@ class SchemeServiceV1Spec extends AsyncFlatSpec with Matchers {
 
 }
 
-object SchemeServiceV1Spec {
+object SchemeServiceV1Spec extends SpecBase {
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceV1 = new SchemeServiceV1(schemeConnector, barsConnector, auditService)
+    val schemeService: SchemeServiceV1 = new SchemeServiceV1(schemeConnector, barsConnector, auditService, appConfig)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}

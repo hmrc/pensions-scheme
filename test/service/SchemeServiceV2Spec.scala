@@ -18,6 +18,7 @@ package service
 
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import audit.testdoubles.StubSuccessfulAuditService
+import base.SpecBase
 import models.Reads.establishersv2.{CompanyEstablisherBuilder, IndividualBuilder}
 import models.enumeration.SchemeType
 import models.{EstablisherDetailsV2 => EstablisherDetails, PensionsSchemeV2 => PensionsScheme, _}
@@ -289,13 +290,13 @@ class SchemeServiceV2Spec extends AsyncFlatSpec with Matchers {
 
 }
 
-object SchemeServiceV2Spec {
+object SchemeServiceV2Spec extends SpecBase {
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceV2 = new SchemeServiceV2(schemeConnector, barsConnector, auditService)
+    val schemeService: SchemeServiceV2 = new SchemeServiceV2(schemeConnector, barsConnector, auditService, appConfig)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}

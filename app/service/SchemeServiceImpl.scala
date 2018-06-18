@@ -16,6 +16,7 @@
 
 package service
 import audit.{AuditService, PSASubscription, SchemeList}
+import config.AppConfig
 import connector.SchemeConnector
 import models.PensionSchemeAdministrator
 import play.api.Logger
@@ -28,7 +29,7 @@ import utils.validationUtils._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-abstract class SchemeServiceImpl(schemeConnector: SchemeConnector, auditService: AuditService) extends SchemeService {
+abstract class SchemeServiceImpl(schemeConnector: SchemeConnector, auditService: AuditService, appConfig: AppConfig) extends SchemeService {
 
   override def listOfSchemes(psaId: String)
                    (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
@@ -44,6 +45,7 @@ abstract class SchemeServiceImpl(schemeConnector: SchemeConnector, auditService:
 
   override def registerPSA(json: JsValue)
                           (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, rh: RequestHeader): Future[HttpResponse] = {
+    implicit val contactAddressEnabled = appConfig.contactAddressEnabled
 
     Try(json.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
       case Success(pensionSchemeAdministrator) =>
