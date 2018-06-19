@@ -18,12 +18,14 @@ package models.Reads
 
 import models.{Reads => _, _}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
 import play.api.libs.json.{Json, _}
 
 class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
+
+  import utils.JsonUtils._
+
   implicit val contactAddressEnabled: Boolean = true
+
   "JSON Payload of a PSA" should {
     "Map to a valid PensionSchemeAdministrator object" when {
       val input = Json.obj("existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(false)), "registrationInfo" -> Json.obj("legalStatus" -> "Limited Company",
@@ -34,7 +36,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         "idNumber" -> JsString("TestIdNumber")),
         "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com"),
         "companyAddressYears" -> JsString("over_a_year"),
-        "companyAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
+        "companyContactAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
           "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))),
         "companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
         "companyRegistrationNumber" -> JsString("CRN11111"),
@@ -88,7 +90,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       "We don't have moreThanTenDirectors flag" in {
         val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
-        result.numberOfDirectorOrPartners mustEqual None
+        result.numberOfDirectorOrPartners mustBe None
       }
 
       "We have contact details" in {
@@ -103,10 +105,23 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         result.previousAddressDetail.isPreviousAddressLast12Month mustBe pensionSchemeAdministratorSample.previousAddressDetail.isPreviousAddressLast12Month
       }
 
-      "We have correspondence address" in {
+      "We have correspondence address when the contact Address toggle is off" in {
+        implicit val contactAddressEnabled: Boolean = false
+
+        renameElement(input, "companyContactAddressId", "companyAddressId").fold(
+          invalid => throw JsResultException(invalid),
+          json => {
+            val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+            result.correspondenceAddressDetail mustBe ukAddressSample
+          }
+        )
+      }
+
+      "We have correspondence address when the contact Address toggle is on" in {
         val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
-        result.correspondenceAddressDetail mustBe pensionSchemeAdministratorSample.correspondenceAddressDetail
+        result.correspondenceAddressDetail mustBe ukAddressSample
       }
 
       "We have a director" in {
@@ -182,21 +197,26 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
 
       "We have an individual address when the contact Address toggle is off" in {
         implicit val contactAddressEnabled: Boolean = false
-        val expectedIndividualAddress = ukAddressSample.copy(addressLine1 = "Test 123 St")
-        val individualCorrespondenceAddress = "individualAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
-          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB")))
-        val result = Json.fromJson[PensionSchemeAdministrator](input + individualCorrespondenceAddress - "companyAddressId")(PensionSchemeAdministrator.apiReads).asOpt.value
 
-        result.correspondenceAddressDetail.asInstanceOf[UkAddress].addressLine1 mustBe expectedIndividualAddress.addressLine1
+        renameElement(input, "companyContactAddressId", "individualAddress").fold(
+          invalid => throw JsResultException(invalid),
+          json => {
+            val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+            result.correspondenceAddressDetail.asInstanceOf[UkAddress] mustBe ukAddressSample
+          }
+        )
       }
 
       "We have an individual address when the contact Address toggle is on" in {
-        val expectedIndividualAddress = ukAddressSample.copy(addressLine1 = "Test 123 St")
-        val individualCorrespondenceAddress = "individualContactAddress" -> JsObject(Map("addressLine1" -> JsString("Test 123 St"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
-          "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB")))
-        val result = Json.fromJson[PensionSchemeAdministrator](input + individualCorrespondenceAddress - "companyAddressId")(PensionSchemeAdministrator.apiReads).asOpt.value
+        renameElement(input, "companyContactAddressId", "individualContactAddress").fold(
+          invalid => throw JsResultException(invalid),
+          json => {
+            val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
 
-        result.correspondenceAddressDetail.asInstanceOf[UkAddress].addressLine1 mustBe expectedIndividualAddress.addressLine1
+            result.correspondenceAddressDetail.asInstanceOf[UkAddress] mustBe ukAddressSample
+          }
+        )
       }
 
       "We have an individual previous address" in {
