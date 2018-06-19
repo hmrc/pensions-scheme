@@ -245,16 +245,16 @@ object PensionSchemeAdministrator {
     (JsPath \ "registrationInfo").read(registrationInfoReads) and
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
       ((JsPath \ "contactDetails").read(ContactDetails.apiReads) orElse (JsPath \ "individualContactDetails").read(ContactDetails.apiReads)) and
-      ((JsPath).read(PreviousAddressDetails.apiReads("company")) orElse (JsPath).read(PreviousAddressDetails.apiReads("individual"))) and
+      (JsPath.read(PreviousAddressDetails.apiReads("company")) orElse JsPath.read(PreviousAddressDetails.apiReads("individual"))) and
       (if(contactAddressEnabled){
-        ((JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualContactAddress").read[Address])
+        (JsPath \ "companyContactAddressId").read[Address] orElse (JsPath \ "individualContactAddress").read[Address]
       } else {
-        ((JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address])
+        (JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address]
       }) and
       (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
-      (JsPath).read(PSADetail.apiReads) and
+      JsPath.read(PSADetail.apiReads) and
       (JsPath \ "existingPSA").read(PensionSchemeAdministratorIdentifierStatusType.apiReads) and
-      (JsPath).read(PensionSchemeAdministratorDeclarationType.apiReads)
+      JsPath.read(PensionSchemeAdministratorDeclarationType.apiReads)
     ) ((registrationInfo, isThereMoreThanTenDirectors, contactDetails, previousAddressDetails, correspondenceAddress, directors,
         transactionDetails, isExistingPSA, declaration) =>
     PensionSchemeAdministrator(
