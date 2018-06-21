@@ -36,7 +36,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         "idNumber" -> JsString("TestIdNumber")),
         "contactDetails" -> Json.obj("phone" -> "07592113", "email" -> "test@test.com"),
         "companyAddressYears" -> JsString("over_a_year"),
-        "companyContactAddressId" -> JsObject(Map("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
+        "companyContactAddress" -> JsObject(Map("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"),
           "addressLine4" -> JsString("line4"), "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))),
         "companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
         "companyRegistrationNumber" -> JsString("CRN11111"),
@@ -108,7 +108,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       "We have correspondence address when the contact Address toggle is off" in {
         implicit val contactAddressEnabled: Boolean = false
 
-        renameElement(input, "companyContactAddressId", "companyAddressId").fold(
+        renameElement(input, "companyContactAddress", "companyAddressId").fold(
           invalid => throw JsResultException(invalid),
           json => {
             val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
@@ -198,7 +198,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       "We have an individual address when the contact Address toggle is off" in {
         implicit val contactAddressEnabled: Boolean = false
 
-        renameElement(input, "companyContactAddressId", "individualAddress").fold(
+        renameElement(input, "companyContactAddress", "individualAddress").fold(
           invalid => throw JsResultException(invalid),
           json => {
             val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
@@ -209,7 +209,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have an individual address when the contact Address toggle is on" in {
-        renameElement(input, "companyContactAddressId", "individualContactAddress").fold(
+        renameElement(input, "companyContactAddress", "individualContactAddress").fold(
           invalid => throw JsResultException(invalid),
           json => {
             val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
