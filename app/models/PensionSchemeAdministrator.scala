@@ -247,7 +247,7 @@ object PensionSchemeAdministrator {
       ((JsPath \ "contactDetails").read(ContactDetails.apiReads) orElse (JsPath \ "individualContactDetails").read(ContactDetails.apiReads)) and
       (JsPath.read(PreviousAddressDetails.apiReads("company")) orElse JsPath.read(PreviousAddressDetails.apiReads("individual"))) and
       (if(contactAddressEnabled){
-        (JsPath \ "companyContactAddressId").read[Address] orElse (JsPath \ "individualContactAddress").read[Address]
+        (JsPath \ "companyContactAddress").read[Address] orElse (JsPath \ "individualContactAddress").read[Address]
       } else {
         (JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address]
       }) and
