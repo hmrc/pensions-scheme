@@ -204,39 +204,39 @@ object PensionSchemeDeclaration {
   )
 }
 
-case class EstablisherDetails(`type`: String, organisationName: Option[String] = None,
-                              personalDetails: Option[PersonalDetails] = None,
-                              referenceOrNino: Option[String] = None, noNinoReason: Option[String] = None,
-                              utr: Option[String] = None, noUtrReason: Option[String] = None, crnNumber: Option[String] = None,
-                              noCrnReason: Option[String] = None, vatRegistrationNumber: Option[String] = None,
-                              payeReference: Option[String] = None, haveMoreThanTenDirectorOrPartner: Option[Boolean] = None,
-                              correspondenceAddressDetails: CorrespondenceAddressDetails,
-                              correspondenceContactDetails: CorrespondenceContactDetails,
-                              previousAddressDetails: Option[PreviousAddressDetails] = None)
+//case class EstablisherDetails(`type`: String, organisationName: Option[String] = None,
+//                              personalDetails: Option[PersonalDetails] = None,
+//                              referenceOrNino: Option[String] = None, noNinoReason: Option[String] = None,
+//                              utr: Option[String] = None, noUtrReason: Option[String] = None, crnNumber: Option[String] = None,
+//                              noCrnReason: Option[String] = None, vatRegistrationNumber: Option[String] = None,
+//                              payeReference: Option[String] = None, haveMoreThanTenDirectorOrPartner: Option[Boolean] = None,
+//                              correspondenceAddressDetails: CorrespondenceAddressDetails,
+//                              correspondenceContactDetails: CorrespondenceContactDetails,
+//                              previousAddressDetails: Option[PreviousAddressDetails] = None)
 
-object EstablisherDetails {
-  implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
-}
+//object EstablisherDetails {
+//  implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
+//}
 
-case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
-                          establisherDetails: List[EstablisherDetails])
-
-object PensionsScheme {
-
-  implicit val formats: Format[PensionsScheme] = Json.format[PensionsScheme]
-
-  val pensionSchemeHaveInvalidBank: Lens[PensionsScheme, Boolean] = new Lens[PensionsScheme, Boolean] {
-    override def get: PensionsScheme => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
-
-    override def set: (PensionsScheme, Boolean) => PensionsScheme =
-      (pensionsScheme, haveInvalidBank) =>
-        pensionsScheme.copy(
-          customerAndSchemeDetails =
-            pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = haveInvalidBank)
-        )
-  }
-
-}
+//case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
+//                          establisherDetails: List[EstablisherDetails])
+//
+//object PensionsScheme {
+//
+//  implicit val formats: Format[PensionsScheme] = Json.format[PensionsScheme]
+//
+//  val pensionSchemeHaveInvalidBank: Lens[PensionsScheme, Boolean] = new Lens[PensionsScheme, Boolean] {
+//    override def get: PensionsScheme => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
+//
+//    override def set: (PensionsScheme, Boolean) => PensionsScheme =
+//      (pensionsScheme, haveInvalidBank) =>
+//        pensionsScheme.copy(
+//          customerAndSchemeDetails =
+//            pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = haveInvalidBank)
+//        )
+//  }
+//
+//}
 
 // Definitions for API V2, which allows multiple establishers and allows links between comapnies and directors
 
@@ -284,27 +284,27 @@ case class TrusteeDetails(
   companyTrusteeDetail: Seq[CompanyTrustee]
 )
 
-case class EstablisherDetailsV2(
+case class EstablisherDetails(
   individual: Seq[Individual],
   companyOrOrganization: Seq[CompanyEstablisher]
 )
 
-case class PensionsSchemeV2(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
-                          establisherDetails: EstablisherDetailsV2, trusteeDetails: TrusteeDetails)
+case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
+                          establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails)
 
-object PensionsSchemeV2 {
+object PensionsScheme {
 
   implicit val formatsIndividual: Format[Individual] = Json.format[Individual]
   implicit val formatsCompanyEstablisher: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
   implicit val formatsCompanyTrustee: Format[CompanyTrustee] = Json.format[CompanyTrustee]
   implicit val formatsTrusteeDetails: Format[TrusteeDetails] = Json.format[TrusteeDetails]
-  implicit val formatsEstablisherDetailsV2: Format[EstablisherDetailsV2] = Json.format[EstablisherDetailsV2]
-  implicit val formatsPensionsSchemeV2: Format[PensionsSchemeV2] = Json.format[PensionsSchemeV2]
+  implicit val formatsEstablisherDetails: Format[EstablisherDetails] = Json.format[EstablisherDetails]
+  implicit val formatsPensionsScheme: Format[PensionsScheme] = Json.format[PensionsScheme]
 
-  val pensionSchemeHaveInvalidBank: Lens[PensionsSchemeV2, Boolean] = new Lens[PensionsSchemeV2, Boolean] {
-    override def get: PensionsSchemeV2 => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
+  val pensionSchemeHaveInvalidBank: Lens[PensionsScheme, Boolean] = new Lens[PensionsScheme, Boolean] {
+    override def get: PensionsScheme => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
 
-    override def set: (PensionsSchemeV2, Boolean) => PensionsSchemeV2 =
+    override def set: (PensionsScheme, Boolean) => PensionsScheme =
       (pensionsScheme, haveInvalidBank) =>
         pensionsScheme.copy(
           customerAndSchemeDetails =
