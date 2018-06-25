@@ -204,42 +204,6 @@ object PensionSchemeDeclaration {
   )
 }
 
-//case class EstablisherDetails(`type`: String, organisationName: Option[String] = None,
-//                              personalDetails: Option[PersonalDetails] = None,
-//                              referenceOrNino: Option[String] = None, noNinoReason: Option[String] = None,
-//                              utr: Option[String] = None, noUtrReason: Option[String] = None, crnNumber: Option[String] = None,
-//                              noCrnReason: Option[String] = None, vatRegistrationNumber: Option[String] = None,
-//                              payeReference: Option[String] = None, haveMoreThanTenDirectorOrPartner: Option[Boolean] = None,
-//                              correspondenceAddressDetails: CorrespondenceAddressDetails,
-//                              correspondenceContactDetails: CorrespondenceContactDetails,
-//                              previousAddressDetails: Option[PreviousAddressDetails] = None)
-
-//object EstablisherDetails {
-//  implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
-//}
-
-//case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
-//                          establisherDetails: List[EstablisherDetails])
-//
-//object PensionsScheme {
-//
-//  implicit val formats: Format[PensionsScheme] = Json.format[PensionsScheme]
-//
-//  val pensionSchemeHaveInvalidBank: Lens[PensionsScheme, Boolean] = new Lens[PensionsScheme, Boolean] {
-//    override def get: PensionsScheme => Boolean = pensionsScheme => pensionsScheme.customerAndSchemeDetails.haveInvalidBank
-//
-//    override def set: (PensionsScheme, Boolean) => PensionsScheme =
-//      (pensionsScheme, haveInvalidBank) =>
-//        pensionsScheme.copy(
-//          customerAndSchemeDetails =
-//            pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = haveInvalidBank)
-//        )
-//  }
-//
-//}
-
-// Definitions for API V2, which allows multiple establishers and allows links between comapnies and directors
-
 case class Individual(
   personalDetails: PersonalDetails,
   referenceOrNino: Option[String] = None,
