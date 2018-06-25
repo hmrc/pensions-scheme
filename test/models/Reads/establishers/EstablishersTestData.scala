@@ -23,7 +23,7 @@ import models._
 
 import scala.util.Random
 
-// scalastyle:off magic.number
+//scalastyle:off magic.number
 object EstablishersTestData {
 
   private def alphanumeric(length: Int) =
@@ -66,60 +66,19 @@ object EstablishersTestData {
   private def testEmail =
     alphanumeric(20) + "@test.net"
 
-  def testCompany(
-      companyType: CompanyType,
-      hasUtr: Boolean,
-      hasCrn: Boolean,
-      hasVat: Boolean,
-      hasPaye: Boolean,
-      otherDirectors: Option[Boolean],
-      hasPreviousAddress: Boolean): EstablisherDetails =
-
-    EstablisherDetails(
-      `type` = companyType.apiType,
-      organisationName = Some(testCompanyName),
-      utr = if (hasUtr) Some(alphanumeric(10)) else None,
-      noUtrReason = if (hasUtr) None else Some(alphanumeric(20)),
-      crnNumber = if (hasCrn) Some(alphanumeric(10)) else None,
-      noCrnReason = if (hasCrn) None else Some(alphanumeric(20)),
-      vatRegistrationNumber = if (hasVat) Some(numeric(9)) else None,
-      payeReference = if (hasPaye) Some(alphanumeric(13)) else None,
-      haveMoreThanTenDirectorOrPartner = otherDirectors,
-      correspondenceAddressDetails = CorrespondenceAddressDetails(testAddress),
-      correspondenceContactDetails = CorrespondenceContactDetails(
-        ContactDetails(
-          telephone = numeric(24),
-          email = testEmail
-        )
-      ),
-      previousAddressDetails =
-        if (hasPreviousAddress) {
-          Some(
-            PreviousAddressDetails(
-              isPreviousAddressLast12Month = true,
-              previousAddressDetails = Some(testAddress)
-            )
-          )
-        }
-        else {
-          None
-        }
-    )
-
   def testIndividual(
-      individualType: IndividualType,
-      hasNino: Boolean = true,
-      hasUtr: Boolean = true,
-      hasPreviousAddress: Boolean = true): EstablisherDetails =
-
-    EstablisherDetails(
-      `type` = individualType.apiType,
-      personalDetails = Some(PersonalDetails(
-        firstName = alphanumeric(35),
-        middleName = Some(alphanumeric(35)),
-        lastName = alphanumeric(35),
-        dateOfBirth = date
-      )),
+      hasNino: Boolean,
+      hasUtr: Boolean,
+      hasPreviousAddress: Boolean
+  ): Individual =
+    Individual(
+      personalDetails =
+        PersonalDetails(
+          firstName = alphanumeric(35),
+          middleName = Some(alphanumeric(35)),
+          lastName = alphanumeric(35),
+          dateOfBirth = date
+        ),
       referenceOrNino = if (hasNino) Some(alphanumeric(10)) else None,
       noNinoReason = if (hasNino) None else Some(alphanumeric(20)),
       utr = if (hasUtr) Some(alphanumeric(10)) else None,
@@ -145,66 +104,89 @@ object EstablishersTestData {
         }
     )
 
-}
+  def testCompanyEstablisher(
+      hasUtr: Boolean,
+      hasCrn: Boolean,
+      hasVat: Boolean,
+      hasPaye: Boolean,
+      hasPreviousAddress: Boolean,
+      directors: Seq[Individual],
+      otherDirectors: Option[Boolean]
+  ): CompanyEstablisher =
+    CompanyEstablisher(
+      organizationName = testCompanyName,
+      utr = if (hasUtr) Some(alphanumeric(10)) else None,
+      noUtrReason = if (hasUtr) None else Some(alphanumeric(20)),
+      crnNumber = if (hasCrn) Some(alphanumeric(10)) else None,
+      noCrnReason = if (hasCrn) None else Some(alphanumeric(20)),
+      vatRegistrationNumber = if (hasVat) Some(numeric(9)) else None,
+      payeReference = if (hasPaye) Some(alphanumeric(13)) else None,
+      haveMoreThanTenDirectorOrPartner = otherDirectors.getOrElse(false),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(testAddress),
+      correspondenceContactDetails = CorrespondenceContactDetails(
+        ContactDetails(
+          telephone = numeric(24),
+          email = testEmail
+        )
+      ),
+      previousAddressDetails =
+        if (hasPreviousAddress) {
+          Some(
+            PreviousAddressDetails(
+              isPreviousAddressLast12Month = true,
+              previousAddressDetails = Some(testAddress)
+            )
+          )
+        }
+        else {
+          None
+        },
+      directorDetails = directors
+    )
 
-case class CompanyBuilder(
-                           companyType: CompanyType,
-                           hasUtr: Boolean,
-                           hasCrn: Boolean,
-                           hasVat: Boolean,
-                           hasPaye: Boolean,
-                           otherDirectors: Option[Boolean],
-                           hasPreviousAddress: Boolean) {
-
-  import EstablishersTestData._
-
-  def withUtr(): CompanyBuilder =
-    copy(hasUtr = true)
-
-  def withCrn(): CompanyBuilder =
-    copy(hasCrn = true)
-
-  def withVat(): CompanyBuilder =
-    copy(hasVat = true)
-
-  def withPaye(): CompanyBuilder =
-    copy(hasPaye = true)
-
-  def withOtherDirectors(otherDirectors: Boolean): CompanyBuilder =
-    copy(otherDirectors = Some(otherDirectors))
-
-  def withPreviousAddress(): CompanyBuilder =
-    copy(hasPreviousAddress = true)
-
-  def build(): EstablisherDetails =
-    testCompany(
-      companyType,
-      hasUtr,
-      hasCrn,
-      hasVat,
-      hasPaye,
-      otherDirectors,
-      hasPreviousAddress
+  def testCompanyTrustee(
+      hasUtr: Boolean,
+      hasCrn: Boolean,
+      hasVat: Boolean,
+      hasPaye: Boolean,
+      hasPreviousAddress: Boolean
+  ): CompanyTrustee =
+    CompanyTrustee(
+      organizationName = testCompanyName,
+      utr = if (hasUtr) Some(alphanumeric(10)) else None,
+      noUtrReason = if (hasUtr) None else Some(alphanumeric(20)),
+      crnNumber = if (hasCrn) Some(alphanumeric(10)) else None,
+      noCrnReason = if (hasCrn) None else Some(alphanumeric(20)),
+      vatRegistrationNumber = if (hasVat) Some(numeric(9)) else None,
+      payeReference = if (hasPaye) Some(alphanumeric(13)) else None,
+      correspondenceAddressDetails = CorrespondenceAddressDetails(testAddress),
+      correspondenceContactDetails = CorrespondenceContactDetails(
+        ContactDetails(
+          telephone = numeric(24),
+          email = testEmail
+        )
+      ),
+      previousAddressDetails =
+        if (hasPreviousAddress) {
+          Some(
+            PreviousAddressDetails(
+              isPreviousAddressLast12Month = true,
+              previousAddressDetails = Some(testAddress)
+            )
+          )
+        }
+        else {
+          None
+        }
     )
 
 }
 
-object CompanyBuilder {
-
-  def apply(companyType: CompanyType): CompanyBuilder =
-    CompanyBuilder(
-      companyType = companyType,
-      hasUtr = false,
-      hasCrn = false,
-      hasVat = false,
-      hasPaye = false,
-      otherDirectors = None,
-      hasPreviousAddress = false
-    )
-
-}
-
-case class IndividualBuilder(individualType: IndividualType, hasNino: Boolean, hasUtr: Boolean, hasPreviousAddress: Boolean) {
+case class IndividualBuilder(
+    hasNino: Boolean,
+    hasUtr: Boolean,
+    hasPreviousAddress: Boolean
+) {
 
   import EstablishersTestData._
 
@@ -217,9 +199,8 @@ case class IndividualBuilder(individualType: IndividualType, hasNino: Boolean, h
   def withPreviousAddress(): IndividualBuilder =
     copy(hasPreviousAddress = true)
 
-  def build(): EstablisherDetails =
+  def build(): Individual =
     testIndividual(
-      individualType,
       hasNino,
       hasUtr,
       hasPreviousAddress
@@ -229,12 +210,103 @@ case class IndividualBuilder(individualType: IndividualType, hasNino: Boolean, h
 
 object IndividualBuilder {
 
-  def apply(individualType: IndividualType): IndividualBuilder =
-    IndividualBuilder(
-      individualType = individualType,
-      hasNino = false,
-      hasUtr = false,
-      hasPreviousAddress = false
+  def apply(): IndividualBuilder =
+    IndividualBuilder(false, false, false)
+
+}
+
+case class CompanyEstablisherBuilder(
+    hasUtr: Boolean,
+    hasCrn: Boolean,
+    hasVat: Boolean,
+    hasPaye: Boolean,
+    hasPreviousAddress: Boolean,
+    directors: Seq[Individual],
+    otherDirectors: Option[Boolean]
+) {
+
+  import EstablishersTestData._
+
+  def withUtr(): CompanyEstablisherBuilder =
+    copy(hasUtr = true)
+
+  def withCrn(): CompanyEstablisherBuilder =
+    copy(hasCrn = true)
+
+  def withVat(): CompanyEstablisherBuilder =
+    copy(hasVat = true)
+
+  def withPaye(): CompanyEstablisherBuilder =
+    copy(hasPaye = true)
+
+  def withPreviousAddress(): CompanyEstablisherBuilder =
+    copy(hasPreviousAddress = true)
+
+  def withDirectors(directors: Seq[Individual]): CompanyEstablisherBuilder =
+    copy(directors = directors)
+
+  def withOtherDirectors(otherDirectors: Boolean): CompanyEstablisherBuilder =
+    copy(otherDirectors = Some(otherDirectors))
+
+  def build(): CompanyEstablisher =
+    testCompanyEstablisher(
+      hasUtr,
+      hasCrn,
+      hasVat,
+      hasPaye,
+      hasPreviousAddress,
+      directors,
+      otherDirectors
     )
+
+}
+
+object CompanyEstablisherBuilder {
+
+  def apply(): CompanyEstablisherBuilder =
+    CompanyEstablisherBuilder(false, false, false, false, false, Nil, None)
+
+}
+
+case class CompanyTrusteeBuilder(
+  hasUtr: Boolean,
+  hasCrn: Boolean,
+  hasVat: Boolean,
+  hasPaye: Boolean,
+  hasPreviousAddress: Boolean
+) {
+
+  import EstablishersTestData._
+
+  def withUtr(): CompanyTrusteeBuilder =
+    copy(hasUtr = true)
+
+  def withCrn(): CompanyTrusteeBuilder =
+    copy(hasCrn = true)
+
+  def withVat(): CompanyTrusteeBuilder =
+    copy(hasVat = true)
+
+  def withPaye(): CompanyTrusteeBuilder =
+    copy(hasPaye = true)
+
+  def withPreviousAddress(): CompanyTrusteeBuilder =
+    copy(hasPreviousAddress = true)
+
+  def build(): CompanyTrustee =
+    testCompanyTrustee(
+      hasUtr,
+      hasCrn,
+      hasVat,
+      hasPaye,
+      hasPreviousAddress
+    )
+
+}
+
+object CompanyTrusteeBuilder {
+
+  def apply(): CompanyTrusteeBuilder =
+    CompanyTrusteeBuilder(false, false, false, false, false)
 
 }
