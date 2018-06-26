@@ -19,12 +19,12 @@ package service
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
-import models.Reads.establishersv2.{CompanyEstablisherBuilder, IndividualBuilder}
+import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder}
 import models.enumeration.SchemeType
-import models.{EstablisherDetailsV2 => EstablisherDetails, PensionsSchemeV2 => PensionsScheme, _}
+import models.{EstablisherDetails, PensionsScheme, _}
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import play.api.http.Status
-import play.api.libs.json.{JsSuccess, JsValue, Json}
+import play.api.libs.json.{Format, JsSuccess, JsValue, Json}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
@@ -32,9 +32,9 @@ import utils.Lens
 
 import scala.concurrent.Future
 
-class SchemeServiceV2Spec extends AsyncFlatSpec with Matchers {
+class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
-  import SchemeServiceV2Spec._
+  import SchemeServiceSpec._
   import FakeSchemeConnector._
 
   "haveInvalidBank" should "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
@@ -290,13 +290,13 @@ class SchemeServiceV2Spec extends AsyncFlatSpec with Matchers {
 
 }
 
-object SchemeServiceV2Spec extends SpecBase {
+object SchemeServiceSpec extends SpecBase {
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceV2 = new SchemeServiceV2(schemeConnector, barsConnector, auditService, appConfig)
+    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(schemeConnector, barsConnector, auditService, appConfig)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
@@ -396,7 +396,7 @@ object SchemeServiceV2Spec extends SpecBase {
     )
   )
 
-  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceV2): JsValue = {
+  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
 
     service.transformJsonToModel(pensionsSchemeJson).fold(
       ex => throw ex,
@@ -437,4 +437,10 @@ object SchemeServiceV2Spec extends SpecBase {
 
   }
 
+}
+
+case class SchemeRegistrationResponse(processingDate: String, schemeReferenceNumber: String)
+
+object SchemeRegistrationResponse {
+  implicit val formatsSchemeRegistrationResponse: Format[SchemeRegistrationResponse] = Json.format[SchemeRegistrationResponse]
 }

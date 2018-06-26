@@ -18,70 +18,17 @@ package models.Reads.establishers
 
 import models._
 import org.scalatest.OptionValues
-import play.api.libs.json.{JsBoolean, JsNull, JsObject, Json}
+import play.api.libs.json._
 
 object EstablishersTestJson extends OptionValues {
 
-  def establisherCompanyJson(company: EstablisherDetails, directors: Seq[EstablisherDetails] = Seq.empty[EstablisherDetails]): JsObject = {
-
-    var json = Json.obj(
-      "companyDetails" -> companyDetailsJson(company.organisationName.value, company.vatRegistrationNumber, company.payeReference),
-      "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
-      "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
-      "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
-      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason),
-      "companyAddressYears" -> addressYearsJson(company.previousAddressDetails),
-      "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
-    )
-
-    if (company.haveMoreThanTenDirectorOrPartner.isDefined) {
-      json = json +
-        (("otherDirectors", company.haveMoreThanTenDirectorOrPartner.map(JsBoolean).getOrElse(JsNull)))
-    }
-
-    if (directors.nonEmpty) {
-      json = json +
-        (("director", directors.foldLeft(Json.arr())((a, d) => a :+ companyDirectorJson(d))))
-    }
-
-    json
-
-  }
-
-  def trusteeCompanyJson(company: EstablisherDetails): JsObject =
-    Json.obj(
-      "companyDetails" -> companyDetailsJson(company.organisationName.value, company.vatRegistrationNumber, company.payeReference),
-      "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
-      "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
-      "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
-      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason),
-      "trusteesCompanyAddressYears" -> addressYearsJson(company.previousAddressDetails),
-      "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
-    )
-
-  def companyDirectorJson(director: EstablisherDetails): JsObject =
-    Json.obj(
-      "directorDetails" -> Json.obj(
-        "firstName" -> director.personalDetails.value.firstName,
-        "middleName" -> director.personalDetails.value.middleName,
-        "lastName" -> director.personalDetails.value.lastName,
-        "date" -> director.personalDetails.value.dateOfBirth
-      ),
-      "directorNino" -> ninoJson(director.referenceOrNino, director.noNinoReason),
-      "directorUniqueTaxReference" -> utrJson(director.utr, director.noUtrReason),
-      "directorAddressId" -> addressJson(director.correspondenceAddressDetails.addressDetails),
-      "directorContactDetails" -> contactDetailsJson(director.correspondenceContactDetails.contactDetails),
-      "companyDirectorAddressYears" -> addressYearsJson(director.previousAddressDetails),
-      "previousAddress" -> previousAddressJson(director.previousAddressDetails)
-    )
-
-  def establisherIndividualJson(individual: EstablisherDetails): JsObject =
+  def establisherIndividualJson(individual: Individual): JsObject =
     Json.obj(
       "establisherDetails" -> Json.obj(
-        "firstName" -> individual.personalDetails.value.firstName,
-        "middleName" -> individual.personalDetails.value.middleName,
-        "lastName" -> individual.personalDetails.value.lastName,
-        "date" -> individual.personalDetails.value.dateOfBirth
+        "firstName" -> individual.personalDetails.firstName,
+        "middleName" -> individual.personalDetails.middleName,
+        "lastName" -> individual.personalDetails.lastName,
+        "date" -> individual.personalDetails.dateOfBirth
       ),
       "establisherNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
       "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
@@ -91,13 +38,55 @@ object EstablishersTestJson extends OptionValues {
       "previousAddress" -> previousAddressJson(individual.previousAddressDetails)
     )
 
-  def trusteeIndividualJson(individual: EstablisherDetails): JsObject =
+  def establisherCompany(company: CompanyEstablisher): JsObject = {
+    var json = Json.obj(
+      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference),
+      "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
+      "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
+      "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
+      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason),
+      "companyAddressYears" -> addressYearsJson(company.previousAddressDetails),
+      "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
+    )
+
+    //scalastyle:off magic.number
+    if (company.haveMoreThanTenDirectorOrPartner || company.directorDetails.lengthCompare(10) >= 0) {
+      json = json +
+        (("otherDirectors", JsBoolean(company.haveMoreThanTenDirectorOrPartner)))
+    }
+    //scalastyle:on magic.number
+
+    if (company.directorDetails.nonEmpty) {
+      json = json +
+        (("director", company.directorDetails.foldLeft(Json.arr())((json, director) => json :+ companyDirectorJson(director))))
+    }
+
+    json
+  }
+
+  def companyDirectorJson(director: Individual): JsObject =
+    Json.obj(
+      "directorDetails" -> Json.obj(
+        "firstName" -> director.personalDetails.firstName,
+        "middleName" -> director.personalDetails.middleName,
+        "lastName" -> director.personalDetails.lastName,
+        "date" -> director.personalDetails.dateOfBirth
+      ),
+      "directorNino" -> ninoJson(director.referenceOrNino, director.noNinoReason),
+      "directorUniqueTaxReference" -> utrJson(director.utr, director.noUtrReason),
+      "directorAddressId" -> addressJson(director.correspondenceAddressDetails.addressDetails),
+      "directorContactDetails" -> contactDetailsJson(director.correspondenceContactDetails.contactDetails),
+      "companyDirectorAddressYears" -> addressYearsJson(director.previousAddressDetails),
+      "previousAddress" -> previousAddressJson(director.previousAddressDetails)
+    )
+
+  def trusteeIndividualJson(individual: Individual): JsObject =
     Json.obj(
       "trusteeDetails" -> Json.obj(
-        "firstName" -> individual.personalDetails.value.firstName,
-        "middleName" -> individual.personalDetails.value.middleName,
-        "lastName" -> individual.personalDetails.value.lastName,
-        "date" -> individual.personalDetails.value.dateOfBirth
+        "firstName" -> individual.personalDetails.firstName,
+        "middleName" -> individual.personalDetails.middleName,
+        "lastName" -> individual.personalDetails.lastName,
+        "date" -> individual.personalDetails.dateOfBirth
       ),
       "trusteeNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
       "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
@@ -105,6 +94,17 @@ object EstablishersTestJson extends OptionValues {
       "trusteeContactDetails" -> contactDetailsJson(individual.correspondenceContactDetails.contactDetails),
       "trusteeAddressYears" -> addressYearsJson(individual.previousAddressDetails),
       "trusteePreviousAddress" -> previousAddressJson(individual.previousAddressDetails)
+    )
+
+  def trusteeCompanyJson(company: CompanyTrustee): JsObject =
+    Json.obj(
+      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference),
+      "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
+      "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
+      "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
+      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason),
+      "trusteesCompanyAddressYears" -> addressYearsJson(company.previousAddressDetails),
+      "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
     )
 
   private def addressJson(address: Address) = {
@@ -144,6 +144,12 @@ object EstablishersTestJson extends OptionValues {
     }
   }
 
+  private def contactDetailsJson(contactDetails: ContactDetails) =
+    Json.obj(
+      "emailAddress" -> contactDetails.email,
+      "phoneNumber" -> contactDetails.telephone
+    )
+
   private def companyDetailsJson(companyName: String, vat: Option[String], paye: Option[String]) =
     Json.obj(
       "companyName" -> companyName,
@@ -151,11 +157,14 @@ object EstablishersTestJson extends OptionValues {
       "payeNumber" -> paye
     )
 
-  private def contactDetailsJson(contactDetails: ContactDetails) =
-    Json.obj(
-      "emailAddress" -> contactDetails.email,
-      "phoneNumber" -> contactDetails.telephone
-    )
+  private def ninoJson(nino: Option[String], noNinoReason: Option[String]) =
+    valueOrReason(nino, noNinoReason, "hasNino", "nino")
+
+  private def utrJson(utr: Option[String], noUtrReason: Option[String]) =
+    valueOrReason(utr, noUtrReason, "hasUtr", "utr")
+
+  private def crnJson(crn: Option[String], noCrnReason: Option[String]) =
+    valueOrReason(crn, noCrnReason, "hasCrn", "crn")
 
   private def valueOrReason(value: Option[String], reason: Option[String], hasField: String, valueField: String) =
     value match {
@@ -170,14 +179,5 @@ object EstablishersTestJson extends OptionValues {
           "reason" -> reason
         )
     }
-
-  private def crnJson(crn: Option[String], noCrnReason: Option[String]) =
-    valueOrReason(crn, noCrnReason, "hasCrn", "crn")
-
-  private def ninoJson(nino: Option[String], noNinoReason: Option[String]) =
-    valueOrReason(nino, noNinoReason, "hasNino", "nino")
-
-  private def utrJson(utr: Option[String], noUtrReason: Option[String]) =
-    valueOrReason(utr, noUtrReason, "hasUtr", "utr")
 
 }

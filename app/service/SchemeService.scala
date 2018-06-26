@@ -16,12 +16,14 @@
 
 package service
 
+import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@ImplementedBy(classOf[SchemeServiceImpl])
 trait SchemeService {
 
   def registerScheme(psaId: String, json: JsValue)
