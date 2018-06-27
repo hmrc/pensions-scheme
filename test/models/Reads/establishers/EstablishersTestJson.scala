@@ -22,13 +22,14 @@ import play.api.libs.json._
 
 object EstablishersTestJson extends OptionValues {
 
-  def establisherIndividualJson(individual: Individual): JsObject =
+  def establisherIndividualJson(individual: Individual, isDeleted: Boolean = false): JsObject =
     Json.obj(
       "establisherDetails" -> Json.obj(
         "firstName" -> individual.personalDetails.firstName,
         "middleName" -> individual.personalDetails.middleName,
         "lastName" -> individual.personalDetails.lastName,
-        "date" -> individual.personalDetails.dateOfBirth
+        "date" -> individual.personalDetails.dateOfBirth,
+        "isDeleted" -> isDeleted
       ),
       "establisherNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
       "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
@@ -38,9 +39,9 @@ object EstablishersTestJson extends OptionValues {
       "previousAddress" -> previousAddressJson(individual.previousAddressDetails)
     )
 
-  def establisherCompany(company: CompanyEstablisher): JsObject = {
+  def establisherCompany(company: CompanyEstablisher, isDeleted: Boolean = false): JsObject = {
     var json = Json.obj(
-      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference),
+      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference, isDeleted),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
@@ -64,13 +65,14 @@ object EstablishersTestJson extends OptionValues {
     json
   }
 
-  def companyDirectorJson(director: Individual): JsObject =
+  def companyDirectorJson(director: Individual, isDeleted: Boolean = false): JsObject =
     Json.obj(
       "directorDetails" -> Json.obj(
         "firstName" -> director.personalDetails.firstName,
         "middleName" -> director.personalDetails.middleName,
         "lastName" -> director.personalDetails.lastName,
-        "date" -> director.personalDetails.dateOfBirth
+        "date" -> director.personalDetails.dateOfBirth,
+        "isDeleted" -> isDeleted
       ),
       "directorNino" -> ninoJson(director.referenceOrNino, director.noNinoReason),
       "directorUniqueTaxReference" -> utrJson(director.utr, director.noUtrReason),
@@ -80,13 +82,14 @@ object EstablishersTestJson extends OptionValues {
       "previousAddress" -> previousAddressJson(director.previousAddressDetails)
     )
 
-  def trusteeIndividualJson(individual: Individual): JsObject =
+  def trusteeIndividualJson(individual: Individual, isDeleted: Boolean = false): JsObject =
     Json.obj(
       "trusteeDetails" -> Json.obj(
         "firstName" -> individual.personalDetails.firstName,
         "middleName" -> individual.personalDetails.middleName,
         "lastName" -> individual.personalDetails.lastName,
-        "date" -> individual.personalDetails.dateOfBirth
+        "date" -> individual.personalDetails.dateOfBirth,
+        "isDeleted" -> isDeleted
       ),
       "trusteeNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
       "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
@@ -96,9 +99,9 @@ object EstablishersTestJson extends OptionValues {
       "trusteePreviousAddress" -> previousAddressJson(individual.previousAddressDetails)
     )
 
-  def trusteeCompanyJson(company: CompanyTrustee): JsObject =
+  def trusteeCompanyJson(company: CompanyTrustee, isDeleted: Boolean = true): JsObject =
     Json.obj(
-      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference),
+      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference, isDeleted),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
@@ -150,11 +153,12 @@ object EstablishersTestJson extends OptionValues {
       "phoneNumber" -> contactDetails.telephone
     )
 
-  private def companyDetailsJson(companyName: String, vat: Option[String], paye: Option[String]) =
+  private def companyDetailsJson(companyName: String, vat: Option[String], paye: Option[String], isDeleted: Boolean = false) =
     Json.obj(
       "companyName" -> companyName,
       "vatNumber" -> vat,
-      "payeNumber" -> paye
+      "payeNumber" -> paye,
+      "isDeleted" -> isDeleted
     )
 
   private def ninoJson(nino: Option[String], noNinoReason: Option[String]) =

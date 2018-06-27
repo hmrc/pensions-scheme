@@ -128,7 +128,8 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         val director = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
           "lastName" -> JsString("Doe"),
           "middleName" -> JsString("Does Does"),
-          "dateOfBirth" -> JsString("2019-01-31")),
+          "dateOfBirth" -> JsString("2019-01-31"),
+          "isDeleted" -> JsBoolean(false)),
           "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
           "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
           "directorAddressYears" -> JsString("over_a_year")
@@ -141,6 +142,31 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.directorOrPartnerDetail.value.head.sequenceId mustBe directorSample.sequenceId
+      }
+
+      "We have two directors one of which is deleted" in {
+        val firstDirector = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
+          "lastName" -> JsString("Doe"),
+          "middleName" -> JsString("Does Does"),
+          "dateOfBirth" -> JsString("2019-01-31"),
+          "isDeleted" -> JsBoolean(true)),
+          "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
+          "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
+          "directorAddressYears" -> JsString("over_a_year")
+        ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress" ->
+          Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+            "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT")))
+
+        val secondDirector = firstDirector ++ Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("Joe"),
+          "lastName" -> JsString("Bloggs"),
+          "dateOfBirth" -> JsString("2019-01-31"),
+          "isDeleted" -> JsBoolean(false)))
+
+        val directors = JsArray(Seq(firstDirector, secondDirector))
+        val pensionSchemeAdministrator = input + ("directors" -> directors)
+        val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
+        result.directorOrPartnerDetail.value.size mustEqual 1
+        result.directorOrPartnerDetail.value.head.lastName mustEqual "Bloggs"
       }
 
       "We have organisation details" in {

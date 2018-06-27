@@ -17,7 +17,7 @@
 package models
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{ConstraintReads, JsArray, JsDefined, JsError, JsLookupResult, JsPath, JsResult, JsSuccess, JsValue, Reads}
+import play.api.libs.json.{JsArray, JsDefined, JsError, JsLookupResult, JsPath, JsResult, JsSuccess, JsValue, Reads}
 
 import scala.annotation.tailrec
 
@@ -26,7 +26,7 @@ object ReadsEstablisherDetails {
   private def previousAddressDetails(addressYears: String, previousAddress: Option[Address]): Option[PreviousAddressDetails] = {
     if (addressYears == "under_a_year") {
       Some(
-        PreviousAddressDetails(true,previousAddress)
+        PreviousAddressDetails(isPreviousAddressLast12Month = true,previousAddress)
       )
     }
     else {
@@ -101,7 +101,7 @@ object ReadsEstablisherDetails {
   )
 
   private val readsCompanyDirectors: Reads[Seq[Individual]] =
-    (Reads: ConstraintReads).seq(readsCompanyDirector)
+    readsFiltered(_ \ "directorDetails", readsCompanyDirector, "directorDetails")
 
   private val readsEstablisherCompany: Reads[CompanyEstablisher] = (
     (JsPath \ "companyDetails" \ "companyName").read[String] and
@@ -185,24 +185,33 @@ object ReadsEstablisherDetails {
   )
 
   private val readsEstablisherIndividuals: Reads[Seq[Individual]] =
-    readsFiltered(_ \ "establisherDetails", readsEstablisherIndividual)
+    readsFiltered(_ \ "establisherDetails", readsEstablisherIndividual, "establisherDetails")
 
   private val readsEstablisherCompanies: Reads[Seq[CompanyEstablisher]] =
-    readsFiltered(_ \ "companyDetails", readsEstablisherCompany)
+    readsFiltered(_ \ "companyDetails", readsEstablisherCompany, "companyDetails")
 
   private val readsTrusteeIndividuals: Reads[Seq[Individual]] =
-    readsFiltered(_ \ "trusteeDetails", readsTrusteeIndividual)
+    readsFiltered(_ \ "trusteeDetails", readsTrusteeIndividual, "trusteeDetails")
 
   private val readsTrusteeCompanies: Reads[Seq[CompanyTrustee]] =
-    readsFiltered(_ \ "companyDetails", readsTrusteeCompany)
+    readsFiltered(_ \ "companyDetails", readsTrusteeCompany, "companyDetails")
 
   //noinspection ConvertExpressionToSAM
-  private def readsFiltered[T](isA: JsValue => JsLookupResult, readsA: Reads[T]): Reads[Seq[T]] = new Reads[Seq[T]] {
+  private def readsFiltered[T](isA: JsValue => JsLookupResult, readsA: Reads[T], detailsType: String): Reads[Seq[T]] = new Reads[Seq[T]] {
     override def reads(json: JsValue): JsResult[Seq[T]] = {
       json match {
         case JsArray(establishers) =>
-          readFilteredSeq(JsSuccess(Nil), establishers, isA, readsA)
+          readFilteredSeq(JsSuccess(Nil), filterDeleted(establishers, detailsType), isA, readsA)
         case _ => JsSuccess(Nil)
+      }
+    }
+  }
+
+  private def filterDeleted(jsValueSeq: Seq[JsValue], detailsType: String): Seq[JsValue] = {
+    jsValueSeq.filterNot{json =>
+      (json \ detailsType \ "isDeleted").validate[Boolean] match {
+        case JsSuccess(e, _) => e
+        case _ => false
       }
     }
   }
