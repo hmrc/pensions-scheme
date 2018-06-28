@@ -143,8 +143,8 @@ object DirectorOrPartnerDetailTypeItem {
 
   val apiReads: Reads[List[DirectorOrPartnerDetailTypeItem]] = json.Reads {
     json =>
-      json.validate[Seq[JsValue]].flatMap( allElements => {
-        val directors: Seq[JsResult[DirectorOrPartnerDetailTypeItem]] = filterDeletedDirector(allElements).zipWithIndex.map(director => director._1.
+      json.validate[Seq[JsValue]].flatMap(elements => {
+        val directors: Seq[JsResult[DirectorOrPartnerDetailTypeItem]] = filterDeletedDirector(elements).zipWithIndex.map(director => director._1.
           validate[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.directorReads(director._2)))
         directors.foldLeft[JsResult[List[DirectorOrPartnerDetailTypeItem]]](JsSuccess(List.empty)) {
           (directors, currentDirector) => {

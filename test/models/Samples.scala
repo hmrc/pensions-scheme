@@ -19,6 +19,7 @@ package models
 import java.time.LocalDate
 
 import org.joda.time.DateTime
+import play.api.libs.json.{JsBoolean, JsString, Json}
 
 trait Samples {
 
@@ -59,4 +60,14 @@ trait Samples {
   val companySample = OrganisationDetailType(Some("Company Test"),vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
   val individualSample = IndividualDetailType(firstName = "John",middleName = Some("Does Does"), lastName = "Doe",dateOfBirth = LocalDate.parse("2019-01-31"))
   val pensionAdviserSample = PensionAdvisorDetail("John",ukAddressSample,contactDetailsSample)
+  val testDirector = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
+    "lastName" -> JsString("Doe"),
+    "middleName" -> JsString("Does Does"),
+    "dateOfBirth" -> JsString("2019-01-31"),
+    "isDeleted" -> JsBoolean(false)),
+    "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
+    "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
+    "directorAddressYears" -> JsString("over_a_year")) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress" ->
+    Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+      "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT")))
 }

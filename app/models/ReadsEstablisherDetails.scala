@@ -17,7 +17,7 @@
 package models
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsArray, JsDefined, JsError, JsLookupResult, JsPath, JsResult, JsSuccess, JsValue, Reads}
+import play.api.libs.json._
 
 import scala.annotation.tailrec
 
