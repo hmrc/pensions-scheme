@@ -23,7 +23,6 @@ import play.api.libs.json.{Json, _}
 class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
 
   import utils.JsonUtils._
-
   implicit val contactAddressEnabled: Boolean = true
 
   "JSON Payload of a PSA" should {
@@ -125,22 +124,25 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have a director" in {
-        val director = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
-          "lastName" -> JsString("Doe"),
-          "middleName" -> JsString("Does Does"),
-          "dateOfBirth" -> JsString("2019-01-31")),
-          "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
-          "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
-          "directorAddressYears" -> JsString("over_a_year")
-        ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress" ->
-          Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
-            "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT")))
-
-        val directors = JsArray(Seq(director, director))
+        val directors = JsArray(Seq(testDirector, testDirector))
         val pensionSchemeAdministrator = input + ("directors" -> directors)
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.directorOrPartnerDetail.value.head.sequenceId mustBe directorSample.sequenceId
+      }
+
+      "We have two directors one of which is deleted" in {
+        val deletedDirector = testDirector ++ Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("Joe"),
+          "lastName" -> JsString("Bloggs"),
+          "dateOfBirth" -> JsString("2019-01-31"),
+          "isDeleted" -> JsBoolean(true)))
+
+        val directors = JsArray(Seq(testDirector, deletedDirector))
+        val pensionSchemeAdministrator = input + ("directors" -> directors)
+        val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
+
+        result.directorOrPartnerDetail.value.size mustEqual 1
+        result.directorOrPartnerDetail.value.head.lastName mustEqual "Doe"
       }
 
       "We have organisation details" in {
