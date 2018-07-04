@@ -161,7 +161,8 @@ object PensionSchemeDeclaration {
       declaration,
       declaration,
       declaration,
-      None, None)
+      None, None,
+      None)
 
     val dormant = (dec: PensionSchemeDeclaration) => {
       declarationDormant.fold(dec)(value => {
