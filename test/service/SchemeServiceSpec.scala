@@ -374,6 +374,7 @@ object SchemeServiceSpec extends SpecBase {
     "schemeEstablishedCountry" -> "test-scheme-established-country",
     "uKBankAccount" -> false,
     "declaration" -> false,
+    "declarationDuties" -> true,
     "establishers" -> Json.arr(
       Json.obj(
         "establisherDetails" -> Json.obj(

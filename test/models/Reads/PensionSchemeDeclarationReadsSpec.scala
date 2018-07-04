@@ -45,25 +45,6 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
          result.box9 mustBe false
        }
      }
-
-     "if we have no Dormant and Decduties boxes 4,5,10,10 personal details be None" in {
-       val result = (Json.obj("declaration" -> JsBoolean(true))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-       result.box1 mustBe true
-       result.box2 mustBe true
-       result.box6 mustBe true
-       result.box7 mustBe true
-       result.box8 mustBe true
-       result.box9 mustBe true
-       result.box3 mustBe None
-       result.box4 mustBe None
-       result.box5 mustBe None
-       result.box10 mustBe None
-       result.box11 mustBe None
-       result.pensionAdviserName mustBe None
-       result.addressAndContactDetails mustBe None
-
-
-     }
      "if we have a dormant field" when {
        "dormant field is true then box 4 is true and box5 is None" in {
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)

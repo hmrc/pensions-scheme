@@ -147,7 +147,7 @@ object PensionSchemeDeclaration {
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "isSchemeMasterTrust").readNullable[Boolean] and
       (JsPath \ "declarationDormant").readNullable[String] and
-      (JsPath \ "declarationDuties").readNullable[Boolean] and
+      (JsPath \ "declarationDuties").read[Boolean] and
       (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
       (JsPath \ "adviserAddress").readNullable[Address]
     ) ((declaration, isSchemeMasterTrust, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
@@ -180,8 +180,8 @@ object PensionSchemeDeclaration {
       })
     }
     val decDuties = (dec: PensionSchemeDeclaration) => {
-      declarationDuties.fold(dec)(value =>
-        if (value) {
+
+        if (declarationDuties) {
           dec.copy(box10 = Some(true))
         }
         else {
@@ -200,7 +200,7 @@ object PensionSchemeDeclaration {
             }
           )
         }
-      )
+
     }
 
     val completedDeclaration = dormant andThen isMasterTrust andThen decDuties
