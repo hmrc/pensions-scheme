@@ -32,7 +32,7 @@ object PSADetail {
   val apiReads : Reads[PSADetail] = companyDetailsReads orElse individualDetailsReads
 }
 
-case class OrganisationDetailType(name: Option[String] = None, crnNumber: Option[String] = None,
+case class OrganisationDetailType(name: String, crnNumber: Option[String] = None,
                                   vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None) extends PSADetail
 
 object OrganisationDetailType {
@@ -49,7 +49,7 @@ object OrganisationDetailType {
   })
 
   val apiReads: Reads[OrganisationDetailType] = (
-    (JsPath \ "businessDetails" \ "companyName").readNullable[String] and
+    (JsPath \ "businessDetails" \ "companyName").read[String] and
       (JsPath \ "companyDetails").readNullable(companyDetailsReads) and
       (JsPath \ "companyRegistrationNumber").readNullable[String]
     ) ((name, companyDetails: Option[Option[(Option[String], Option[String])]], crnNumber) =>

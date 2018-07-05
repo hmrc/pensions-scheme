@@ -57,7 +57,7 @@ trait Samples {
     noUtrReason = Some("he can't find it"),
     correspondenceCommonDetail = correspondenceCommonDetails,
     previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false))
-  val companySample = OrganisationDetailType(Some("Company Test"),vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
+  val companySample = OrganisationDetailType("Company Test",vatRegistrationNumber = Some("VAT11111"), payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
   val individualSample = IndividualDetailType(firstName = "John",middleName = Some("Does Does"), lastName = "Doe",dateOfBirth = LocalDate.parse("2019-01-31"))
   val pensionAdviserSample = PensionAdvisorDetail("John",ukAddressSample,contactDetailsSample)
   val testDirector = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
