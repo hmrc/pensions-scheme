@@ -75,6 +75,14 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
           result.schemeStructure mustBe customerDetails.copy(schemeStructure = "Other").schemeStructure
         }
+
+        "is Master trust" in {
+          val result = (dataJson + ("schemeDetails" -> Json.obj(
+            "isSchemeMasterTrust" -> true
+            ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+          result mustBe customerDetails.copy(isSchemeMasterTrust = true)
+        }
       }
 
       "we have a valid more than ten trustees flag" in {
