@@ -87,6 +87,7 @@ object CustomerAndSchemeDetails {
     (JsPath \ "schemeDetails" \ "schemeName").read[String] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "schemeTypeDetails").readNullable[String] and
+      (JsPath \ "schemeDetails" \ "isSchemeMasterTrust").read[Boolean] and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
       (JsPath \ "membership").read[String] and
       (JsPath \ "membershipFuture").read[String] and
@@ -98,11 +99,11 @@ object CustomerAndSchemeDetails {
       (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
       (JsPath \ "insurerAddress").readNullable[Address]
     ) (
-    (name, schemeType, schemeTypeDetails, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+    (name, schemeType, schemeTypeDetails, isSchemeMasterTrust, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
      occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
       CustomerAndSchemeDetails(
         schemeName = name,
-        isSchemeMasterTrust = false,
+        isSchemeMasterTrust = isSchemeMasterTrust,
         schemeStructure = SchemeType.valueWithName(schemeType),
         otherSchemeStructure = schemeTypeDetails,
         haveMoreThanTenTrustee = moreThanTenTrustees,
@@ -145,11 +146,12 @@ object PensionSchemeDeclaration {
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
+      (JsPath \ "isSchemeMasterTrust").readNullable[Boolean] and
       (JsPath \ "declarationDormant").readNullable[String] and
-      (JsPath \ "declarationDuties").readNullable[Boolean] and
+      (JsPath \ "declarationDuties").read[Boolean] and
       (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
       (JsPath \ "adviserAddress").readNullable[Address]
-    ) ((declaration, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
+    ) ((declaration, isSchemeMasterTrust, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
 
 
     val basicDeclaration = PensionSchemeDeclaration(
@@ -160,7 +162,8 @@ object PensionSchemeDeclaration {
       declaration,
       declaration,
       declaration,
-      None, None)
+      None, None,
+      None)
 
     val dormant = (dec: PensionSchemeDeclaration) => {
       declarationDormant.fold(dec)(value => {
@@ -173,9 +176,14 @@ object PensionSchemeDeclaration {
       )
     }
 
+    val isMasterTrust=(dec:PensionSchemeDeclaration) =>{
+      isSchemeMasterTrust.fold(dec)(value =>{
+        dec.copy(box3=Some(value))
+      })
+    }
     val decDuties = (dec: PensionSchemeDeclaration) => {
-      declarationDuties.fold(dec)(value =>
-        if (value) {
+
+        if (declarationDuties) {
           dec.copy(box10 = Some(true))
         }
         else {
@@ -194,14 +202,12 @@ object PensionSchemeDeclaration {
             }
           )
         }
-      )
+
     }
 
-    val completedDeclaration = dormant andThen decDuties
+    val completedDeclaration = dormant andThen isMasterTrust andThen decDuties
     completedDeclaration(basicDeclaration)
-
-  }
-  )
+  })
 }
 
 case class Individual(

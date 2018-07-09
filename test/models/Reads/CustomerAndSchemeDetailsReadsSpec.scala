@@ -48,6 +48,8 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Group Life/Death" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
+            "isSchemeMasterTrust" -> false,
+            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "group"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
@@ -58,6 +60,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Body Corporate" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
+            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "corp"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
@@ -68,12 +71,45 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Other with other Scheme structure" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
+            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "other",
               "schemeTypeDetails" -> "other details"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
           result.schemeStructure mustBe customerDetails.copy(schemeStructure = "Other").schemeStructure
+        }
+
+        "is Master trust" in {
+          val result = (dataJson + ("schemeDetails" -> Json.obj(
+            "schemeName" -> "test scheme name",
+            "isSchemeMasterTrust" -> true,
+            "schemeType" -> Json.obj(
+              "name" -> "other",
+              "schemeTypeDetails" -> "other details"
+            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+          result.isSchemeMasterTrust mustBe true
+        }
+
+        "it is not a Master trust" in {
+          val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+          result.isSchemeMasterTrust mustBe false
+        }
+
+        "we have Master Trust" when {
+          "scheme structure is None" in {
+            val result = (dataJson + ("schemeDetails" -> Json.obj(
+              "schemeName" -> "test scheme name",
+              "isSchemeMasterTrust" -> true,
+              "schemeType" -> Json.obj(
+                "name" -> "other",
+                "schemeTypeDetails" -> "other details"
+              )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+            result.schemeStructure mustBe None
+          }
         }
       }
 
@@ -183,6 +219,7 @@ object CustomerAndSchemeDetailsReadsSpec {
   val dataJson: JsObject = Json.obj(
     "schemeDetails" -> Json.obj(
       "schemeName" -> "test scheme name",
+      "isSchemeMasterTrust" -> false,
       "schemeType" -> Json.obj(
         "name" -> "single"
       )

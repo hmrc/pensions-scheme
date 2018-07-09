@@ -361,6 +361,7 @@ object SchemeServiceSpec extends SpecBase {
   val pensionsSchemeJson: JsValue = Json.obj(
     "schemeDetails" -> Json.obj(
       "schemeName" -> "test-scheme-name",
+      "isSchemeMasterTrust" -> false,
       "schemeType" -> Json.obj(
         "name" -> SchemeType.single.name
       )
@@ -374,6 +375,7 @@ object SchemeServiceSpec extends SpecBase {
     "schemeEstablishedCountry" -> "test-scheme-established-country",
     "uKBankAccount" -> false,
     "declaration" -> false,
+    "declarationDuties" -> true,
     "establishers" -> Json.arr(
       Json.obj(
         "establisherDetails" -> Json.obj(
