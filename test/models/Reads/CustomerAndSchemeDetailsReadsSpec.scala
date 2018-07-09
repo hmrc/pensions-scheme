@@ -97,6 +97,20 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
           result.isSchemeMasterTrust mustBe false
         }
+
+        "we have Master Trust" when {
+          "scheme structure is None" in {
+            val result = (dataJson + ("schemeDetails" -> Json.obj(
+              "schemeName" -> "test scheme name",
+              "isSchemeMasterTrust" -> true,
+              "schemeType" -> Json.obj(
+                "name" -> "other",
+                "schemeTypeDetails" -> "other details"
+              )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+            result.schemeStructure mustBe None
+          }
+        }
       }
 
       "we have a valid more than ten trustees flag" in {
