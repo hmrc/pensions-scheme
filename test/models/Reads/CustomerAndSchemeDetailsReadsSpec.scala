@@ -91,6 +91,12 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
           result.isSchemeMasterTrust mustBe true
         }
+
+        "it is not a Master trust" in {
+          val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+          result.isSchemeMasterTrust mustBe false
+        }
       }
 
       "we have a valid more than ten trustees flag" in {
