@@ -54,7 +54,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
               "name" -> "group"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A group life/death in service scheme").schemeStructure
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A group life/death in service scheme")).schemeStructure
         }
 
         "is Body Corporate" in {
@@ -65,7 +65,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
               "name" -> "corp"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A body corporate").schemeStructure
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A body corporate")).schemeStructure
         }
 
         "is Other with other Scheme structure" in {
@@ -77,7 +77,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
               "schemeTypeDetails" -> "other details"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "Other").schemeStructure
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("Other")).schemeStructure
         }
 
         "is Master trust" in {
@@ -102,13 +102,8 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
           "scheme structure is None" in {
             val result = (dataJson + ("schemeDetails" -> Json.obj(
               "schemeName" -> "test scheme name",
-              "isSchemeMasterTrust" -> true,
-              "schemeType" -> Json.obj(
-                "name" -> "other",
-                "schemeTypeDetails" -> "other details"
-              )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-
-            result.schemeStructure mustBe None
+              "isSchemeMasterTrust" -> true))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+             result.schemeStructure mustBe None
           }
         }
       }
@@ -234,8 +229,8 @@ object CustomerAndSchemeDetailsReadsSpec {
     "uKBankAccount" -> true
   )
 
-  val customerDetails = CustomerAndSchemeDetails("test scheme name", false, "A single trust under which all" +
-    " of the assets are held for the benefit of all members of the scheme", Some("other details"),
+  val customerDetails = CustomerAndSchemeDetails("test scheme name", false,Some("A single trust under which all" +
+    " of the assets are held for the benefit of all members of the scheme"), Some("other details"),
     Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", false,
     Some("my insurance company"), Some("111"), Some(UkAddress("ADDRESS LINE 1", Some("ADDRESS LINE 2"),
       Some("ADDRESS LINE 3"), Some("ADDRESS LINE 4"), "GB", "ZZ1 1ZZ")))

@@ -66,7 +66,7 @@ object CorrespondenceContactDetails {
   implicit val formats: Format[CorrespondenceContactDetails] = Json.format[CorrespondenceContactDetails]
 }
 
-case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: String,
+case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: Option[String],
                                     otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,
                                     currentSchemeMembers: String, futureSchemeMembers: String, isReguledSchemeInvestment: Boolean,
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
@@ -83,10 +83,15 @@ object CustomerAndSchemeDetails {
       ((companyName, policyNumber) => (companyName, policyNumber))
     )
 
+  def schemeTypeReads : Reads[(Option[String],Option[String])] = (
+    (JsPath \ "name").readNullable[String] and
+      (JsPath \ "schemeTypeDetails").readNullable[String]
+  )((name,schemeDetails)=>(name,schemeDetails))
+
+
   def apiReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeDetails" \ "schemeName").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType" \ "schemeTypeDetails").readNullable[String] and
+      (JsPath \ "schemeDetails" \ "schemeType").readNullable[(Option[String],Option[String])](schemeTypeReads) and
       (JsPath \ "schemeDetails" \ "isSchemeMasterTrust").read[Boolean] and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
       (JsPath \ "membership").read[String] and
@@ -99,13 +104,13 @@ object CustomerAndSchemeDetails {
       (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
       (JsPath \ "insurerAddress").readNullable[Address]
     ) (
-    (name, schemeType, schemeTypeDetails, isSchemeMasterTrust, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+    (name, schemeDetails, isSchemeMasterTrust, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
      occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
       CustomerAndSchemeDetails(
         schemeName = name,
         isSchemeMasterTrust = isSchemeMasterTrust,
-        schemeStructure = SchemeType.valueWithName(schemeType),
-        otherSchemeStructure = schemeTypeDetails,
+        schemeStructure = schemeDetails.flatMap(c=>c._1.map(z=>SchemeType.valueWithName(z))),
+        otherSchemeStructure = schemeDetails.flatMap(c=>c._2.map(z=>z)),
         haveMoreThanTenTrustee = moreThanTenTrustees,
         currentSchemeMembers = SchemeMembers.valueWithName(membership),
         futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),

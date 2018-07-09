@@ -154,7 +154,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
-      schemeType = AuditSchemeType.masterTrust,
+      schemeType = Some(AuditSchemeType.masterTrust),
       request = Json.toJson(scheme)
     )
 
@@ -164,7 +164,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   it should "translate a single trust scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.single.value)
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.single.value))
 
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
@@ -178,12 +178,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   it should "translate a group Life/Death scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.group.value)
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme,Some(SchemeType.group.value))
 
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
-      schemeType = AuditSchemeType.groupLifeDeath,
+      schemeType = Some(AuditSchemeType.groupLifeDeath),
       request = Json.toJson(scheme)
     )
 
@@ -193,12 +193,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   it should "translate a body corporate scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.corp.value)
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.corp.value))
 
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
-      schemeType = AuditSchemeType.bodyCorporate,
+      schemeType = Some(AuditSchemeType.bodyCorporate),
       request = Json.toJson(scheme)
     )
 
@@ -208,12 +208,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   it should "translate an 'other' scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, SchemeType.other.value)
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.other.value))
 
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
-      schemeType = AuditSchemeType.other,
+      schemeType = Some(AuditSchemeType.other),
       request = Json.toJson(scheme)
     )
 
@@ -225,7 +225,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     val scheme =
       PensionsSchemeSchemeStructure
-        .set(pensionsScheme, SchemeType.single.value)
+        .set(pensionsScheme, Some(SchemeType.single.value))
         .copy(establisherDetails =
           EstablisherDetails(
             companyOrOrganization = Nil,
@@ -248,7 +248,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     val scheme =
       PensionsSchemeSchemeStructure
-        .set(pensionsScheme, SchemeType.single.value)
+        .set(pensionsScheme, Some(SchemeType.single.value))
         .copy(establisherDetails =
           EstablisherDetails(
             companyOrOrganization = Seq(CompanyEstablisherBuilder().build()),
@@ -277,7 +277,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, true, Status.OK, None)
 
     val expected = schemeSubscription.copy(
-      schemeType = AuditSchemeType.singleTrust,
+      schemeType = Some(AuditSchemeType.singleTrust),
       hasDormantCompany = true,
       hasBankDetails = true,
       hasValidBankDetails = false,
@@ -330,7 +330,7 @@ object SchemeServiceSpec extends SpecBase {
     CustomerAndSchemeDetails(
       schemeName = "test-pensions-scheme",
       isSchemeMasterTrust = false,
-      schemeStructure = SchemeType.single.value,
+      schemeStructure = Some(SchemeType.single.value),
       currentSchemeMembers = "test-current-scheme-members",
       futureSchemeMembers = "test-future-scheme-members",
       isReguledSchemeInvestment = false,
@@ -409,7 +409,7 @@ object SchemeServiceSpec extends SpecBase {
 
   val schemeSubscription = SchemeSubscription(
     psaIdentifier = psaId,
-    schemeType = AuditSchemeType.singleTrust,
+    schemeType = Some(AuditSchemeType.singleTrust),
     hasIndividualEstablisher = false,
     hasCompanyEstablisher = false,
     hasPartnershipEstablisher = false,
@@ -430,11 +430,11 @@ object SchemeServiceSpec extends SpecBase {
 
   }
 
-  object PensionsSchemeSchemeStructure extends Lens[PensionsScheme, String] {
+  object PensionsSchemeSchemeStructure extends Lens[PensionsScheme, Option[String]] {
 
-    override def get: PensionsScheme => String = pensionsScheme => pensionsScheme.customerAndSchemeDetails.schemeStructure
+    override def get: PensionsScheme => Option[String] = pensionsScheme => pensionsScheme.customerAndSchemeDetails.schemeStructure
 
-    override def set: (PensionsScheme, String) => PensionsScheme = (pensionsScheme, schemeStructure) =>
+    override def set: (PensionsScheme, Option[String]) => PensionsScheme = (pensionsScheme, schemeStructure) =>
       pensionsScheme.copy(customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(schemeStructure = schemeStructure))
 
   }
