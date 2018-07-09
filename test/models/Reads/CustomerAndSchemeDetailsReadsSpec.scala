@@ -83,10 +83,8 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Master trust" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
-            "isSchemeMasterTrust" -> true,
             "schemeType" -> Json.obj(
-              "name" -> "other",
-              "schemeTypeDetails" -> "other details"
+              "name" -> "master"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
           result.isSchemeMasterTrust mustBe true
@@ -102,7 +100,10 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
           "scheme structure is None" in {
             val result = (dataJson + ("schemeDetails" -> Json.obj(
               "schemeName" -> "test scheme name",
-              "isSchemeMasterTrust" -> true))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+              "schemeType" -> Json.obj(
+                "name" -> "master"
+              )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
              result.schemeStructure mustBe None
           }
         }
