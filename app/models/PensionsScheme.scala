@@ -87,6 +87,7 @@ object CustomerAndSchemeDetails {
     (JsPath \ "schemeDetails" \ "schemeName").read[String] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "schemeTypeDetails").readNullable[String] and
+      (JsPath \ "schemeDetails" \ "isSchemeMasterTrust").read[Boolean] and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
       (JsPath \ "membership").read[String] and
       (JsPath \ "membershipFuture").read[String] and
@@ -98,11 +99,11 @@ object CustomerAndSchemeDetails {
       (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
       (JsPath \ "insurerAddress").readNullable[Address]
     ) (
-    (name, schemeType, schemeTypeDetails, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+    (name, schemeType, schemeTypeDetails, isSchemeMasterTrust, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
      occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
       CustomerAndSchemeDetails(
         schemeName = name,
-        isSchemeMasterTrust = false,
+        isSchemeMasterTrust = isSchemeMasterTrust,
         schemeStructure = SchemeType.valueWithName(schemeType),
         otherSchemeStructure = schemeTypeDetails,
         haveMoreThanTenTrustee = moreThanTenTrustees,
