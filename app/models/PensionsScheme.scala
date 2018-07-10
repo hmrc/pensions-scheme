@@ -83,11 +83,6 @@ object CustomerAndSchemeDetails {
       ((companyName, policyNumber) => (companyName, policyNumber))
     )
 
-  def schemeTypeReads: Reads[(Option[String], Option[String])] = (
-    (JsPath \ "name").readNullable[String] and
-      (JsPath \ "schemeTypeDetails").readNullable[String]
-    ) ((name, schemeDetails) => (name, schemeDetails))
-
   def apiReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeDetails" \ "schemeName").read[String] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
@@ -103,7 +98,7 @@ object CustomerAndSchemeDetails {
       (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
       (JsPath \ "insurerAddress").readNullable[Address]
     ) (
-    (name, schemeType,schemeTypeDetails, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+    (name, schemeType, schemeTypeDetails, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
      occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
 
       val isMasterTrust = schemeType == "master"
