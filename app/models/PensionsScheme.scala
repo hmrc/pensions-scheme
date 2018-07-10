@@ -83,10 +83,14 @@ object CustomerAndSchemeDetails {
       ((companyName, policyNumber) => (companyName, policyNumber))
     )
 
+  def schemeTypeReads : Reads[((String),Option[String])] = (
+       (JsPath \ "name").read[String] and
+         (JsPath \ "schemeTypeDetails").readNullable[String]
+        )((name,schemeDetails)=>(name,schemeDetails))
+
   def apiReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeDetails" \ "schemeName").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType" \ "schemeTypeDetails").readNullable[String] and
+      (JsPath \ "schemeDetails" \ "schemeType").read[((String),Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
       (JsPath \ "membership").read[String] and
       (JsPath \ "membershipFuture").read[String] and
@@ -98,13 +102,13 @@ object CustomerAndSchemeDetails {
       (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
       (JsPath \ "insurerAddress").readNullable[Address]
     ) (
-    (name, schemeType, schemeTypeDetails, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+    (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
      occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
 
-      val isMasterTrust = schemeType == "master"
+      val isMasterTrust = schemeType._1 == "master"
 
       val schemeTypeName = if (!isMasterTrust)
-        Some(SchemeType.valueWithName(schemeType))
+        Some(SchemeType.valueWithName(schemeType._1))
       else
         None
 
@@ -113,7 +117,7 @@ object CustomerAndSchemeDetails {
         schemeName = name,
         isSchemeMasterTrust = isMasterTrust,
         schemeStructure = schemeTypeName,
-        otherSchemeStructure = schemeTypeDetails,
+        otherSchemeStructure = schemeType._2,
         haveMoreThanTenTrustee = moreThanTenTrustees,
         currentSchemeMembers = SchemeMembers.valueWithName(membership),
         futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),
@@ -155,12 +159,12 @@ object PensionSchemeDeclaration {
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
-      (JsPath \ "isSchemeMasterTrust").readNullable[Boolean] and
+      (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
       (JsPath \ "declarationDormant").readNullable[String] and
       (JsPath \ "declarationDuties").read[Boolean] and
       (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
       (JsPath \ "adviserAddress").readNullable[Address]
-    ) ((declaration, isSchemeMasterTrust, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
+    ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
 
 
     val basicDeclaration = PensionSchemeDeclaration(
@@ -186,9 +190,10 @@ object PensionSchemeDeclaration {
     }
 
     val isMasterTrust = (dec: PensionSchemeDeclaration) => {
-      isSchemeMasterTrust.fold(dec)(value => {
-        dec.copy(box3 = Some(value))
-      })
+       if (schemeTypeName == "master")
+         dec.copy(box3 = Some(true))
+       else
+         dec
     }
     val decDuties = (dec: PensionSchemeDeclaration) => {
 

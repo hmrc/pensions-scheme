@@ -23,7 +23,13 @@ import play.api.libs.json.{JsBoolean, JsString, Json}
 class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
  "A json payload containing declarations" should {
    "Map correctly to a Declaration model" when {
-     val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(true))
+     val declaration = Json.obj("declaration" -> JsBoolean(true),
+       "declarationDormant" -> JsString("no"),
+       "declarationDuties" -> JsBoolean(true),
+       "schemeDetails" -> Json.obj(
+         "schemeType" -> Json.obj(
+          "name" -> "trust"
+       )))
      "We have a declaration field" when {
        "It is true then boxes 1,2,6 7,8 and 9 are true" in {
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
@@ -59,7 +65,12 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
      }
      "if we do not have a dormant field" when {
        "box 4 and box 5 should be None" in {
-         val result = Json.obj("declaration" -> JsBoolean(true), "declarationDuties" -> JsBoolean(true)).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+         val result = Json.obj("declaration" -> JsBoolean(true),
+           "declarationDuties" -> JsBoolean(true),
+           "schemeDetails" -> Json.obj(
+             "schemeType" -> Json.obj(
+               "name" -> "trust"
+             ))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
 
          result.box4 mustBe None
          result.box5 mustBe None
@@ -82,7 +93,13 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
          val name="John"
          val address=UkAddress("line1",Some("line2"),Some("line3"),Some("line4"),"GB","NE1")
          val contact=ContactDetails("07592113",None,None,"test@test.com")
-         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(false))
+         val declaration = Json.obj("declaration" -> JsBoolean(true),
+           "declarationDormant" -> JsString("no"),
+           "declarationDuties" -> JsBoolean(false),
+           "schemeDetails" -> Json.obj(
+             "schemeType" -> Json.obj(
+               "name" -> "trust"
+             )))
          val result = (declaration + adviserDetails + adviserAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
 
          result.box10 mustBe None
@@ -104,26 +121,22 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
 
      "we have a isSchemeMasterTrust field" when {
        "set as true" in {
-         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(true), "isSchemeMasterTrust" -> JsBoolean(true))
+         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(true), "schemeDetails" -> Json.obj(
+           "schemeType" -> Json.obj(
+             "name" -> "master"
+           )))
 
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
          result.box3.value mustBe true
        }
 
-       "set as false" in {
-         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(true), "isSchemeMasterTrust" -> JsBoolean(false))
-
-         val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-         result.box3.value mustBe false
-       }
-     }
-     "we don't have a isSchemeMasterTrust field " when {
        "set as None" in {
-         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(true))
-
+         val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"), "declarationDuties" -> JsBoolean(true), "schemeDetails" -> Json.obj(
+           "schemeType" -> Json.obj(
+             "name" -> "single"
+           )))
          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
          result.box3 mustBe None
-
        }
      }
    }
