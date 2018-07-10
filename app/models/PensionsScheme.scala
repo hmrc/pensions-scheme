@@ -107,11 +107,7 @@ object CustomerAndSchemeDetails {
 
       val isMasterTrust = schemeType._1 == "master"
 
-      val schemeTypeName = if (!isMasterTrust)
-        Some(SchemeType.valueWithName(schemeType._1))
-      else
-        None
-
+      val schemeTypeName = if (isMasterTrust) None else Some(SchemeType.valueWithName(schemeType._1))
 
       CustomerAndSchemeDetails(
         schemeName = name,
