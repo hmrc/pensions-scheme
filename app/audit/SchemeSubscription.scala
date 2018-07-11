@@ -20,7 +20,7 @@ import play.api.libs.json.{Format, JsValue, Json}
 
 case class SchemeSubscription(
                                psaIdentifier: String,
-                               schemeType: SchemeType.Value,
+                               schemeType: Option[SchemeType.Value],
                                hasIndividualEstablisher: Boolean,
                                hasCompanyEstablisher: Boolean,
                                hasPartnershipEstablisher: Boolean,
@@ -33,10 +33,9 @@ case class SchemeSubscription(
                              ) extends AuditEvent {
   override def auditType: String = "SchemeSubscription"
 
-  override def details: Map[String, String] =
-    Map(
+  override def details: Map[String, String] = {
+    val details = Map(
       "psaIdentifier" -> psaIdentifier,
-      "schemeType" -> schemeType.toString,
       "hasIndividualEstablisher" -> hasIndividualEstablisher.toString,
       "hasCompanyEstablisher" -> hasCompanyEstablisher.toString,
       "hasPartnershipEstablisher" -> hasPartnershipEstablisher.toString,
@@ -52,6 +51,9 @@ case class SchemeSubscription(
         }
       }
     )
+
+    schemeType.fold(details)(schemeType => details + ("schemeType" -> schemeType.toString))
+  }
 }
 
 object SchemeSubscription {

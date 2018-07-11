@@ -15,6 +15,7 @@
  */
 
 package service
+
 import audit.{AuditService, PSASubscription, SchemeList, SchemeSubscription, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import config.AppConfig
@@ -33,11 +34,11 @@ import models.PensionsScheme.pensionSchemeHaveInvalidBank
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,barsConnector: BarsConnector,
-                        auditService: AuditService, appConfig: AppConfig) extends SchemeService {
+class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector,
+                                  auditService: AuditService, appConfig: AppConfig) extends SchemeService {
 
   override def listOfSchemes(psaId: String)
-                   (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+                            (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
     schemeConnector.listOfSchemes(psaId) andThen {
       case Success(httpResponse) =>
@@ -177,10 +178,10 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,barsConnector
   (psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue]): SchemeSubscription = {
 
     val schemeType = if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
-      AuditSchemeType.masterTrust
+     Some(AuditSchemeType.masterTrust)
     }
     else {
-      pensionsScheme.customerAndSchemeDetails.schemeStructure match {
+      pensionsScheme.customerAndSchemeDetails.schemeStructure.map {
         case SchemeType.single.value => AuditSchemeType.singleTrust
         case SchemeType.group.value => AuditSchemeType.groupLifeDeath
         case SchemeType.corp.value => AuditSchemeType.bodyCorporate

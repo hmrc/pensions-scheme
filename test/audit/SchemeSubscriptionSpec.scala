@@ -30,7 +30,7 @@ class SchemeSubscriptionSpec extends FlatSpec with Matchers {
 
     val event = SchemeSubscription(
       psaIdentifier = psaIdentifier,
-      schemeType = SchemeType.singleTrust,
+      schemeType = Some(SchemeType.singleTrust),
       hasIndividualEstablisher = true,
       hasCompanyEstablisher = false,
       hasPartnershipEstablisher = true,

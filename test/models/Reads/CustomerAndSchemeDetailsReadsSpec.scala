@@ -48,32 +48,64 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Group Life/Death" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
+            "isSchemeMasterTrust" -> false,
+            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "group"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A group life/death in service scheme").schemeStructure
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A group life/death in service scheme")).schemeStructure
         }
 
         "is Body Corporate" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
+            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "corp"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "A body corporate").schemeStructure
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A body corporate")).schemeStructure
         }
 
         "is Other with other Scheme structure" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
+            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "other",
               "schemeTypeDetails" -> "other details"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = "Other").schemeStructure
+          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("Other")).schemeStructure
+        }
+
+        "is Master trust" in {
+          val result = (dataJson + ("schemeDetails" -> Json.obj(
+            "schemeName" -> "test scheme name",
+            "schemeType" -> Json.obj(
+              "name" -> "master"
+            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+          result.isSchemeMasterTrust mustBe true
+        }
+
+        "it is not a Master trust" in {
+          val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+          result.isSchemeMasterTrust mustBe false
+        }
+
+        "we have Master Trust" when {
+          "scheme structure is None" in {
+            val result = (dataJson + ("schemeDetails" -> Json.obj(
+              "schemeName" -> "test scheme name",
+              "schemeType" -> Json.obj(
+                "name" -> "master"
+              )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+             result.schemeStructure mustBe None
+          }
         }
       }
 
@@ -183,6 +215,7 @@ object CustomerAndSchemeDetailsReadsSpec {
   val dataJson: JsObject = Json.obj(
     "schemeDetails" -> Json.obj(
       "schemeName" -> "test scheme name",
+      "isSchemeMasterTrust" -> false,
       "schemeType" -> Json.obj(
         "name" -> "single"
       )
@@ -197,8 +230,8 @@ object CustomerAndSchemeDetailsReadsSpec {
     "uKBankAccount" -> true
   )
 
-  val customerDetails = CustomerAndSchemeDetails("test scheme name", false, "A single trust under which all" +
-    " of the assets are held for the benefit of all members of the scheme", Some("other details"),
+  val customerDetails = CustomerAndSchemeDetails("test scheme name", false,Some("A single trust under which all" +
+    " of the assets are held for the benefit of all members of the scheme"), Some("other details"),
     Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", false,
     Some("my insurance company"), Some("111"), Some(UkAddress("ADDRESS LINE 1", Some("ADDRESS LINE 2"),
       Some("ADDRESS LINE 3"), Some("ADDRESS LINE 4"), "GB", "ZZ1 1ZZ")))

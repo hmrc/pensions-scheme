@@ -40,10 +40,10 @@ case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
 object PreviousAddressDetails {
   implicit val formats: Format[PreviousAddressDetails] = Json.format[PreviousAddressDetails]
 
-  val psaSubmissionWrites : Writes[PreviousAddressDetails] = (
+  val psaSubmissionWrites: Writes[PreviousAddressDetails] = (
     (JsPath \ "isPreviousAddressLast12Month").write[Boolean] and
       (JsPath \ "previousAddressDetail").writeNullable[Address]
-    )(previousAddress => (previousAddress.isPreviousAddressLast12Month,previousAddress.previousAddressDetails))
+    ) (previousAddress => (previousAddress.isPreviousAddressLast12Month, previousAddress.previousAddressDetails))
 
   def apiReads(typeOfAddressDetail: String): Reads[PreviousAddressDetails] = (
     (JsPath \ s"${typeOfAddressDetail}AddressYears").read[String] and
@@ -66,7 +66,7 @@ object CorrespondenceContactDetails {
   implicit val formats: Format[CorrespondenceContactDetails] = Json.format[CorrespondenceContactDetails]
 }
 
-case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: String,
+case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: Option[String],
                                     otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,
                                     currentSchemeMembers: String, futureSchemeMembers: String, isReguledSchemeInvestment: Boolean,
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
@@ -83,10 +83,14 @@ object CustomerAndSchemeDetails {
       ((companyName, policyNumber) => (companyName, policyNumber))
     )
 
+  def schemeTypeReads : Reads[((String),Option[String])] = (
+       (JsPath \ "name").read[String] and
+         (JsPath \ "schemeTypeDetails").readNullable[String]
+        )((name,schemeDetails)=>(name,schemeDetails))
+
   def apiReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeDetails" \ "schemeName").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType" \ "schemeTypeDetails").readNullable[String] and
+      (JsPath \ "schemeDetails" \ "schemeType").read[((String),Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
       (JsPath \ "membership").read[String] and
       (JsPath \ "membershipFuture").read[String] and
@@ -98,13 +102,18 @@ object CustomerAndSchemeDetails {
       (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
       (JsPath \ "insurerAddress").readNullable[Address]
     ) (
-    (name, schemeType, schemeTypeDetails, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+    (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
      occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
+
+      val isMasterTrust = schemeType._1 == "master"
+
+      val schemeTypeName = if (isMasterTrust) None else Some(SchemeType.valueWithName(schemeType._1))
+
       CustomerAndSchemeDetails(
         schemeName = name,
-        isSchemeMasterTrust = false,
-        schemeStructure = SchemeType.valueWithName(schemeType),
-        otherSchemeStructure = schemeTypeDetails,
+        isSchemeMasterTrust = isMasterTrust,
+        schemeStructure = schemeTypeName,
+        otherSchemeStructure = schemeType._2,
         haveMoreThanTenTrustee = moreThanTenTrustees,
         currentSchemeMembers = SchemeMembers.valueWithName(membership),
         futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),
@@ -139,17 +148,19 @@ case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[B
                                     box5: Option[Boolean] = None, box6: Boolean, box7: Boolean, box8: Boolean, box9: Boolean,
                                     box10: Option[Boolean] = None, box11: Option[Boolean] = None, pensionAdviserName: Option[String] = None,
                                     addressAndContactDetails: Option[AddressAndContactDetails] = None)
+
 object PensionSchemeDeclaration {
 
   implicit val formats: Format[PensionSchemeDeclaration] = Json.format[PensionSchemeDeclaration]
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
+      (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
       (JsPath \ "declarationDormant").readNullable[String] and
-      (JsPath \ "declarationDuties").readNullable[Boolean] and
+      (JsPath \ "declarationDuties").read[Boolean] and
       (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
       (JsPath \ "adviserAddress").readNullable[Address]
-    ) ((declaration, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
+    ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
 
 
     val basicDeclaration = PensionSchemeDeclaration(
@@ -160,11 +171,12 @@ object PensionSchemeDeclaration {
       declaration,
       declaration,
       declaration,
-      None, None)
+      None, None,
+      None)
 
     val dormant = (dec: PensionSchemeDeclaration) => {
       declarationDormant.fold(dec)(value => {
-        if (value=="no") {
+        if (value == "no") {
           dec.copy(box4 = Some(true))
         } else {
           dec.copy(box5 = Some(true))
@@ -173,85 +185,89 @@ object PensionSchemeDeclaration {
       )
     }
 
+    val isMasterTrust = (dec: PensionSchemeDeclaration) => {
+       if (schemeTypeName == "master")
+         dec.copy(box3 = Some(true))
+       else
+         dec
+    }
     val decDuties = (dec: PensionSchemeDeclaration) => {
-      declarationDuties.fold(dec)(value =>
-        if (value) {
-          dec.copy(box10 = Some(true))
-        }
-        else {
-          dec.copy(
-            box11 = Some(true),
-            pensionAdviserName = adviserDetails.map(_.adviserName),
-            addressAndContactDetails = {
-              (adviserDetails, adviserAddress) match {
-                case (Some(contact), Some(address)) =>
-                  Some(AddressAndContactDetails(
-                    address,
-                    ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)
-                  ))
-                case _ => None
-              }
+
+      if (declarationDuties) {
+        dec.copy(box10 = Some(true))
+      }
+      else {
+        dec.copy(
+          box11 = Some(true),
+          pensionAdviserName = adviserDetails.map(_.adviserName),
+          addressAndContactDetails = {
+            (adviserDetails, adviserAddress) match {
+              case (Some(contact), Some(address)) =>
+                Some(AddressAndContactDetails(
+                  address,
+                  ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)
+                ))
+              case _ => None
             }
-          )
-        }
-      )
+          }
+        )
+      }
+
     }
 
-    val completedDeclaration = dormant andThen decDuties
+    val completedDeclaration = dormant andThen isMasterTrust andThen decDuties
     completedDeclaration(basicDeclaration)
-
-  }
-  )
+  })
 }
 
 case class Individual(
-  personalDetails: PersonalDetails,
-  referenceOrNino: Option[String] = None,
-  noNinoReason: Option[String] = None,
-  utr: Option[String] = None,
-  noUtrReason: Option[String] = None,
-  correspondenceAddressDetails: CorrespondenceAddressDetails,
-  correspondenceContactDetails: CorrespondenceContactDetails,
-  previousAddressDetails: Option[PreviousAddressDetails] = None
-)
+                       personalDetails: PersonalDetails,
+                       referenceOrNino: Option[String] = None,
+                       noNinoReason: Option[String] = None,
+                       utr: Option[String] = None,
+                       noUtrReason: Option[String] = None,
+                       correspondenceAddressDetails: CorrespondenceAddressDetails,
+                       correspondenceContactDetails: CorrespondenceContactDetails,
+                       previousAddressDetails: Option[PreviousAddressDetails] = None
+                     )
 
-case class CompanyEstablisher (
-  organizationName: String,
-  utr: Option[String] = None,
-  noUtrReason: Option[String] = None,
-  crnNumber: Option[String] = None,
-  noCrnReason: Option[String] = None,
-  vatRegistrationNumber: Option[String] = None,
-  payeReference: Option[String] = None,
-  haveMoreThanTenDirectorOrPartner: Boolean,
-  correspondenceAddressDetails: CorrespondenceAddressDetails,
-  correspondenceContactDetails: CorrespondenceContactDetails,
-  previousAddressDetails: Option[PreviousAddressDetails] = None,
-  directorDetails: Seq[Individual]
-)
+case class CompanyEstablisher(
+                               organizationName: String,
+                               utr: Option[String] = None,
+                               noUtrReason: Option[String] = None,
+                               crnNumber: Option[String] = None,
+                               noCrnReason: Option[String] = None,
+                               vatRegistrationNumber: Option[String] = None,
+                               payeReference: Option[String] = None,
+                               haveMoreThanTenDirectorOrPartner: Boolean,
+                               correspondenceAddressDetails: CorrespondenceAddressDetails,
+                               correspondenceContactDetails: CorrespondenceContactDetails,
+                               previousAddressDetails: Option[PreviousAddressDetails] = None,
+                               directorDetails: Seq[Individual]
+                             )
 
 case class CompanyTrustee(
-  organizationName: String,
-  utr: Option[String] = None,
-  noUtrReason: Option[String] = None,
-  crnNumber: Option[String] = None,
-  noCrnReason: Option[String] = None,
-  vatRegistrationNumber: Option[String] = None,
-  payeReference: Option[String] = None,
-  correspondenceAddressDetails: CorrespondenceAddressDetails,
-  correspondenceContactDetails: CorrespondenceContactDetails,
-  previousAddressDetails: Option[PreviousAddressDetails] = None
-)
+                           organizationName: String,
+                           utr: Option[String] = None,
+                           noUtrReason: Option[String] = None,
+                           crnNumber: Option[String] = None,
+                           noCrnReason: Option[String] = None,
+                           vatRegistrationNumber: Option[String] = None,
+                           payeReference: Option[String] = None,
+                           correspondenceAddressDetails: CorrespondenceAddressDetails,
+                           correspondenceContactDetails: CorrespondenceContactDetails,
+                           previousAddressDetails: Option[PreviousAddressDetails] = None
+                         )
 
 case class TrusteeDetails(
-  individualTrusteeDetail: Seq[Individual],
-  companyTrusteeDetail: Seq[CompanyTrustee]
-)
+                           individualTrusteeDetail: Seq[Individual],
+                           companyTrusteeDetail: Seq[CompanyTrustee]
+                         )
 
 case class EstablisherDetails(
-  individual: Seq[Individual],
-  companyOrOrganization: Seq[CompanyEstablisher]
-)
+                               individual: Seq[Individual],
+                               companyOrOrganization: Seq[CompanyEstablisher]
+                             )
 
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
                           establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails)
