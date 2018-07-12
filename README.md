@@ -3,7 +3,41 @@
 [![Build Status](https://travis-ci.org/hmrc/pensions-scheme.svg)](https://travis-ci.org/hmrc/pensions-scheme) [ ![Download](https://api.bintray.com/packages/hmrc/releases/pensions-scheme/images/download.svg) ](https://bintray.com/hmrc/releases/pensions-scheme/_latestVersion)
 
 
-This is a placeholder README.md for a new repository 
+pensions-scheme
+=============
+
+Microservice to support the registration of Pension Scheme Administrators and the registration of Pensions Schemes
+
+### Registration Endpoints
+
+| Method | Path                                                            | Description                                                                                                           |
+|--------|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+|  POST  | ```/register-scheme```                    | Register scheme.                                                          |
+|  POST   | ```/register-psa```   | Register Pension Scheme Administrator.                                                   |
+
+
+### Scheme List Endpoints
+
+| Method | Path                                                            | Description                                                                                                           |
+|--------|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+|  GET   | ```/list-of-schemes```                  | Retrieves list of schemes successfully submitted to date.|
+
+
+### Business Partner Matching Endpoints
+
+| Method | Path                                                            | Description                                                                                                           |
+|--------|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+|  POST  | ```/register-with-no-id/organisation```                    |                                                           |
+|  POST   | ```/register-with-id/individual```   |                                                    |
+|  POST   | ```/register-with-id/organisation```                  | Retrieve company information given Company Name and Unique Tax Reference.|
+
+
+### Name Matching Endpoints
+
+| Method | Path                                                            | Description                                                                                                           |
+|--------|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+|  GET   | ```/psa-name/:id```                  | |
+|  POST   | ```/psa-name/:id```                  | |
 
 
 ### License
