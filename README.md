@@ -28,7 +28,7 @@ Microservice to support the registration of Pension Scheme Administrators and th
 | Method | Path                                                            | Description                                                                                                           |
 |--------|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
 |  POST  | ```/register-with-no-id/organisation```                    |                                                           |
-|  POST   | ```/register-with-id/individual```   |                                                    |
+|  POST   | ```/register-with-id/individual```   | Retrieve individual information given name and NINO                                                   |
 |  POST   | ```/register-with-id/organisation```                  | Retrieve company information given Company Name and Unique Tax Reference.|
 
 
