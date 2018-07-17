@@ -47,6 +47,8 @@ trait SchemeConnector {
                                    headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
+
+  def getCorrelationId(requestId: Option[String]): String
 }
 
 class SchemeConnectorImpl @Inject()(
@@ -57,13 +59,17 @@ class SchemeConnectorImpl @Inject()(
                                    ) extends SchemeConnector {
 
   def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
-    val requestId = hc.requestId.map(_.value).getOrElse {
-      Logger.error("No Request Id found while calling register with Id")
-      randomUUID.toString
-    }.replaceAll("(govuk-tax-|-)", "")
+    val requestId = getCorrelationId(hc.requestId.map(_.value))
 
     Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
+  }
+
+  def getCorrelationId(requestId: Option[String]): String = {
+    requestId.getOrElse{
+      Logger.error("No Request Id found while calling register with Id")
+      randomUUID.toString
+    }.replaceAll("(govuk-tax-|-)", "").slice(0, 32)
   }
 
   override def registerScheme(psaId: String, registerData: JsValue)(implicit
