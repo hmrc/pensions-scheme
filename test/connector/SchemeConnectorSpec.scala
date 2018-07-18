@@ -324,6 +324,32 @@ class SchemeConnectorSpec extends AsyncWordSpec with MustMatchers with WireMockH
       }
     }
   }
+
+  "SchemeConnector" must {
+
+    "return the correct CorrelationId by " when {
+      "the request Id is more than 32 characters" in {
+        val connector = injector.instanceOf[SchemeConnector]
+        val requestId = Some("govuk-tax-4725c811-9251-4c06-9b8f-f1d84659b2dfe")
+        val result = connector.getCorrelationId(requestId)
+        result mustBe "4725c81192514c069b8ff1d84659b2df"
+      }
+
+      "the request Id is less than 32 characters" in {
+        val connector = injector.instanceOf[SchemeConnector]
+        val requestId = Some("govuk-tax-4725c811-9251-4c06-9b8f-f1")
+        val result = connector.getCorrelationId(requestId)
+        result mustBe "4725c81192514c069b8ff1"
+      }
+
+      "the request Id does not have gov-uk-tax or -" in {
+        val connector = injector.instanceOf[SchemeConnector]
+        val requestId = Some("4725c81192514c069b8ff1")
+        val result = connector.getCorrelationId(requestId)
+        result mustBe "4725c81192514c069b8ff1"
+      }
+    }
+  }
 }
 
 object SchemeConnectorSpec extends JsonFileReader {

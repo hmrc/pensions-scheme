@@ -229,6 +229,8 @@ class FakeSchemeConnector extends SchemeConnector {
                                             headerCarrier: HeaderCarrier,
                                             ec: ExecutionContext,
                                             request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
+
+  override def getCorrelationId(requestId: Option[String]): String = "4725c81192514c069b8ff1d84659b2df"
 }
 
 object FakeSchemeConnector {
