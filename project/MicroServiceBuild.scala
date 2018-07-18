@@ -30,7 +30,7 @@ object MicroServiceBuild extends Build with MicroService {
   val compile = Seq(
     "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.4.0",
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.7.0",
     "com.networknt" % "json-schema-validator" % "0.1.19",
     "com.josephpconley" %% "play-jsonpath" % "2.5.0"
   )
