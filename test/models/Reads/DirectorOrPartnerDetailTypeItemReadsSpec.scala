@@ -22,133 +22,150 @@ import play.api.libs.json._
 
 
 class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
-  "JSON Payload of a Director" should  {
+
+  import DirectorOrPartnerDetailTypeItemReadsSpec._
+
+  "JSON Payload of a Director" should {
     "Map correctly into a DirectorOrPartnerDetailTypeItem" when {
-      
-      val director = Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("John"),
-        "lastName" -> JsString("Doe"),
-        "middleName" -> JsString("Does Does"),
-        "dateOfBirth" -> JsString("2019-01-31")),
-        "directorNino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
-        "directorUtr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
-        "directorAddressYears" -> JsString("over_a_year")
-      ) + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-        Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "country" -> JsString("IT")))
 
-      val directors = JsArray(Seq(director,director))
+      Seq(("director", directors), ("partner", partners)).foreach { entity =>
+        val (personType, personDetails) = entity
+        val directorsOrPartners = JsArray(personDetails)
+        s"We have $personType user details" when {
+          s"We have a list of $personType" in {
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+            result.head.lastName mustBe directorSample(personType).lastName
+          }
 
-      "We have director user details" when {
-        "We have a list of Directors" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
+          "We have a sequence id" in {
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+            result.head.sequenceId mustBe directorSample(personType).sequenceId
+          }
 
-          result.head.lastName mustBe directorSample.lastName
+          "We have 10 directors" in {
+            val directorsOrPartners = JsArray(Seq.tabulate(10)(_ => personDetails.head))
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+            result.last.sequenceId mustBe "009"
+          }
+
+          "We have 100 directors" in {
+            val directorsOrPartners = JsArray(Seq.tabulate(100)(_ => personDetails.head))
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+            result.last.sequenceId mustBe "099"
+          }
+
+          "We have 101 directors" in {
+            val directorsOrPartners = JsArray(Seq.tabulate(101)(_ => personDetails.head))
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+            result.last.sequenceId mustBe "100"
+          }
+
+          "We have individual details" in {
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+            result.head.firstName mustBe directorSample(personType).firstName
+          }
         }
 
-        "We have a sequence id" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-          result.head.sequenceId mustBe directorSample.sequenceId
+        s"We have $personType NINO details" when {
+          "We have a director nino" in {
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+
+            result.head.referenceOrNino mustBe directorSample(personType).referenceOrNino
+          }
+
+          "We don't have a nino" in {
+            val directorsNoNino = directorsOrPartners.value :+ (directorsOrPartners.head.as[JsObject] +
+              (s"${personType}Nino" -> Json.obj("hasNino" -> JsBoolean(false))))
+            val result = JsArray(directorsNoNino).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+
+            result.last.referenceOrNino mustBe None
+          }
+
+          "We have a reason for not having nino" in {
+            val directorsNoNino = directorsOrPartners.value :+
+              (directorsOrPartners.head.as[JsObject] + (s"${personType}Nino" -> Json.obj("reason" -> JsString("he can't find it"))))
+
+            val result = JsArray(directorsNoNino).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+
+            result.last.noNinoReason mustBe directorSample(personType).noNinoReason
+          }
         }
 
-        "We have 10 directors" in {
-          val directors = JsArray(Seq.tabulate(10)(_ => director))
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-          result.last.sequenceId mustBe "009"
+        s"We have $personType UTR details" when {
+          s"We have a $personType utr" in {
+            val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+
+            result.head.utr mustBe directorSample(personType).utr
+          }
+
+          "There is no UTR" in {
+            val directorNoUtr = directorsOrPartners.value :+ (directorsOrPartners.head.as[JsObject] +
+              (s"${personType}Utr" -> Json.obj("hasUtr" -> JsBoolean(false))))
+
+            val result = JsArray(directorNoUtr).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+
+            result.last.utr mustBe None
+          }
+
+          "We have a reason for not having utr" in {
+            val directorNoUtr = directorsOrPartners.value :+ (directorsOrPartners.head.as[JsObject] +
+              (s"${personType}Utr" -> Json.obj("reason" -> JsString("he can't find it"))))
+
+            val result = JsArray(directorNoUtr).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+
+            result.last.noUtrReason mustBe directorSample(personType).noUtrReason
+          }
         }
 
-        "We have 100 directors" in {
-          val directors = JsArray(Seq.tabulate(100)(_ => director))
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-          result.last.sequenceId mustBe "099"
+        s"We have entity type as $personType" in {
+          val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+
+          result.head.entityType mustBe directorSample(personType).entityType
         }
 
-        "We have 101 directors" in {
-          val directors = JsArray(Seq.tabulate(101)(_ => director))
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-          result.last.sequenceId mustBe "100"
+        s"We have a $personType previous address detail" in {
+          val directorWithPreviousAddress = directorsOrPartners.value :+ (directorsOrPartners.head.as[JsObject] +
+            (s"${personType}AddressYears" -> JsString("under_a_year")) +
+            (s"${personType}PreviousAddress" -> Json.obj("addressLine1" -> JsString("line1"),
+              "addressLine2" -> JsString("line2"), "country" -> JsString("IT"))))
+
+
+          val result = JsArray(directorWithPreviousAddress).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
+          val expectedDirector = directorSample(personType).copy(previousAddressDetail =
+            PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(InternationalAddress("line1", Some("line2"), countryCode = "IT"))))
+
+          result.last.previousAddressDetail mustBe expectedDirector.previousAddressDetail
         }
 
-        "We have individual details" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
+        s"We have a $personType correspondence common detail" in {
+          val directorWithCorrespondenceCommonDetail = directorsOrPartners.value :+ (directorsOrPartners.head.as[JsObject] +
+            (s"${personType}ContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + (s"${personType}Address" ->
+            Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+              "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "postcode" -> JsString("NE1"), "country" -> JsString("IT"))))
 
-          result.head.firstName mustBe directorSample.firstName
+          val result = JsArray(directorWithCorrespondenceCommonDetail).as[List[DirectorOrPartnerDetailTypeItem]](
+            DirectorOrPartnerDetailTypeItem.apiReads(personType))
+          val expectedDirector = directorSample(personType).copy(correspondenceCommonDetail = correspondenceCommonDetails)
+
+          result.last.correspondenceCommonDetail mustBe expectedDirector.correspondenceCommonDetail
         }
-      }
-
-      "We have director NINO details" when {
-        "We have a director nino" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.head.referenceOrNino mustBe directorSample.referenceOrNino
-        }
-
-        "We don't have a nino" in {
-          val directorsNoNino = directors.value :+ (director + ("directorNino" -> Json.obj("hasNino" -> JsBoolean(false))))
-
-          val result = JsArray(directorsNoNino).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.last.referenceOrNino mustBe None
-        }
-
-        "We have a reason for not having nino" in {
-          val directorsNoNino = directors.value :+ (director + ("directorNino" -> Json.obj("reason" -> JsString("he can't find it"))))
-
-          val result = JsArray(directorsNoNino).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.last.noNinoReason mustBe directorSample.noNinoReason
-        }
-      }
-
-      "We have director UTR details" when {
-        "We have a director utr" in {
-          val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.head.utr mustBe directorSample.utr
-        }
-
-        "There is no UTR" in {
-          val directorNoUtr = directors.value :+ (director + ("directorUtr" -> Json.obj("hasUtr" -> JsBoolean(false))))
-
-          val result = JsArray(directorNoUtr).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.last.utr mustBe None
-        }
-
-        "We have a reason for not having utr" in {
-          val directorNoUtr = directors.value :+ (director + ("directorUtr" -> Json.obj("reason" -> JsString("he can't find it"))))
-
-          val result = JsArray(directorNoUtr).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-          result.last.noUtrReason mustBe directorSample.noUtrReason
-        }
-      }
-
-      "We have entity type as Director" in {
-        val result = directors.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-
-        result.head.entityType mustBe directorSample.entityType
-      }
-
-      "We have a previous address detail" in {
-        val directorWithPreviousAddress = directors.value :+ (director + ("directorAddressYears" -> JsString("under_a_year")) +
-          ("directorPreviousAddress"->  Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "country" -> JsString("IT"))))
-
-
-        val result = JsArray(directorWithPreviousAddress).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-        val expectedDirector = directorSample.copy(previousAddressDetail = PreviousAddressDetails(true,Some(InternationalAddress("line1",Some("line2"),countryCode = "IT"))))
-
-        result.last.previousAddressDetail mustBe expectedDirector.previousAddressDetail
-      }
-
-      "We have a correspondence common detail" in {
-        val directorWithCorrespondenceCommonDetail = directors.value :+ (director + ("directorContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + ("directorAddress"->
-          Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
-            "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT"))))
-
-        val result = JsArray(directorWithCorrespondenceCommonDetail).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads)
-        val expectedDirector = directorSample.copy(correspondenceCommonDetail = correspondenceCommonDetails)
-
-        result.last.correspondenceCommonDetail mustBe expectedDirector.correspondenceCommonDetail
       }
     }
   }
+}
+
+object DirectorOrPartnerDetailTypeItemReadsSpec {
+
+  private def directorOrPartner(personType: String) = Json.obj(s"${personType}Details" -> Json.obj("firstName" -> JsString("John"),
+    "lastName" -> JsString("Doe"),
+    "middleName" -> JsString("Does Does"),
+    "dateOfBirth" -> JsString("2019-01-31")),
+    s"${personType}Nino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
+    s"${personType}Utr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
+    s"${personType}AddressYears" -> JsString("over_a_year")
+  ) + (s"${personType}ContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) + (s"${personType}Address" ->
+    Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "country" -> JsString("IT")))
+
+  val directors = Seq(directorOrPartner("director"), directorOrPartner("director"))
+  val partners = Seq(directorOrPartner("partner"), directorOrPartner("partner"))
 }

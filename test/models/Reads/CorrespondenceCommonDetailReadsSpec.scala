@@ -21,23 +21,34 @@ import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
 class CorrespondenceCommonDetailReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
+
+  import CorrespondenceCommonDetailReadsSpec._
+
   "JSON payload containing correspondence common details" should {
-    "correclty parse to a CorrespondenceCommonDetails object" when {
-      val details = Json.obj("directorContactDetails" -> Json.obj("email" -> "test@test.com",
-        "phone" -> "07592113"),
-        "directorAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
-          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("IT")))
-      "We have Contact Details" in {
-        val result = details.as[CorrespondenceCommonDetail](CorrespondenceCommonDetail.apiReads)
+    Seq("director", "partner").foreach { personType =>
 
-        result.contactDetail.telephone mustBe correspondenceCommonDetails.contactDetail.telephone
-      }
+      s"correctly parse to a ${personType} CorrespondenceCommonDetails object" when {
 
-      "We have an address" in {
-        val result = details.as[CorrespondenceCommonDetail](CorrespondenceCommonDetail.apiReads)
+        "We have Contact Details" in {
+          val result = directorOrPartnerDetails(personType).as[CorrespondenceCommonDetail](CorrespondenceCommonDetail.apiReads(personType))
 
-        result.addressDetail mustBe correspondenceCommonDetails.addressDetail
+          result.contactDetail.telephone mustBe correspondenceCommonDetails.contactDetail.telephone
+        }
+
+        "We have an address" in {
+          val result = directorOrPartnerDetails(personType).as[CorrespondenceCommonDetail](CorrespondenceCommonDetail.apiReads(personType))
+
+          result.addressDetail mustBe correspondenceCommonDetails.addressDetail
+        }
       }
     }
   }
+}
+
+object CorrespondenceCommonDetailReadsSpec {
+
+  private def directorOrPartnerDetails(personType: String) = Json.obj(s"${personType}ContactDetails" -> Json.obj("email" -> "test@test.com",
+    "phone" -> "07592113"),
+    s"${personType}Address" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+      "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "postcode" -> JsString("NE1"), "country" -> JsString("IT")))
 }
