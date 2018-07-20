@@ -34,7 +34,7 @@ class PensionSchemeAdministratorWritesSpec extends WordSpec with MustMatchers wi
         }
 
         s"We are doing a PSA submission with ${personType}s that have previous address" in {
-          val directorWithPreviousAddress = directorSample(personType).copy(previousAddressDetail = PreviousAddressDetails(true, Some(ukAddressSample)))
+          val directorWithPreviousAddress = directorOrPartnerSample(personType).copy(previousAddressDetail = PreviousAddressDetails(true, Some(ukAddressSample)))
           val result = Json.toJson(pensionSchemeAdministratorSample.copy(directorOrPartnerDetail = Some(List(directorWithPreviousAddress))))(
             PensionSchemeAdministrator.psaSubmissionWrites)
 

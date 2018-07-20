@@ -18,64 +18,93 @@ package models.Reads
 
 import models.{OrganisationDetailType, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsBoolean, JsString, Json}
 
 class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionValues with Samples {
-  "A JSON Payload containing organisation detials" should {
-    "Map correctly to an OrganisationDetailTypeSpec" when {
-      val companyDetails = Json.obj("companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111"), "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
-        "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
 
-      "We have a name" in {
-        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+  import OrganisationDetailTypeSpec._
 
-        result.name mustBe companySample.name
-      }
+  "A JSON Payload containing organisation detials" must {
 
-      "We have VAT registration number" in {
-        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+    Seq(("Company", companyDetails), ("Partnership", partnershipDetails)).foreach { entityType =>
+      val (orgType, orgData) = entityType
+      s"Map correctly to a ${orgType} OrganisationDetailType model" when {
+        val apiReads = if(orgType == "Company") OrganisationDetailType.CompanyApiReads else OrganisationDetailType.partnershipApiReads
 
-        result.vatRegistrationNumber mustBe companySample.vatRegistrationNumber
-      }
+        "We have a name" in {
+          val result = orgData.as[OrganisationDetailType](apiReads)
 
-      "We have a PAYE employer reference number" in {
-        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+          result.name mustBe companySample.name
+        }
 
-        result.payeReference mustBe companySample.payeReference
-      }
+        "We have VAT registration number" in {
+          val result = orgData.as[OrganisationDetailType](apiReads)
 
-      "We have a Company Registration Number" in {
-        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+          result.vatRegistrationNumber mustBe companySample.vatRegistrationNumber
+        }
 
-        result.crnNumber mustBe companySample.crnNumber
-      }
+        "We have a PAYE employer reference number" in {
+          val result = orgData.as[OrganisationDetailType](apiReads)
 
-      "We have no company details" in {
-        val orgDetailsWithNoCompanyDetails = companyDetails - "companyDetails"
+          result.payeReference mustBe companySample.payeReference
+        }
 
-        val result = orgDetailsWithNoCompanyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+        "We have a Company Registration Number" in {
+          val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.CompanyApiReads)
 
-        result.vatRegistrationNumber mustBe None
-      }
+          result.crnNumber mustBe companySample.crnNumber
+        }
 
+        "We have no company details" in {
+          val orgDetailsWithNoCompanyDetails = companyDetails - "companyDetails"
 
-      "We have no VAT registration number" in {
-        val companyDetails = Json.obj("companyDetails" -> Json.obj("payeEmployerReferenceNumber" -> JsString("PAYE11111")),
-          "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
+          val result = orgDetailsWithNoCompanyDetails.as[OrganisationDetailType](OrganisationDetailType.CompanyApiReads)
 
-        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+          result.vatRegistrationNumber mustBe None
+        }
 
-        result.vatRegistrationNumber mustBe None
-      }
+        "We have no VAT registration number" in {
+          val companyDetails = orgDetailWithoutVat(orgType)
 
-      "We have no payeEmployerReferenceNumber" in {
-        val companyDetails = Json.obj("companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("PAYE11111")),
-          "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
+          val result = companyDetails.as[OrganisationDetailType](apiReads)
 
-        val result = companyDetails.as[OrganisationDetailType](OrganisationDetailType.apiReads)
+          result.vatRegistrationNumber mustBe None
+        }
 
-        result.payeReference mustBe None
+        "We have no payeEmployerReferenceNumber" in {
+          val companyDetails = orgDetailWithoutPaye(orgType)
+
+          val result = companyDetails.as[OrganisationDetailType](apiReads)
+
+          result.payeReference mustBe None
+        }
       }
     }
   }
+}
+
+object OrganisationDetailTypeSpec {
+  val companyDetails = Json.obj("companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111"),
+    "payeEmployerReferenceNumber" -> JsString("PAYE11111")),
+    "companyRegistrationNumber" -> JsString("CRN11111"), "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")))
+
+  private def orgDetailWithoutVat(entityType: String) = {
+    if (entityType == "Partnership") {
+      partnershipDetails + ("partnershipVat" -> Json.obj("hasVat" -> JsBoolean(false)))
+    } else {
+      companyDetails + ("companyDetails" -> Json.obj("payeEmployerReferenceNumber" -> JsString("PAYE11111")))
+    }
+  }
+
+  private def orgDetailWithoutPaye(entityType: String) = {
+    if (entityType == "Partnership") {
+      partnershipDetails + ("partnershipPaye" -> Json.obj("hasPaye" -> JsBoolean(false)))
+    } else {
+      companyDetails + ("companyDetails" -> Json.obj("vatRegistrationNumber" -> JsString("VAT11111")))
+    }
+  }
+
+  val partnershipDetails = Json.obj("partnershipVat" -> Json.obj("vat" -> JsString("VAT11111"), "hasVat" -> JsBoolean(true)),
+    "partnershipPaye" -> Json.obj("paye" -> JsString("PAYE11111"), "hasPaye" -> JsBoolean(true)),
+    "partnershipDetails" -> Json.obj("companyName" -> JsString("Company Test")))
 }

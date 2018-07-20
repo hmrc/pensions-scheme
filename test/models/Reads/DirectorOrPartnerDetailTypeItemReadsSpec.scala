@@ -34,12 +34,12 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
         s"We have $personType user details" when {
           s"We have a list of $personType" in {
             val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
-            result.head.lastName mustBe directorSample(personType).lastName
+            result.head.lastName mustBe directorOrPartnerSample(personType).lastName
           }
 
           "We have a sequence id" in {
             val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
-            result.head.sequenceId mustBe directorSample(personType).sequenceId
+            result.head.sequenceId mustBe directorOrPartnerSample(personType).sequenceId
           }
 
           "We have 10 directors" in {
@@ -62,7 +62,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
           "We have individual details" in {
             val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
-            result.head.firstName mustBe directorSample(personType).firstName
+            result.head.firstName mustBe directorOrPartnerSample(personType).firstName
           }
         }
 
@@ -70,7 +70,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
           "We have a director nino" in {
             val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
 
-            result.head.referenceOrNino mustBe directorSample(personType).referenceOrNino
+            result.head.referenceOrNino mustBe directorOrPartnerSample(personType).referenceOrNino
           }
 
           "We don't have a nino" in {
@@ -87,7 +87,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
             val result = JsArray(directorsNoNino).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
 
-            result.last.noNinoReason mustBe directorSample(personType).noNinoReason
+            result.last.noNinoReason mustBe directorOrPartnerSample(personType).noNinoReason
           }
         }
 
@@ -95,7 +95,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
           s"We have a $personType utr" in {
             val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
 
-            result.head.utr mustBe directorSample(personType).utr
+            result.head.utr mustBe directorOrPartnerSample(personType).utr
           }
 
           "There is no UTR" in {
@@ -113,14 +113,14 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
             val result = JsArray(directorNoUtr).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
 
-            result.last.noUtrReason mustBe directorSample(personType).noUtrReason
+            result.last.noUtrReason mustBe directorOrPartnerSample(personType).noUtrReason
           }
         }
 
         s"We have entity type as $personType" in {
           val result = directorsOrPartners.as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
 
-          result.head.entityType mustBe directorSample(personType).entityType
+          result.head.entityType mustBe directorOrPartnerSample(personType).entityType
         }
 
         s"We have a $personType previous address detail" in {
@@ -131,7 +131,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
 
           val result = JsArray(directorWithPreviousAddress).as[List[DirectorOrPartnerDetailTypeItem]](DirectorOrPartnerDetailTypeItem.apiReads(personType))
-          val expectedDirector = directorSample(personType).copy(previousAddressDetail =
+          val expectedDirector = directorOrPartnerSample(personType).copy(previousAddressDetail =
             PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(InternationalAddress("line1", Some("line2"), countryCode = "IT"))))
 
           result.last.previousAddressDetail mustBe expectedDirector.previousAddressDetail
@@ -145,7 +145,7 @@ class DirectorOrPartnerDetailTypeItemReadsSpec extends WordSpec with MustMatcher
 
           val result = JsArray(directorWithCorrespondenceCommonDetail).as[List[DirectorOrPartnerDetailTypeItem]](
             DirectorOrPartnerDetailTypeItem.apiReads(personType))
-          val expectedDirector = directorSample(personType).copy(correspondenceCommonDetail = correspondenceCommonDetails)
+          val expectedDirector = directorOrPartnerSample(personType).copy(correspondenceCommonDetail = correspondenceCommonDetails)
 
           result.last.correspondenceCommonDetail mustBe expectedDirector.correspondenceCommonDetail
         }

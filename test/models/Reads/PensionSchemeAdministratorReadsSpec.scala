@@ -124,20 +124,20 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have a director" in {
-        val directors = JsArray(Seq(testDirector, testDirector))
+        val directors = JsArray(Seq(testDirectorOrPartner("Director"), testDirectorOrPartner("Director")))
         val pensionSchemeAdministrator = input + ("directors" -> directors)
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 
-        result.directorOrPartnerDetail.value.head.sequenceId mustBe directorSample("director").sequenceId
+        result.directorOrPartnerDetail.value.head.sequenceId mustBe directorOrPartnerSample("director").sequenceId
       }
 
       "We have two directors one of which is deleted" in {
-        val deletedDirector = testDirector ++ Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("Joe"),
+        val deletedDirector = testDirectorOrPartner("Director") ++ Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("Joe"),
           "lastName" -> JsString("Bloggs"),
           "dateOfBirth" -> JsString("2019-01-31"),
           "isDeleted" -> JsBoolean(true)))
 
-        val directors = JsArray(Seq(testDirector, deletedDirector))
+        val directors = JsArray(Seq(testDirectorOrPartner("Director"), deletedDirector))
         val pensionSchemeAdministrator = input + ("directors" -> directors)
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 

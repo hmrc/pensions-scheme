@@ -25,7 +25,7 @@ class DirectorOrPartnerDetailTypeItemWrites extends WordSpec with MustMatchers w
     Seq("director", "partner").foreach{ personType =>
       s"Map ${personType} previousaddressdetails inner object as `previousaddresdetail`" when {
         "required" in {
-          val result = Json.toJson(directorSample(personType).copy(
+          val result = Json.toJson(directorOrPartnerSample(personType).copy(
             previousAddressDetail = PreviousAddressDetails(true,Some(ukAddressSample))))(DirectorOrPartnerDetailTypeItem.psaSubmissionWrites)
 
           result.toString() must include("true,\"previousAddressDetail\":")
