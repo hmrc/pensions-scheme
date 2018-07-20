@@ -128,7 +128,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         val pensionSchemeAdministrator = input + ("directors" -> directors)
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 
-        result.directorOrPartnerDetail.value.head.sequenceId mustBe directorSample.sequenceId
+        result.directorOrPartnerDetail.value.head.sequenceId mustBe directorSample("director").sequenceId
       }
 
       "We have two directors one of which is deleted" in {

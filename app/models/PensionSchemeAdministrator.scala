@@ -96,9 +96,9 @@ case class CorrespondenceCommonDetail(addressDetail: Address, contactDetail: Con
 object CorrespondenceCommonDetail {
   implicit val formats = Json.format[CorrespondenceCommonDetail]
 
-  val apiReads: Reads[CorrespondenceCommonDetail] = (
-    (JsPath \ "directorContactDetails").read(ContactDetails.apiReads) and
-      (JsPath \ "directorAddress").read[Address]
+  def apiReads(personType: String): Reads[CorrespondenceCommonDetail] = (
+    (JsPath \ s"${personType}ContactDetails").read(ContactDetails.apiReads) and
+      (JsPath \ s"${personType}Address").read[Address]
     ) ((contactDetails, address) => CorrespondenceCommonDetail(address, contactDetails))
 }
 
@@ -141,12 +141,15 @@ object DirectorOrPartnerDetailTypeItem {
     directorOrPartner.correspondenceCommonDetail,
     directorOrPartner.previousAddressDetail))
 
-  val apiReads: Reads[List[DirectorOrPartnerDetailTypeItem]] = json.Reads {
+  def apiReads(personType: String): Reads[List[DirectorOrPartnerDetailTypeItem]] = json.Reads {
     json =>
       json.validate[Seq[JsValue]].flatMap(elements => {
-        val directors: Seq[JsResult[DirectorOrPartnerDetailTypeItem]] = filterDeletedDirector(elements).zipWithIndex.map(director => director._1.
-          validate[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.directorReads(director._2)))
-        directors.foldLeft[JsResult[List[DirectorOrPartnerDetailTypeItem]]](JsSuccess(List.empty)) {
+        val directorsOrPartners: Seq[JsResult[DirectorOrPartnerDetailTypeItem]] =
+          filterDeletedDirectorOrPartner(personType, elements).zipWithIndex.map { directorOrPartner =>
+            val (directorOrPartnerDetails, index) = directorOrPartner
+            directorOrPartnerDetails.validate[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.directorOrPartnerReads(index, personType))
+          }
+        directorsOrPartners.foldLeft[JsResult[List[DirectorOrPartnerDetailTypeItem]]](JsSuccess(List.empty)) {
           (directors, currentDirector) => {
             for {
               sequenceOfDirectors <- directors
@@ -157,35 +160,35 @@ object DirectorOrPartnerDetailTypeItem {
       })
   }
 
-  private def filterDeletedDirector(jsValueSeq: Seq[JsValue]): Seq[JsValue] = {
+  private def filterDeletedDirectorOrPartner(personType: String, jsValueSeq: Seq[JsValue]): Seq[JsValue] = {
     jsValueSeq.filterNot{json =>
-      (json \ "directorDetails" \ "isDeleted").validate[Boolean] match {
+      (json \ s"${personType}Details" \ "isDeleted").validate[Boolean] match {
         case JsSuccess(isDeleted, _) => isDeleted
         case _ => false
       }
     }
   }
 
-  def directorReferenceReads(referenceFlag: String, referenceName: String): Reads[(Option[String], Option[String])] = (
+  def directorOrPartnerReferenceReads(referenceFlag: String, referenceName: String): Reads[(Option[String], Option[String])] = (
     (JsPath \ referenceName).readNullable[String] and
       (JsPath \ "reason").readNullable[String]
     ) ((referenceNumber, reason) => (referenceNumber, reason))
 
-  def directorReads(index: Int): Reads[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath).read(IndividualDetailType.apiReads("director")) and
-      (JsPath \ "directorNino").readNullable(directorReferenceReads("hasNino", "nino")) and
-      (JsPath \ "directorUtr").readNullable(directorReferenceReads("hasUtr", "utr")) and
-      (JsPath).read(PreviousAddressDetails.apiReads("director")) and
-      (JsPath).read(CorrespondenceCommonDetail.apiReads)
+  def directorOrPartnerReads(index: Int, personType: String): Reads[DirectorOrPartnerDetailTypeItem] = (
+    (JsPath).read(IndividualDetailType.apiReads(personType)) and
+      (JsPath \ s"${personType}Nino").readNullable(directorOrPartnerReferenceReads("hasNino", "nino")) and
+      (JsPath \ s"${personType}Utr").readNullable(directorOrPartnerReferenceReads("hasUtr", "utr")) and
+      (JsPath).read(PreviousAddressDetails.apiReads(personType)) and
+      (JsPath).read(CorrespondenceCommonDetail.apiReads(personType))
     ) (
-    (directorPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) =>
+    (directorOrPartnerPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) =>
       DirectorOrPartnerDetailTypeItem(sequenceId = f"${index}%03d",
-      entityType = "Director",
+      entityType = personType.capitalize,
       title = None,
-      firstName = directorPersonalDetails.firstName,
-      middleName = directorPersonalDetails.middleName,
-      lastName = directorPersonalDetails.lastName,
-      dateOfBirth = directorPersonalDetails.dateOfBirth,
+      firstName = directorOrPartnerPersonalDetails.firstName,
+      middleName = directorOrPartnerPersonalDetails.middleName,
+      lastName = directorOrPartnerPersonalDetails.lastName,
+      dateOfBirth = directorOrPartnerPersonalDetails.dateOfBirth,
       referenceOrNino = ninoDetails.flatMap(_._1),
       noNinoReason = ninoDetails.flatMap(_._2),
       utr = utrDetails.flatMap(_._1),
@@ -260,7 +263,8 @@ object PensionSchemeAdministrator {
       } else {
         (JsPath \ "companyAddressId").read[Address] orElse (JsPath \ "individualAddress").read[Address]
       }) and
-      (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads) and
+      ((JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("director"))
+        orElse (JsPath \ "partners").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("partner")))  and
       JsPath.read(PSADetail.apiReads) and
       (JsPath \ "existingPSA").read(PensionSchemeAdministratorIdentifierStatusType.apiReads) and
       JsPath.read(PensionSchemeAdministratorDeclarationType.apiReads)
