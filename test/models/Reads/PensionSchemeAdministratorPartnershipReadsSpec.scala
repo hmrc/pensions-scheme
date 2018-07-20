@@ -26,7 +26,7 @@ class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustM
   import PensionSchemeAdministratorPartnershipReadsSpec._
 
   "Json Payload of a PSA for partnership" must {
-/*    "read correct registration info" when {
+    "read correct registration info" when {
       "we have valid legal status" in {
         val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
         result.legalStatus mustEqual pensionSchemeAdministratorSample.copy(legalStatus = "Partnership").legalStatus
@@ -112,7 +112,7 @@ class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustM
 
         result.correspondenceAddressDetail mustBe ukAddressSample
       }
-    }*/
+    }
 
     "read correct partners" when {
 
@@ -124,7 +124,7 @@ class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustM
         result.directorOrPartnerDetail.value.head.sequenceId mustBe directorOrPartnerSample("partner").sequenceId
       }
 
-      /*"We have two partners one of which is deleted" in {
+      "We have two partners one of which is deleted" in {
         val deletedDirector = testDirectorOrPartner("partner") ++ Json.obj("partnerDetails" -> Json.obj("firstName" -> JsString("Joe"),
           "lastName" -> JsString("Bloggs"),
           "dateOfBirth" -> JsString("2019-01-31"),
@@ -136,10 +136,10 @@ class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustM
 
         result.directorOrPartnerDetail.value.size mustEqual 1
         result.directorOrPartnerDetail.value.head.lastName mustEqual "Doe"
-      }*/
+      }
     }
 
-/*    "read correct partnership details" when {
+    "read correct partnership details" when {
 
       "We have organisation details but no individual details" in {
         val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
@@ -176,11 +176,11 @@ class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustM
       val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
       result.declaration mustBe pensionSchemeAdministratorSample.declaration
-    }*/
+    }
   }
 }
 
-object PensionSchemeAdministratorPartnershipReadsSpec {
+object PensionSchemeAdministratorPartnershipReadsSpec extends  Samples{
   val input = Json.obj(
     "existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(false)),
     "registrationInfo" ->
@@ -205,5 +205,5 @@ object PensionSchemeAdministratorPartnershipReadsSpec {
     "partnershipDetails" -> Json.obj("companyName" -> JsString("Company Test"), "uniqueTaxReferenceNumber" -> "1234567891"),
     "declaration" -> JsBoolean(true),
     "declarationFitAndProper" -> JsBoolean(true),
-    "declarationWorkingKnowledge" -> "workingKnowledge")
+    "declarationWorkingKnowledge" -> "workingKnowledge") + ("partners" -> JsArray(Seq(testDirectorOrPartner("partner"))))
 }

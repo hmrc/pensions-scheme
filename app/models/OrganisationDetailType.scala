@@ -39,23 +39,18 @@ object OrganisationDetailType {
     ((JsPath \ "partnershipDetails" \ "companyName").read[String]) and
       (JsPath \ "partnershipVat" \ "vat").readNullable[String] and
       (JsPath \ "partnershipPaye" \ "paye").readNullable[String]
-    ) ((name, vatRegistrationNumber, payeEmployerReferenceNumber) => {
+    ) ((name, vatRegistrationNumber, payeEmployerReferenceNumber) =>
     OrganisationDetailType(name,
       None,
       vatRegistrationNumber,
-      payeEmployerReferenceNumber)
-  }
-  )
+      payeEmployerReferenceNumber))
 
   val CompanyApiReads: Reads[OrganisationDetailType] = (
     (JsPath \ "businessDetails" \ "companyName").read[String] and
       ((JsPath \ "companyDetails").readNullable(companyDetailsReads)) and
       (JsPath \ "companyRegistrationNumber").readNullable[String]
-    ) ((name, companyDetails: Option[Option[(Option[String], Option[String])]], crnNumber) => {
-    println("\n\n\n CompanyApiReads Org Reads")
+    ) ((name, companyDetails: Option[Option[(Option[String], Option[String])]], crnNumber) =>
     OrganisationDetailType(name, vatRegistrationNumber = companyDetails.flatMap(c => c.flatMap(c => c._1)),
       payeReference = companyDetails.flatMap(c => c.flatMap(c => c._2)),
-      crnNumber = crnNumber)
-  }
-  )
+      crnNumber = crnNumber))
 }

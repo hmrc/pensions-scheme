@@ -42,7 +42,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         "businessDetails" -> Json.obj("companyName" -> JsString("Company Test")),
         "declaration" -> JsBoolean(true),
         "declarationFitAndProper" -> JsBoolean(true),
-        "declarationWorkingKnowledge" -> "workingKnowledge")
+        "declarationWorkingKnowledge" -> "workingKnowledge") + ("directors" -> JsArray(Seq(testDirectorOrPartner("director"))))
 
       "We have a valid legalStatus" in {
         val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
@@ -104,19 +104,6 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         result.previousAddressDetail.isPreviousAddressLast12Month mustBe pensionSchemeAdministratorSample.previousAddressDetail.isPreviousAddressLast12Month
       }
 
-      "We have correspondence address when the contact Address toggle is off" in {
-        implicit val contactAddressEnabled: Boolean = false
-
-        renameElement(input, "companyContactAddress", "companyAddressId").fold(
-          invalid => throw JsResultException(invalid),
-          json => {
-            val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
-
-            result.correspondenceAddressDetail mustBe ukAddressSample
-          }
-        )
-      }
-
       "We have correspondence address when the contact Address toggle is on" in {
         val result = Json.fromJson[PensionSchemeAdministrator](input)(PensionSchemeAdministrator.apiReads).asOpt.value
 
@@ -124,7 +111,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have a director" in {
-        val directors = JsArray(Seq(testDirectorOrPartner("Director"), testDirectorOrPartner("Director")))
+        val directors = JsArray(Seq(testDirectorOrPartner("director"), testDirectorOrPartner("director")))
         val pensionSchemeAdministrator = input + ("directors" -> directors)
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 
@@ -132,12 +119,12 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
       }
 
       "We have two directors one of which is deleted" in {
-        val deletedDirector = testDirectorOrPartner("Director") ++ Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("Joe"),
+        val deletedDirector = testDirectorOrPartner("director") ++ Json.obj("directorDetails" -> Json.obj("firstName" -> JsString("Joe"),
           "lastName" -> JsString("Bloggs"),
           "dateOfBirth" -> JsString("2019-01-31"),
           "isDeleted" -> JsBoolean(true)))
 
-        val directors = JsArray(Seq(testDirectorOrPartner("Director"), deletedDirector))
+        val directors = JsArray(Seq(testDirectorOrPartner("director"), deletedDirector))
         val pensionSchemeAdministrator = input + ("directors" -> directors)
         val result = Json.fromJson[PensionSchemeAdministrator](pensionSchemeAdministrator)(PensionSchemeAdministrator.apiReads).asOpt.value
 
@@ -197,20 +184,7 @@ class PensionSchemeAdministratorReadsSpec extends WordSpec with MustMatchers wit
         result.correspondenceContactDetail.telephone mustBe expectedContactDetails.telephone
       }
 
-      "We have an individual address when the contact Address toggle is off" in {
-        implicit val contactAddressEnabled: Boolean = false
-
-        renameElement(input, "companyContactAddress", "individualAddress").fold(
-          invalid => throw JsResultException(invalid),
-          json => {
-            val result = Json.fromJson[PensionSchemeAdministrator](json)(PensionSchemeAdministrator.apiReads).asOpt.value
-
-            result.correspondenceAddressDetail.asInstanceOf[UkAddress] mustBe ukAddressSample
-          }
-        )
-      }
-
-      "We have an individual address when the contact Address toggle is on" in {
+      "We have an individual contact address" in {
         renameElement(input, "companyContactAddress", "individualContactAddress").fold(
           invalid => throw JsResultException(invalid),
           json => {

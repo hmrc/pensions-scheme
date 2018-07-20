@@ -18,9 +18,9 @@ package models
 
 import java.time.LocalDate
 
+import models.enumeration.RegistrationLegalStatus
 import play.api.libs.functional.syntax._
-import play.api.libs.json
-import play.api.libs.json.{JsPath, JsResult, JsSuccess, JsValue, Json, Reads, Writes}
+import play.api.libs.json.{JsPath, JsValue, Json, Reads, Writes}
 
 trait PSADetail
 
@@ -77,102 +77,6 @@ object CorrespondenceCommonDetail {
       (JsPath \ s"${personType}Address").read[Address]
     ) ((contactDetails, address) => CorrespondenceCommonDetail(address, contactDetails))
 }
-
-case class DirectorOrPartnerDetailTypeItem(sequenceId: String, entityType: String, title: Option[String] = None,
-                                           firstName: String, middleName: Option[String] = None, lastName: String,
-                                           dateOfBirth: LocalDate, referenceOrNino: Option[String] = None,
-                                           noNinoReason: Option[String] = None, utr: Option[String] = None,
-                                           noUtrReason: Option[String] = None,
-                                           correspondenceCommonDetail: CorrespondenceCommonDetail,
-                                           previousAddressDetail: PreviousAddressDetails)
-
-object DirectorOrPartnerDetailTypeItem {
-  implicit val formats = Json.format[DirectorOrPartnerDetailTypeItem]
-
-  val psaSubmissionWrites : Writes[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath \ "sequenceId").write[String] and
-      (JsPath \ "entityType").write[String] and
-      (JsPath \ "title").writeNullable[String] and
-      (JsPath \ "firstName").write[String] and
-      (JsPath \ "middleName").writeNullable[String] and
-      (JsPath \ "lastName").write[String] and
-      (JsPath \ "dateOfBirth").write[LocalDate] and
-      (JsPath \ "referenceOrNino").writeNullable[String] and
-      (JsPath \ "noNinoReason").writeNullable[String] and
-      (JsPath \ "utr").writeNullable[String] and
-      (JsPath \ "noUtrReason").writeNullable[String] and
-      (JsPath \ "correspondenceCommonDetail").write[CorrespondenceCommonDetail] and
-      (JsPath \ "previousAddressDetail").write(PreviousAddressDetails.psaSubmissionWrites)
-  )(directorOrPartner => (directorOrPartner.sequenceId,
-    directorOrPartner.entityType,
-    directorOrPartner.title,
-    directorOrPartner.firstName,
-    directorOrPartner.middleName,
-    directorOrPartner.lastName,
-    directorOrPartner.dateOfBirth,
-    directorOrPartner.referenceOrNino,
-    directorOrPartner.noNinoReason,
-    directorOrPartner.utr,
-    directorOrPartner.noUtrReason,
-    directorOrPartner.correspondenceCommonDetail,
-    directorOrPartner.previousAddressDetail))
-
-  def apiReads(personType: String): Reads[List[DirectorOrPartnerDetailTypeItem]] = json.Reads {
-    json =>
-      println("\n\n 4..")
-      json.validate[Seq[JsValue]].flatMap(elements => {
-        val directorsOrPartners: Seq[JsResult[DirectorOrPartnerDetailTypeItem]] =
-          filterDeletedDirectorOrPartner(personType, elements).zipWithIndex.map { directorOrPartner =>
-            val (directorOrPartnerDetails, index) = directorOrPartner
-            directorOrPartnerDetails.validate[DirectorOrPartnerDetailTypeItem](DirectorOrPartnerDetailTypeItem.directorOrPartnerReads(index, personType))
-          }
-        directorsOrPartners.foldLeft[JsResult[List[DirectorOrPartnerDetailTypeItem]]](JsSuccess(List.empty)) {
-          (directors, currentDirector) => {
-            for {
-              sequenceOfDirectors <- directors
-              director <- currentDirector
-            } yield sequenceOfDirectors :+ director
-          }
-        }
-      })
-  }
-
-  private def filterDeletedDirectorOrPartner(personType: String, jsValueSeq: Seq[JsValue]): Seq[JsValue] = {
-    jsValueSeq.filterNot{json =>
-      (json \ s"${personType}Details" \ "isDeleted").validate[Boolean] match {
-        case JsSuccess(isDeleted, _) => isDeleted
-        case _ => false
-      }
-    }
-  }
-
-  def directorOrPartnerReferenceReads(referenceFlag: String, referenceName: String): Reads[(Option[String], Option[String])] = (
-    (JsPath \ referenceName).readNullable[String] and
-      (JsPath \ "reason").readNullable[String]
-    ) ((referenceNumber, reason) => (referenceNumber, reason))
-
-  def directorOrPartnerReads(index: Int, personType: String): Reads[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath).read(IndividualDetailType.apiReads(personType)) and
-      (JsPath \ s"${personType}Nino").readNullable(directorOrPartnerReferenceReads("hasNino", "nino")) and
-      (JsPath \ s"${personType}Utr").readNullable(directorOrPartnerReferenceReads("hasUtr", "utr")) and
-      (JsPath).read(PreviousAddressDetails.apiReads(personType)) and
-      (JsPath).read(CorrespondenceCommonDetail.apiReads(personType))
-    ) (
-    (directorOrPartnerPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) =>
-      DirectorOrPartnerDetailTypeItem(sequenceId = f"${index}%03d",
-      entityType = personType.capitalize,
-      title = None,
-      firstName = directorOrPartnerPersonalDetails.firstName,
-      middleName = directorOrPartnerPersonalDetails.middleName,
-      lastName = directorOrPartnerPersonalDetails.lastName,
-      dateOfBirth = directorOrPartnerPersonalDetails.dateOfBirth,
-      referenceOrNino = ninoDetails.flatMap(_._1),
-      noNinoReason = ninoDetails.flatMap(_._2),
-      utr = utrDetails.flatMap(_._1),
-      noUtrReason = utrDetails.flatMap(_._2),
-      correspondenceCommonDetail = addressCommonDetails,
-      previousAddressDetail = previousAddress))
-  }
 
 case class PensionSchemeAdministrator(customerType: String, legalStatus: String, idType: Option[String] = None,
                                       idNumber: Option[String] = None, sapNumber: String, noIdentifier: Boolean,
@@ -249,9 +153,8 @@ object PensionSchemeAdministrator {
   }
 
   private val directorsOrPartnersReads = {
-    println("\n\n\n 1...")
-    (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("director")) orElse
-      (JsPath \ "partners").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("partner"))
+    (JsPath \ "directors").read(DirectorOrPartnerDetailTypeItem.apiReads("director")) orElse
+      (JsPath \ "partners").read(DirectorOrPartnerDetailTypeItem.apiReads("partner"))
   }
 
   private val organisationLegalStatus = Seq("Limited Company", "Partnership")
@@ -263,6 +166,14 @@ object PensionSchemeAdministrator {
       case _ => Some(NumberOfDirectorOrPartnersType(isThereMoreThanTenDirectors, isThereMoreThanTenPartners))
     }
 
+  private def directorOrPartnerDetail(legalStatus: String, directorsOrPartners:  Seq[Option[scala.List[DirectorOrPartnerDetailTypeItem]]]) = {
+    legalStatus match {
+      case RegistrationLegalStatus.Company.name => directorsOrPartners(0)
+      case RegistrationLegalStatus.Partnership.name => directorsOrPartners(1)
+      case _ => None
+    }
+  }
+
   val apiReads: Reads[PensionSchemeAdministrator] = (
     (JsPath \ "registrationInfo").read(registrationInfoReads) and
       (JsPath \ "moreThanTenDirectors").readNullable[Boolean] and
@@ -270,8 +181,8 @@ object PensionSchemeAdministrator {
       contactDetailsReads and
       previousAddressReads and
       contactAddressReads and
-      ((JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("director")) orElse
-      (JsPath \ "partners").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("partner"))) and
+      (JsPath \ "directors").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("director")) and
+      (JsPath \ "partners").readNullable(DirectorOrPartnerDetailTypeItem.apiReads("partner")) and
       JsPath.read(PSADetail.apiReads) and
       (JsPath \ "existingPSA").read(PensionSchemeAdministratorIdentifierStatusType.apiReads) and
       JsPath.read(PensionSchemeAdministratorDeclarationType.apiReads)
@@ -282,9 +193,10 @@ object PensionSchemeAdministrator {
         previousAddressDetails,
         correspondenceAddress,
         directors,
+        partners,
         transactionDetails,
         isExistingPSA,
-        declaration) =>
+        declaration) => {
 
     PensionSchemeAdministrator(
       customerType = registrationInfo._4,
@@ -298,8 +210,10 @@ object PensionSchemeAdministrator {
       correspondenceAddressDetail = correspondenceAddress,
       correspondenceContactDetail = contactDetails,
       previousAddressDetail = previousAddressDetails,
-      directorOrPartnerDetail = directors,
+      directorOrPartnerDetail = directorOrPartnerDetail(registrationInfo._1, Seq(directors, partners)),
       organisationDetail = if (organisationLegalStatus.contains(registrationInfo._1)) Some(transactionDetails.asInstanceOf[OrganisationDetailType]) else None,
-      individualDetail = if (registrationInfo._1 == "Individual") Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None,
-      declaration = declaration))
+      individualDetail = if (registrationInfo._1 == RegistrationLegalStatus.Individual.name) Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None,
+      declaration = declaration)
+  }
+  )
 }
