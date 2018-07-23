@@ -20,15 +20,15 @@ import java.time.LocalDate
 
 import models.enumeration.RegistrationLegalStatus
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, JsValue, Json, Reads, Writes}
+import play.api.libs.json.{JsPath, JsValue, Json, OFormat, Reads, Writes}
 
 trait PSADetail
 
 object PSADetail {
-  val companyReads: Reads[PSADetail] = (JsPath).read[OrganisationDetailType](OrganisationDetailType.CompanyApiReads).map(c => c.asInstanceOf[PSADetail])
-  val individualDetailsReads: Reads[PSADetail] = (JsPath).read[IndividualDetailType](IndividualDetailType.apiReads("individual")).map(
+  val companyReads: Reads[PSADetail] = JsPath.read[OrganisationDetailType](OrganisationDetailType.CompanyApiReads).map(c => c.asInstanceOf[PSADetail])
+  val individualDetailsReads: Reads[PSADetail] = JsPath.read[IndividualDetailType](IndividualDetailType.apiReads("individual")).map(
     c => c.asInstanceOf[PSADetail])
-  val partnershipReads: Reads[PSADetail] = (JsPath).read[OrganisationDetailType](
+  val partnershipReads: Reads[PSADetail] = JsPath.read[OrganisationDetailType](
     OrganisationDetailType.partnershipApiReads).map(c => c.asInstanceOf[PSADetail])
 
   val apiReads: Reads[PSADetail] = companyReads orElse individualDetailsReads orElse partnershipReads
@@ -38,7 +38,7 @@ case class IndividualDetailType(title: Option[String] = None, firstName: String,
                                 lastName: String, dateOfBirth: LocalDate) extends PSADetail
 
 object IndividualDetailType {
-  implicit val formats = Json.format[IndividualDetailType]
+  implicit val formats: OFormat[IndividualDetailType] = Json.format[IndividualDetailType]
 
   def apiReads(individualType: String): Reads[IndividualDetailType] = (
     (JsPath \ s"${individualType}Details" \ "firstName").read[String] and
@@ -52,7 +52,7 @@ case class PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchem
                                                           existingPensionSchemaAdministratorReference: Option[String] = None)
 
 object PensionSchemeAdministratorIdentifierStatusType {
-  implicit val formats = Json.format[PensionSchemeAdministratorIdentifierStatusType]
+  implicit val formats: OFormat[PensionSchemeAdministratorIdentifierStatusType] = Json.format[PensionSchemeAdministratorIdentifierStatusType]
 
   val apiReads: Reads[PensionSchemeAdministratorIdentifierStatusType] = (
     (JsPath \ "isExistingPSA").read[Boolean] and
@@ -64,13 +64,13 @@ case class NumberOfDirectorOrPartnersType(isMorethanTenDirectors: Option[Boolean
                                           isMorethanTenPartners: Option[Boolean] = None)
 
 object NumberOfDirectorOrPartnersType {
-  implicit val formats = Json.format[NumberOfDirectorOrPartnersType]
+  implicit val formats: OFormat[NumberOfDirectorOrPartnersType] = Json.format[NumberOfDirectorOrPartnersType]
 }
 
 case class CorrespondenceCommonDetail(addressDetail: Address, contactDetail: ContactDetails)
 
 object CorrespondenceCommonDetail {
-  implicit val formats = Json.format[CorrespondenceCommonDetail]
+  implicit val formats: OFormat[CorrespondenceCommonDetail] = Json.format[CorrespondenceCommonDetail]
 
   def apiReads(personType: String): Reads[CorrespondenceCommonDetail] = (
     (JsPath \ s"${personType}ContactDetails").read(ContactDetails.apiReads) and
@@ -91,7 +91,7 @@ case class PensionSchemeAdministrator(customerType: String, legalStatus: String,
                                       declaration: PensionSchemeAdministratorDeclarationType)
 
 object PensionSchemeAdministrator {
-  implicit val formats = Json.format[PensionSchemeAdministrator]
+  implicit val formats: OFormat[PensionSchemeAdministrator] = Json.format[PensionSchemeAdministrator]
 
   val psaSubmissionWrites: Writes[PensionSchemeAdministrator] = (
     (JsPath \ "customerType").write[String] and
@@ -152,11 +152,6 @@ object PensionSchemeAdministrator {
       (JsPath \ "partnershipContactAddress").read[Address]
   }
 
-  private val directorsOrPartnersReads = {
-    (JsPath \ "directors").read(DirectorOrPartnerDetailTypeItem.apiReads("director")) orElse
-      (JsPath \ "partners").read(DirectorOrPartnerDetailTypeItem.apiReads("partner"))
-  }
-
   private val organisationLegalStatus = Seq("Limited Company", "Partnership")
 
   private def numberOfDirectorsOrPartners(isThereMoreThanTenDirectors: Option[Boolean],
@@ -168,7 +163,7 @@ object PensionSchemeAdministrator {
 
   private def directorOrPartnerDetail(legalStatus: String, directorsOrPartners:  Seq[Option[scala.List[DirectorOrPartnerDetailTypeItem]]]) = {
     legalStatus match {
-      case RegistrationLegalStatus.Company.name => directorsOrPartners(0)
+      case RegistrationLegalStatus.Company.name => directorsOrPartners.head
       case RegistrationLegalStatus.Partnership.name => directorsOrPartners(1)
       case _ => None
     }
@@ -211,8 +206,10 @@ object PensionSchemeAdministrator {
       correspondenceContactDetail = contactDetails,
       previousAddressDetail = previousAddressDetails,
       directorOrPartnerDetail = directorOrPartnerDetail(registrationInfo._1, Seq(directors, partners)),
-      organisationDetail = if (organisationLegalStatus.contains(registrationInfo._1)) Some(transactionDetails.asInstanceOf[OrganisationDetailType]) else None,
-      individualDetail = if (registrationInfo._1 == RegistrationLegalStatus.Individual.name) Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None,
+      organisationDetail = if (organisationLegalStatus.contains(registrationInfo._1))
+        Some(transactionDetails.asInstanceOf[OrganisationDetailType]) else None,
+      individualDetail = if (registrationInfo._1 == RegistrationLegalStatus.Individual.name)
+        Some(transactionDetails.asInstanceOf[IndividualDetailType]) else None,
       declaration = declaration)
   }
   )
