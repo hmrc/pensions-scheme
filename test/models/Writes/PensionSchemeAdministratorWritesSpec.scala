@@ -22,19 +22,24 @@ import play.api.libs.json.Json
 
 class PensionSchemeAdministratorWritesSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "An object of a Pension Scheme Administrator" should {
-    "Map all previousdetailsaddressess to `previousDetail`" when {
-      "We are doing a PSA submission containing previous address at rool level" in {
-        val result = Json.toJson(pensionSchemeAdministratorSample.copy(previousAddressDetail = PreviousAddressDetails(true,Some(ukAddressSample))))(PensionSchemeAdministrator.psaSubmissionWrites)
+    Seq("director", "partner").foreach { personType =>
 
-        result.toString() must include("true,\"previousAddressDetail\":")
-      }
+      s"Map all ${personType}s previous addresses to `previousDetail`" when {
 
-      "We are doing a PSA submission with directors that have previous address" in {
-        val directorWithPreviousAddress = directorSample.copy(previousAddressDetail = PreviousAddressDetails(true,Some(ukAddressSample)))
-        val result = Json.toJson(pensionSchemeAdministratorSample.copy(directorOrPartnerDetail = Some(List(directorWithPreviousAddress))))(PensionSchemeAdministrator.psaSubmissionWrites)
+        "We are doing a PSA submission containing previous address at rool level" in {
+          val result = Json.toJson(pensionSchemeAdministratorSample.copy(previousAddressDetail = PreviousAddressDetails(true, Some(ukAddressSample))))(
+            PensionSchemeAdministrator.psaSubmissionWrites)
 
-        println(result)
-        result.toString() must include("true,\"previousAddressDetail\":")
+          result.toString() must include("true,\"previousAddressDetail\":")
+        }
+
+        s"We are doing a PSA submission with ${personType}s that have previous address" in {
+          val directorWithPreviousAddress = directorOrPartnerSample(personType).copy(previousAddressDetail = PreviousAddressDetails(true, Some(ukAddressSample)))
+          val result = Json.toJson(pensionSchemeAdministratorSample.copy(directorOrPartnerDetail = Some(List(directorWithPreviousAddress))))(
+            PensionSchemeAdministrator.psaSubmissionWrites)
+
+          result.toString() must include("true,\"previousAddressDetail\":")
+        }
       }
     }
   }

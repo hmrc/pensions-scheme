@@ -51,8 +51,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
   override def registerPSA(json: JsValue)
                           (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, rh: RequestHeader): Future[HttpResponse] = {
-    implicit val contactAddressEnabled = appConfig.contactAddressEnabled
-
     Try(json.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
       case Success(pensionSchemeAdministrator) =>
         val psaJsValue = Json.toJson(pensionSchemeAdministrator)(PensionSchemeAdministrator.psaSubmissionWrites)
