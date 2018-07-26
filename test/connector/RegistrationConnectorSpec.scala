@@ -16,397 +16,476 @@
 
 package connector
 
-import audit.PSARegistration
 import audit.testdoubles.StubSuccessfulAuditService
-import base.SpecBase
-import models.{OrganisationRegistrant, SuccessResponse, User}
-import org.joda.time.LocalDate
-import org.mockito.Matchers
-import org.mockito.Matchers.any
-import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfter
-import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
+import audit.{AuditService, PSARegistration}
+import base.JsonFileReader
+import com.github.tomakehurst.wiremock.client.WireMock._
+import models._
+import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.mvc.{AnyContentAsEmpty, Request}
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
-import play.mvc.Http.Status._
+import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse, NotFoundException}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http._
+import utils.WireMockHelper
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+class RegistrationConnectorSpec extends AsyncFlatSpec
+  with JsonFileReader
+  with Matchers
+  with WireMockHelper
+  with EitherValues
+  with RegistrationConnectorBehaviours {
 
-class RegistrationConnectorSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
+  import RegistrationConnectorSpec._
 
-  private val httpClient = mock[HttpClient]
+  override def beforeEach(): Unit = {
+    auditService.reset()
+    super.beforeEach()
+  }
 
-  private val auditService = new StubSuccessfulAuditService()
-  private val registrationConnector = new RegistrationConnectorImpl(httpClient, appConfig, auditService)
+  override protected def portConfigKey: String = "microservice.services.des-hod.port"
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private implicit val request: Request[AnyContentAsEmpty.type ] = FakeRequest("", "")
-
-  private val failureResponse: JsObject = Json.obj(
-    "code" -> "INVALID_PAYLOAD",
-    "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
+  override protected def bindings: Seq[GuiceableModule] = Seq[GuiceableModule](
+    bind[AuditService].toInstance(auditService)
   )
 
-  before {
-    reset(httpClient)
-    auditService.reset()
-  }
+  def connector: RegistrationConnector = app.injector.instanceOf[RegistrationConnector]
 
-  "register with id individual" must {
-    "return OK when Des/ETMP returns successfully for Individual" in {
-      val user = User("test-external-id", AffinityGroup.Individual)
-      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> false, "isAnAgent" -> false)
-      val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json")
+  "registerWithIdIndividual" should "handle OK (200)" in {
 
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdIndividualUrl.format("AB100100A")),
-        Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
-        thenReturn(
-          Future.successful(HttpResponse(OK, Some(Json.toJson(
-            validSuccessResponse.as[SuccessResponse]))))
+    server.stubFor(
+      post(urlEqualTo(registerIndividualWithIdUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(registerIndividualResponse.toString())
         )
+    )
 
-      val result = registrationConnector.registerWithIdIndividual("AB100100A", user, inputRequestData)
-      ScalaFutures.whenReady(result) { res =>
-        res.status mustBe OK
-        res.body mustEqual Json.prettyPrint(Json.toJson(validSuccessResponse.as[SuccessResponse]))
-      }
+    connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual).map {
+      response =>
+        response.right.value shouldBe registerIndividualResponse
     }
 
-    "throw BadRequest when DES/ETMP throws Bad Request" in {
-      val user = User("test-external-id", AffinityGroup.Individual)
-      val invalidData = Json.obj("data" -> "invalid")
-      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
+  }
 
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdIndividualUrl.format("AB100100A")),
-        Matchers.eq(invalidData), any())(any(), any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(failureResponse.toString())))
+  it should "handle BAD_REQUEST (400) - INVALID_NINO" in {
 
-      val result = registrationConnector.registerWithIdIndividual("AB100100A", user, invalidData)
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustEqual failureResponse.toString()
-      }
-    }
-
-    "send a PSARegistration audit event on success" in {
-      val user = User("test-external-id", AffinityGroup.Individual)
-      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> false, "isAnAgent" -> false)
-      val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdIndividualUrl.format("AB100100A")),
-        Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).
-        thenReturn(
-          Future.successful(HttpResponse(OK, Some(Json.toJson(
-            validSuccessResponse.as[SuccessResponse]))))
+    server.stubFor(
+      post(urlEqualTo(registerIndividualWithIdUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_NINO"))
         )
+    )
 
-      val result = registrationConnector.registerWithIdIndividual("AB100100A", user, inputRequestData)
-
-      ScalaFutures.whenReady(result) {
-        _ =>
-          auditService.verifySent(
-            PSARegistration(
-              withId = true,
-              externalId = user.externalId,
-              psaType = "Individual",
-              found = true,
-              isUk = Some(true),
-              status = OK,
-              request = inputRequestData,
-              response = Some(validSuccessResponse)
-            )
-          ) mustBe true
-      }
-    }
-
-    "send a PSARegistration audit event on not found" in {
-      val user = User("test-external-id", AffinityGroup.Individual)
-      val invalidData = Json.obj("data" -> "invalid")
-      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdIndividualUrl.format("AB100100A")),
-        Matchers.eq(invalidData), any())(any(), any(), any(), any())).thenReturn(
-        Future.failed(new NotFoundException(failureResponse.toString())))
-
-      val result = registrationConnector.registerWithIdIndividual("AB100100A", user, invalidData)
-
-      ScalaFutures.whenReady(result.failed) {
-        _ =>
-          auditService.verifySent(
-            PSARegistration(
-              withId = true,
-              externalId = user.externalId,
-              psaType = "Individual",
-              found = false,
-              isUk = None,
-              status = NOT_FOUND,
-              request = invalidData,
-              response = None
-            )
-          ) mustBe true
-      }
-    }
-
-    "not send a PSARegistration audit event on failure" in {
-      val user = User("test-external-id", AffinityGroup.Individual)
-      val invalidData = Json.obj("data" -> "invalid")
-      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdIndividualUrl.format("AB100100A")),
-        Matchers.eq(invalidData), any())(any(), any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(failureResponse.toString())))
-
-      val result = registrationConnector.registerWithIdIndividual("AB100100A", user, invalidData)
-
-      ScalaFutures.whenReady(result.failed) {
-        _ =>
-          auditService.verifyNothingSent() mustBe true
-      }
-    }
-  }
-
-  "register with id organisation" must {
-    "return OK when Des/ETMP returns successfully for Organisation" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> true, "isAnAgent" -> false,
-        "organisation" -> Json.obj(
-          "organisationName" -> "Test Ltd",
-          "organisationType" -> "LLP"
-        ))
-      val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdOrganisationUrl.format("1100000000")),
-        Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(Json.toJson(
-        validSuccessResponse.as[SuccessResponse])))))
-
-      val result = registrationConnector.registerWithIdOrganisation("1100000000", user, inputRequestData)
-      ScalaFutures.whenReady(result) { res =>
-        res.status mustBe OK
-        res.body mustEqual Json.prettyPrint(Json.toJson(validSuccessResponse.as[SuccessResponse]))
-      }
-    }
-
-    "throw BadRequest when DES/ETMP throws Bad Request" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val invalidData = Json.obj("data" -> "invalid")
-      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdOrganisationUrl.format("1100000000")),
-        Matchers.eq(invalidData), any())(any(), any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(failureResponse.toString())))
-
-      val result = registrationConnector.registerWithIdOrganisation("1100000000", user, invalidData)
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustEqual failureResponse.toString()
-      }
-    }
-
-    "send a PSARegistration audit event on success" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> true, "isAnAgent" -> false,
-        "organisation" -> Json.obj(
-          "organisationName" -> "Test Ltd",
-          "organisationType" -> "LLP"
-        ))
-      val validSuccessResponse = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdOrganisationUrl.format("1100000000")),
-        Matchers.eq(inputRequestData), any())(any(), any(), any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(Json.toJson(
-        validSuccessResponse.as[SuccessResponse])))))
-
-      val result = registrationConnector.registerWithIdOrganisation("1100000000", user, inputRequestData)
-
-      ScalaFutures.whenReady(result) {
-        _ =>
-          auditService.verifySent(
-            PSARegistration(
-              withId = true,
-              externalId = user.externalId,
-              psaType = "LLP",
-              found = true,
-              isUk = Some(true),
-              status = OK,
-              request = inputRequestData,
-              response = Some(validSuccessResponse)
-            )
-          ) mustBe true
-      }
-    }
-
-    "send a PSARegistration audit event on not found" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> true, "isAnAgent" -> false,
-        "organisation" -> Json.obj(
-          "organisationName" -> "Test Ltd",
-          "organisationType" -> "LLP"
-        ))
-      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdOrganisationUrl.format("1100000000")),
-        Matchers.eq(inputRequestData), any())(any(), any(), any(), any()))
-        .thenReturn(Future.failed(new NotFoundException(failureResponse.toString())))
-
-      val result = registrationConnector.registerWithIdOrganisation("1100000000", user, inputRequestData)
-
-      ScalaFutures.whenReady(result.failed) {
-        _ =>
-          auditService.verifySent(
-            PSARegistration(
-              withId = true,
-              externalId = user.externalId,
-              psaType = "LLP",
-              found = false,
-              isUk = None,
-              status = NOT_FOUND,
-              request = inputRequestData,
-              response = None
-            )
-          ) mustBe true
-      }
-    }
-
-    "not send a PSARegistration audit event on failure" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val invalidData = Json.obj("data" -> "invalid")
-      val failureResponse = Json.obj("code" -> "INVALID_PAYLOAD",
-        "reason" -> "Submission has not passed validation. Invalid PAYLOAD")
-
-      when(httpClient.POST[JsValue, HttpResponse](
-        Matchers.eq(appConfig.registerWithIdOrganisationUrl.format("1100000000")),
-        Matchers.eq(invalidData), any())(any(), any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(failureResponse.toString())))
-
-      val result = registrationConnector.registerWithIdOrganisation("1100000000", user, invalidData)
-
-      ScalaFutures.whenReady(result.failed) {
-        _ =>
-          auditService.verifyNothingSent() mustBe true
-      }
+    connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual) map {
+      response =>
+        response.left.value shouldBe a[BadRequestException]
+        response.left.value.message should include ("INVALID_NINO")
     }
 
   }
 
-  "Register organisation no ID" must {
-    val url = appConfig.registerWithoutIdOrganisationUrl
-    "return OK when DES/Etmp returns successfully" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
-      val successResponse = Json.obj(
-        "processingDate" -> LocalDate.now,
-        "sapNumber" -> "1234567890",
-        "safeId" -> "XE0001234567890"
-      )
+  it should behave like registrationApiEndpointOnFailure(
+    connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual),
+    registerIndividualWithIdUrl
+  )
 
-      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+  it should "send a PSARegistration audit event on success" in {
 
-      val result = registrationConnector.registrationNoIdOrganisation(user, validDataRequest)
-      ScalaFutures.whenReady(result) {
-        res =>
-          res.status mustBe OK
-      }
+    server.stubFor(
+      post(urlEqualTo(registerIndividualWithIdUrl))
+        .withRequestBody(equalToJson(Json.stringify(testRegisterDataIndividual)))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(registerIndividualResponse.toString())
+        )
+    )
+
+    connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual) map {
+      _ =>
+        auditService.verifySent(
+          PSARegistration(
+            withId = true,
+            externalId = testIndividual.externalId,
+            psaType = "Individual",
+            found = true,
+            isUk = Some(true),
+            status = OK,
+            request = testRegisterDataIndividual,
+            response = Some(registerIndividualResponse)
+          )
+        ) shouldBe true
+    }
+  }
+
+  it should "send a PSARegistration audit event on not found" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerIndividualWithIdUrl))
+        .willReturn(
+          notFound
+        )
+    )
+
+    connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual) map {
+      _ =>
+        auditService.verifySent(
+          PSARegistration(
+            withId = true,
+            externalId = testIndividual.externalId,
+            psaType = "Individual",
+            found = false,
+            isUk = None,
+            status = NOT_FOUND,
+            request = testRegisterDataIndividual,
+            response = None
+          )
+        ) shouldBe true
+    }
+  }
+
+  it should "not send a PSARegistration audit event on failure" in {
+
+    val invalidData = Json.obj("data" -> "invalid")
+    val failureResponse = Json.obj(
+      "code" -> "INVALID_PAYLOAD",
+      "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
+    )
+
+    server.stubFor(
+      post(urlEqualTo(registerIndividualWithIdUrl))
+        .willReturn(
+          serverError
+            .withBody(failureResponse.toString)
+        )
+    )
+
+    recoverToExceptionIf[Upstream5xxResponse](connector.registerWithIdIndividual(testNino, testIndividual, invalidData)) map {
+      _ =>
+        auditService.verifyNothingSent shouldBe true
     }
 
-    "throw BadRequestException when Etmp throws Bad Request" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
-      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+  }
 
-      val result = registrationConnector.registrationNoIdOrganisation(user, validDataRequest)
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe failureResponse.toString()
-      }
+  "registerWithIdOrganisation" should "handle OK (200)" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithIdUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(registerOrganisationResponse.toString())
+        )
+    )
+
+    connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation).map {
+      response =>
+        response.right.value shouldBe registerOrganisationResponse
     }
 
-    "send a PSARegistration audit event on success" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
-      val successResponse = Json.obj(
-        "processingDate" -> LocalDate.now,
-        "sapNumber" -> "1234567890",
-        "safeId" -> "XE0001234567890"
-      )
+  }
 
-      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+  it should behave like registrationApiEndpointOnFailure(
+    connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation),
+    registerOrganisationWithIdUrl
+  )
 
-      val result = registrationConnector.registrationNoIdOrganisation(user, validDataRequest)
-      ScalaFutures.whenReady(result) {
-        _ =>
-          auditService.verifySent(
-            PSARegistration(
-              withId = false,
-              externalId = user.externalId,
-              psaType = "Organisation",
-              found = true,
-              isUk = Some(false),
-              status = OK,
-              request = Json.toJson(validDataRequest),
-              response = Some(successResponse)
-            )
-          ) mustBe true
-      }
+  it should "send a PSARegistration audit event on success" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithIdUrl))
+        .withRequestBody(equalToJson(Json.stringify(testRegisterDataOrganisation)))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(registerOrganisationResponse.toString())
+        )
+    )
+
+    connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation) map {
+      _ =>
+        auditService.verifySent(
+          PSARegistration(
+            withId = true,
+            externalId = testOrganisation.externalId,
+            psaType = psaType,
+            found = true,
+            isUk = Some(true),
+            status = OK,
+            request = testRegisterDataOrganisation,
+            response = Some(registerOrganisationResponse)
+          )
+        ) shouldBe true
+    }
+  }
+
+  it should "send a PSARegistration audit event on not found" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithIdUrl))
+        .willReturn(
+          notFound
+        )
+    )
+
+    connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation) map {
+      _ =>
+        auditService.verifySent(
+          PSARegistration(
+            withId = true,
+            externalId = testOrganisation.externalId,
+            psaType = psaType,
+            found = false,
+            isUk = None,
+            status = NOT_FOUND,
+            request = testRegisterDataOrganisation,
+            response = None
+          )
+        ) shouldBe true
+    }
+  }
+
+  it should "not send a PSARegistration audit event on failure" in {
+
+    val invalidData = Json.obj("data" -> "invalid")
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithIdUrl))
+        .willReturn(
+          serverError
+        )
+    )
+
+    recoverToExceptionIf[Upstream5xxResponse](connector.registerWithIdOrganisation(testUtr, testOrganisation, invalidData)) map {
+      _ =>
+        auditService.verifyNothingSent shouldBe true
     }
 
-    "send a PSARegistration audit event on not found" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
-      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new NotFoundException(failureResponse.toString())))
+  }
 
-      val result = registrationConnector.registrationNoIdOrganisation(user, validDataRequest)
-      ScalaFutures.whenReady(result.failed) {
-        _ =>
-          auditService.verifySent(
-            PSARegistration(
-              withId = false,
-              externalId = user.externalId,
-              psaType = "Organisation",
-              found = false,
-              isUk = None,
-              status = NOT_FOUND,
-              request = Json.toJson(validDataRequest),
-              response = None
-            )
-          ) mustBe true
-      }
+  "registrationNoIdOrganisation" should "handle OK (200)" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithoutIdUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(registerOrganisationWithoutIdResponse.toString())
+        )
+    )
+
+    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant).map {
+      response =>
+        response.right.value shouldBe registerOrganisationWithoutIdResponse
     }
 
-    "not send a PSARegistration audit event on failure" in {
-      val user = User("test-external-id", AffinityGroup.Organisation)
-      val validDataRequest = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json").as[OrganisationRegistrant]
-      when(httpClient.POST[OrganisationRegistrant, HttpResponse](Matchers.eq(url), Matchers.eq(validDataRequest), any())(any(), any(), any(), any())).
-        thenReturn(Future.failed(new BadRequestException(failureResponse.toString())))
+  }
 
-      val result = registrationConnector.registrationNoIdOrganisation(user, validDataRequest)
-      ScalaFutures.whenReady(result.failed) {
-        _ =>
-          auditService.verifyNothingSent() mustBe true
-      }
+  it should behave like registrationApiEndpointOnFailure(
+    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant),
+    registerOrganisationWithoutIdUrl
+  )
+
+  it should "send a PSARegistration audit event on success" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithoutIdUrl))
+        .withRequestBody(equalToJson(Json.stringify(testRegisterDataOrganisationWithoutId)))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(registerOrganisationWithoutIdResponse.toString)
+        )
+    )
+
+    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant) map {
+      _ =>
+        auditService.verifySent(
+          PSARegistration(
+            withId = false,
+            externalId = testOrganisation.externalId,
+            psaType = "Organisation",
+            found = true,
+            isUk = Some(false),
+            status = OK,
+            request = Json.toJson(organisationRegistrant),
+            response = Some(registerOrganisationWithoutIdResponse)
+          )
+        ) shouldBe true
     }
+  }
+
+  it should "send a PSARegistration audit event on not found" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithoutIdUrl))
+        .willReturn(
+          notFound
+        )
+    )
+
+    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant) map {
+      _ =>
+        auditService.verifySent(
+          PSARegistration(
+            withId = false,
+            externalId = testOrganisation.externalId,
+            psaType = "Organisation",
+            found = false,
+            isUk = None,
+            status = NOT_FOUND,
+            request = Json.toJson(organisationRegistrant),
+            response = None
+          )
+        ) shouldBe true
+    }
+  }
+
+  it should "not send a PSARegistration audit event on failure" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithoutIdUrl))
+        .willReturn(
+          serverError
+        )
+    )
+
+    recoverToExceptionIf[Upstream5xxResponse](connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant)) map {
+      _ =>
+        auditService.verifyNothingSent shouldBe true
+    }
+
+  }
+
+}
+
+object RegistrationConnectorSpec {
+
+  val testNino: String = "AB123456C"
+  val testUtr: String = "1234567890"
+
+  val psaType = "LLP"
+
+  val registerIndividualWithIdUrl = s"/registration/individual/nino/$testNino"
+  val registerOrganisationWithIdUrl = s"/registration/organisation/utr/$testUtr"
+  val registerOrganisationWithoutIdUrl = "/registration/02.00.00/organisation"
+
+  val testOrganisation: User = User("test-external-id", AffinityGroup.Organisation)
+  val testIndividual: User = User("test-external-id", AffinityGroup.Individual)
+
+  val testRegisterDataIndividual: JsObject = Json.obj("regime" -> "PODA", "requiresNameMatch" -> false, "isAnAgent" -> false)
+  val testRegisterDataOrganisation: JsObject = Json.obj(
+    "regime" -> "PODA",
+    "requiresNameMatch" -> false,
+    "isAnAgent" -> false,
+    "organisation" -> Json.obj(
+      "organisationName" -> "Test Ltd",
+      "organisationType" -> "LLP"
+    ))
+  val testRegisterDataOrganisationWithoutId: JsObject = Json.obj(
+    "regime" -> "PODA",
+    "acknowledgementReference" -> "ackReference",
+    "isAnAgent" -> false,
+    "isAGroup" -> false,
+    "organisation" -> OrganisationName("Name"),
+    "address" -> Json.obj(
+      "line1" -> "addressLine1",
+      "countryCode" -> "US",
+      "addressType" -> "NON-UK"
+    ),
+    "contactDetails" -> ContactDetailsType(None, None)
+  )
+
+  val organisationRegistrant = OrganisationRegistrant(
+    "ackReference",
+    OrganisationName("Name"),
+    InternationalAddress("addressLine1", None, None,None, "US", None),
+    ContactDetailsType(None, None)
+  )
+
+  val auditService = new StubSuccessfulAuditService()
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("", "")
+
+  val registerOrganisationWithoutIdResponse: JsValue = Json.obj(
+    "sapNumber" -> "1234567890",
+    "safeId" -> "XE0001234567890"
+  )
+
+  val registerIndividualResponse: JsValue = Json.parse(
+    """
+      |{
+      |  "safeId": "XE0001234567890",
+      |  "sapNumber": "1234567890",
+      |  "agentReferenceNumber": "AARN1234567",
+      |  "isEditable": true,
+      |  "isAnAgent": false,
+      |  "isAnASAgent": false,
+      |  "isAnIndividual": true,
+      |  "individual": {
+      |    "firstName": "Stephen",
+      |    "lastName": "Wood",
+      |    "dateOfBirth": "1990-04-03"
+      |  },
+      |  "address": {
+      |    "addressLine1": "100 SuttonStreet",
+      |    "addressLine2": "Wokingham",
+      |    "addressLine3": "Surrey",
+      |    "addressLine4": "London",
+      |    "postalCode": "DH14EJ",
+      |    "countryCode": "GB"
+      |  },
+      |  "contactDetails": {
+      |    "primaryPhoneNumber": "01332752856",
+      |    "secondaryPhoneNumber": "07782565326",
+      |    "faxNumber": "01332754256",
+      |    "emailAddress": "stephen@manncorpone.co.uk"
+      |  }
+      |}
+      |
+    """.stripMargin)
+
+  val registerOrganisationResponse: JsValue = Json.parse(
+    s"""{
+       |  "safeId": "XE0001234567890",
+       |  "sapNumber": "1234567890",
+       |  "isAnIndividual": false,
+       |  "organisation": {
+       |    "organisationName": "Test Ltd",
+       |    "isAGroup": false,
+       |    "organisationType": "$psaType"
+       |  },
+       |  "address": {
+       |    "addressLine1": "100 SuttonStreet",
+       |    "addressLine2": "Wokingham",
+       |    "addressLine3": "Surrey",
+       |    "addressLine4": "London",
+       |    "postalCode": "DH14EJ",
+       |    "countryCode": "GB"
+       |  },
+       |  "contactDetails": {
+       |    "primaryPhoneNumber": "01332752856",
+       |    "secondaryPhoneNumber": "07782565326",
+       |    "faxNumber": "01332754256",
+       |    "emailAddress": "stephen@manncorpone.co.uk"
+       |  }
+       |}
+       |
+    """.stripMargin)
+
+  def errorResponse(code: String): String = {
+    Json.obj(
+      "code" -> code,
+      "reason" -> s"Reason for $code"
+    ).toString()
   }
 
 }

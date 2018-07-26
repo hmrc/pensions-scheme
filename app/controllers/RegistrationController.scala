@@ -24,13 +24,13 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.http.{BadRequestException, Upstream4xxResponse}
+import uk.gov.hmrc.http.{BadRequestException, HttpException, Upstream4xxResponse}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import utils.validationUtils._
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 class RegistrationController @Inject()(
@@ -43,10 +43,10 @@ class RegistrationController @Inject()(
       authorised(ConfidenceLevel.L200 and AffinityGroup.Individual)
         .retrieve(Retrievals.nino and Retrievals.externalId and Retrievals.affinityGroup) {
           case Some(nino) ~ Some(externalId) ~ Some(affinityGroup) =>
-            registerConnector.registerWithIdIndividual(nino, models.User(externalId, affinityGroup), mandatoryPODSData()).map { httpResponse =>
-              val response = httpResponse.json.convertTo[SuccessResponse]
-              Ok(Json.toJson[SuccessResponse](response))
-            }
+            registerConnector.registerWithIdIndividual(nino, models.User(externalId, affinityGroup), mandatoryPODSData()).map {
+              case Right(json) => Ok(Json.toJson[SuccessResponse](json.as[SuccessResponse]))
+              case Left(e: HttpException) => result(e)
+            } recoverWith recoverFromError
           case _ =>
             Future.failed(Upstream4xxResponse("Nino not found in auth record", UNAUTHORIZED, UNAUTHORIZED))
         } recoverWith recoverFromError
@@ -61,13 +61,13 @@ class RegistrationController @Inject()(
             case Some(jsBody) =>
               Try((jsBody \ "utr").convertTo[String], jsBody.convertTo[Organisation]) match {
                 case Success((utr, org)) =>
-                  val registerWithIdData = mandatoryPODSData(true).as[JsObject] ++
-                    Json.obj("organisation" -> Json.toJson(org))
+                  val registerWithIdData = mandatoryPODSData(true).as[JsObject] ++ Json.obj("organisation" -> Json.toJson(org))
 
-                  registerConnector.registerWithIdOrganisation(utr, models.User(externalId, affinityGroup), registerWithIdData).map { httpResponse =>
-                    val response = httpResponse.json.as[SuccessResponse]
-                    Ok(Json.toJson[SuccessResponse](response))
+                  registerConnector.registerWithIdOrganisation(utr, models.User(externalId, affinityGroup), registerWithIdData).map {
+                    case Right(json) => Ok(Json.toJson[SuccessResponse](json.as[SuccessResponse]))
+                    case Left(e) => result(e)
                   }
+
                 case Failure(e) =>
                   Logger.warn(s"Bad Request returned from frontend for Register With Id Organisation $e")
                   Future.failed(new BadRequestException(s"Bad Request returned from frontend for Register With Id Organisation $e"))
@@ -92,9 +92,9 @@ class RegistrationController @Inject()(
 
         authorised().retrieve(Retrievals.externalId and Retrievals.affinityGroup) {
           case Some(externalId) ~ Some(affinityGroup) =>
-            registerConnector.registrationNoIdOrganisation(models.User(externalId, affinityGroup), request.body).map {
-              httpResponse =>
-                Ok(httpResponse.body)
+            registerConnector.registrationNoIdOrganisation(models.User(externalId, affinityGroup), request.body) map {
+              case Right(json) => Ok(json)
+              case Left(e) => result(e)
             }
           case _ =>
             Future.failed(Upstream4xxResponse("Not authorized", UNAUTHORIZED, UNAUTHORIZED))

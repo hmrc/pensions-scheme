@@ -16,11 +16,15 @@
 
 package utils
 
-import play.api.libs.json.JsResultException
-import play.api.mvc.Result
-import uk.gov.hmrc.http._
+import akka.util.ByteString
+import play.api.http.HttpEntity
 import play.api.http.Status._
+import play.api.libs.json.JsResultException
+import play.api.mvc.{ResponseHeader, Result}
+import uk.gov.hmrc.http._
+
 import scala.concurrent.Future
+import scala.util.matching.Regex
 
 trait ErrorHandler {
 
@@ -39,15 +43,30 @@ trait ErrorHandler {
       Future.failed(new Exception(e.getMessage))
   }
 
-  def throwAppropriateException(e: Upstream4xxResponse): Exception = {
+  private def throwAppropriateException(e: Upstream4xxResponse): Exception = {
     e.upstreamResponseCode match {
-      case (FORBIDDEN) if (e.message.contains("INVALID_BUSINESS_PARTNER")) =>
+      case FORBIDDEN if e.message.contains("INVALID_BUSINESS_PARTNER") =>
         new ForbiddenException(e.message)
-      case CONFLICT if (e.message.contains("DUPLICATE_SUBMISSION")) =>
+      case CONFLICT if e.message.contains("DUPLICATE_SUBMISSION") =>
         new ConflictException(e.message)
       case _ =>
         new Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs)
     }
   }
+
+  protected def result(ex: HttpException): Result = {
+
+    val responseBodyRegex: Regex = """^.*Response body:? '(.*)'$""".r
+
+    val httpEntity = ex.message match {
+      case responseBodyRegex(body) => HttpEntity.Strict(ByteString(body), Some("application/json"))
+      case message => HttpEntity.Strict(ByteString(message), Some("text/plain"))
+      case _ => HttpEntity.NoEntity
+    }
+
+    Result(ResponseHeader(ex.responseCode), httpEntity)
+  }
+
+
 }
 

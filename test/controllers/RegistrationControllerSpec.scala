@@ -92,24 +92,13 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     "return OK when the registration with id is successful for Individual" in {
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdIndividualResponse.json").as[SuccessResponse])
       when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq(nino), any(), Matchers.eq(inputRequestData))(
-        any(), any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(successResponse))))
+        any(), any(), any())).thenReturn(Future.successful(Right(successResponse)))
 
       val result = registrationController(individualRetrievals).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
 
       ScalaFutures.whenReady(result) { _ =>
         status(result) mustBe OK
         contentAsJson(result) mustEqual successResponse
-      }
-    }
-
-    "throw BadRequestException when the bad data returned in the response from DES/ETMP" in {
-      val output = Json.obj("bad" -> "data")
-      when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq(nino), any(), Matchers.eq(inputRequestData))(
-        any(), any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(output))))
-
-      val result = registrationController(individualRetrievals).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
       }
     }
 
@@ -173,8 +162,9 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     "return OK when the registration with id is successful for Organisation" in {
       val input = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json").as[SuccessResponse])
+
       when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(
-        any(), any(), any())).thenReturn(Future.successful(HttpResponse(OK, Some(input))))
+        any(), any(), any())).thenReturn(Future.successful(Right(input)))
 
       val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
       ScalaFutures.whenReady(result) { _ =>
@@ -255,7 +245,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         "safeId" -> "XE0001234567890"
       )
       when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(Matchers.any(), Matchers.any(), any())).thenReturn(
-        Future.successful(HttpResponse(OK, Some(successResponse))))
+        Future.successful(Right(successResponse)))
 
       val result = call(registrationController(organisationRetrievals).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
 
