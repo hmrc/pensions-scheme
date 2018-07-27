@@ -24,20 +24,22 @@ import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
+import org.scalacheck.Gen
+import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.BeforeAndAfter
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import play.api.libs.json._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.http.{BadRequestException, _}
 import utils.FakeAuthConnector
 
 import scala.concurrent.Future
 
-class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter {
+class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with GeneratorDrivenPropertyChecks {
 
   import RegistrationControllerSpec._
 
@@ -74,7 +76,6 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         contentAsJson(result) mustEqual successResponse
       }
     }
-
 
     "throw Upstream5xxResponse when given Upstream5xxResponse from connector" in {
 
@@ -114,7 +115,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
   }
 
-  "register With Id Organisation" must {
+  "registerWithIdOrganisation" must {
 
     val inputData = Json.obj("utr" -> "1100000000", "organisationName" -> "Test Ltd", "organisationType" -> "LLP")
 
@@ -134,16 +135,29 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       }
     }
 
-    "return Bad Request" when {
-      "the bad data returned from frontend in the request" in {
+    "throw BadRequestException" when {
+      "utr and organisation cannot be read from request" in {
 
-        val inputData = Json.obj("bad" -> "data")
+        val badRequestGen: Gen[JsObject] = Gen.oneOf(Seq(
+          Json.obj("organisationName" -> "Test Ltd", "organisationType" -> "LLP"),
+          Json.obj("utr" -> "1100000000", "organisationName" -> "Test Ltd"),
+          Json.obj("utr" -> "1100000000", "organisationType" -> "LLP"),
+          Json.obj("utr" -> "1100000000"),
+          Json.obj(),
+          Json.obj("bad" -> "request")
+        ))
 
-        val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+        forAll(badRequestGen){ badRequest =>
 
-        ScalaFutures.whenReady(result.failed) { e =>
-          e mustBe a[BadRequestException]
+          val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(badRequest))
+
+          ScalaFutures.whenReady(result.failed) { e =>
+            e mustBe a[BadRequestException]
+            e.getMessage must startWith("Bad Request returned from frontend for Register With Id Organisation")
+          }
+
         }
+
       }
 
       "there is no body in the request" in {
@@ -154,6 +168,75 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
           e.getMessage mustEqual "No request body received for Organisation"
         }
       }
+    }
+
+    "return result from registration" when {
+
+      "connector returns failure" in {
+
+        val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
+          new BadRequestException("INVALID_PAYLOAD"),
+          new NotFoundException("NOT FOUND"),
+          new ConflictException("CONFLICT")
+        ))
+
+        forAll(connectorFailureGen){ connectorFailure =>
+
+          when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
+            .thenReturn(Future.successful(Left(connectorFailure)))
+
+          val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+
+          ScalaFutures.whenReady(result) { _ =>
+            status(result) mustBe connectorFailure.responseCode
+          }
+
+        }
+
+      }
+
+    }
+
+    "throw Exception when authorisation retrievals fails" in {
+
+      val retrievals = InsufficientConfidenceLevel()
+      val input = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
+
+      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
+        .thenReturn(Future.successful(Right(input)))
+
+      val result = registrationController(Future.failed(retrievals)).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe retrievals.msg
+      }
+    }
+
+    "throw Upstream4xxResponse when auth all retrievals are not present" in {
+
+      val input = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
+
+      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
+        .thenReturn(Future.successful(Right(input)))
+
+      val retrievalsGen = Gen.oneOf(Seq(
+        new ~(None, None),
+        new ~(None, Some(AffinityGroup.Organisation)),
+        new ~(Some(""), None)
+      ))
+
+      forAll(retrievalsGen){ retrievals =>
+
+        val result = registrationController(Future.successful(retrievals)).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+
+        ScalaFutures.whenReady(result.failed) { e =>
+          e mustBe a[Upstream4xxResponse]
+          e.getMessage mustBe "Not authorized"
+        }
+
+      }
+
     }
 
     "throw Upstream5xxResponse when given Upstream5xxResponse from connector" in {
@@ -177,21 +260,6 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       }
     }
 
-    "throw Exception when any other exception returned from connector" in {
-
-      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
-        .thenReturn(Future.failed(new Exception("Generic Exception")))
-
-      val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
-
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Exception]
-        e.getMessage mustBe "Generic Exception"
-
-        verify(mockRegistrationConnector, times(1))
-          .registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any())
-      }
-    }
   }
 
   "registrationNoIdOrganisation" must {
