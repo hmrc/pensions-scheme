@@ -30,6 +30,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import play.api.libs.json._
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
@@ -437,11 +438,5 @@ object RegistrationControllerSpec {
         Some(AffinityGroup.Organisation)
       )
     )
-
-}
-
-trait RegistrationControllerBehaviours {
-
-  def registrationResponseHandler: Unit = ???
 
 }
