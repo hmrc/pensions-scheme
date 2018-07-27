@@ -58,7 +58,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
   before(reset(mockRegistrationConnector))
 
-  "register With Id Individual" must {
+  "registerWithIdIndividual" must {
 
     val inputRequestData = Json.obj("regime" -> "PODA", "requiresNameMatch" -> false, "isAnAgent" -> false)
 
@@ -75,6 +75,66 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         status(result) mustBe OK
         contentAsJson(result) mustEqual successResponse
       }
+    }
+
+    "return result from registration when connector returns failure" in {
+
+      val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
+        new BadRequestException("INVALID_PAYLOAD"),
+        new NotFoundException("NOT FOUND"),
+        new ConflictException("CONFLICT")
+      ))
+
+      forAll(connectorFailureGen){ connectorFailure =>
+
+        when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq(nino), any(), Matchers.eq(inputRequestData))(any(), any(), any()))
+          .thenReturn(Future.successful(Left(connectorFailure)))
+
+        val result = registrationController(individualRetrievals).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+
+        ScalaFutures.whenReady(result) { _ =>
+          status(result) mustBe connectorFailure.responseCode
+        }
+
+      }
+
+    }
+
+    "throw Exception when authorisation retrievals fails" in {
+
+      val retrievals = InsufficientConfidenceLevel()
+
+      val result = registrationController(Future.failed(retrievals)).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe retrievals.msg
+      }
+    }
+
+    "throw Upstream4xxResponse when auth all retrievals are not present" in {
+
+      val retrievalsGen = Gen.oneOf(Seq(
+        new ~(new ~(None, None), None),
+        new ~(new ~(None, None), Some(AffinityGroup.Individual)),
+        new ~(new ~(None, Some(externalId)), Some(AffinityGroup.Individual)),
+        new ~(new ~(None, Some(externalId)), None),
+        new ~(new ~(Some(nino),None),Some(AffinityGroup.Individual)),
+        new ~(new ~(Some(nino),None),None),
+        new ~(new ~(Some(nino),Some(externalId)),None)
+      ))
+
+      forAll(retrievalsGen){ retrievals =>
+
+        val result = registrationController(Future.successful(retrievals)).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
+
+        ScalaFutures.whenReady(result.failed) { e =>
+          e mustBe a[Upstream4xxResponse]
+          e.getMessage mustBe "Nino not found in auth record"
+        }
+
+      }
+
     }
 
     "throw Upstream5xxResponse when given Upstream5xxResponse from connector" in {
@@ -206,11 +266,6 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
     }
 
     "throw Upstream4xxResponse when auth all retrievals are not present" in {
-
-      val input = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
-
-      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
-        .thenReturn(Future.successful(Right(input)))
 
       val retrievalsGen = Gen.oneOf(Seq(
         new ~(None, None),
