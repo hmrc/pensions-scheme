@@ -119,7 +119,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
     val inputData = Json.obj("utr" -> "1100000000", "organisationName" -> "Test Ltd", "organisationType" -> "LLP")
 
-    "return OK when the registration with id is successful for Organisation" in {
+    "return OK when request utr and organisation get successful response from connector" in {
 
       val input = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
       val successResponse = Json.toJson(readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json").as[SuccessResponse])
@@ -170,9 +170,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       }
     }
 
-    "return result from registration" when {
-
-      "connector returns failure" in {
+    "return result from registration when connector returns failure" in {
 
         val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
           new BadRequestException("INVALID_PAYLOAD"),
@@ -195,15 +193,9 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
       }
 
-    }
-
     "throw Exception when authorisation retrievals fails" in {
 
       val retrievals = InsufficientConfidenceLevel()
-      val input = readJsonFromFile("/data/validRegisterWithIdOrganisationResponse.json")
-
-      when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
-        .thenReturn(Future.successful(Right(input)))
 
       val result = registrationController(Future.failed(retrievals)).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
 
@@ -266,13 +258,14 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
     def fakeRequest(data: JsValue): FakeRequest[JsValue] = FakeRequest("POST", "/").withBody(data)
 
-    "return OK when valid data is posted" in {
+    "return OK with successful response from connector" in {
 
       val successResponse: JsObject = Json.obj(
         "processingDate" -> LocalDate.now,
         "sapNumber" -> "1234567890",
         "safeId" -> "XE0001234567890"
       )
+
       when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any()))
         .thenReturn(Future.successful(Right(successResponse)))
 
@@ -284,41 +277,83 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
       }
     }
 
-    "throw Upstream5xxResponse when given UpStream5XXResponse from connector" in {
-      val serviceUnavailable: JsObject = Json.obj(
-        "code" -> "SERVICE_UNAVAILABLE",
-        "reason" -> "Dependent systems are currently not responding."
-      )
+    "return result from registration when connector returns failure" in {
 
-      when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any()))
-        .thenReturn(Future.failed(Upstream5xxResponse(serviceUnavailable.toString(), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+        val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
+          new BadRequestException("INVALID_PAYLOAD"),
+          new NotFoundException("NOT FOUND"),
+          new ConflictException("CONFLICT")
+        ))
 
-      val result = call(registrationController(organisationRetrievals).registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
+        forAll(connectorFailureGen){ connectorFailure =>
 
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream5xxResponse]
-        e.getMessage mustBe serviceUnavailable.toString()
+          when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any()))
+            .thenReturn(Future.successful(Left(connectorFailure)))
 
-        verify(mockRegistrationConnector, times(1))
-          .registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any())
+          val result = call(registrationController(organisationRetrievals).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
+
+          ScalaFutures.whenReady(result) { _ =>
+            status(result) mustBe connectorFailure.responseCode
+          }
+
+        }
+
       }
-    }
 
-    "throw Exception when any other exception returned from connector" in {
+    "throw Exception when authorisation retrievals fails" in {
 
-      when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any()))
-        .thenReturn(Future.failed(new Exception("Generic Exception")))
+      val retrievals = InsufficientConfidenceLevel()
 
-      val result = call(registrationController(organisationRetrievals).registrationNoIdOrganisation,fakeRequest(dataFromFrontend))
+      val result = call(registrationController(Future.failed(retrievals)).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
 
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
-        e.getMessage mustBe "Generic Exception"
+        e.getMessage mustBe retrievals.msg
+      }
+    }
+
+    "throw Upstream4xxResponse when auth all retrievals are not present" in {
+
+      val retrievalsGen = Gen.oneOf(Seq(
+        new ~(None, None),
+        new ~(None, Some(AffinityGroup.Organisation)),
+        new ~(Some(""), None)
+      ))
+
+      forAll(retrievalsGen){ retrievals =>
+
+        val result = call(registrationController(Future.successful(retrievals)).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
+
+        ScalaFutures.whenReady(result.failed) { e =>
+          e mustBe a[Upstream4xxResponse]
+          e.getMessage mustBe "Not authorized"
+        }
+
+      }
+
+    }
+
+    "throw Upstream5xxResponse when given Upstream5xxResponse from connector" in {
+
+      val failureResponse = Json.obj(
+        "code" -> "SERVER_ERROR",
+        "reason" -> "DES is currently experiencing problems that require live service intervention."
+      )
+
+      when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any()))
+        .thenReturn(Future.failed(Upstream5xxResponse(failureResponse.toString(), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+
+      val result = call(registrationController(organisationRetrievals).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
+
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream5xxResponse]
+        e.getMessage mustBe failureResponse.toString()
 
         verify(mockRegistrationConnector, times(1))
           .registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any())
       }
     }
+
   }
 
 }
