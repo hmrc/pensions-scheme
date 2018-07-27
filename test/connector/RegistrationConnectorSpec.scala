@@ -91,7 +91,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
 
   }
 
-  it should behave like registrationApiEndpointOnFailure(
+  it should behave like errorHandlerForApiFailures(
     connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual),
     registerIndividualWithIdUrl
   )
@@ -192,7 +192,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
 
   }
 
-  it should behave like registrationApiEndpointOnFailure(
+  it should behave like errorHandlerForApiFailures(
     connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation),
     registerOrganisationWithIdUrl
   )
@@ -288,7 +288,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
 
   }
 
-  it should behave like registrationApiEndpointOnFailure(
+  it should behave like errorHandlerForApiFailures(
     connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant),
     registerOrganisationWithoutIdUrl
   )

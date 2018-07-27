@@ -44,9 +44,7 @@ class RegistrationConnectorImpl @Inject()(
   )
 
   override def registerWithIdIndividual(nino: String, user: User, registerData: JsValue)
-                                       (implicit hc: HeaderCarrier,
-                                        ec: ExecutionContext,
-                                        request: RequestHeader): Future[Either[HttpException, JsValue]] = {
+                                       (implicit hc: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[Either[HttpException, JsValue]] = {
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader)
 
@@ -68,9 +66,7 @@ class RegistrationConnectorImpl @Inject()(
   }
 
   override def registerWithIdOrganisation(utr: String, user: User, registerData: JsValue)
-                                         (implicit hc: HeaderCarrier,
-                                          ec: ExecutionContext,
-                                          request: RequestHeader): Future[Either[HttpException, JsValue]] = {
+                                         (implicit hc: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[Either[HttpException, JsValue]] = {
     val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
     val psaType: String = organisationPsaType(registerData)
 
@@ -87,9 +83,7 @@ class RegistrationConnectorImpl @Inject()(
   }
 
   override def registrationNoIdOrganisation(user: User, registerData: OrganisationRegistrant)
-                                           (implicit hc: HeaderCarrier,
-                                            ec: ExecutionContext,
-                                            request: RequestHeader): Future[Either[HttpException, JsValue]] = {
+                                           (implicit hc: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[Either[HttpException, JsValue]] = {
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader)
     val schemeAdminRegisterUrl = config.registerWithoutIdOrganisationUrl

@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 trait RegistrationConnectorBehaviours { this: RegistrationConnectorSpec =>
 
-  def registrationApiEndpointOnFailure(call: => Future[Either[HttpException, JsValue]], url: String): Unit = {
+  def errorHandlerForApiFailures(call: => Future[Either[HttpException, JsValue]], url: String): Unit = {
 
     it should "handle BAD_REQUEST (400) - INVALID_PAYLOAD" in {
 
