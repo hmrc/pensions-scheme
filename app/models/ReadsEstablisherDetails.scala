@@ -100,8 +100,34 @@ object ReadsEstablisherDetails {
     )
   )
 
+  private val readsPartner: Reads[Individual]= (
+    (JsPath \ "partnerDetails").read[PersonalDetails] and
+      (JsPath \ "partnerAddressId").read[Address] and
+      (JsPath \ "partnerContactDetails").read[ContactDetails] and
+      (JsPath \ "partnerNino" \ "nino").readNullable[String] and
+      (JsPath \ "partnerNino" \ "reason").readNullable[String] and
+      (JsPath \ "partnerUniqueTaxReference" \ "utr").readNullable[String] and
+      (JsPath \ "partnerUniqueTaxReference" \ "reason").readNullable[String] and
+      (JsPath \ "partnerAddressYears").read[String] and
+      (JsPath \ "previousAddress").readNullable[Address]
+    )((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
+    Individual(
+      personalDetails = personalDetails,
+      referenceOrNino = nino,
+      noNinoReason = noNinoReason,
+      utr = utr,
+      noUtrReason = noUtrReason,
+      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
+      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
+      previousAddressDetails = previousAddressDetails(addressYears, previousAddress)
+    )
+  )
+
   private val readsCompanyDirectors: Reads[Seq[Individual]] =
     readsFiltered(_ \ "directorDetails", readsCompanyDirector, "directorDetails")
+
+  private val readsPartners: Reads[Seq[Individual]] =
+    readsFiltered(_ \ "partnerDetails", readsPartner, "partnerDetails")
 
   private val readsEstablisherCompany: Reads[CompanyEstablisher] = (
     (JsPath \ "companyDetails" \ "companyName").read[String] and
@@ -131,6 +157,33 @@ object ReadsEstablisherDetails {
       correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
       previousAddressDetails = previousAddressDetails(addressYears, previousAddress),
       directorDetails = directors.getOrElse(Nil)
+    )
+  )
+
+  private val readsEstablisherPartnership: Reads[Partnership] = (
+    (JsPath \ "partnershipDetails" \ "name").read[String] and
+      (JsPath \ "partnershipVat" \ "vat").readNullable[String] and
+      (JsPath \ "partnershipPaye" \ "paye").readNullable[String] and
+      (JsPath \ "partnershipUniqueTaxReference" \ "utr").readNullable[String] and
+      (JsPath \ "partnershipUniqueTaxReference" \ "reason").readNullable[String] and
+      (JsPath \ "otherPartners").readNullable[Boolean] and
+      (JsPath \ "partnershipAddress").read[Address] and
+      (JsPath \ "partnershipContactDetails").read[ContactDetails] and
+      (JsPath \ "partnershipAddressYears").read[String] and
+      (JsPath \ "partnershipPreviousAddress").readNullable[Address] and
+      (JsPath \ "partner").readNullable(readsPartners)
+    )((partnershipName, vat, paye, utr, noUtrReason, otherPartners, address, contactDetails, addressYears, previousAddress, partners) =>
+    Partnership(
+      organizationName = partnershipName,
+      utr = utr,
+      noUtrReason = noUtrReason,
+      vatRegistrationNumber = vat,
+      payeReference = paye,
+      haveMoreThanTenDirectorOrPartner = otherPartners.getOrElse(false),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
+      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
+      previousAddressDetails = previousAddressDetails(addressYears, previousAddress),
+      partnerDetails = partners.getOrElse(Nil)
     )
   )
 
@@ -190,6 +243,9 @@ object ReadsEstablisherDetails {
   private val readsEstablisherCompanies: Reads[Seq[CompanyEstablisher]] =
     readsFiltered(_ \ "companyDetails", readsEstablisherCompany, "companyDetails")
 
+  private val readsEstablisherPartnerships: Reads[Seq[Partnership]] =
+    readsFiltered(_ \ "partnershipDetails", readsEstablisherPartnership, "partnershipDetails")
+
   private val readsTrusteeIndividuals: Reads[Seq[Individual]] =
     readsFiltered(_ \ "trusteeDetails", readsTrusteeIndividual, "trusteeDetails")
 
@@ -234,11 +290,13 @@ object ReadsEstablisherDetails {
 
   val readsEstablisherDetails: Reads[EstablisherDetails] = (
     (JsPath \ "establishers").readNullable(readsEstablisherIndividuals) and
-    (JsPath \ "establishers").readNullable(readsEstablisherCompanies)
-  )((establisherIndividuals, establisherCompanies) =>
+    (JsPath \ "establishers").readNullable(readsEstablisherCompanies) and
+    (JsPath \ "establishers").readNullable(readsEstablisherPartnerships)
+  )((establisherIndividuals, establisherCompanies, establisherPartnerships) =>
     EstablisherDetails(
       individual = establisherIndividuals.getOrElse(Nil),
-      companyOrOrganization = establisherCompanies.getOrElse(Nil)
+      companyOrOrganization = establisherCompanies.getOrElse(Nil),
+      partnership = establisherPartnerships.getOrElse(Nil)
     )
   )
 

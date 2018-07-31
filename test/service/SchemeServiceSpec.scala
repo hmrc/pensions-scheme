@@ -19,7 +19,7 @@ package service
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
-import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder}
+import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
 import models.{EstablisherDetails, PensionsScheme, _}
 import org.scalatest.{AsyncFlatSpec, Matchers}
@@ -229,7 +229,8 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
         .copy(establisherDetails =
           EstablisherDetails(
             companyOrOrganization = Nil,
-            individual = Seq(IndividualBuilder().build())
+            individual = Seq(IndividualBuilder().build()),
+            partnership = Nil
           )
         )
 
@@ -252,7 +253,8 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
         .copy(establisherDetails =
           EstablisherDetails(
             companyOrOrganization = Seq(CompanyEstablisherBuilder().build()),
-            individual = Nil
+            individual = Nil,
+            partnership = Nil
           )
         )
 
@@ -260,6 +262,30 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     val expected = schemeSubscription.copy(
       hasCompanyEstablisher = true,
+      request = Json.toJson(scheme)
+    )
+
+    actual shouldBe expected
+
+  }
+
+  it should "translate a scheme with partnership establishers" in {
+
+    val scheme =
+      PensionsSchemeSchemeStructure
+        .set(pensionsScheme, Some(SchemeType.single.value))
+        .copy(establisherDetails =
+          EstablisherDetails(
+            companyOrOrganization = Nil,
+            individual = Nil,
+            partnership = Seq(PartnershipBuilder().build())
+          )
+        )
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      hasPartnershipEstablisher = true,
       request = Json.toJson(scheme)
     )
 
@@ -349,6 +375,7 @@ object SchemeServiceSpec extends SpecBase {
       box9 = false
     ),
     EstablisherDetails(
+      Nil,
       Nil,
       Nil
     ),

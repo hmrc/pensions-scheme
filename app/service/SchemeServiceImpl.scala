@@ -192,7 +192,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
       schemeType = schemeType,
       hasIndividualEstablisher = pensionsScheme.establisherDetails.individual.nonEmpty,
       hasCompanyEstablisher = pensionsScheme.establisherDetails.companyOrOrganization.nonEmpty,
-      hasPartnershipEstablisher = false,
+      hasPartnershipEstablisher = pensionsScheme.establisherDetails.partnership.nonEmpty,
       hasDormantCompany = pensionsScheme.pensionSchemeDeclaration.box5.getOrElse(false),
       hasBankDetails = hasBankDetails,
       hasValidBankDetails = hasBankDetails && !pensionsScheme.customerAndSchemeDetails.haveInvalidBank,
