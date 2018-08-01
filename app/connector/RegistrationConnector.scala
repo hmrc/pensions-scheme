@@ -57,8 +57,7 @@ class RegistrationConnectorImpl @Inject()(
         require(response.status == 200)
         Right(response.json)
     } recoverWith {
-      case e: BadRequestException if e.message.contains("INVALID_NINO") => Future.successful(Left(e))
-      case e: BadRequestException if e.message.contains("INVALID_PAYLOAD") => Future.successful(Left(e))
+      case e: BadRequestException if e.message.contains("INVALID_NINO") | e.message.contains("INVALID_PAYLOAD") => Future.successful(Left(e))
       case e: NotFoundException => Future.successful(Left(e))
       case e: Upstream4xxResponse if e.upstreamResponseCode == CONFLICT => Future.successful(Left(new ConflictException(e.message)))
     } andThen sendPSARegistrationEvent(true, user, "Individual", registerData, withIdIsUk) andThen logWarning("registerWithIdIndividual")
@@ -75,7 +74,7 @@ class RegistrationConnectorImpl @Inject()(
         require(response.status == 200)
         Right(response.json)
     } recoverWith {
-      case e: BadRequestException if e.message.contains("INVALID_PAYLOAD") => Future.successful(Left(e))
+      case e: BadRequestException if e.message.contains("INVALID_PAYLOAD") | e.message.contains("INVALID_UTR") => Future.successful(Left(e))
       case e: NotFoundException => Future.successful(Left(e))
       case e: Upstream4xxResponse if e.upstreamResponseCode == CONFLICT => Future.successful(Left(new ConflictException(e.message)))
     } andThen sendPSARegistrationEvent(true, user, psaType, registerData, withIdIsUk) andThen logWarning("registerWithIdOrganisation")

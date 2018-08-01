@@ -192,6 +192,25 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
 
   }
 
+  it should "handle BAD_REQUEST (400) - INVALID_UTR" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithIdUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_UTR"))
+        )
+    )
+
+    connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation) map {
+      response =>
+        response.left.value shouldBe a[BadRequestException]
+        response.left.value.message should include ("INVALID_UTR")
+    }
+
+  }
+
   it should behave like errorHandlerForApiFailures(
     connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation),
     registerOrganisationWithIdUrl
@@ -288,11 +307,6 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
 
   }
 
-  it should behave like errorHandlerForApiFailures(
-    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant),
-    registerOrganisationWithoutIdUrl
-  )
-
   it should "handle FORBIDDEN (403) - INVALID_SUBMISSION" in {
 
     server.stubFor(
@@ -311,6 +325,11 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
     }
 
   }
+
+  it should behave like errorHandlerForApiFailures(
+    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant),
+    registerOrganisationWithoutIdUrl
+  )
 
   it should "send a PSARegistration audit event on success" in {
 
