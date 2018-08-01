@@ -17,6 +17,7 @@
 package utils
 
 import akka.util.ByteString
+import play.api.Logger
 import play.api.http.HttpEntity
 import play.api.http.Status._
 import play.api.libs.json.JsResultException
@@ -63,6 +64,8 @@ trait ErrorHandler {
       case message => HttpEntity.Strict(ByteString(message), Some("text/plain"))
       case _ => HttpEntity.NoEntity
     }
+
+    Logger.debug(s"pension-scheme.utils.ErrorHandler: Code - ${ex.responseCode} Body - $httpEntity")
 
     Result(ResponseHeader(ex.responseCode), httpEntity)
   }
