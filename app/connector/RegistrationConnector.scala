@@ -27,6 +27,7 @@ import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import play.api.http.Status._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import utils.ErrorHandler
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -35,7 +36,7 @@ class RegistrationConnectorImpl @Inject()(
                                            http: HttpClient,
                                            config: AppConfig,
                                            auditService: AuditService
-                                         ) extends RegistrationConnector with HttpErrorFunctions {
+                                         ) extends RegistrationConnector with HttpErrorFunctions with ErrorHandler {
 
   private val desHeader = Seq(
     "Environment" -> config.desEnvironment,
@@ -93,70 +94,6 @@ class RegistrationConnectorImpl @Inject()(
       case status if is5xx(status) => throw Upstream5xxResponse(response.body, status, 502)
       case status => throw new Exception(s"Business Partner Matching fail with status $status. Response body: '${response.body}'")
     }
-  }
-
-  private def organisationPsaType(registerData: JsValue): String = {
-    (registerData \ "organisation" \ "organisationType").validate[String].fold(
-      _ => "Unknown",
-      organisationType => organisationType
-    )
-  }
-
-  private def noIdIsUk(organisation: OrganisationRegistrant)(response: JsValue): Option[Boolean] = {
-    organisation.address match {
-      case _: UkAddress => Some(true)
-      case _ => Some(false)
-    }
-  }
-
-  private def withIdIsUk(response: JsValue): Option[Boolean] = {
-
-    response.validate[SuccessResponse].fold(
-      _ => None,
-      success => success.address match {
-        case _: UkAddress => Some(true)
-        case _ => Some(false)
-      }
-    )
-
-  }
-
-  private def sendPSARegistrationEvent(withId: Boolean, user: User, psaType: String, registerData: JsValue, isUk: JsValue => Option[Boolean])
-                                      (implicit request: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
-
-    case Success(Right(json)) =>
-      auditService.sendEvent(
-        PSARegistration(
-          withId = withId,
-          externalId = user.externalId,
-          psaType = psaType,
-          found = true,
-          isUk = isUk(json),
-          status = Status.OK,
-          request = registerData,
-          response = Some(json)
-        )
-      )
-    case Success(Left(e)) =>
-      auditService.sendEvent(
-        PSARegistration(
-          withId = withId,
-          externalId = user.externalId,
-          psaType = psaType,
-          found = false,
-          isUk = None,
-          status = e.responseCode,
-          request = registerData,
-          response = None
-        )
-      )
-    case Failure(t) =>
-      Logger.error("Error in registration connector", t)
-
-  }
-
-  private def logWarning(endpoint: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
-    case Success(Left(e: HttpResponse)) => Logger.warn(s"RegistrationConnector.$endpoint received error response from DES", e)
   }
 
 }
