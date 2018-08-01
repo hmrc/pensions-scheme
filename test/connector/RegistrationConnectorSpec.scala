@@ -293,6 +293,25 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
     registerOrganisationWithoutIdUrl
   )
 
+  it should "handle FORBIDDEN (403) - INVALID_SUBMISSION" in {
+
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithoutIdUrl))
+        .willReturn(
+          forbidden
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_SUBMISSION"))
+        )
+    )
+
+    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant) map {
+      response =>
+        response.left.value shouldBe a[ForbiddenException]
+        response.left.value.message should include ("INVALID_SUBMISSION")
+    }
+
+  }
+
   it should "send a PSARegistration audit event on success" in {
 
     server.stubFor(

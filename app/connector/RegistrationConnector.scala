@@ -93,9 +93,14 @@ class RegistrationConnectorImpl @Inject()(
         require(response.status == 200)
         Right(response.json)
     } recoverWith {
-      case e: BadRequestException if e.message.contains("INVALID_PAYLOAD") => Future.successful(Left(e))
-      case e: NotFoundException => Future.successful(Left(e))
-      case e: Upstream4xxResponse if e.upstreamResponseCode == CONFLICT => Future.successful(Left(new ConflictException(e.message)))
+      case e: BadRequestException if e.message.contains("INVALID_PAYLOAD") =>
+        Future.successful(Left(e))
+      case e: NotFoundException =>
+        Future.successful(Left(e))
+      case e: Upstream4xxResponse if e.upstreamResponseCode == CONFLICT =>
+        Future.successful(Left(new ConflictException(e.message)))
+      case e: Upstream4xxResponse if e.upstreamResponseCode == FORBIDDEN & e.message.contains("INVALID_SUBMISSION") =>
+        Future.successful(Left(new ForbiddenException(e.message)))
     } andThen sendPSARegistrationEvent(false, user, "Organisation", Json.toJson(registerData), noIdIsUk(registerData)) andThen logWarning("registrationNoIdOrganisation")
 
   }
