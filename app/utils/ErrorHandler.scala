@@ -17,13 +17,15 @@
 package utils
 
 import akka.util.ByteString
+import play.api.Logger
 import play.api.http.HttpEntity
 import play.api.http.Status._
-import play.api.libs.json.JsResultException
+import play.api.libs.json.{JsResultException, JsValue}
 import play.api.mvc.{ResponseHeader, Result}
 import uk.gov.hmrc.http._
 
 import scala.concurrent.Future
+import scala.util.{Success, Try}
 import scala.util.matching.Regex
 
 trait ErrorHandler {
@@ -65,6 +67,10 @@ trait ErrorHandler {
     }
 
     Result(ResponseHeader(ex.responseCode), httpEntity)
+  }
+
+  protected def logWarning(endpoint: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
+    case Success(Left(e: HttpResponse)) => Logger.warn(s"$endpoint received error response from DES", e)
   }
 
 
