@@ -17,6 +17,7 @@
 package utils
 
 import akka.util.ByteString
+import play.api.Logger
 import play.api.http.HttpEntity
 import play.api.http.Status._
 import play.api.libs.json.{JsResultException, JsValue}

@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HttpException
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
-trait RegistrationAuditService { this: AuditServiceImpl =>
+trait RegistrationAuditService {
 
   def organisationPsaType(registerData: JsValue): String = {
     (registerData \ "organisation" \ "organisationType").validate[String].fold(
@@ -55,7 +55,8 @@ trait RegistrationAuditService { this: AuditServiceImpl =>
   }
 
   def sendPSARegistrationEvent(withId: Boolean, user: User, psaType: String, registerData: JsValue, isUk: JsValue => Option[Boolean])
-                                      (implicit request: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
+                              (sendEvent: PSARegistration => Unit)
+                              (implicit request: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
 
     case Success(Right(json)) =>
       sendEvent(

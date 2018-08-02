@@ -17,7 +17,7 @@
 package connector
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{AuditService, PSARegistration, RegistrationAuditService}
+import audit.{AuditService, PSARegistration}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models._
@@ -49,7 +49,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
   override protected def portConfigKey: String = "microservice.services.des-hod.port"
 
   override protected def bindings: Seq[GuiceableModule] = Seq[GuiceableModule](
-    bind[RegistrationAuditService].toInstance(auditService)
+    bind(classOf[AuditService]).toInstance(auditService)
   )
 
   def connector: RegistrationConnector = app.injector.instanceOf[RegistrationConnector]
