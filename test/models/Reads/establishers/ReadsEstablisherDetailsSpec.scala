@@ -43,6 +43,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
             .build(), false)
       ),
       Nil,
+      Nil,
       Nil
     )
 
@@ -58,6 +59,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
             .build(), false)
       ) :+ ((CompanyEstablisherBuilder()
         .build(), true)),
+      Nil,
       Nil,
       Nil
     )
@@ -172,6 +174,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
             .build(), false)
       },
       Nil,
+      Nil,
       Nil
     )
 
@@ -184,6 +187,161 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
           (IndividualBuilder().build(), true)
         } :+ ((IndividualBuilder().build(), false))
       )
+  }
+
+  it should "read a partnership with minimal details" in {
+
+    establisherPartnershipTest(
+      (PartnershipBuilder()
+        .build(), true))
+
+  }
+
+  it should "read multiple partnerships" in {
+
+    establisherTest(
+      Nil,
+      Nil,
+      (1 to 3).map(
+        _ =>
+          (PartnershipBuilder()
+            .build(), false)
+      ),
+      Nil,
+      Nil
+    )
+
+  }
+
+  it should "read multiple partnerships without deleted ones" in {
+
+    establisherTest(
+      Nil,
+      Nil,
+      (1 to 3).map(
+        _ =>
+          (PartnershipBuilder()
+            .build(), false)
+      ) :+ ((PartnershipBuilder()
+        .build(), true)),
+      Nil,
+      Nil
+    )
+
+  }
+
+  it should "read a partnership with a UTR" in {
+
+    establisherPartnershipTest(
+      (PartnershipBuilder()
+        .withUtr()
+        .build(), false))
+
+  }
+
+  it should "read a partnership with a VAT number" in {
+
+    establisherPartnershipTest(
+      (PartnershipBuilder()
+        .withVat()
+        .build(), false))
+
+  }
+
+  it should "read a partnership with a PAYE reference" in {
+
+    establisherPartnershipTest(
+      (PartnershipBuilder()
+        .withPaye()
+        .build(), false))
+
+  }
+
+  it should "read a partnership with Other Directors true" in {
+
+    establisherPartnershipTest(
+      (PartnershipBuilder()
+        .withOtherPartners(true)
+        .build(), false))
+
+  }
+
+  it should "read a partnership with a previous address" in {
+
+    establisherPartnershipTest(
+      (PartnershipBuilder()
+        .withPreviousAddress()
+        .build(), false))
+
+  }
+
+  it should "read a partnership wth a partner with minimal details" in {
+
+    partnerTest(
+      IndividualBuilder()
+        .build()
+    )
+
+  }
+
+  it should "read a partnership wth a partner with a Nino" in {
+
+    partnerTest(
+      IndividualBuilder()
+        .withNino()
+        .build()
+    )
+
+  }
+
+  it should "read a partnership wth a partner with a UTR" in {
+
+    partnerTest(
+      IndividualBuilder()
+        .withUtr()
+        .build()
+    )
+
+  }
+
+  it should "read a partnership wth a partner with a previous address" in {
+
+    partnerTest(
+      IndividualBuilder()
+        .withPreviousAddress()
+        .build()
+    )
+
+  }
+
+  it should "read multiple partnerships with multiple partners" in {
+
+    establisherTest(
+      Nil,
+      Nil,
+      (1 to 3).map {
+        i =>
+          (PartnershipBuilder()
+            .withPartners(
+              (1 to i).map {
+                _ => IndividualBuilder().build()
+              }
+            )
+            .build(), false)
+      },
+      Nil,
+      Nil
+    )
+
+  }
+
+  it should "read multiple partners without deleted ones" in {
+
+    deletedPartnersTest(
+      (1 to 3).map { _ =>
+        (IndividualBuilder().build(), true)
+      } :+ ((IndividualBuilder().build(), false))
+    )
   }
 
   it should "read an individual with minimal details" in {
@@ -203,6 +361,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
       },
       Nil,
       Nil,
+      Nil,
       Nil
     )
   }
@@ -214,6 +373,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
         (IndividualBuilder().build(), false)
       } :+ ((IndividualBuilder()
         .build(), true)),
+      Nil,
       Nil,
       Nil,
       Nil
@@ -251,7 +411,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a mix of company and individual establishers without the deleted ones" in {
+  it should "read a mix of company, partnership and individual establishers without the deleted ones" in {
 
     establisherTest(
       (1 to 2).map(_ =>
@@ -260,8 +420,12 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
       (1 to 3).map(_ =>
         (CompanyEstablisherBuilder().build(), false)
       ) :+ ((CompanyEstablisherBuilder().build(), true)),
+      (1 to 3).map(_ =>
+        (PartnershipBuilder().build(), false)
+      ) :+ ((PartnershipBuilder().build(), true)),
       Nil,
       Nil
+
     )
 
   }
@@ -281,6 +445,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
       Nil,
       Nil,
       Nil,
+      Nil,
       (1 to 3).map {
         _ =>
           (CompanyTrusteeBuilder()
@@ -293,6 +458,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
   it should "read multiple trustee companies without the deleted ones" in {
 
     establisherTest(
+      Nil,
       Nil,
       Nil,
       Nil,
@@ -370,6 +536,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherTest(
       Nil,
       Nil,
+      Nil,
       (1 to 3).map(
         _ =>
           (IndividualBuilder()
@@ -415,6 +582,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherTest(
       Nil,
       Nil,
+      Nil,
       (1 to 2).map(_ => (IndividualBuilder().build(), false)),
       (1 to 3).map(_ => (CompanyTrusteeBuilder().build(), false))
     )
@@ -423,11 +591,11 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   it should "read when there are no establishers or trustees" in {
 
-    establisherTest(Nil, Nil, Nil, Nil)
+    establisherTest(Nil, Nil, Nil, Nil, Nil)
 
   }
 
-  it should "read a mix of company and individual establishers and company and individual trustees" in {
+  it should "read a mix of company, individual and partneship establishers and company and individual trustees" in {
 
     establisherTest(
       (1 to 2).map(_ => (IndividualBuilder().build(), false)),
@@ -435,6 +603,14 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
         i =>
           (CompanyEstablisherBuilder()
             .withDirectors(
+              (1 to i).map(_ => IndividualBuilder().build())
+            )
+            .build(), false)
+      ),
+      (1 to 3).map(
+        i =>
+          (PartnershipBuilder()
+            .withPartners(
               (1 to i).map(_ => IndividualBuilder().build())
             )
             .build(), false)
@@ -447,7 +623,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   it should "read when neither the establishers nor trustees elements are present" in {
 
-    establisherTest(Nil, Nil, Nil, Nil, Json.obj())
+    establisherTest(Nil, Nil, Nil, Nil, Nil, Json.obj())
 
   }
 
@@ -458,16 +634,29 @@ object ReadsEstablisherDetailsSpec extends Matchers {
   import EstablishersTestJson._
 
   def establisherIndividualTest(establisher: (Individual, Boolean)): Assertion =
-    establisherTest(Seq(establisher), Nil, Nil, Nil)
+    establisherTest(Seq(establisher), Nil, Nil, Nil, Nil)
 
   def establisherCompanyTest(establisher: (CompanyEstablisher, Boolean)): Assertion =
-    establisherTest(Nil, Seq(establisher), Nil, Nil)
+    establisherTest(Nil, Seq(establisher), Nil, Nil, Nil)
+
+  def establisherPartnershipTest(establisher: (Partnership, Boolean)): Assertion =
+    establisherTest(Nil, Nil, Seq(establisher), Nil, Nil)
 
   def companyDirectorTest(director: Individual): Assertion = {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withDirectors(Seq(director))
+        .build(), false)
+    )
+
+  }
+
+  def partnerTest(partner: Individual): Assertion = {
+
+    establisherPartnershipTest(
+      (PartnershipBuilder()
+        .withPartners(Seq(partner))
         .build(), false)
     )
 
@@ -486,7 +675,30 @@ object ReadsEstablisherDetailsSpec extends Matchers {
 
     val expectedEstablishers = EstablisherDetails(
       individual = Nil,
-      companyOrOrganization = companyEstablisher.map(_._1)
+      companyOrOrganization = companyEstablisher.map(_._1),
+      partnership = Nil
+    )
+    json.validate(readsEstablisherDetails).fold(
+      errors => fail(s"JSON errors: $errors"),
+      actual => actual shouldBe expectedEstablishers
+    )
+  }
+
+  def deletedPartnersTest(partners: Seq[(Individual, Boolean)]): Assertion = {
+    val allPartnersJson = Json.obj(
+      "partner" -> toJsonArray(partners, partnerJson)
+    )
+    val partnershipEstablisher = Seq((PartnershipBuilder().withPartners(partners.filterNot(_._2).map(_._1)).build(), false))
+    val establishers = toJsonArray(partnershipEstablisher, partnership).value.map(_.as[JsObject] ++ allPartnersJson)
+
+    val json: JsValue = Json.obj(
+      "establishers" -> establishers
+    )
+
+    val expectedEstablishers = EstablisherDetails(
+      individual = Nil,
+      companyOrOrganization = Nil,
+      partnership = partnershipEstablisher.map(_._1)
     )
     json.validate(readsEstablisherDetails).fold(
       errors => fail(s"JSON errors: $errors"),
@@ -495,20 +707,22 @@ object ReadsEstablisherDetailsSpec extends Matchers {
   }
 
   def trusteeIndividualTest(trustee: (Individual, Boolean)): Assertion =
-    establisherTest(Nil, Nil, Seq(trustee), Nil)
+    establisherTest(Nil, Nil, Nil, Seq(trustee), Nil)
 
   def trusteeCompanyTest(trustee: (CompanyTrustee, Boolean)): Assertion =
-    establisherTest(Nil, Nil, Nil, Seq(trustee))
+    establisherTest(Nil, Nil, Nil, Nil, Seq(trustee))
 
   def establisherTest(establisherIndividuals: Seq[(Individual, Boolean)],
-                         establisherCompanies: Seq[(CompanyEstablisher, Boolean)],
-                         trusteeIndividuals: Seq[(Individual, Boolean)],
-                         trusteeCompanies: Seq[(CompanyTrustee, Boolean)]
+                      establisherCompanies: Seq[(CompanyEstablisher, Boolean)],
+                      establisherPartnerships: Seq[(Partnership, Boolean)],
+                      trusteeIndividuals: Seq[(Individual, Boolean)],
+                      trusteeCompanies: Seq[(CompanyTrustee, Boolean)]
                         ): Assertion = {
 
     val establishers =
       toJsonArray(establisherIndividuals, establisherIndividualJson) ++
-        toJsonArray(establisherCompanies, establisherCompany)
+        toJsonArray(establisherCompanies, establisherCompany) ++
+    toJsonArray(establisherPartnerships, partnership)
 
     val trustees =
       toJsonArray(trusteeIndividuals, trusteeIndividualJson) ++
@@ -521,6 +735,7 @@ object ReadsEstablisherDetailsSpec extends Matchers {
 
     establisherTest(establisherIndividuals.filterNot(_._2).map(_._1),
       establisherCompanies.filterNot(_._2).map(_._1),
+      establisherPartnerships.filterNot(_._2).map(_._1),
       trusteeIndividuals.filterNot(_._2).map(_._1),
       trusteeCompanies.filterNot(_._2).map(_._1), json)
 
@@ -528,6 +743,7 @@ object ReadsEstablisherDetailsSpec extends Matchers {
 
   def establisherTest(establisherIndividuals: Seq[Individual],
                       establisherCompanies: Seq[CompanyEstablisher],
+                      establisherPartnerships: Seq[Partnership],
                       trusteeIndividuals: Seq[Individual],
                       trusteeCompanies: Seq[CompanyTrustee],
                       json: JsValue
@@ -535,7 +751,8 @@ object ReadsEstablisherDetailsSpec extends Matchers {
 
     val expectedEstablishers = EstablisherDetails(
       individual = establisherIndividuals,
-      companyOrOrganization = establisherCompanies
+      companyOrOrganization = establisherCompanies,
+      partnership = establisherPartnerships
     )
 
     json.validate(readsEstablisherDetails).fold(

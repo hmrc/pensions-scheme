@@ -82,6 +82,50 @@ object EstablishersTestJson extends OptionValues {
       "previousAddress" -> previousAddressJson(director.previousAddressDetails)
     )
 
+  def partnership(partnership: Partnership, isDeleted: Boolean = false): JsObject = {
+    var json = Json.obj(
+      "partnershipDetails" -> partnershipDetailsJson(partnership.organizationName, isDeleted),
+      "partnershipVat" -> vatJson(partnership.vatRegistrationNumber),
+      "partnershipPaye" -> payeJson(partnership.payeReference),
+      "partnershipAddress" -> addressJson(partnership.correspondenceAddressDetails.addressDetails),
+      "partnershipContactDetails" -> contactDetailsJson(partnership.correspondenceContactDetails.contactDetails),
+      "partnershipUniqueTaxReference" -> utrJson(partnership.utr, partnership.noUtrReason),
+      "partnershipAddressYears" -> addressYearsJson(partnership.previousAddressDetails),
+      "partnershipPreviousAddress" -> previousAddressJson(partnership.previousAddressDetails)
+    )
+
+    //scalastyle:off magic.number
+    if (partnership.haveMoreThanTenDirectorOrPartner || partnership.partnerDetails.lengthCompare(10) >= 0) {
+      json = json +
+        (("otherPartners", JsBoolean(partnership.haveMoreThanTenDirectorOrPartner)))
+    }
+    //scalastyle:on magic.number
+
+    if (partnership.partnerDetails.nonEmpty) {
+      json = json +
+        (("partner", partnership.partnerDetails.foldLeft(Json.arr())((json, partner) => json :+ partnerJson(partner))))
+    }
+
+    json
+  }
+
+  def partnerJson(partner: Individual, isDeleted: Boolean = false): JsObject =
+    Json.obj(
+      "partnerDetails" -> Json.obj(
+        "firstName" -> partner.personalDetails.firstName,
+        "middleName" -> partner.personalDetails.middleName,
+        "lastName" -> partner.personalDetails.lastName,
+        "date" -> partner.personalDetails.dateOfBirth,
+        "isDeleted" -> isDeleted
+      ),
+      "partnerNino" -> ninoJson(partner.referenceOrNino, partner.noNinoReason),
+      "partnerUniqueTaxReference" -> utrJson(partner.utr, partner.noUtrReason),
+      "partnerAddressId" -> addressJson(partner.correspondenceAddressDetails.addressDetails),
+      "partnerContactDetails" -> contactDetailsJson(partner.correspondenceContactDetails.contactDetails),
+      "partnerAddressYears" -> addressYearsJson(partner.previousAddressDetails),
+      "previousAddress" -> previousAddressJson(partner.previousAddressDetails)
+    )
+
   def trusteeIndividualJson(individual: Individual, isDeleted: Boolean = false): JsObject =
     Json.obj(
       "trusteeDetails" -> Json.obj(
@@ -161,8 +205,26 @@ object EstablishersTestJson extends OptionValues {
       "isDeleted" -> isDeleted
     )
 
+  private def partnershipDetailsJson(name: String, isDeleted: Boolean = false) =
+    Json.obj(
+      "name" -> name,
+      "isDeleted" -> isDeleted
+    )
+
   private def ninoJson(nino: Option[String], noNinoReason: Option[String]) =
     valueOrReason(nino, noNinoReason, "hasNino", "nino")
+
+  private def vatJson(vat: Option[String]) =
+    vat match {
+      case Some(vat) => Json.obj("vat" -> vat)
+      case _ => JsNull
+    }
+
+  private def payeJson(paye: Option[String]) =
+    paye match {
+      case Some(vat) => Json.obj("paye" -> paye)
+      case _ => JsNull
+    }
 
   private def utrJson(utr: Option[String], noUtrReason: Option[String]) =
     valueOrReason(utr, noUtrReason, "hasUtr", "utr")

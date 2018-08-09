@@ -63,6 +63,9 @@ object EstablishersTestData {
   private def testCompanyName =
     alphanumeric(35)
 
+  private def testPartnershipName =
+    alphanumeric(35)
+
   private def testEmail =
     alphanumeric(20) + "@test.net"
 
@@ -142,6 +145,43 @@ object EstablishersTestData {
           None
         },
       directorDetails = directors
+    )
+
+  def testPartnership(
+                              hasUtr: Boolean,
+                              hasVat: Boolean,
+                              hasPaye: Boolean,
+                              hasPreviousAddress: Boolean,
+                              partners: Seq[Individual],
+                              otherPartners: Option[Boolean]
+                            ): Partnership =
+    Partnership(
+      organizationName = testPartnershipName,
+      utr = if (hasUtr) Some(alphanumeric(10)) else None,
+      noUtrReason = if (hasUtr) None else Some(alphanumeric(20)),
+      vatRegistrationNumber = if (hasVat) Some(numeric(9)) else None,
+      payeReference = if (hasPaye) Some(alphanumeric(13)) else None,
+      haveMoreThanTenDirectorOrPartner = otherPartners.getOrElse(false),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(testAddress),
+      correspondenceContactDetails = CorrespondenceContactDetails(
+        ContactDetails(
+          telephone = numeric(24),
+          email = testEmail
+        )
+      ),
+      previousAddressDetails =
+        if (hasPreviousAddress) {
+          Some(
+            PreviousAddressDetails(
+              isPreviousAddressLast12Month = true,
+              previousAddressDetails = Some(testAddress)
+            )
+          )
+        }
+        else {
+          None
+        },
+      partnerDetails = partners
     )
 
   def testCompanyTrustee(
@@ -265,6 +305,54 @@ object CompanyEstablisherBuilder {
 
   def apply(): CompanyEstablisherBuilder =
     CompanyEstablisherBuilder(false, false, false, false, false, Nil, None)
+
+}
+
+case class PartnershipBuilder(
+                                      hasUtr: Boolean,
+                                      hasVat: Boolean,
+                                      hasPaye: Boolean,
+                                      hasPreviousAddress: Boolean,
+                                      partners: Seq[Individual],
+                                      otherPartners: Option[Boolean]
+                                    ) {
+
+  import EstablishersTestData._
+
+  def withUtr(): PartnershipBuilder =
+    copy(hasUtr = true)
+
+  def withVat(): PartnershipBuilder =
+    copy(hasVat = true)
+
+  def withPaye(): PartnershipBuilder =
+    copy(hasPaye = true)
+
+  def withPreviousAddress(): PartnershipBuilder =
+    copy(hasPreviousAddress = true)
+
+  def withPartners(partners: Seq[Individual]): PartnershipBuilder =
+    copy(partners = partners)
+
+  def withOtherPartners(otherPartners: Boolean): PartnershipBuilder =
+    copy(otherPartners = Some(otherPartners))
+
+  def build(): Partnership =
+    testPartnership(
+      hasUtr,
+      hasVat,
+      hasPaye,
+      hasPreviousAddress,
+      partners,
+      otherPartners
+    )
+
+}
+
+object PartnershipBuilder {
+
+  def apply(): PartnershipBuilder =
+    PartnershipBuilder(false, false, false, false, Nil, None)
 
 }
 

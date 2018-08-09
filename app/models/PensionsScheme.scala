@@ -246,6 +246,19 @@ case class CompanyEstablisher(
                                directorDetails: Seq[Individual]
                              )
 
+case class Partnership(
+                               organizationName: String,
+                               utr: Option[String] = None,
+                               noUtrReason: Option[String] = None,
+                               vatRegistrationNumber: Option[String] = None,
+                               payeReference: Option[String] = None,
+                               haveMoreThanTenDirectorOrPartner: Boolean,
+                               correspondenceAddressDetails: CorrespondenceAddressDetails,
+                               correspondenceContactDetails: CorrespondenceContactDetails,
+                               previousAddressDetails: Option[PreviousAddressDetails] = None,
+                               partnerDetails: Seq[Individual]
+                             )
+
 case class CompanyTrustee(
                            organizationName: String,
                            utr: Option[String] = None,
@@ -266,7 +279,8 @@ case class TrusteeDetails(
 
 case class EstablisherDetails(
                                individual: Seq[Individual],
-                               companyOrOrganization: Seq[CompanyEstablisher]
+                               companyOrOrganization: Seq[CompanyEstablisher],
+                               partnership: Seq[Partnership]
                              )
 
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
@@ -276,6 +290,7 @@ object PensionsScheme {
 
   implicit val formatsIndividual: Format[Individual] = Json.format[Individual]
   implicit val formatsCompanyEstablisher: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
+  implicit val formatsPartnershipEstablisher: Format[Partnership] = Json.format[Partnership]
   implicit val formatsCompanyTrustee: Format[CompanyTrustee] = Json.format[CompanyTrustee]
   implicit val formatsTrusteeDetails: Format[TrusteeDetails] = Json.format[TrusteeDetails]
   implicit val formatsEstablisherDetails: Format[EstablisherDetails] = Json.format[EstablisherDetails]
