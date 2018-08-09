@@ -129,18 +129,11 @@ object ReadsEstablisherDetails {
   private val readsPartners: Reads[Seq[Individual]] =
     readsFiltered(_ \ "partnerDetails", readsPartner, "partnerDetails")
 
-  case class Company(organizationName: String,
-                     utr: Option[String] = None,
-                     noUtrReason: Option[String] = None,
-                     crnNumber: Option[String] = None,
-                     noCrnReason: Option[String] = None,
-                     vatRegistrationNumber: Option[String] = None,
-                     payeReference: Option[String] = None,
-                     correspondenceAddressDetails: CorrespondenceAddressDetails,
-                     correspondenceContactDetails: CorrespondenceContactDetails,
-                     previousAddressDetails: Option[PreviousAddressDetails] = None)
+  case class Company(name : String, vatNumber : Option[String], payeNumber : Option[String], utr: Option[String],
+                     noUtrReason: Option[String], crn: Option[String], noCrnReason: Option[String], address: Address,
+                     contactDetails: ContactDetails, previousAddress: Option[Address], addressYears: String)
 
-  private val companyReads : Reads[(String, Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Address, ContactDetails, Option[Address], String)] = (
+  private val companyReads : Reads[Company] = (
     (JsPath \ "companyDetails" \ "companyName").read[String] and
       (JsPath \ "companyDetails" \ "vatNumber").readNullable[String] and
       (JsPath \ "companyDetails" \ "payeNumber").readNullable[String] and
@@ -152,41 +145,40 @@ object ReadsEstablisherDetails {
       (JsPath \ "companyContactDetails").read[ContactDetails] and
       (JsPath \ "companyPreviousAddress").readNullable[Address] and
       ((JsPath \ "companyAddressYears").read[String] orElse (JsPath \ "trusteesCompanyAddressYears").read[String])
-  )((companyName,vat, paye, utr, noUtrReason, crn, noCrnReason, address, contactDetails, previousAddress, addressYears) =>
-    (companyName,vat, paye, utr, noUtrReason, crn, noCrnReason, address, contactDetails, previousAddress, addressYears))
+  )(Company.apply _)
 
   private val readsEstablisherCompany: Reads[CompanyEstablisher] = (
     (JsPath).read(companyReads) and
     (JsPath \ "otherDirectors").readNullable[Boolean] and
     (JsPath \ "director").readNullable(readsCompanyDirectors)
-  )((readsTest, otherDirectors, directors) =>
+  )((company, otherDirectors, directors) =>
     CompanyEstablisher(
-      organizationName = readsTest._1,
-      utr = readsTest._4,
-      noUtrReason = readsTest._5,
-      crnNumber = readsTest._6,
-      noCrnReason = readsTest._7,
-      vatRegistrationNumber = readsTest._2,
-      payeReference = readsTest._3,
+      organizationName = company.name,
+      utr = company.utr,
+      noUtrReason = company.noUtrReason,
+      crnNumber = company.crn,
+      noCrnReason = company.noCrnReason,
+      vatRegistrationNumber = company.vatNumber,
+      payeReference = company.payeNumber,
       haveMoreThanTenDirectorOrPartner = otherDirectors.getOrElse(false),
-      correspondenceAddressDetails = CorrespondenceAddressDetails(readsTest._8),
-      correspondenceContactDetails = CorrespondenceContactDetails(readsTest._9),
-      previousAddressDetails = previousAddressDetails(readsTest._11, readsTest._10),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(company.address),
+      correspondenceContactDetails = CorrespondenceContactDetails(company.contactDetails),
+      previousAddressDetails = previousAddressDetails(company.addressYears, company.previousAddress),
       directorDetails = directors.getOrElse(Nil)
     )
   )
 
   private val readsTrusteeCompany: Reads[CompanyTrustee] = ((JsPath).read(companyReads)).map(test => CompanyTrustee(
-    organizationName = test._1,
-    utr = test._4,
-    noUtrReason = test._5,
-    crnNumber = test._6,
-    noCrnReason = test._7,
-    vatRegistrationNumber = test._2,
-    payeReference = test._3,
-    correspondenceAddressDetails = CorrespondenceAddressDetails(test._8),
-    correspondenceContactDetails = CorrespondenceContactDetails(test._9),
-    previousAddressDetails = previousAddressDetails(test._11, test._10)))
+    organizationName = test.name,
+    utr = test.utr,
+    noUtrReason = test.noUtrReason,
+    crnNumber = test.crn,
+    noCrnReason = test.noCrnReason,
+    vatRegistrationNumber = test.vatNumber,
+    payeReference = test.payeNumber,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(test.address),
+    correspondenceContactDetails = CorrespondenceContactDetails(test.contactDetails),
+    previousAddressDetails = previousAddressDetails(test.addressYears, test.previousAddress)))
 
   private val readsEstablisherPartnership: Reads[Partnership] = (
     (JsPath \ "partnershipDetails" \ "name").read[String] and
