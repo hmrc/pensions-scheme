@@ -129,36 +129,64 @@ object ReadsEstablisherDetails {
   private val readsPartners: Reads[Seq[Individual]] =
     readsFiltered(_ \ "partnerDetails", readsPartner, "partnerDetails")
 
-  private val readsEstablisherCompany: Reads[CompanyEstablisher] = (
+  case class Company(organizationName: String,
+                     utr: Option[String] = None,
+                     noUtrReason: Option[String] = None,
+                     crnNumber: Option[String] = None,
+                     noCrnReason: Option[String] = None,
+                     vatRegistrationNumber: Option[String] = None,
+                     payeReference: Option[String] = None,
+                     correspondenceAddressDetails: CorrespondenceAddressDetails,
+                     correspondenceContactDetails: CorrespondenceContactDetails,
+                     previousAddressDetails: Option[PreviousAddressDetails] = None)
+
+  private val companyReads : Reads[(String, Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Address, ContactDetails, Option[Address], String)] = (
     (JsPath \ "companyDetails" \ "companyName").read[String] and
-    (JsPath \ "companyDetails" \ "vatNumber").readNullable[String] and
-    (JsPath \ "companyDetails" \ "payeNumber").readNullable[String] and
-    (JsPath \ "companyUniqueTaxReference" \ "utr").readNullable[String] and
-    (JsPath \ "companyUniqueTaxReference" \ "reason").readNullable[String] and
-    (JsPath \ "companyRegistrationNumber" \ "crn").readNullable[String] and
-    (JsPath \ "companyRegistrationNumber" \ "reason").readNullable[String] and
+      (JsPath \ "companyDetails" \ "vatNumber").readNullable[String] and
+      (JsPath \ "companyDetails" \ "payeNumber").readNullable[String] and
+      (JsPath \ "companyUniqueTaxReference" \ "utr").readNullable[String] and
+      (JsPath \ "companyUniqueTaxReference" \ "reason").readNullable[String] and
+      (JsPath \ "companyRegistrationNumber" \ "crn").readNullable[String] and
+      (JsPath \ "companyRegistrationNumber" \ "reason").readNullable[String] and
+      (JsPath \ "companyAddress").read[Address] and
+      (JsPath \ "companyContactDetails").read[ContactDetails] and
+      (JsPath \ "companyPreviousAddress").readNullable[Address] and
+      ((JsPath \ "companyAddressYears").read[String] orElse (JsPath \ "trusteesCompanyAddressYears").read[String])
+  )((companyName,vat, paye, utr, noUtrReason, crn, noCrnReason, address, contactDetails, previousAddress, addressYears) =>
+    (companyName,vat, paye, utr, noUtrReason, crn, noCrnReason, address, contactDetails, previousAddress, addressYears))
+
+  private val readsEstablisherCompany: Reads[CompanyEstablisher] = (
+    (JsPath).read(companyReads) and
     (JsPath \ "otherDirectors").readNullable[Boolean] and
-    (JsPath \ "companyAddress").read[Address] and
-    (JsPath \ "companyContactDetails").read[ContactDetails] and
-    (JsPath \ "companyAddressYears").read[String] and
-    (JsPath \ "companyPreviousAddress").readNullable[Address] and
     (JsPath \ "director").readNullable(readsCompanyDirectors)
-  )((companyName, vat, paye, utr, noUtrReason, crn, noCrnReason, otherDirectors, address, contactDetails, addressYears, previousAddress, directors) =>
+  )((readsTest, otherDirectors, directors) =>
     CompanyEstablisher(
-      organizationName = companyName,
-      utr = utr,
-      noUtrReason = noUtrReason,
-      crnNumber = crn,
-      noCrnReason = noCrnReason,
-      vatRegistrationNumber = vat,
-      payeReference = paye,
+      organizationName = readsTest._1,
+      utr = readsTest._4,
+      noUtrReason = readsTest._5,
+      crnNumber = readsTest._6,
+      noCrnReason = readsTest._7,
+      vatRegistrationNumber = readsTest._2,
+      payeReference = readsTest._3,
       haveMoreThanTenDirectorOrPartner = otherDirectors.getOrElse(false),
-      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
-      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
-      previousAddressDetails = previousAddressDetails(addressYears, previousAddress),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(readsTest._8),
+      correspondenceContactDetails = CorrespondenceContactDetails(readsTest._9),
+      previousAddressDetails = previousAddressDetails(readsTest._11, readsTest._10),
       directorDetails = directors.getOrElse(Nil)
     )
   )
+
+  private val readsTrusteeCompany: Reads[CompanyTrustee] = ((JsPath).read(companyReads)).map(test => CompanyTrustee(
+    organizationName = test._1,
+    utr = test._4,
+    noUtrReason = test._5,
+    crnNumber = test._6,
+    noCrnReason = test._7,
+    vatRegistrationNumber = test._2,
+    payeReference = test._3,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(test._8),
+    correspondenceContactDetails = CorrespondenceContactDetails(test._9),
+    previousAddressDetails = previousAddressDetails(test._11, test._10)))
 
   private val readsEstablisherPartnership: Reads[Partnership] = (
     (JsPath \ "partnershipDetails" \ "name").read[String] and
@@ -204,33 +232,6 @@ object ReadsEstablisherDetails {
       noNinoReason = noNinoReason,
       utr = utr,
       noUtrReason = noUtrReason,
-      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
-      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
-      previousAddressDetails = previousAddressDetails(addressYears, previousAddress)
-    )
-  )
-
-  private val readsTrusteeCompany: Reads[CompanyTrustee] = (
-    (JsPath \ "companyDetails" \ "companyName").read[String] and
-    (JsPath \ "companyDetails" \ "vatNumber").readNullable[String] and
-    (JsPath \ "companyDetails" \ "payeNumber").readNullable[String] and
-    (JsPath \ "companyUniqueTaxReference" \ "utr").readNullable[String] and
-    (JsPath \ "companyUniqueTaxReference" \ "reason").readNullable[String] and
-    (JsPath \ "companyRegistrationNumber" \ "crn").readNullable[String] and
-    (JsPath \ "companyRegistrationNumber" \ "reason").readNullable[String] and
-    (JsPath \ "companyAddress").read[Address] and
-    (JsPath \ "companyContactDetails").read[ContactDetails] and
-    (JsPath \ "trusteesCompanyAddressYears").read[String] and
-    (JsPath \ "companyPreviousAddress").readNullable[Address]
-  )((companyName, vat, paye, utr, noUtrReason, crn, noCrnReason, address, contactDetails, addressYears, previousAddress) =>
-    CompanyTrustee(
-      organizationName = companyName,
-      utr = utr,
-      noUtrReason = noUtrReason,
-      crnNumber = crn,
-      noCrnReason = noCrnReason,
-      vatRegistrationNumber = vat,
-      payeReference = paye,
       correspondenceAddressDetails = CorrespondenceAddressDetails(address),
       correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
       previousAddressDetails = previousAddressDetails(addressYears, previousAddress)
