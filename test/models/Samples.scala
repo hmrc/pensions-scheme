@@ -78,4 +78,38 @@ trait Samples {
     (s"${personType}ContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) +
     (s"${personType}Address" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
       "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "postcode" -> JsString("NE1"), "country" -> JsString("IT")))
+
+  val trusteePartnershipData = PartnershipTrustee(
+    organizationName = "test partnership",
+    utr = Some("1111111111"),
+    noUtrReason = None,
+    vatRegistrationNumber = None,
+    payeReference = None,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
+    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
+    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
+
+  val trusteeCompanyData = CompanyTrustee(
+    organizationName = "test company",
+    utr = Some("1111111111"),
+    crnNumber = Some("crn1234"),
+    noUtrReason = None,
+    vatRegistrationNumber = None,
+    payeReference = None,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
+    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
+    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
+
+  val trusteeIndividualData = Individual(
+    personalDetails = PersonalDetails(firstName = "John",
+      middleName = Some("William"),
+      lastName = "Doe",
+      dateOfBirth = "2019-01-31"),
+    referenceOrNino = Some("nino1234"),
+    noNinoReason = None,
+    utr = Some("1111111111"),
+    noUtrReason = None,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
+    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
+    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
 }

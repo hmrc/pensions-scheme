@@ -206,7 +206,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
     }
 
-    "read multiple trustee details " when {
+    "read multiple trustees " when {
 
       "we have two trustee partnerships" in {
         val inputJson = trusteeInputJson(Seq(trusteePartnershipJson, trusteePartnershipJson ++ Json.obj("partnershipDetails" -> Json.obj(
@@ -215,10 +215,57 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         result mustEqual Seq(trusteePartnershipData, trusteePartnershipData.copy(organizationName = "test partnership two"))
       }
 
+      "we have two trustee partnerships one of them is deleted" in {
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson, trusteePartnershipJson ++ Json.obj("partnershipDetails" -> Json.obj(
+          "name" -> "test partnership two", "isDeleted" -> JsBoolean(true)))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail
+        result mustEqual Seq(trusteePartnershipData)
+      }
+
+      "we have two trustee individuals" in {
+        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson, trusteeIndividualJson ++ Json.obj("trusteeDetails" -> Json.obj(
+          "firstName" -> "second",
+          "lastName" -> "trustee",
+          "date" -> JsString("2019-01-31"), "isDeleted" -> JsBoolean(false)))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).individualTrusteeDetail
+        result mustEqual Seq(trusteeIndividualData, trusteeIndividualData.copy(
+          personalDetails = PersonalDetails(None, "second", None, "trustee", "2019-01-31")))
+      }
+
+      "we have two trustee individuals one of them is deleted" in {
+        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson, trusteeIndividualJson ++ Json.obj("trusteeDetails" -> Json.obj(
+          "firstName" -> "second",
+          "lastName" -> "trustee",
+          "date" -> JsString("2019-01-31"), "isDeleted" -> JsBoolean(true)))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).individualTrusteeDetail
+        result mustEqual Seq(trusteeIndividualData)
+      }
+
+      "we have two trustee companies" in {
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson, trusteeCompanyJson ++ Json.obj("companyDetails" -> Json.obj(
+          "companyName" -> "test company two", "isDeleted" -> JsBoolean(false)))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).companyTrusteeDetail
+        result mustEqual Seq(trusteeCompanyData, trusteeCompanyData.copy(organizationName = "test company two"))
+      }
+
+      "we have two trustee companies one of them is deleted" in {
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson, trusteeCompanyJson ++ Json.obj("companyDetails" -> Json.obj(
+          "companyName" -> "test company two", "isDeleted" -> JsBoolean(true)))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).companyTrusteeDetail
+        result mustEqual Seq(trusteeCompanyData)
+      }
+
       "we have one trustee individual, one company and one partnership" in {
         val inputJson = trusteeInputJson(Seq(trusteePartnershipJson, trusteeIndividualJson, trusteeCompanyJson))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails)
         result mustEqual TrusteeDetails(Seq(trusteeIndividualData), Seq(trusteeCompanyData), Seq(trusteePartnershipData))
+      }
+
+      "we have one trustee individual, one company and one partnership but partnership is deleted" in {
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson ++ Json.obj("partnershipDetails" -> Json.obj(
+          "name" -> "test partnership two", "isDeleted" -> JsBoolean(true))), trusteeIndividualJson, trusteeCompanyJson))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails)
+        result mustEqual TrusteeDetails(Seq(trusteeIndividualData), Seq(trusteeCompanyData), Nil)
       }
     }
   }
@@ -342,38 +389,4 @@ object ReadsTrusteeDetailsSpec extends Samples {
       "emailAddress" -> "test@test.com"
     )
   )
-
-  val trusteePartnershipData = PartnershipTrustee(
-    organizationName = "test partnership",
-    utr = Some("1111111111"),
-    noUtrReason = None,
-    vatRegistrationNumber = None,
-    payeReference = None,
-    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
-    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
-    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
-
-  val trusteeCompanyData = CompanyTrustee(
-    organizationName = "test company",
-    utr = Some("1111111111"),
-    crnNumber = Some("crn1234"),
-    noUtrReason = None,
-    vatRegistrationNumber = None,
-    payeReference = None,
-    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
-    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
-    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
-
-  val trusteeIndividualData = Individual(
-    personalDetails = PersonalDetails(firstName = "John",
-      middleName = Some("William"),
-      lastName = "Doe",
-      dateOfBirth = "2019-01-31"),
-    referenceOrNino = Some("nino1234"),
-    noNinoReason = None,
-    utr = Some("1111111111"),
-    noUtrReason = None,
-    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
-    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
-    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
 }
