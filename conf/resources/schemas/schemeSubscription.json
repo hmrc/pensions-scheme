@@ -17,10 +17,12 @@
         "schemeStructure": {
           "type": "string",
           "description": "type and structure of the scheme",
-          "enum": ["A single trust under which all of the assets are held for the benefit of all members of the scheme",
+          "enum": [
+            "A single trust under which all of the assets are held for the benefit of all members of the scheme",
             "A group life/death in service scheme",
             "A body corporate",
-            "Other"]
+            "Other"
+          ]
         },
         "otherSchemeStructure": {
           "type": "string",
@@ -32,21 +34,25 @@
         },
         "currentSchemeMembers": {
           "type": "string",
-          "enum": ["0",
+          "enum": [
+            "0",
             "1",
             "2 to 11",
             "12 to 50",
             "51 to 10,000",
-            "More than 10,000"]
+            "More than 10,000"
+          ]
         },
         "futureSchemeMembers": {
           "type": "string",
-          "enum": ["0",
+          "enum": [
+            "0",
             "1",
             "2 to 11",
             "12 to 50",
             "51 to 10,000",
-            "More than 10,000"]
+            "More than 10,000"
+          ]
         },
         "isReguledSchemeInvestment": {
           "type": "boolean",
@@ -62,9 +68,11 @@
         },
         "doesSchemeProvideBenefits": {
           "type": "string",
-          "enum": ["Money Purchase benefits only (defined contribution)",
+          "enum": [
+            "Money Purchase benefits only (defined contribution)",
             "Defined Benefits only",
-            "Mixture of money purchase benefits and defined benefits"]
+            "Mixture of money purchase benefits and defined benefits"
+          ]
         },
         "schemeEstablishedCountry": {
           "$ref": "#/definitions/countryCodes"
@@ -86,7 +94,8 @@
         }
       },
       "additionalProperties": false,
-      "required": ["schemeName",
+      "required": [
+        "schemeName",
         "isSchemeMasterTrust",
         "currentSchemeMembers",
         "futureSchemeMembers",
@@ -95,7 +104,8 @@
         "doesSchemeProvideBenefits",
         "schemeEstablishedCountry",
         "areBenefitsSecuredContractInsuranceCompany",
-        "haveInvalidBank"]
+        "haveInvalidBank"
+      ]
     },
     "pensionSchemeDeclaration": {
       "type": "object",
@@ -159,17 +169,21 @@
             }
           },
           "additionalProperties": false,
-          "required": ["addressDetails",
-            "contactDetails"]
+          "required": [
+            "addressDetails",
+            "contactDetails"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["box1",
+      "required": [
+        "box1",
         "box2",
         "box6",
         "box7",
         "box8",
-        "box9"]
+        "box9"
+      ]
     },
     "establisherDetails": {
       "type": "object",
@@ -185,14 +199,16 @@
                 "properties": {
                   "title": {
                     "type": "string",
-                    "enum": ["Mr",
+                    "enum": [
+                      "Mr",
                       "Mrs",
                       "Miss",
                       "Ms",
                       "Dr",
                       "Sir",
                       "Professor",
-                      "Lord"]
+                      "Lord"
+                    ]
                   },
                   "firstName": {
                     "type": "string",
@@ -212,9 +228,11 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["firstName",
+                "required": [
+                  "firstName",
                   "lastName",
-                  "dateOfBirth"]
+                  "dateOfBirth"
+                ]
               },
               "referenceOrNino": {
                 "type": "string",
@@ -240,7 +258,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["addressDetails"]
+                "required": [
+                  "addressDetails"
+                ]
               },
               "correspondenceContactDetails": {
                 "type": "object",
@@ -250,7 +270,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["contactDetails"]
+                "required": [
+                  "contactDetails"
+                ]
               },
               "previousAddressDetails": {
                 "type": "object",
@@ -263,13 +285,17 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["isPreviousAddressLast12Month"]
+                "required": [
+                  "isPreviousAddressLast12Month"
+                ]
               }
             },
             "additionalProperties": false,
-            "required": ["personalDetails",
+            "required": [
+              "personalDetails",
               "correspondenceAddressDetails",
-              "correspondenceContactDetails"]
+              "correspondenceContactDetails"
+            ]
           }
         },
         "companyOrOrganization": {
@@ -318,7 +344,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["addressDetails"]
+                "required": [
+                  "addressDetails"
+                ]
               },
               "correspondenceContactDetails": {
                 "type": "object",
@@ -328,7 +356,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["contactDetails"]
+                "required": [
+                  "contactDetails"
+                ]
               },
               "previousAddressDetails": {
                 "type": "object",
@@ -341,7 +371,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["isPreviousAddressLast12Month"]
+                "required": [
+                  "isPreviousAddressLast12Month"
+                ]
               },
               "directorDetails": {
                 "type": "array",
@@ -355,14 +387,16 @@
                       "properties": {
                         "title": {
                           "type": "string",
-                          "enum": ["Mr",
+                          "enum": [
+                            "Mr",
                             "Mrs",
                             "Miss",
                             "Ms",
                             "Dr",
                             "Sir",
                             "Professor",
-                            "Lord"]
+                            "Lord"
+                          ]
                         },
                         "firstName": {
                           "type": "string",
@@ -382,9 +416,11 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["firstName",
+                      "required": [
+                        "firstName",
                         "lastName",
-                        "dateOfBirth"]
+                        "dateOfBirth"
+                      ]
                     },
                     "referenceOrNino": {
                       "type": "string",
@@ -410,7 +446,9 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["addressDetails"]
+                      "required": [
+                        "addressDetails"
+                      ]
                     },
                     "correspondenceContactDetails": {
                       "type": "object",
@@ -420,7 +458,9 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["contactDetails"]
+                      "required": [
+                        "contactDetails"
+                      ]
                     },
                     "previousAddressDetails": {
                       "type": "object",
@@ -433,22 +473,28 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["isPreviousAddressLast12Month"]
+                      "required": [
+                        "isPreviousAddressLast12Month"
+                      ]
                     }
                   },
                   "additionalProperties": false,
-                  "required": ["personalDetails",
+                  "required": [
+                    "personalDetails",
                     "correspondenceAddressDetails",
-                    "correspondenceContactDetails"]
+                    "correspondenceContactDetails"
+                  ]
                 }
               }
             },
             "additionalProperties": false,
-            "required": ["haveMoreThanTenDirectorOrPartner",
+            "required": [
+              "haveMoreThanTenDirectorOrPartner",
               "correspondenceAddressDetails",
               "correspondenceContactDetails",
               "directorDetails",
-              "organizationName"]
+              "organizationName"
+            ]
           }
         },
         "partnership": {
@@ -489,7 +535,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["addressDetails"]
+                "required": [
+                  "addressDetails"
+                ]
               },
               "correspondenceContactDetails": {
                 "type": "object",
@@ -499,7 +547,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["contactDetails"]
+                "required": [
+                  "contactDetails"
+                ]
               },
               "previousAddressDetails": {
                 "type": "object",
@@ -512,7 +562,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["isPreviousAddressLast12Month"]
+                "required": [
+                  "isPreviousAddressLast12Month"
+                ]
               },
               "partnerDetails": {
                 "type": "array",
@@ -526,14 +578,16 @@
                       "properties": {
                         "title": {
                           "type": "string",
-                          "enum": ["Mr",
+                          "enum": [
+                            "Mr",
                             "Mrs",
                             "Miss",
                             "Ms",
                             "Dr",
                             "Sir",
                             "Professor",
-                            "Lord"]
+                            "Lord"
+                          ]
                         },
                         "firstName": {
                           "type": "string",
@@ -553,9 +607,11 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["firstName",
+                      "required": [
+                        "firstName",
                         "lastName",
-                        "dateOfBirth"]
+                        "dateOfBirth"
+                      ]
                     },
                     "referenceOrNino": {
                       "type": "string",
@@ -581,7 +637,9 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["addressDetails"]
+                      "required": [
+                        "addressDetails"
+                      ]
                     },
                     "correspondenceContactDetails": {
                       "type": "object",
@@ -591,7 +649,9 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["contactDetails"]
+                      "required": [
+                        "contactDetails"
+                      ]
                     },
                     "previousAddressDetails": {
                       "type": "object",
@@ -604,22 +664,28 @@
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["isPreviousAddressLast12Month"]
+                      "required": [
+                        "isPreviousAddressLast12Month"
+                      ]
                     }
                   },
                   "additionalProperties": false,
-                  "required": ["personalDetails",
+                  "required": [
+                    "personalDetails",
                     "correspondenceAddressDetails",
-                    "correspondenceContactDetails"]
+                    "correspondenceContactDetails"
+                  ]
                 }
               }
             },
             "additionalProperties": false,
-            "required": ["organizationName",
+            "required": [
+              "organizationName",
               "haveMoreThanTenDirectorOrPartner",
               "correspondenceAddressDetails",
               "correspondenceContactDetails",
-              "partnerDetails"]
+              "partnerDetails"
+            ]
           }
         }
       },
@@ -641,14 +707,16 @@
                 "properties": {
                   "title": {
                     "type": "string",
-                    "enum": ["Mr",
+                    "enum": [
+                      "Mr",
                       "Mrs",
                       "Miss",
                       "Ms",
                       "Dr",
                       "Sir",
                       "Professor",
-                      "Lord"]
+                      "Lord"
+                    ]
                   },
                   "firstName": {
                     "type": "string",
@@ -668,9 +736,11 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["firstName",
+                "required": [
+                  "firstName",
                   "lastName",
-                  "dateOfBirth"]
+                  "dateOfBirth"
+                ]
               },
               "referenceOrNino": {
                 "type": "string",
@@ -696,7 +766,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["addressDetails"]
+                "required": [
+                  "addressDetails"
+                ]
               },
               "correspondenceContactDetails": {
                 "type": "object",
@@ -706,7 +778,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["contactDetails"]
+                "required": [
+                  "contactDetails"
+                ]
               },
               "previousAddressDetails": {
                 "type": "object",
@@ -719,13 +793,17 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["isPreviousAddressLast12Month"]
+                "required": [
+                  "isPreviousAddressLast12Month"
+                ]
               }
             },
             "additionalProperties": false,
-            "required": ["personalDetails",
+            "required": [
+              "personalDetails",
               "correspondenceAddressDetails",
-              "correspondenceContactDetails"]
+              "correspondenceContactDetails"
+            ]
           }
         },
         "companyTrusteeDetail": {
@@ -771,7 +849,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["addressDetails"]
+                "required": [
+                  "addressDetails"
+                ]
               },
               "correspondenceContactDetails": {
                 "type": "object",
@@ -781,7 +861,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["contactDetails"]
+                "required": [
+                  "contactDetails"
+                ]
               },
               "previousAddressDetails": {
                 "type": "object",
@@ -794,13 +876,17 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["isPreviousAddressLast12Month"]
+                "required": [
+                  "isPreviousAddressLast12Month"
+                ]
               }
             },
             "additionalProperties": false,
-            "required": ["organizationName",
+            "required": [
+              "organizationName",
               "correspondenceAddressDetails",
-              "correspondenceContactDetails"]
+              "correspondenceContactDetails"
+            ]
           }
         },
         "partnershipTrusteeDetail": {
@@ -838,7 +924,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["addressDetails"]
+                "required": [
+                  "addressDetails"
+                ]
               },
               "correspondenceContactDetails": {
                 "type": "object",
@@ -848,7 +936,9 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["contactDetails"]
+                "required": [
+                  "contactDetails"
+                ]
               },
               "previousAddressDetails": {
                 "type": "object",
@@ -861,13 +951,17 @@
                   }
                 },
                 "additionalProperties": false,
-                "required": ["isPreviousAddressLast12Month"]
+                "required": [
+                  "isPreviousAddressLast12Month"
+                ]
               }
             },
             "additionalProperties": false,
-            "required": ["organizationName",
+            "required": [
+              "organizationName",
               "correspondenceAddressDetails",
-              "correspondenceContactDetails"]
+              "correspondenceContactDetails"
+            ]
           }
         }
       },
@@ -875,52 +969,61 @@
     }
   },
   "additionalProperties": false,
-  "required": ["customerAndSchemeDetails",
+  "required": [
+    "customerAndSchemeDetails",
     "pensionSchemeDeclaration",
-    "establisherDetails"],
+    "establisherDetails"
+  ],
   "definitions": {
     "addressType": {
-      "oneOf": [{
-        "type": "object",
-        "properties": {
-          "addressType": {
-            "type": "string",
-            "enum": ["NON-UK"]
-          },
-          "line1": {
-            "$ref": "#/definitions/AddressLineType"
-          },
-          "line2": {
-            "$ref": "#/definitions/AddressLineType"
-          },
-          "line3": {
-            "$ref": "#/definitions/AddressLineType"
-          },
-          "line4": {
-            "$ref": "#/definitions/AddressLineType"
-          },
-          "postalCode": {
-            "description": "This is populated if the address supplied is a NON-UK address.",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 10
-          },
-          "countryCode": {
-            "$ref": "#/definitions/countryCodes"
-          }
-        },
-        "required": ["addressType",
-          "line1",
-          "line2",
-          "countryCode"],
-        "additionalProperties": false
-      },
+      "oneOf": [
         {
           "type": "object",
           "properties": {
             "addressType": {
               "type": "string",
-              "enum": ["UK"]
+              "enum": [
+                "NON-UK"
+              ]
+            },
+            "line1": {
+              "$ref": "#/definitions/AddressLineType"
+            },
+            "line2": {
+              "$ref": "#/definitions/AddressLineType"
+            },
+            "line3": {
+              "$ref": "#/definitions/AddressLineType"
+            },
+            "line4": {
+              "$ref": "#/definitions/AddressLineType"
+            },
+            "postalCode": {
+              "description": "This is populated if the address supplied is a NON-UK address.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 10
+            },
+            "countryCode": {
+              "$ref": "#/definitions/countryCodes"
+            }
+          },
+          "required": [
+            "addressType",
+            "line1",
+            "line2",
+            "countryCode"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "addressType": {
+              "type": "string",
+              "enum": [
+                "UK"
+              ]
             },
             "line1": {
               "$ref": "#/definitions/AddressLineType"
@@ -943,19 +1046,22 @@
               "$ref": "#/definitions/countryCodes"
             }
           },
-          "required": ["addressType",
+          "required": [
+            "addressType",
             "line1",
             "line2",
             "countryCode",
-            "postalCode"],
+            "postalCode"
+          ],
           "additionalProperties": false
-        }]
+        }
+      ]
     },
     "AddressLineType": {
       "type": "string",
       "minLength": 1,
       "maxLength": 35,
-      "pattern": "^[A-Za-z0-9 !'‘’\"“”(),./\u2014\u2013\u2010\u002d]{1,35}$"
+      "pattern": "^[A-Za-z0-9 &!'‘’\"“”(),./\u2014\u2013\u2010\u002d]{1,35}$"
     },
     "contactDetailsType": {
       "type": "object",
@@ -980,13 +1086,16 @@
         }
       },
       "additionalProperties": false,
-      "required": ["telephone",
-        "email"]
+      "required": [
+        "telephone",
+        "email"
+      ]
     },
     "countryCodes": {
       "type": "string",
       "description": "Country code iso 3166-1 alpha-2",
-      "enum": ["AD",
+      "enum": [
+        "AD",
         "AE",
         "AF",
         "AG",
@@ -1243,7 +1352,8 @@
         "ZA",
         "ZM",
         "ZW",
-        "ZZ"]
+        "ZZ"
+      ]
     }
   }
 }

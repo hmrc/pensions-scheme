@@ -282,6 +282,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
           )
         )
 
+    println("\n\n\n scheme : "+PartnershipBuilder().build())
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
@@ -380,6 +381,7 @@ object SchemeServiceSpec extends SpecBase {
       Nil
     ),
     TrusteeDetails(
+      Nil,
       Nil,
       Nil
     )

@@ -272,9 +272,21 @@ case class CompanyTrustee(
                            previousAddressDetails: Option[PreviousAddressDetails] = None
                          )
 
+case class PartnershipTrustee(
+                           organizationName: String,
+                           utr: Option[String] = None,
+                           noUtrReason: Option[String] = None,
+                           vatRegistrationNumber: Option[String] = None,
+                           payeReference: Option[String] = None,
+                           correspondenceAddressDetails: CorrespondenceAddressDetails,
+                           correspondenceContactDetails: CorrespondenceContactDetails,
+                           previousAddressDetails: Option[PreviousAddressDetails] = None
+                         )
+
 case class TrusteeDetails(
                            individualTrusteeDetail: Seq[Individual],
-                           companyTrusteeDetail: Seq[CompanyTrustee]
+                           companyTrusteeDetail: Seq[CompanyTrustee],
+                           partnershipTrusteeDetail: Seq[PartnershipTrustee]
                          )
 
 case class EstablisherDetails(
@@ -290,10 +302,11 @@ object PensionsScheme {
 
   implicit val formatsIndividual: Format[Individual] = Json.format[Individual]
   implicit val formatsCompanyEstablisher: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
+  implicit val formatsEstablisherDetails: Format[EstablisherDetails] = Json.format[EstablisherDetails]
   implicit val formatsPartnershipEstablisher: Format[Partnership] = Json.format[Partnership]
   implicit val formatsCompanyTrustee: Format[CompanyTrustee] = Json.format[CompanyTrustee]
+  implicit val formatsPartnershipTrustee: Format[PartnershipTrustee] = Json.format[PartnershipTrustee]
   implicit val formatsTrusteeDetails: Format[TrusteeDetails] = Json.format[TrusteeDetails]
-  implicit val formatsEstablisherDetails: Format[EstablisherDetails] = Json.format[EstablisherDetails]
   implicit val formatsPensionsScheme: Format[PensionsScheme] = Json.format[PensionsScheme]
 
   val pensionSchemeHaveInvalidBank: Lens[PensionsScheme, Boolean] = new Lens[PensionsScheme, Boolean] {

@@ -180,29 +180,36 @@ object ReadsEstablisherDetails {
     correspondenceContactDetails = CorrespondenceContactDetails(test.contactDetails),
     previousAddressDetails = previousAddressDetails(test.addressYears, test.previousAddress)))
 
-  private val readsEstablisherPartnership: Reads[Partnership] = (
+  case class PartnershipDetail(name: String, vat: Option[String], paye: Option[String], utr: Option[String], utrReason: Option[String],
+                         address: Address, contact: ContactDetails, addressYears: String, previousAddress: Option[Address])
+
+  private val partnershipDetailReads : Reads[PartnershipDetail] = (
     (JsPath \ "partnershipDetails" \ "name").read[String] and
       (JsPath \ "partnershipVat" \ "vat").readNullable[String] and
       (JsPath \ "partnershipPaye" \ "paye").readNullable[String] and
       (JsPath \ "partnershipUniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "partnershipUniqueTaxReference" \ "reason").readNullable[String] and
-      (JsPath \ "otherPartners").readNullable[Boolean] and
       (JsPath \ "partnershipAddress").read[Address] and
       (JsPath \ "partnershipContactDetails").read[ContactDetails] and
       (JsPath \ "partnershipAddressYears").read[String] and
-      (JsPath \ "partnershipPreviousAddress").readNullable[Address] and
+      (JsPath \ "partnershipPreviousAddress").readNullable[Address]
+    )(PartnershipDetail.apply _)
+
+  private val readsEstablisherPartnership: Reads[Partnership] = (
+    (JsPath).read(partnershipDetailReads) and
+      (JsPath \ "otherPartners").readNullable[Boolean] and
       (JsPath \ "partner").readNullable(readsPartners)
-    )((partnershipName, vat, paye, utr, noUtrReason, otherPartners, address, contactDetails, addressYears, previousAddress, partners) =>
+    )((partnership, otherPartners, partners) =>
     Partnership(
-      organizationName = partnershipName,
-      utr = utr,
-      noUtrReason = noUtrReason,
-      vatRegistrationNumber = vat,
-      payeReference = paye,
+      organizationName = partnership.name,
+      utr = partnership.utr,
+      noUtrReason = partnership.utrReason,
+      vatRegistrationNumber = partnership.vat,
+      payeReference = partnership.paye,
       haveMoreThanTenDirectorOrPartner = otherPartners.getOrElse(false),
-      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
-      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
-      previousAddressDetails = previousAddressDetails(addressYears, previousAddress),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
+      correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
+      previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress),
       partnerDetails = partners.getOrElse(Nil)
     )
   )
@@ -230,6 +237,19 @@ object ReadsEstablisherDetails {
     )
   )
 
+  private val readsTrusteePartnership: Reads[PartnershipTrustee] = (((JsPath).read(partnershipDetailReads)).map(partnership =>
+    PartnershipTrustee(
+      organizationName = partnership.name,
+      utr = partnership.utr,
+      noUtrReason = partnership.utrReason,
+      vatRegistrationNumber = partnership.vat,
+      payeReference = partnership.paye,
+      correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
+      correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
+      previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress)
+    )
+  ))
+
   private val readsEstablisherIndividuals: Reads[Seq[Individual]] =
     readsFiltered(_ \ "establisherDetails", readsEstablisherIndividual, "establisherDetails")
 
@@ -244,6 +264,9 @@ object ReadsEstablisherDetails {
 
   private val readsTrusteeCompanies: Reads[Seq[CompanyTrustee]] =
     readsFiltered(_ \ "companyDetails", readsTrusteeCompany, "companyDetails")
+
+  private val readsTrusteePartnerships: Reads[Seq[PartnershipTrustee]] =
+    readsFiltered(_ \ "partnershipDetails", readsTrusteePartnership, "partnershipDetails")
 
   //noinspection ConvertExpressionToSAM
   private def readsFiltered[T](isA: JsValue => JsLookupResult, readsA: Reads[T], detailsType: String): Reads[Seq[T]] = new Reads[Seq[T]] {
@@ -295,11 +318,13 @@ object ReadsEstablisherDetails {
 
   val readsTrusteeDetails: Reads[TrusteeDetails] = (
     (JsPath \ "trustees").readNullable(readsTrusteeIndividuals) and
-    (JsPath \ "trustees").readNullable(readsTrusteeCompanies)
-  )((trusteeIndividuals, trusteeCompanies) =>
+      (JsPath \ "trustees").readNullable(readsTrusteeCompanies) and
+      (JsPath \ "trustees").readNullable(readsTrusteePartnerships)
+    ) ((trusteeIndividuals, trusteeCompanies, trusteePartnerships) =>
     TrusteeDetails(
       individualTrusteeDetail = trusteeIndividuals.getOrElse(Nil),
-      companyTrusteeDetail = trusteeCompanies.getOrElse(Nil)
+      companyTrusteeDetail = trusteeCompanies.getOrElse(Nil),
+      partnershipTrusteeDetail = trusteePartnerships.getOrElse(Nil)
     )
   )
 
