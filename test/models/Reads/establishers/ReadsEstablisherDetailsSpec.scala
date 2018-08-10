@@ -623,7 +623,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   it should "read when neither the establishers nor trustees elements are present" in {
 
-    establisherTest(Nil, Nil, Nil, Nil, Nil, Json.obj())
+    establisherTest(Nil, Nil, Nil, Nil, Nil, Nil, Json.obj())
 
   }
 
@@ -737,7 +737,7 @@ object ReadsEstablisherDetailsSpec extends Matchers {
       establisherCompanies.filterNot(_._2).map(_._1),
       establisherPartnerships.filterNot(_._2).map(_._1),
       trusteeIndividuals.filterNot(_._2).map(_._1),
-      trusteeCompanies.filterNot(_._2).map(_._1), json)
+      trusteeCompanies.filterNot(_._2).map(_._1), Nil, json)
 
   }
 
@@ -746,6 +746,7 @@ object ReadsEstablisherDetailsSpec extends Matchers {
                       establisherPartnerships: Seq[Partnership],
                       trusteeIndividuals: Seq[Individual],
                       trusteeCompanies: Seq[CompanyTrustee],
+                      trusteePartnerships: Seq[PartnershipTrustee] = Nil,
                       json: JsValue
                      ): Assertion = {
 
@@ -762,7 +763,8 @@ object ReadsEstablisherDetailsSpec extends Matchers {
 
     val expectedTrustees = TrusteeDetails(
       individualTrusteeDetail = trusteeIndividuals,
-      companyTrusteeDetail = trusteeCompanies
+      companyTrusteeDetail = trusteeCompanies,
+      partnershipTrusteeDetail = trusteePartnerships
     )
 
     json.validate(readsTrusteeDetails).fold(

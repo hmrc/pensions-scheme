@@ -381,6 +381,7 @@ object SchemeServiceSpec extends SpecBase {
     ),
     TrusteeDetails(
       Nil,
+      Nil,
       Nil
     )
   )

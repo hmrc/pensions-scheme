@@ -23,6 +23,7 @@ import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
 
 trait Samples {
 
+  val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")
   val nonUkAddressSample = InternationalAddress("line1", Some("line2"), Some("line3"), Some("line4"), "IT", Some("NE1"))
   val ukAddressSample = UkAddress("line1", Some("line2"), Some("line3"), Some("line4"), "GB", "NE1")
   val numberOfDirectorOrPartnersSample = NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(true), isMorethanTenPartners = Some(true))
@@ -77,4 +78,38 @@ trait Samples {
     (s"${personType}ContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) +
     (s"${personType}Address" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
       "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "postcode" -> JsString("NE1"), "country" -> JsString("IT")))
+
+  val trusteePartnershipData = PartnershipTrustee(
+    organizationName = "test partnership",
+    utr = Some("1111111111"),
+    noUtrReason = None,
+    vatRegistrationNumber = None,
+    payeReference = None,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
+    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
+    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
+
+  val trusteeCompanyData = CompanyTrustee(
+    organizationName = "test company",
+    utr = Some("1111111111"),
+    crnNumber = Some("crn1234"),
+    noUtrReason = None,
+    vatRegistrationNumber = None,
+    payeReference = None,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
+    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
+    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
+
+  val trusteeIndividualData = Individual(
+    personalDetails = PersonalDetails(firstName = "John",
+      middleName = Some("William"),
+      lastName = "Doe",
+      dateOfBirth = "2019-01-31"),
+    referenceOrNino = Some("nino1234"),
+    noNinoReason = None,
+    utr = Some("1111111111"),
+    noUtrReason = None,
+    correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
+    correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
+    previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
 }
