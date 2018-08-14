@@ -101,7 +101,7 @@ class RegistrationConnectorImpl @Inject()(
       case status => throw new Exception(s"Business Partner Matching fail with status $status. Response body: '${response.body}'")
     }
   }
-
+  //scalastyle:on cyclomatic.complexity
 }
 
 @ImplementedBy(classOf[RegistrationConnectorImpl])
