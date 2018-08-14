@@ -58,8 +58,8 @@ class SchemeController @Inject()(schemeService: SchemeService) extends BaseContr
       feJson match {
         case Some(jsValue) =>
           schemeService.registerPSA(jsValue).map {
-            response =>
-              Ok(response.body)
+            case Right(json) => Ok(json)
+            case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
       }

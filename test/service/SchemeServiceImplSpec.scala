@@ -22,16 +22,16 @@ import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
 import models._
 import org.joda.time.LocalDate
-import org.scalatest.{AsyncFlatSpec, Matchers}
+import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers {
+class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers with EitherValues {
 
   import FakeSchemeConnector._
   import SchemeServiceImplSpec._
@@ -78,8 +78,7 @@ class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers {
 
     fixture.schemeService.registerPSA(psaJson).map {
       httpResponse =>
-        httpResponse.status shouldBe Status.OK
-        httpResponse.json shouldBe registerPsaResponseJson
+        httpResponse.right.value shouldBe registerPsaResponseJson
     }
 
   }
@@ -108,7 +107,7 @@ class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers {
               legalStatus = "test-legal-status",
               status = Status.OK,
               request = requestJson,
-              response = Some(httpResponse.json)
+              response = Some(httpResponse.right.value)
             )
           )
     }
@@ -120,23 +119,21 @@ class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers {
     val fixture = testFixture()
     val requestJson = registerPsaRequestJson(psaJson)
 
-    fixture.schemeConnector.setRegisterPsaResponse(Future.failed(new BadRequestException("bad request")))
+    fixture.schemeConnector.setRegisterPsaResponse(Future.successful(Left(new BadRequestException("bad request"))))
 
-    fixture.schemeService.registerPSA(psaJson)
-      .map(_ => fail("Expected failure"))
-      .recover {
-        case _: BadRequestException =>
-          fixture.auditService.lastEvent shouldBe
-            Some(
-              PSASubscription(
-                existingUser = false,
-                legalStatus = "test-legal-status",
-                status = Status.BAD_REQUEST,
-                request = requestJson,
-                response = None
-              )
+    fixture.schemeService.registerPSA(psaJson).map {
+      _ =>
+        fixture.auditService.lastEvent shouldBe
+          Some(
+            PSASubscription(
+              existingUser = false,
+              legalStatus = "test-legal-status",
+              status = Status.BAD_REQUEST,
+              request = requestJson,
+              response = None
             )
-      }
+          )
+    }
 
   }
 
@@ -209,11 +206,13 @@ class FakeSchemeConnector extends SchemeConnector {
 
   private var registerSchemeResponse = Future.successful(HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
   private var listOfSchemesResponse = Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))
-  private var registerPsaResponse = Future.successful(HttpResponse(Status.OK, Some(registerPsaResponseJson)))
+  private var registerPsaResponse: Future[Either[HttpException, JsValue]] = Future.successful(Right(registerPsaResponseJson))
 
   def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit = this.registerSchemeResponse = response
+
   def setListOfSchemesResponse(response: Future[HttpResponse]): Unit = this.listOfSchemesResponse = response
-  def setRegisterPsaResponse(response: Future[HttpResponse]): Unit = this.registerPsaResponse = response
+
+  def setRegisterPsaResponse(response: Future[Either[HttpException, JsValue]]): Unit = this.registerPsaResponse = response
 
   override def registerScheme(psaId: String, registerData: JsValue)(implicit
                                                                     headerCarrier: HeaderCarrier,
@@ -223,7 +222,7 @@ class FakeSchemeConnector extends SchemeConnector {
   override def registerPSA(registerData: JsValue)(implicit
                                                   headerCarrier: HeaderCarrier,
                                                   ec: ExecutionContext,
-                                                  request: RequestHeader): Future[HttpResponse] = registerPsaResponse
+                                                  request: RequestHeader): Future[Either[HttpException, JsValue]] = registerPsaResponse
 
   override def listOfSchemes(psaId: String)(implicit
                                             headerCarrier: HeaderCarrier,

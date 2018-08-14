@@ -17,20 +17,19 @@
 package connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import connector.RegistrationConnectorSpec.errorResponse
+import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
 import play.api.libs.json.JsValue
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import connector.RegistrationConnectorSpec.errorResponse
-
-
+import utils.WireMockHelper
 import scala.concurrent.Future
 
-trait RegistrationConnectorBehaviours { this: RegistrationConnectorSpec =>
-
+trait ConnectorBehaviours extends AsyncFlatSpec with WireMockHelper with EitherValues with Matchers {
+  //scalastyle:off method.length
   def errorHandlerForApiFailures(call: => Future[Either[HttpException, JsValue]], url: String): Unit = {
 
     it should "handle BAD_REQUEST (400) - INVALID_PAYLOAD" in {
-
       server.stubFor(
         post(urlEqualTo(url))
           .willReturn(
@@ -40,80 +39,50 @@ trait RegistrationConnectorBehaviours { this: RegistrationConnectorSpec =>
               .withBody(errorResponse("INVALID_PAYLOAD"))
           )
       )
-
       call.map {
         response =>
           response.left.value shouldBe a[BadRequestException]
-          response.left.value.message should include ("INVALID_PAYLOAD")
+          response.left.value.message should include("INVALID_PAYLOAD")
       }
-
     }
 
     it should "handle NOT_FOUND (404)" in {
-
       server.stubFor(
         post(urlEqualTo(url))
           .willReturn(
             notFound
           )
       )
-
       call.map {
         response =>
           response.left.value shouldBe a[NotFoundException]
       }
-
-    }
-
-    it should "handle CONFLICT (409)" in {
-
-      server.stubFor(
-        post(urlEqualTo(url))
-          .willReturn(
-            aResponse()
-              .withStatus(CONFLICT)
-          )
-      )
-
-      call.map {
-        response =>
-          response.left.value shouldBe a[ConflictException]
-      }
-
     }
 
     it should "handle SERVER_ERROR (500)" in {
-
       server.stubFor(
         post(urlEqualTo(url))
           .willReturn(
             serverError
           )
       )
-
       recoverToExceptionIf[Upstream5xxResponse](call) map {
         ex =>
           ex.upstreamResponseCode shouldBe INTERNAL_SERVER_ERROR
       }
-
     }
 
     it should "handle SERVICE_UNAVAILABLE (503)" in {
-
       server.stubFor(
         post(urlEqualTo(url))
           .willReturn(
             serviceUnavailable
           )
       )
-
       recoverToExceptionIf[Upstream5xxResponse](call) map {
         ex =>
           ex.upstreamResponseCode shouldBe SERVICE_UNAVAILABLE
       }
-
     }
-
   }
-
 }
