@@ -16,9 +16,8 @@
 
 package models
 
-import play.api.libs.json.{JsPath, Json, Writes}
 import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.json.{JsPath, Json, Writes}
 
 case class OrganisationType(organisationName: String,
                             isAGroup: Option[Boolean] = None,
@@ -56,7 +55,7 @@ case class SuccessResponse(safeId: String,
 
 object SuccessResponse {
   implicit val reads = Json.reads[SuccessResponse]
-  implicit val writes : Writes[SuccessResponse] = (
+  implicit val writes: Writes[SuccessResponse] = (
     (JsPath \ "safeId").write[String] and
       (JsPath \ "sapNumber").write[String] and
       (JsPath \ "isAnIndividual").write[Boolean] and
@@ -64,5 +63,5 @@ object SuccessResponse {
       (JsPath \ "organisation").writeNullable[OrganisationType] and
       (JsPath \ "address").write(Address.defaultWrites) and
       (JsPath \ "contactDetails").write[ContactCommDetailsType]
-    )(unlift(SuccessResponse.unapply))
+    ) (unlift(SuccessResponse.unapply))
 }

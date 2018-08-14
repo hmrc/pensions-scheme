@@ -20,16 +20,16 @@ import audit.{AuditService, PSASubscription, SchemeList, SchemeSubscription, Sch
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
-import models.enumeration.SchemeType
+import models.PensionsScheme.pensionSchemeHaveInvalidBank
+import models.ReadsEstablisherDetails._
 import models._
+import models.enumeration.SchemeType
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json.{JsResultException, JsValue, Json}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
 import utils.validationUtils._
-import models.ReadsEstablisherDetails._
-import models.PensionsScheme.pensionSchemeHaveInvalidBank
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -176,7 +176,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   (psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue]): SchemeSubscription = {
 
     val schemeType = if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
-     Some(AuditSchemeType.masterTrust)
+      Some(AuditSchemeType.masterTrust)
     }
     else {
       pensionsScheme.customerAndSchemeDetails.schemeStructure.map {

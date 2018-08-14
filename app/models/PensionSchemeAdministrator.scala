@@ -161,7 +161,7 @@ object PensionSchemeAdministrator {
       case _ => Some(NumberOfDirectorOrPartnersType(isThereMoreThanTenDirectors, isThereMoreThanTenPartners))
     }
 
-  private def directorOrPartnerDetail(legalStatus: String, directorsOrPartners:  Seq[Option[scala.List[DirectorOrPartnerDetailTypeItem]]]) = {
+  private def directorOrPartnerDetail(legalStatus: String, directorsOrPartners: Seq[Option[scala.List[DirectorOrPartnerDetailTypeItem]]]) = {
     legalStatus match {
       case RegistrationLegalStatus.Company.name => directorsOrPartners.head
       case RegistrationLegalStatus.Partnership.name => directorsOrPartners(1)

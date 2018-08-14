@@ -21,8 +21,8 @@ import play.api.Configuration
 import repositories.PSANameCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 
-class PSANameController @Inject() (
-                                    config: Configuration,
-                                    repository: PSANameCacheRepository,
-                                    authConnector: AuthConnector
-                                  ) extends PensionsSchemeCacheController(config, repository, authConnector)
+class PSANameController @Inject()(
+                                   config: Configuration,
+                                   repository: PSANameCacheRepository,
+                                   authConnector: AuthConnector
+                                 ) extends PensionsSchemeCacheController(config, repository, authConnector)

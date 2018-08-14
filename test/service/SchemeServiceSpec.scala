@@ -16,8 +16,8 @@
 
 package service
 
-import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import audit.testdoubles.StubSuccessfulAuditService
+import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
@@ -34,8 +34,8 @@ import scala.concurrent.Future
 
 class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
-  import SchemeServiceSpec._
   import FakeSchemeConnector._
+  import SchemeServiceSpec._
 
   "haveInvalidBank" should "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
 
@@ -178,7 +178,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   it should "translate a group Life/Death scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme,Some(SchemeType.group.value))
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.group.value))
 
     val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
@@ -337,7 +337,7 @@ object SchemeServiceSpec extends SpecBase {
   def bankAccount(accountNumber: String): BankAccount =
     BankAccount("001100", accountNumber)
 
-  def bankDetailsJson(accountNumber: String ): JsValue =
+  def bankDetailsJson(accountNumber: String): JsValue =
     Json.obj(
       "uKBankDetails" -> Json.obj(
         "bankName" -> "my bank name",

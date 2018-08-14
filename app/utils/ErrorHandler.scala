@@ -25,8 +25,8 @@ import play.api.mvc.{ResponseHeader, Result}
 import uk.gov.hmrc.http._
 
 import scala.concurrent.Future
-import scala.util.{Success, Try}
 import scala.util.matching.Regex
+import scala.util.{Success, Try}
 
 trait ErrorHandler {
 
@@ -40,7 +40,7 @@ trait ErrorHandler {
     case e: Upstream4xxResponse =>
       Future.failed(throwAppropriateException(e))
     case e: Upstream5xxResponse =>
-      Future.failed(new Upstream5xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
+      Future.failed(Upstream5xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
     case e: Exception =>
       Future.failed(new Exception(e.getMessage))
   }
@@ -52,7 +52,7 @@ trait ErrorHandler {
       case CONFLICT if e.message.contains("DUPLICATE_SUBMISSION") =>
         new ConflictException(e.message)
       case _ =>
-        new Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs)
+        Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs)
     }
   }
 

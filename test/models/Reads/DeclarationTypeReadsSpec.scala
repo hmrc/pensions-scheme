@@ -70,7 +70,7 @@ class DeclarationTypeReadsSpec extends WordSpec with MustMatchers with OptionVal
         }
 
         "set as 'adviser' containing adviser details" in {
-          val adviserDetails = "adviserDetails" -> Json.obj("name" -> JsString("John"),"phone" -> "07592113", "email" -> "test@test.com")
+          val adviserDetails = "adviserDetails" -> Json.obj("name" -> JsString("John"), "phone" -> "07592113", "email" -> "test@test.com")
 
           val adviserAddress = "adviserAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
             "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))

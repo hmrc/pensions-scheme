@@ -23,7 +23,7 @@ import play.api.libs.json.Json
 class SuccessResponseWrites extends WordSpec with MustMatchers with OptionValues with Samples {
   "A success response object" should {
     "Map an address as default type" when {
-      val successRespone = SuccessResponse("test", "test", true,Some(IndividualType("Test",None,"Test")),Some(OrganisationType("Test")), ukAddressSample, ContactCommDetailsType())
+      val successRespone = SuccessResponse("test", "test", true, Some(IndividualType("Test", None, "Test")), Some(OrganisationType("Test")), ukAddressSample, ContactCommDetailsType())
       val response = Json.toJson(successRespone)
 
       "We have an address" in {

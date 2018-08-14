@@ -23,6 +23,7 @@ import play.api.libs.json.{Json, _}
 class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
 
   implicit val contactAddressEnabled: Boolean = true
+
   import PensionSchemeAdministratorPartnershipReadsSpec._
 
   "Json Payload of a PSA for partnership" must {
@@ -165,7 +166,7 @@ class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustM
       }
 
       "The user is an existing PSA user with previous reference number" in {
-        val existingPSA = "existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(true),"existingPSAId" -> JsString("TestId"))
+        val existingPSA = "existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(true), "existingPSAId" -> JsString("TestId"))
         val result = Json.fromJson[PensionSchemeAdministrator](input + existingPSA)(PensionSchemeAdministrator.apiReads).asOpt.value
 
         result.pensionSchemeAdministratoridentifierStatus.existingPensionSchemaAdministratorReference mustBe Some("TestId")
@@ -180,7 +181,7 @@ class PensionSchemeAdministratorPartnershipReadsSpec extends WordSpec with MustM
   }
 }
 
-object PensionSchemeAdministratorPartnershipReadsSpec extends  Samples{
+object PensionSchemeAdministratorPartnershipReadsSpec extends Samples {
   val input = Json.obj(
     "existingPSA" -> Json.obj("isExistingPSA" -> JsBoolean(false)),
     "registrationInfo" ->

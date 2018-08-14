@@ -4,7 +4,7 @@
     "isSchemeMasterTrust": true,
     "schemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
     "otherSchemeStructure": "abcdefghijklmnopqrst",
-    "haveMoreThanTenTrustee":true,
+    "haveMoreThanTenTrustee": true,
     "currentSchemeMembers": "0",
     "futureSchemeMembers": "0",
     "isReguledSchemeInvestment": true,
@@ -15,12 +15,12 @@
     "haveInvalidBank": false,
     "insuranceCompanyName": "XZY - Co. -Ltd",
     "insuranceCompanyAddress": {
-      "addressLine1" : "100 SuttonStreet",
-      "addressLine2" : "Wokingham",
-      "addressLine3" : "Surrey",
-      "addressLine4" : "London",
-      "postalCode" : "DH14EJ",
-      "countryCode" : "GB"
+      "addressLine1": "100 SuttonStreet",
+      "addressLine2": "Wokingham",
+      "addressLine3": "Surrey",
+      "addressLine4": "London",
+      "postalCode": "DH14EJ",
+      "countryCode": "GB"
     },
     "policyNumber": "12345678"
   },
@@ -39,12 +39,12 @@
     "pensionAdviserName": "abcdef",
     "addressAndContactDetails": {
       "addressDetails": {
-        "addressLine1" : "100 SuttonStreet",
-        "addressLine2" : "Wokingham",
-        "addressLine3" : "Surrey",
-        "addressLine4" : "London",
-        "postalCode" : "DH14EJ",
-        "countryCode" : "GB"
+        "addressLine1": "100 SuttonStreet",
+        "addressLine2": "Wokingham",
+        "addressLine3": "Surrey",
+        "addressLine4": "London",
+        "postalCode": "DH14EJ",
+        "countryCode": "GB"
       },
       "contactDetails": {
         "telephone": "7889129814",
@@ -76,12 +76,12 @@
       "haveMoreThanTenDirectorOrPartner": false,
       "correspondenceAddressDetails": {
         "addressDetails": {
-          "addressLine1" : "100 SuttonStreet",
-          "addressLine2" : "Wokingham",
-          "addressLine3" : "Surrey",
-          "addressLine4" : "London",
-          "postalCode" : "DH14EJ",
-          "countryCode" : "GB"
+          "addressLine1": "100 SuttonStreet",
+          "addressLine2": "Wokingham",
+          "addressLine3": "Surrey",
+          "addressLine4": "London",
+          "postalCode": "DH14EJ",
+          "countryCode": "GB"
         }
       },
       "correspondenceContactDetails": {
@@ -95,12 +95,12 @@
       "previousAddressDetails": {
         "isPreviousAddressLast12Month": true,
         "previousAddressDetails": {
-          "addressLine1" : "100 SuttonStreet",
-          "addressLine2" : "Wokingham",
-          "addressLine3" : "Surrey",
-          "addressLine4" : "London",
-          "postalCode" : "DH14EJ",
-          "countryCode" : "GB"
+          "addressLine1": "100 SuttonStreet",
+          "addressLine2": "Wokingham",
+          "addressLine3": "Surrey",
+          "addressLine4": "London",
+          "postalCode": "DH14EJ",
+          "countryCode": "GB"
         }
       }
     }

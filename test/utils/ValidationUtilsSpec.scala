@@ -21,12 +21,15 @@ import play.api.libs.json.{JsResultException, Json, OFormat}
 import utils.validationUtils._
 
 class ValidationUtilsSpec extends WordSpec with MustMatchers with OptionValues {
+
   case class TestDetails(first: String, second: Option[String])
+
   object TestDetails {
     implicit val formats = Json.format[TestDetails]
   }
 
   case class Test(testFirst: String, testLast: String, testDetails: Option[TestDetails])
+
   object Test {
     implicit val formats: OFormat[Test] = Json.format[Test]
   }

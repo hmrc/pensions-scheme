@@ -30,7 +30,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import play.api.libs.json._
-import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
@@ -86,7 +85,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         new ConflictException("CONFLICT")
       ))
 
-      forAll(connectorFailureGen){ connectorFailure =>
+      forAll(connectorFailureGen) { connectorFailure =>
 
         when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq(nino), any(), Matchers.eq(inputRequestData))(any(), any(), any()))
           .thenReturn(Future.successful(Left(connectorFailure)))
@@ -120,12 +119,12 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         new ~(new ~(None, None), Some(AffinityGroup.Individual)),
         new ~(new ~(None, Some(externalId)), Some(AffinityGroup.Individual)),
         new ~(new ~(None, Some(externalId)), None),
-        new ~(new ~(Some(nino),None),Some(AffinityGroup.Individual)),
-        new ~(new ~(Some(nino),None),None),
-        new ~(new ~(Some(nino),Some(externalId)),None)
+        new ~(new ~(Some(nino), None), Some(AffinityGroup.Individual)),
+        new ~(new ~(Some(nino), None), None),
+        new ~(new ~(Some(nino), Some(externalId)), None)
       ))
 
-      forAll(retrievalsGen){ retrievals =>
+      forAll(retrievalsGen) { retrievals =>
 
         val result = registrationController(Future.successful(retrievals)).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
 
@@ -161,7 +160,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
     "throw Exception when any other exception returned from connector" in {
 
-      when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq(nino), any(),Matchers.eq(inputRequestData))(any(), any(), any()))
+      when(mockRegistrationConnector.registerWithIdIndividual(Matchers.eq(nino), any(), Matchers.eq(inputRequestData))(any(), any(), any()))
         .thenReturn(Future.failed(new Exception("Generic Exception")))
 
       val result = registrationController(individualRetrievals).registerWithIdIndividual(fakeRequest.withJsonBody(inputRequestData))
@@ -208,7 +207,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
           Json.obj("bad" -> "request")
         ))
 
-        forAll(badRequestGen){ badRequest =>
+        forAll(badRequestGen) { badRequest =>
 
           val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(badRequest))
 
@@ -233,26 +232,26 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
     "return result from registration when connector returns failure" in {
 
-        val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
-          new BadRequestException("INVALID_PAYLOAD"),
-          new NotFoundException("NOT FOUND"),
-          new ConflictException("CONFLICT")
-        ))
+      val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
+        new BadRequestException("INVALID_PAYLOAD"),
+        new NotFoundException("NOT FOUND"),
+        new ConflictException("CONFLICT")
+      ))
 
-        forAll(connectorFailureGen){ connectorFailure =>
+      forAll(connectorFailureGen) { connectorFailure =>
 
-          when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
-            .thenReturn(Future.successful(Left(connectorFailure)))
+        when(mockRegistrationConnector.registerWithIdOrganisation(Matchers.eq("1100000000"), any(), any())(any(), any(), any()))
+          .thenReturn(Future.successful(Left(connectorFailure)))
 
-          val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
+        val result = registrationController(organisationRetrievals).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
 
-          ScalaFutures.whenReady(result) { _ =>
-            status(result) mustBe connectorFailure.responseCode
-          }
-
+        ScalaFutures.whenReady(result) { _ =>
+          status(result) mustBe connectorFailure.responseCode
         }
 
       }
+
+    }
 
     "throw Exception when authorisation retrievals fails" in {
 
@@ -274,7 +273,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         new ~(Some(""), None)
       ))
 
-      forAll(retrievalsGen){ retrievals =>
+      forAll(retrievalsGen) { retrievals =>
 
         val result = registrationController(Future.successful(retrievals)).registerWithIdOrganisation(fakeRequest.withJsonBody(inputData))
 
@@ -335,26 +334,26 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
 
     "return result from registration when connector returns failure" in {
 
-        val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
-          new BadRequestException("INVALID_PAYLOAD"),
-          new NotFoundException("NOT FOUND"),
-          new ConflictException("CONFLICT")
-        ))
+      val connectorFailureGen: Gen[HttpException] = Gen.oneOf(Seq(
+        new BadRequestException("INVALID_PAYLOAD"),
+        new NotFoundException("NOT FOUND"),
+        new ConflictException("CONFLICT")
+      ))
 
-        forAll(connectorFailureGen){ connectorFailure =>
+      forAll(connectorFailureGen) { connectorFailure =>
 
-          when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any()))
-            .thenReturn(Future.successful(Left(connectorFailure)))
+        when(mockRegistrationConnector.registrationNoIdOrganisation(any(), Matchers.eq(dataToEmtp))(any(), any(), any()))
+          .thenReturn(Future.successful(Left(connectorFailure)))
 
-          val result = call(registrationController(organisationRetrievals).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
+        val result = call(registrationController(organisationRetrievals).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
 
-          ScalaFutures.whenReady(result) { _ =>
-            status(result) mustBe connectorFailure.responseCode
-          }
-
+        ScalaFutures.whenReady(result) { _ =>
+          status(result) mustBe connectorFailure.responseCode
         }
 
       }
+
+    }
 
     "throw Exception when authorisation retrievals fails" in {
 
@@ -376,7 +375,7 @@ class RegistrationControllerSpec extends SpecBase with MockitoSugar with BeforeA
         new ~(Some(""), None)
       ))
 
-      forAll(retrievalsGen){ retrievals =>
+      forAll(retrievalsGen) { retrievals =>
 
         val result = call(registrationController(Future.successful(retrievals)).registrationNoIdOrganisation, fakeRequest(dataFromFrontend))
 

@@ -29,7 +29,7 @@ class OrganisationDetailTypeSpec extends WordSpec with MustMatchers with OptionV
     Seq(("Company", companyDetails), ("Partnership", partnershipDetails)).foreach { entityType =>
       val (orgType, orgData) = entityType
       s"Map correctly to a ${orgType} OrganisationDetailType model" when {
-        val apiReads = if(orgType == "Company") OrganisationDetailType.CompanyApiReads else OrganisationDetailType.partnershipApiReads
+        val apiReads = if (orgType == "Company") OrganisationDetailType.CompanyApiReads else OrganisationDetailType.partnershipApiReads
 
         "We have a name" in {
           val result = orgData.as[OrganisationDetailType](apiReads)
