@@ -200,7 +200,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     logger.reset()
     connector.registerPSA(registerPsaData).map {
-      response =>
+      _ =>
         logger.getLogEntries.size shouldBe 1
         logger.getLogEntries.head.level shouldBe Level.WARN
     }
@@ -321,12 +321,12 @@ object SchemeConnectorSpec extends JsonFileReader {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
   val psaId = "test"
-  val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-  val registerPsaData = readJsonFromFile("/data/validPsaRequest.json")
+  private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
+  private val registerPsaData = readJsonFromFile("/data/validPsaRequest.json")
   val registerPsaUrl = "/pension-online/subscription"
   val schemeUrl = s"/pension-online/scheme-subscription/$psaId"
   val listOfSchemeUrl = s"/pension-online/subscription/$psaId/list"
-  val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+  private val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
 
   private val invalidBusinessPartnerResponse =
     Json.stringify(

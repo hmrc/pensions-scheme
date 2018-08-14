@@ -78,7 +78,7 @@ class SchemeConnectorImpl @Inject()(
     response.status match {
       case OK => Right(response.json)
       case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
-      case CONFLICT if(response.body.contains("DUPLICATE_SUBMISSION"))=> Left(new ConflictException(response.body))
+      case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
       case NOT_FOUND => Left(new NotFoundException(response.body))
       case FORBIDDEN if response.body.contains("INVALID_BUSINESS_PARTNER") => Left(new ForbiddenException(response.body))
       case status if is4xx(status) => throw Upstream4xxResponse(response.body, status, BAD_REQUEST, response.allHeaders)
