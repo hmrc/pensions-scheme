@@ -37,8 +37,8 @@ trait WireMockHelper extends BeforeAndAfterAll with BeforeAndAfterEach {
         "auditing.enabled" -> false,
         "metrics.enabled" -> false
       )
-    .overrides(bindings: _*)
-    .build()
+      .overrides(bindings: _*)
+      .build()
 
   protected lazy val injector: Injector = app.injector
 

@@ -17,9 +17,9 @@
 package models
 
 import base.SpecBase
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 
-class RegistrationNoIdAddress extends SpecBase{
+class RegistrationNoIdAddress extends SpecBase {
 
   "Reads for Registrant" must {
 
@@ -46,7 +46,7 @@ class RegistrationNoIdAddress extends SpecBase{
       contactDetails = contactDetailsData
     )
 
-   "successfully read a OrganisationRegistrant" in {
+    "successfully read a OrganisationRegistrant" in {
       val json = readJsonFromFile("/data/validRegistrationNoIDOrganisationFE.json")
 
       Json.fromJson[OrganisationRegistrant](json).get mustEqual organisationRegistrantInternationalAddress

@@ -183,10 +183,10 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
   it should "read multiple directors without deleted ones" in {
 
     deletedDirectorsTest(
-       (1 to 3).map { _ =>
-          (IndividualBuilder().build(), true)
-        } :+ ((IndividualBuilder().build(), false))
-      )
+      (1 to 3).map { _ =>
+        (IndividualBuilder().build(), true)
+      } :+ ((IndividualBuilder().build(), false))
+    )
   }
 
   it should "read a partnership with minimal details" in {
@@ -717,12 +717,12 @@ object ReadsEstablisherDetailsSpec extends Matchers {
                       establisherPartnerships: Seq[(Partnership, Boolean)],
                       trusteeIndividuals: Seq[(Individual, Boolean)],
                       trusteeCompanies: Seq[(CompanyTrustee, Boolean)]
-                        ): Assertion = {
+                     ): Assertion = {
 
     val establishers =
       toJsonArray(establisherIndividuals, establisherIndividualJson) ++
         toJsonArray(establisherCompanies, establisherCompany) ++
-    toJsonArray(establisherPartnerships, partnership)
+        toJsonArray(establisherPartnerships, partnership)
 
     val trustees =
       toJsonArray(trusteeIndividuals, trusteeIndividualJson) ++

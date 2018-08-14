@@ -17,11 +17,12 @@
 package config
 
 import com.google.inject.Inject
+import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.config.ServicesConfig
 
 class AppConfig @Inject()(override val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
-  override protected def mode = environment.mode
+  override protected def mode: Mode = environment.mode
 
   lazy val baseURL: String = baseUrl("des-hod")
   lazy val barsBaseUrl: String = baseUrl("bank-account-reputation")
@@ -29,7 +30,7 @@ class AppConfig @Inject()(override val runModeConfiguration: Configuration, envi
 
   lazy val schemeRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.register")}"
   lazy val schemeAdminRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.administrator.register")}"
-  lazy val registerWithoutIdOrganisationUrl:String=s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.register.without.id.organisation")}"
+  lazy val registerWithoutIdOrganisationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.register.without.id.organisation")}"
   lazy val registerWithIdIndividualUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.register.with.id.individual")}"
   lazy val registerWithIdOrganisationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.register.with.id.organisation")}"
   lazy val listOfSchemesUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.list.of.schemes")}"

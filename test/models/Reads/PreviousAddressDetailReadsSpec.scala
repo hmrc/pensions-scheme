@@ -18,7 +18,7 @@ package models.Reads
 
 import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsArray, JsObject, JsString, Json}
+import play.api.libs.json.{JsString, Json}
 
 class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "JSON payload with previous address details" should {
@@ -40,8 +40,8 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
       }
 
       "we have a GB address" in {
-        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"-> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
-          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"postcode" -> JsString("NE1"),"country" -> JsString("GB")))
+        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "postcode" -> JsString("NE1"), "country" -> JsString("GB")))
 
         val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 
@@ -49,8 +49,8 @@ class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with Opt
       }
 
       "we have a non UK address with no postcode" in {
-        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress"-> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
-          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),"country" -> JsString("IT")))
+        val input = Json.obj("companyAddressYears" -> JsString("under_a_year"), "companyPreviousAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
+          "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "country" -> JsString("IT")))
 
         val result = input.as[PreviousAddressDetails](PreviousAddressDetails.apiReads("company"))
 

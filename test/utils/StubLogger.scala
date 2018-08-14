@@ -23,6 +23,7 @@ import play.api.LoggerLike
 //noinspection NotImplementedCode
 //scalastyle:off number.of.methods
 class StubLogger(name: String = "Application") extends LoggerLike {
+
   case class LogEntry(level: Level, msg: String)
 
   private var logEntries: Seq[LogEntry] = Seq.empty

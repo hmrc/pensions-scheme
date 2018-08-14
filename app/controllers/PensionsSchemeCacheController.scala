@@ -17,8 +17,8 @@
 package controllers
 
 import play.api.libs.json.Json
-import play.api.{Configuration, Logger}
 import play.api.mvc.{Action, AnyContent, RawBuffer}
+import play.api.{Configuration, Logger}
 import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -27,10 +27,10 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 
 abstract class PensionsSchemeCacheController(
-                                        config: Configuration,
-                                        repository: PensionsSchemeCacheRepository,
-                                        val authConnector: AuthConnector
-                                      ) extends BaseController with AuthorisedFunctions {
+                                              config: Configuration,
+                                              repository: PensionsSchemeCacheRepository,
+                                              val authConnector: AuthConnector
+                                            ) extends BaseController with AuthorisedFunctions {
 
   private val maxSize: Int = config.underlying.getInt("mongodb.pensions-scheme-cache.maxSize")
 
@@ -51,7 +51,9 @@ abstract class PensionsSchemeCacheController(
         Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
         repository.get(id).map { response =>
           Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
-          response.map{Ok(_)}
+          response.map {
+            Ok(_)
+          }
             .getOrElse(NotFound)
         }
       }
@@ -63,7 +65,7 @@ abstract class PensionsSchemeCacheController(
         Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
         repository.getLastUpdated(id).map { response =>
           Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
-          response.map{date => Ok(Json.toJson(date))}
+          response.map { date => Ok(Json.toJson(date)) }
             .getOrElse(NotFound)
         }
       }

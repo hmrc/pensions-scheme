@@ -148,7 +148,7 @@ object ReadsEstablisherDetails {
     ) (Company.apply _)
 
   private val readsEstablisherCompany: Reads[CompanyEstablisher] = (
-    (JsPath).read(companyReads) and
+    JsPath.read(companyReads) and
       (JsPath \ "otherDirectors").readNullable[Boolean] and
       (JsPath \ "director").readNullable(readsCompanyDirectors)
     ) ((company, otherDirectors, directors) =>
@@ -184,7 +184,7 @@ object ReadsEstablisherDetails {
     ) (PartnershipDetail.apply _)
 
   private val readsEstablisherPartnership: Reads[Partnership] = (
-    (JsPath).read(partnershipDetailReads) and
+    JsPath.read(partnershipDetailReads) and
       (JsPath \ "otherPartners").readNullable[Boolean] and
       (JsPath \ "partner").readNullable(readsPartners)
     ) ((partnership, otherPartners, partners) =>
@@ -225,7 +225,7 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private val readsTrusteeCompany: Reads[CompanyTrustee] = ((JsPath).read(companyReads)).map(test => CompanyTrustee(
+  private val readsTrusteeCompany: Reads[CompanyTrustee] = JsPath.read(companyReads).map(test => CompanyTrustee(
     organizationName = test.name,
     utr = test.utr,
     noUtrReason = test.noUtrReason,
@@ -237,7 +237,7 @@ object ReadsEstablisherDetails {
     correspondenceContactDetails = CorrespondenceContactDetails(test.contactDetails),
     previousAddressDetails = previousAddressDetails(test.addressYears, test.previousAddress)))
 
-  private val readsTrusteePartnership: Reads[PartnershipTrustee] = (((JsPath).read(partnershipDetailReads)).map(partnership =>
+  private val readsTrusteePartnership: Reads[PartnershipTrustee] = JsPath.read(partnershipDetailReads).map(partnership =>
     PartnershipTrustee(
       organizationName = partnership.name,
       utr = partnership.utr,
@@ -248,7 +248,7 @@ object ReadsEstablisherDetails {
       correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
       previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress)
     )
-  ))
+  )
 
   private val readsEstablisherIndividuals: Reads[Seq[Individual]] =
     readsFiltered(_ \ "establisherDetails", readsEstablisherIndividual, "establisherDetails")

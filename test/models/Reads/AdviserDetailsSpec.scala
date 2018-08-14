@@ -23,10 +23,10 @@ import play.api.libs.json.Json
 class AdviserDetailsSpec extends WordSpec with MustMatchers {
   "A JSON payload containing contact details" should {
     "Map to a valid ContactDetails object" when {
-      val input = Json.obj("adviserName"->"abc","phoneNumber" -> "0758237281", "emailAddress" -> "test@test.com")
+      val input = Json.obj("adviserName" -> "abc", "phoneNumber" -> "0758237281", "emailAddress" -> "test@test.com")
 
       "We have a name" in {
-        val result:AdviserDetails=input.as[AdviserDetails](AdviserDetails.readsAdviserDetails)
+        val result: AdviserDetails = input.as[AdviserDetails](AdviserDetails.readsAdviserDetails)
         result.adviserName mustBe "abc"
       }
       "We have a telephone number" in {

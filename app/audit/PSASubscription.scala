@@ -19,11 +19,11 @@ package audit
 import play.api.libs.json.{Format, JsValue, Json}
 
 case class PSASubscription(
-                          existingUser: Boolean,
-                          legalStatus: String,
-                          status: Int,
-                          request: JsValue,
-                          response: Option[JsValue]
+                            existingUser: Boolean,
+                            legalStatus: String,
+                            status: Int,
+                            request: JsValue,
+                            response: Option[JsValue]
                           ) extends AuditEvent {
 
   override def auditType: String = "PSASubscription"

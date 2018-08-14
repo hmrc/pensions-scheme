@@ -17,6 +17,7 @@
 package models
 
 import java.time.LocalDate
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json
 import play.api.libs.json._
@@ -94,11 +95,11 @@ object DirectorOrPartnerDetailTypeItem {
     ) ((referenceNumber, reason) => (referenceNumber, reason))
 
   def directorOrPartnerReads(index: Int, personType: String): Reads[DirectorOrPartnerDetailTypeItem] = (
-    (JsPath).read(IndividualDetailType.apiReads(personType)) and
+    JsPath.read(IndividualDetailType.apiReads(personType)) and
       (JsPath \ s"${personType}Nino").readNullable(directorOrPartnerReferenceReads("hasNino", "nino")) and
       (JsPath \ s"${personType}Utr").readNullable(directorOrPartnerReferenceReads("hasUtr", "utr")) and
-      (JsPath).read(PreviousAddressDetails.apiReads(personType)) and
-      (JsPath).read(CorrespondenceCommonDetail.apiReads(personType))
+      JsPath.read(PreviousAddressDetails.apiReads(personType)) and
+      JsPath.read(CorrespondenceCommonDetail.apiReads(personType))
     ) (
     (directorOrPartnerPersonalDetails, ninoDetails, utrDetails, previousAddress, addressCommonDetails) =>
       DirectorOrPartnerDetailTypeItem(sequenceId = f"${index}%03d",

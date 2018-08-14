@@ -17,15 +17,15 @@
 package connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import connector.RegistrationConnectorSpec.errorResponse
 import play.api.libs.json.JsValue
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import connector.RegistrationConnectorSpec.errorResponse
-
 
 import scala.concurrent.Future
 
-trait RegistrationConnectorBehaviours { this: RegistrationConnectorSpec =>
+trait RegistrationConnectorBehaviours {
+  this: RegistrationConnectorSpec =>
 
   def errorHandlerForApiFailures(call: => Future[Either[HttpException, JsValue]], url: String): Unit = {
 
@@ -44,7 +44,7 @@ trait RegistrationConnectorBehaviours { this: RegistrationConnectorSpec =>
       call.map {
         response =>
           response.left.value shouldBe a[BadRequestException]
-          response.left.value.message should include ("INVALID_PAYLOAD")
+          response.left.value.message should include("INVALID_PAYLOAD")
       }
 
     }

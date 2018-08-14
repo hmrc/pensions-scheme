@@ -19,10 +19,10 @@ package audit
 import play.api.libs.json.{Format, JsValue, Json}
 
 case class SchemeList(
-                     psaIdentifier: String,
-                     status: Int,
-                     response: Option[JsValue]
-                     )extends AuditEvent {
+                       psaIdentifier: String,
+                       status: Int,
+                       response: Option[JsValue]
+                     ) extends AuditEvent {
   override def auditType: String = "SchemeList"
 
   override def details: Map[String, String] =

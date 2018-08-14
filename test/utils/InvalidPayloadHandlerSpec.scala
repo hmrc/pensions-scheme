@@ -31,7 +31,7 @@ class InvalidPayloadHandlerSpec extends FlatSpec with Matchers {
     val logger = testFixture().handler
     val schema = logger.loadSchema("/resources/schemas/psaSubscription.json")
     schema shouldBe a[JsonSchema]
-    schema.toString should include ("API#1358")
+    schema.toString should include("API#1358")
 
   }
 
@@ -40,7 +40,7 @@ class InvalidPayloadHandlerSpec extends FlatSpec with Matchers {
     val logger = testFixture().handler
     val schema = logger.loadSchema("/resources/schemas/schemeSubscription.json")
     schema shouldBe a[JsonSchema]
-    schema.toString should include ("API#1359")
+    schema.toString should include("API#1359")
 
   }
 
@@ -197,10 +197,10 @@ class InvalidPayloadHandlerSpec extends FlatSpec with Matchers {
 
     logger.getLogEntries.size shouldBe 1
     logger.getLogEntries.head.level shouldBe Level.WARN
-    logger.getLogEntries.head.msg should include ("Invalid Paylod JSON Failures")
-    logger.getLogEntries.head.msg should include ("Failures: 2")
-    logger.getLogEntries.head.msg should include ("$.test1")
-    logger.getLogEntries.head.msg should include ("$.test2")
+    logger.getLogEntries.head.msg should include("Invalid Paylod JSON Failures")
+    logger.getLogEntries.head.msg should include("Failures: 2")
+    logger.getLogEntries.head.msg should include("$.test1")
+    logger.getLogEntries.head.msg should include("$.test2")
 
   }
 
@@ -210,6 +210,7 @@ object InvalidPayloadHandlerSpec {
 
   trait TestFixture {
     def logger: StubLogger
+
     def handler: InvalidPayloadHandlerImpl
   }
 
