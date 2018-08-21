@@ -16,12 +16,11 @@
 
 package connector
 
-import audit.{AuditService, BarsCheck}
 import audit.testdoubles.StubSuccessfulAuditService
-import org.scalatest.{AsyncFlatSpec, Matchers, OptionValues}
-import utils.WireMockHelper
+import audit.{AuditService, BarsCheck}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.{BankAccount, ValidateBankDetailsRequest}
+import org.scalatest.{AsyncFlatSpec, Matchers, OptionValues}
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
@@ -29,6 +28,7 @@ import play.api.libs.json.Json
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.WireMockHelper
 
 import scala.concurrent.ExecutionContext
 

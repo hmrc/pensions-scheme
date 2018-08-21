@@ -16,18 +16,18 @@
 
 package models
 
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
-case class ContactDetailsType(phoneNumber:Option[String],
-                              emailAddress:Option[String])
+case class ContactDetailsType(phoneNumber: Option[String],
+                              emailAddress: Option[String])
 
 object ContactDetailsType {
 
   implicit val format: Format[ContactDetailsType] = Json.format[ContactDetailsType]
 }
 
-case class OrganisationName(organisationName:String)
+case class OrganisationName(organisationName: String)
 
 object OrganisationName {
 
@@ -35,10 +35,10 @@ object OrganisationName {
 }
 
 case class OrganisationRegistrant(
-                                  acknowledgementReference:String,
-                                  organisation:OrganisationName,
-                                  address:Address,
-                                  contactDetails:ContactDetailsType
+                                   acknowledgementReference: String,
+                                   organisation: OrganisationName,
+                                   address: Address,
+                                   contactDetails: ContactDetailsType
                                  )
 
 object OrganisationRegistrant {
@@ -48,12 +48,12 @@ object OrganisationRegistrant {
   val apiWrites: Writes[OrganisationRegistrant] = {
     (
       (__ \ "regime").write[String] and
-      (__ \ "acknowledgementReference").write[String] and
-      (__ \ "isAnAgent").write[Boolean] and
-      (__ \ "isAGroup").write[Boolean] and
-      (__ \ "organisation").write[OrganisationName] and
-      (__ \ "address").write[Address] and
-      (__ \ "contactDetails").write[ContactDetailsType]
+        (__ \ "acknowledgementReference").write[String] and
+        (__ \ "isAnAgent").write[Boolean] and
+        (__ \ "isAGroup").write[Boolean] and
+        (__ \ "organisation").write[OrganisationName] and
+        (__ \ "address").write[Address] and
+        (__ \ "contactDetails").write[ContactDetailsType]
       ) { o =>
       (
         "PODA",

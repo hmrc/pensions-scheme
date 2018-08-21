@@ -104,7 +104,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
                 "name" -> "master"
               )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
-             result.schemeStructure mustBe None
+            result.schemeStructure mustBe None
           }
         }
       }
@@ -230,7 +230,7 @@ object CustomerAndSchemeDetailsReadsSpec {
     "uKBankAccount" -> true
   )
 
-  val customerDetails = CustomerAndSchemeDetails("test scheme name", false,Some("A single trust under which all" +
+  val customerDetails = CustomerAndSchemeDetails("test scheme name", false, Some("A single trust under which all" +
     " of the assets are held for the benefit of all members of the scheme"), Some("other details"),
     Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", false,
     Some("my insurance company"), Some("111"), Some(UkAddress("ADDRESS LINE 1", Some("ADDRESS LINE 2"),

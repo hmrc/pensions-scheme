@@ -74,9 +74,9 @@ class BarsConnectorImpl @Inject()(http: HttpClient, appConfig: AppConfig, auditS
           )
         )
     } recoverWith {
-        case t =>
-          Logger.error("Exception calling bank reputation service", t)
-          Future.successful(notInvalid)
+      case t =>
+        Logger.error("Exception calling bank reputation service", t)
+        Future.successful(notInvalid)
     }
   }
 

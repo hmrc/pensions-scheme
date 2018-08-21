@@ -1,5 +1,5 @@
 {
-  "regime" : "PODA",
+  "regime": "PODA",
   "acknowledgementReference": "12345678901234567890123456789012",
   "isAnAgent": false,
   "isAGroup": false,
@@ -12,7 +12,7 @@
     "line3": "Illinois",
     "line4": "USA",
     "countryCode": "US",
-    "addressType":"NON-UK"
+    "addressType": "NON-UK"
   },
   "contactDetails": {
     "phoneNumber": "01332752856"

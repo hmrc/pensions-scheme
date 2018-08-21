@@ -27,6 +27,6 @@ object ContactDetails {
   val apiReads: Reads[ContactDetails] = (
     (JsPath \ "phone").read[String] and
       (JsPath \ "email").read[String]
-    ) ((phone, email) => ContactDetails(phone,email = email)
+    ) ((phone, email) => ContactDetails(phone, email = email)
   )
 }

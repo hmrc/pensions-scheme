@@ -46,9 +46,9 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
   val authConnector = mock[AuthConnector]
 
   private class PensionsSchemeCacheControllerImpl(
-                                            repo: PensionsSchemeCacheRepository,
-                                            authConnector: AuthConnector
-                                          ) extends PensionsSchemeCacheController(configuration, repo, authConnector)
+                                                   repo: PensionsSchemeCacheRepository,
+                                                   authConnector: AuthConnector
+                                                 ) extends PensionsSchemeCacheController(configuration, repo, authConnector)
 
   def controller(repo: PensionsSchemeCacheRepository, authConnector: AuthConnector): PensionsSchemeCacheController = {
     new PensionsSchemeCacheControllerImpl(repo, authConnector)
@@ -173,7 +173,7 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
       val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
       status(result) mustEqual OK
-       contentAsJson(result) mustEqual Json.toJson(date.getMillis)
+      contentAsJson(result) mustEqual Json.toJson(date.getMillis)
     }
 
     "return 404 when the data doesn't exist" in {

@@ -39,7 +39,6 @@ Microservice to support the registration of Pension Scheme Administrators and th
 |  GET   | ```/psa-name/:id```                  | Retrieve Pension Scheme Administrator name. |
 |  POST   | ```/psa-name/:id```                  | Save Pension Scheme Administrator name. |
 
-
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")

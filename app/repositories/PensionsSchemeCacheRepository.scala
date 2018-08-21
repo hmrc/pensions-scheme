@@ -30,14 +30,14 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.{ExecutionContext, Future}
 
 abstract class PensionsSchemeCacheRepository(
-                                       index: String,
-                                       ttl: Option[Int],
-                                       component: ReactiveMongoComponent
-                                     ) extends ReactiveRepository[JsValue, BSONObjectID](
-    index,
-    component.mongoConnector.db,
-    implicitly
-  ) {
+                                              index: String,
+                                              ttl: Option[Int],
+                                              component: ReactiveMongoComponent
+                                            ) extends ReactiveRepository[JsValue, BSONObjectID](
+  index,
+  component.mongoConnector.db,
+  implicitly
+) {
 
   private case class DataEntry(
                                 id: String,
@@ -66,7 +66,7 @@ abstract class PensionsSchemeCacheRepository(
 
     val defaultIndex: Index = Index(Seq((field, IndexType.Ascending)), Some(indexName))
 
-    val index: Index = ttl.fold(defaultIndex){ ttl =>
+    val index: Index = ttl.fold(defaultIndex) { ttl =>
       Index(
         Seq((field, IndexType.Ascending)),
         Some(indexName),

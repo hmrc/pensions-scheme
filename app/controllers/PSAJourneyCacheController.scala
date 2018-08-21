@@ -21,8 +21,8 @@ import play.api.Configuration
 import repositories.PSAJourneyCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 
-class PSAJourneyCacheController @Inject() (
-                                            config: Configuration,
-                                            repository: PSAJourneyCacheRepository,
-                                            authConnector: AuthConnector
-                                          ) extends PensionsSchemeCacheController(config, repository, authConnector)
+class PSAJourneyCacheController @Inject()(
+                                           config: Configuration,
+                                           repository: PSAJourneyCacheRepository,
+                                           authConnector: AuthConnector
+                                         ) extends PensionsSchemeCacheController(config, repository, authConnector)

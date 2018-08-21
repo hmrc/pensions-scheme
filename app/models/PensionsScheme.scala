@@ -17,8 +17,8 @@
 package models
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
-import play.api.libs.json.{Format, JsPath, Json, Reads, Writes}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, JsPath, Json, Reads, Writes}
 import utils.Lens
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
@@ -83,14 +83,14 @@ object CustomerAndSchemeDetails {
       ((companyName, policyNumber) => (companyName, policyNumber))
     )
 
-  def schemeTypeReads : Reads[((String),Option[String])] = (
-       (JsPath \ "name").read[String] and
-         (JsPath \ "schemeTypeDetails").readNullable[String]
-        )((name,schemeDetails)=>(name,schemeDetails))
+  def schemeTypeReads: Reads[(String, Option[String])] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "schemeTypeDetails").readNullable[String]
+    ) ((name, schemeDetails) => (name, schemeDetails))
 
   def apiReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeDetails" \ "schemeName").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType").read[((String),Option[String])](schemeTypeReads) and
+      (JsPath \ "schemeDetails" \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
       (JsPath \ "membership").read[String] and
       (JsPath \ "membershipFuture").read[String] and
@@ -186,10 +186,10 @@ object PensionSchemeDeclaration {
     }
 
     val isMasterTrust = (dec: PensionSchemeDeclaration) => {
-       if (schemeTypeName == "master")
-         dec.copy(box3 = Some(true))
-       else
-         dec
+      if (schemeTypeName == "master")
+        dec.copy(box3 = Some(true))
+      else
+        dec
     }
     val decDuties = (dec: PensionSchemeDeclaration) => {
 
@@ -247,17 +247,17 @@ case class CompanyEstablisher(
                              )
 
 case class Partnership(
-                               organizationName: String,
-                               utr: Option[String] = None,
-                               noUtrReason: Option[String] = None,
-                               vatRegistrationNumber: Option[String] = None,
-                               payeReference: Option[String] = None,
-                               haveMoreThanTenDirectorOrPartner: Boolean,
-                               correspondenceAddressDetails: CorrespondenceAddressDetails,
-                               correspondenceContactDetails: CorrespondenceContactDetails,
-                               previousAddressDetails: Option[PreviousAddressDetails] = None,
-                               partnerDetails: Seq[Individual]
-                             )
+                        organizationName: String,
+                        utr: Option[String] = None,
+                        noUtrReason: Option[String] = None,
+                        vatRegistrationNumber: Option[String] = None,
+                        payeReference: Option[String] = None,
+                        haveMoreThanTenDirectorOrPartner: Boolean,
+                        correspondenceAddressDetails: CorrespondenceAddressDetails,
+                        correspondenceContactDetails: CorrespondenceContactDetails,
+                        previousAddressDetails: Option[PreviousAddressDetails] = None,
+                        partnerDetails: Seq[Individual]
+                      )
 
 case class CompanyTrustee(
                            organizationName: String,
@@ -273,15 +273,15 @@ case class CompanyTrustee(
                          )
 
 case class PartnershipTrustee(
-                           organizationName: String,
-                           utr: Option[String] = None,
-                           noUtrReason: Option[String] = None,
-                           vatRegistrationNumber: Option[String] = None,
-                           payeReference: Option[String] = None,
-                           correspondenceAddressDetails: CorrespondenceAddressDetails,
-                           correspondenceContactDetails: CorrespondenceContactDetails,
-                           previousAddressDetails: Option[PreviousAddressDetails] = None
-                         )
+                               organizationName: String,
+                               utr: Option[String] = None,
+                               noUtrReason: Option[String] = None,
+                               vatRegistrationNumber: Option[String] = None,
+                               payeReference: Option[String] = None,
+                               correspondenceAddressDetails: CorrespondenceAddressDetails,
+                               correspondenceContactDetails: CorrespondenceContactDetails,
+                               previousAddressDetails: Option[PreviousAddressDetails] = None
+                             )
 
 case class TrusteeDetails(
                            individualTrusteeDetail: Seq[Individual],

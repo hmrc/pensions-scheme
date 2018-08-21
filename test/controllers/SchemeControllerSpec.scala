@@ -294,7 +294,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       when(mockSchemeService.listOfSchemes(Matchers.eq("A2000001"))(any(), any(), any())).thenReturn(Future.successful(
         HttpResponse(OK, Some(validResponse))))
       val result = schemeController.listOfSchemes(fakeRequest)
-      ScalaFutures.whenReady(result){ _ =>
+      ScalaFutures.whenReady(result) { _ =>
         status(result) mustBe OK
         contentAsJson(result) mustEqual validResponse
         verify(mockSchemeService, times(1)).listOfSchemes(any())(any(), any(), any())

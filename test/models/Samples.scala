@@ -18,7 +18,6 @@ package models
 
 import java.time.LocalDate
 
-import org.joda.time.DateTime
 import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
 
 trait Samples {

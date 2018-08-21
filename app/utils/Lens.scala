@@ -18,5 +18,6 @@ package utils
 
 trait Lens[Model, Property] {
   def get: Model => Property
+
   def set: (Model, Property) => Model
 }

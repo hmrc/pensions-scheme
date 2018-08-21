@@ -16,8 +16,8 @@
 
 package bindings
 
-import play.api.{Configuration, Environment, Logger, LoggerLike}
 import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment, Logger, LoggerLike}
 
 class Bindings extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {

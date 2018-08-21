@@ -16,8 +16,8 @@
 
 package models
 
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 case class BankAccount(sortCode: String, accountNumber: String)
 
@@ -32,7 +32,7 @@ object BankAccount {
     (JsPath \ "sortCode" \ "first").read[String] and
       (JsPath \ "sortCode" \ "second").read[String] and
       (JsPath \ "sortCode" \ "third").read[String] and
-      (JsPath \ "accountNumber").read[String])(
+      (JsPath \ "accountNumber").read[String]) (
     (first, second, third, accountNo) => BankAccount(s"$first$second$third", accountNo)
   )
 }
@@ -45,15 +45,15 @@ object ValidateBankDetailsResponse {
 
   implicit val reads: Reads[ValidateBankDetailsResponse] = {
 
-    import play.api.libs.json._
     import play.api.libs.functional.syntax._
+    import play.api.libs.json._
 
     (
       (__ \ "accountNumberWithSortCodeIsValid").read[Boolean] and
-      (__ \ "sortCodeIsPresentOnEISCD").read[String].map {
-        case "yes" => true
-        case _     => false
-      }
-    ) (ValidateBankDetailsResponse.apply _)
+        (__ \ "sortCodeIsPresentOnEISCD").read[String].map {
+          case "yes" => true
+          case _ => false
+        }
+      ) (ValidateBankDetailsResponse.apply _)
   }
 }

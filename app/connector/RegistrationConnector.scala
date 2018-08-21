@@ -57,8 +57,8 @@ class RegistrationConnectorImpl @Inject()(
 
     Logger.debug(s"[Pensions-Scheme-Header-Carrier]-${desHeader.toString()}")
 
-    http.POST(registerWithIdUrl, registerData,desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly) map
-      handleResponse andThen sendPSARegistrationEvent(true, user, "Individual", registerData, withIdIsUk)(auditService.sendEvent) andThen logWarning("registerWithIdIndividual")
+    http.POST(registerWithIdUrl, registerData, desHeader)(implicitly, implicitly[HttpReads[HttpResponse]], HeaderCarrier(), implicitly) map
+      handleResponse andThen sendPSARegistrationEvent(withId = true, user, "Individual", registerData, withIdIsUk)(auditService.sendEvent) andThen logWarning("registerWithIdIndividual")
 
   }
 
@@ -70,8 +70,8 @@ class RegistrationConnectorImpl @Inject()(
     val registerWithIdUrl = config.registerWithIdOrganisationUrl.format(utr)
     val psaType: String = organisationPsaType(registerData)
 
-    http.POST(registerWithIdUrl, registerData, desHeader)(implicitly,implicitly[HttpReads[HttpResponse]],HeaderCarrier(),implicitly) map
-      handleResponse andThen sendPSARegistrationEvent(true, user, psaType, registerData, withIdIsUk)(auditService.sendEvent) andThen logWarning("registerWithIdOrganisation")
+    http.POST(registerWithIdUrl, registerData, desHeader)(implicitly, implicitly[HttpReads[HttpResponse]], HeaderCarrier(), implicitly) map
+      handleResponse andThen sendPSARegistrationEvent(withId = true, user, psaType, registerData, withIdIsUk)(auditService.sendEvent) andThen logWarning("registerWithIdOrganisation")
 
   }
 
@@ -84,7 +84,7 @@ class RegistrationConnectorImpl @Inject()(
     val schemeAdminRegisterUrl = config.registerWithoutIdOrganisationUrl
 
     http.POST(schemeAdminRegisterUrl, registerData)(OrganisationRegistrant.apiWrites, implicitly[HttpReads[HttpResponse]], implicitly, implicitly) map
-      handleResponse andThen sendPSARegistrationEvent(false, user, "Organisation", Json.toJson(registerData), noIdIsUk(registerData))(auditService.sendEvent) andThen logWarning("registrationNoIdOrganisation")
+      handleResponse andThen sendPSARegistrationEvent(withId = false, user, "Organisation", Json.toJson(registerData), noIdIsUk(registerData))(auditService.sendEvent) andThen logWarning("registrationNoIdOrganisation")
 
   }
   //scalastyle:off cyclomatic.complexity
@@ -117,7 +117,7 @@ trait RegistrationConnector {
                                                                                  request: RequestHeader): Future[Either[HttpException, JsValue]]
 
   def registrationNoIdOrganisation(user: User, registerData: OrganisationRegistrant)(implicit
-                                                                         hc: HeaderCarrier,
-                                                                         ec: ExecutionContext,
-                                                                         request: RequestHeader): Future[Either[HttpException, JsValue]]
+                                                                                     hc: HeaderCarrier,
+                                                                                     ec: ExecutionContext,
+                                                                                     request: RequestHeader): Future[Either[HttpException, JsValue]]
 }

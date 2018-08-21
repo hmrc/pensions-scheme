@@ -22,7 +22,7 @@ import play.api.libs.json._
 sealed trait Address
 
 object Address {
-  implicit val reads: Reads[Address] =  ((__ \ "countryCode").read[String] orElse (__ \ "country").read[String]).flatMap(countryCode =>
+  implicit val reads: Reads[Address] = ((__ \ "countryCode").read[String] orElse (__ \ "country").read[String]).flatMap(countryCode =>
     getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiReads, InternationalAddress.apiReads, countryCode))
 
   implicit val writes: Writes[Address] = Writes {
@@ -32,7 +32,7 @@ object Address {
       InternationalAddress.writes.writes(address)
   }
 
-  val defaultWrites : Writes[Address] = Writes {
+  val defaultWrites: Writes[Address] = Writes {
     case address: UkAddress =>
       UkAddress.defaultWrites.writes(address)
     case address: InternationalAddress =>
@@ -47,12 +47,12 @@ object Address {
       ((JsPath \ "countryCode").read[String] orElse (JsPath \ "country").read[String])
     ) ((line1, line2, line3, line4, countryCode) => (line1, line2, line3, line4, getCountryOrTerritoryCode(countryCode)))
 
-  val commonAddressWrites : Writes[(String,Option[String],Option[String],Option[String])] = (
+  val commonAddressWrites: Writes[(String, Option[String], Option[String], Option[String])] = (
     (JsPath \ "line1").write[String] and
       (JsPath \ "line2").writeNullable[String] and
       (JsPath \ "line3").writeNullable[String] and
-      (JsPath \ "line4").writeNullable[String])(elements => (elements._1.replace("&","and"),elements._2.map(c=>c.replace("&","and")),
-    elements._3.map(c=>c.replace("&","and")),elements._4.map(c=>c.replace("&","and"))))
+      (JsPath \ "line4").writeNullable[String]) (elements => (elements._1.replace("&", "and"), elements._2.map(c => c.replace("&", "and")),
+    elements._3.map(c => c.replace("&", "and")), elements._4.map(c => c.replace("&", "and"))))
 
   private def getCountryOrTerritoryCode(countryCode: String) = {
     if (countryCode.contains("territory")) countryCode.split(":").last.trim() else countryCode
@@ -74,12 +74,12 @@ object UkAddress {
       (JsPath \ "countryCode").write[String] and
       (JsPath \ "postalCode").write[String] and
       (JsPath \ "addressType").write[String]
-    )(ukAddress => ((ukAddress.addressLine1,ukAddress.addressLine2, ukAddress.addressLine3, ukAddress.addressLine4),
+    ) (ukAddress => ((ukAddress.addressLine1, ukAddress.addressLine2, ukAddress.addressLine3, ukAddress.addressLine4),
     ukAddress.countryCode,
     ukAddress.postalCode,
     "UK"))
 
-  val defaultWrites : Writes[UkAddress] = Json.writes[UkAddress]
+  val defaultWrites: Writes[UkAddress] = Json.writes[UkAddress]
 
   val apiReads: Reads[UkAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
@@ -93,17 +93,17 @@ case class InternationalAddress(addressLine1: String, addressLine2: Option[Strin
 object InternationalAddress {
   implicit val format: Format[InternationalAddress] = Json.format[InternationalAddress]
 
-  implicit val writes : Writes[InternationalAddress] = (
-      JsPath.write(Address.commonAddressWrites) and
+  implicit val writes: Writes[InternationalAddress] = (
+    JsPath.write(Address.commonAddressWrites) and
       (JsPath \ "countryCode").write[String] and
       (JsPath \ "postalCode").writeNullable[String] and
       (JsPath \ "addressType").write[String]
-    )(internationalAddress => ((internationalAddress.addressLine1,internationalAddress.addressLine2,internationalAddress.addressLine3,internationalAddress.addressLine4),
+    ) (internationalAddress => ((internationalAddress.addressLine1, internationalAddress.addressLine2, internationalAddress.addressLine3, internationalAddress.addressLine4),
     internationalAddress.countryCode,
     internationalAddress.postalCode,
     "NON-UK"))
 
-  val defaultWrites : Writes[InternationalAddress] = Json.writes[InternationalAddress]
+  val defaultWrites: Writes[InternationalAddress] = Json.writes[InternationalAddress]
 
   val apiReads: Reads[InternationalAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
@@ -111,8 +111,8 @@ object InternationalAddress {
       (JsPath \ "postcode").readNullable[String]
     ) ((common, postCodeFormat1, postCodeFormat2) => {
 
-    val postCode : Option[String] = (postCodeFormat1,postCodeFormat2) match {
-      case (Some(postCodeFormat1),None) => Some(postCodeFormat1)
+    val postCode: Option[String] = (postCodeFormat1, postCodeFormat2) match {
+      case (Some(postCodeFormat1), None) => Some(postCodeFormat1)
       case (None, Some(postCodeFormat2)) => Some(postCodeFormat2)
       case _ => None
     }

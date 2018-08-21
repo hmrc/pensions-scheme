@@ -22,11 +22,11 @@ import play.api.libs.json.Json
 
 class DirectorOrPartnerDetailTypeItemWrites extends WordSpec with MustMatchers with OptionValues with Samples {
   "An object of a directorOrPartner detail type item" should {
-    Seq("director", "partner").foreach{ personType =>
+    Seq("director", "partner").foreach { personType =>
       s"Map ${personType} previousaddressdetails inner object as `previousaddresdetail`" when {
         "required" in {
           val result = Json.toJson(directorOrPartnerSample(personType).copy(
-            previousAddressDetail = PreviousAddressDetails(true,Some(ukAddressSample))))(DirectorOrPartnerDetailTypeItem.psaSubmissionWrites)
+            previousAddressDetail = PreviousAddressDetails(true, Some(ukAddressSample))))(DirectorOrPartnerDetailTypeItem.psaSubmissionWrites)
 
           result.toString() must include("true,\"previousAddressDetail\":")
         }

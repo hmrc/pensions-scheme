@@ -16,8 +16,8 @@
 
 package models
 
-import play.api.libs.json.{JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Json, Reads}
 
 case class OrganisationDetailType(name: String, crnNumber: Option[String] = None,
                                   vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None) extends PSADetail
@@ -36,7 +36,7 @@ object OrganisationDetailType {
   })
 
   val partnershipApiReads: Reads[OrganisationDetailType] = (
-    ((JsPath \ "partnershipDetails" \ "companyName").read[String]) and
+    (JsPath \ "partnershipDetails" \ "companyName").read[String] and
       (JsPath \ "partnershipVat" \ "vat").readNullable[String] and
       (JsPath \ "partnershipPaye" \ "paye").readNullable[String]
     ) ((name, vatRegistrationNumber, payeEmployerReferenceNumber) =>
@@ -47,7 +47,7 @@ object OrganisationDetailType {
 
   val CompanyApiReads: Reads[OrganisationDetailType] = (
     (JsPath \ "businessDetails" \ "companyName").read[String] and
-      ((JsPath \ "companyDetails").readNullable(companyDetailsReads)) and
+      (JsPath \ "companyDetails").readNullable(companyDetailsReads) and
       (JsPath \ "companyRegistrationNumber").readNullable[String]
     ) ((name, companyDetails: Option[Option[(Option[String], Option[String])]], crnNumber) =>
     OrganisationDetailType(name, vatRegistrationNumber = companyDetails.flatMap(c => c.flatMap(c => c._1)),

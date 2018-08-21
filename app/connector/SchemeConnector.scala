@@ -66,7 +66,7 @@ class SchemeConnectorImpl @Inject()(
   }
 
   def getCorrelationId(requestId: Option[String]): String = {
-    requestId.getOrElse{
+    requestId.getOrElse {
       Logger.error("No Request Id found while calling register with Id")
       randomUUID.toString
     }.replaceAll("(govuk-tax-|-)", "").slice(0, 32)
@@ -106,7 +106,7 @@ class SchemeConnectorImpl @Inject()(
     http.POST(schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
 
-      .andThen{
+      .andThen {
         case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
           invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
       }

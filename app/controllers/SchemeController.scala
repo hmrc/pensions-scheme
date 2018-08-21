@@ -70,14 +70,14 @@ class SchemeController @Inject()(schemeService: SchemeService) extends BaseContr
     implicit request => {
       val psaId = request.headers.get("psaId")
 
-    psaId match {
-      case Some(psa) =>
-        schemeService.listOfSchemes(psa).map { httpResponse =>
-          Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
-        }
-      case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
-    }
-  } recoverWith recoverFromError
+      psaId match {
+        case Some(psa) =>
+          schemeService.listOfSchemes(psa).map { httpResponse =>
+            Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
+          }
+        case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
+      }
+    } recoverWith recoverFromError
   }
 
 }

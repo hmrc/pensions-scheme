@@ -86,7 +86,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
     connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
-        response.left.value.message should include ("INVALID_NINO")
+        response.left.value.message should include("INVALID_NINO")
     }
 
   }
@@ -220,7 +220,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
     connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
-        response.left.value.message should include ("INVALID_UTR")
+        response.left.value.message should include("INVALID_UTR")
     }
 
   }
@@ -349,7 +349,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
     connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant) map {
       response =>
         response.left.value shouldBe a[ForbiddenException]
-        response.left.value.message should include ("INVALID_SUBMISSION")
+        response.left.value.message should include("INVALID_SUBMISSION")
     }
 
   }
@@ -486,7 +486,7 @@ object RegistrationConnectorSpec {
   val organisationRegistrant = OrganisationRegistrant(
     "ackReference",
     OrganisationName("Name"),
-    InternationalAddress("addressLine1", None, None,None, "US", None),
+    InternationalAddress("addressLine1", None, None, None, "US", None),
     ContactDetailsType(None, None)
   )
 

@@ -70,10 +70,10 @@ object EstablishersTestData {
     alphanumeric(20) + "@test.net"
 
   def testIndividual(
-      hasNino: Boolean,
-      hasUtr: Boolean,
-      hasPreviousAddress: Boolean
-  ): Individual =
+                      hasNino: Boolean,
+                      hasUtr: Boolean,
+                      hasPreviousAddress: Boolean
+                    ): Individual =
     Individual(
       personalDetails =
         PersonalDetails(
@@ -108,14 +108,14 @@ object EstablishersTestData {
     )
 
   def testCompanyEstablisher(
-      hasUtr: Boolean,
-      hasCrn: Boolean,
-      hasVat: Boolean,
-      hasPaye: Boolean,
-      hasPreviousAddress: Boolean,
-      directors: Seq[Individual],
-      otherDirectors: Option[Boolean]
-  ): CompanyEstablisher =
+                              hasUtr: Boolean,
+                              hasCrn: Boolean,
+                              hasVat: Boolean,
+                              hasPaye: Boolean,
+                              hasPreviousAddress: Boolean,
+                              directors: Seq[Individual],
+                              otherDirectors: Option[Boolean]
+                            ): CompanyEstablisher =
     CompanyEstablisher(
       organizationName = testCompanyName,
       utr = if (hasUtr) Some(alphanumeric(10)) else None,
@@ -148,13 +148,13 @@ object EstablishersTestData {
     )
 
   def testPartnership(
-                              hasUtr: Boolean,
-                              hasVat: Boolean,
-                              hasPaye: Boolean,
-                              hasPreviousAddress: Boolean,
-                              partners: Seq[Individual],
-                              otherPartners: Option[Boolean]
-                            ): Partnership =
+                       hasUtr: Boolean,
+                       hasVat: Boolean,
+                       hasPaye: Boolean,
+                       hasPreviousAddress: Boolean,
+                       partners: Seq[Individual],
+                       otherPartners: Option[Boolean]
+                     ): Partnership =
     Partnership(
       organizationName = testPartnershipName,
       utr = if (hasUtr) Some(alphanumeric(10)) else None,
@@ -185,12 +185,12 @@ object EstablishersTestData {
     )
 
   def testCompanyTrustee(
-      hasUtr: Boolean,
-      hasCrn: Boolean,
-      hasVat: Boolean,
-      hasPaye: Boolean,
-      hasPreviousAddress: Boolean
-  ): CompanyTrustee =
+                          hasUtr: Boolean,
+                          hasCrn: Boolean,
+                          hasVat: Boolean,
+                          hasPaye: Boolean,
+                          hasPreviousAddress: Boolean
+                        ): CompanyTrustee =
     CompanyTrustee(
       organizationName = testCompanyName,
       utr = if (hasUtr) Some(alphanumeric(10)) else None,
@@ -223,10 +223,10 @@ object EstablishersTestData {
 }
 
 case class IndividualBuilder(
-    hasNino: Boolean,
-    hasUtr: Boolean,
-    hasPreviousAddress: Boolean
-) {
+                              hasNino: Boolean,
+                              hasUtr: Boolean,
+                              hasPreviousAddress: Boolean
+                            ) {
 
   import EstablishersTestData._
 
@@ -256,14 +256,14 @@ object IndividualBuilder {
 }
 
 case class CompanyEstablisherBuilder(
-    hasUtr: Boolean,
-    hasCrn: Boolean,
-    hasVat: Boolean,
-    hasPaye: Boolean,
-    hasPreviousAddress: Boolean,
-    directors: Seq[Individual],
-    otherDirectors: Option[Boolean]
-) {
+                                      hasUtr: Boolean,
+                                      hasCrn: Boolean,
+                                      hasVat: Boolean,
+                                      hasPaye: Boolean,
+                                      hasPreviousAddress: Boolean,
+                                      directors: Seq[Individual],
+                                      otherDirectors: Option[Boolean]
+                                    ) {
 
   import EstablishersTestData._
 
@@ -309,13 +309,13 @@ object CompanyEstablisherBuilder {
 }
 
 case class PartnershipBuilder(
-                                      hasUtr: Boolean,
-                                      hasVat: Boolean,
-                                      hasPaye: Boolean,
-                                      hasPreviousAddress: Boolean,
-                                      partners: Seq[Individual],
-                                      otherPartners: Option[Boolean]
-                                    ) {
+                               hasUtr: Boolean,
+                               hasVat: Boolean,
+                               hasPaye: Boolean,
+                               hasPreviousAddress: Boolean,
+                               partners: Seq[Individual],
+                               otherPartners: Option[Boolean]
+                             ) {
 
   import EstablishersTestData._
 
@@ -357,12 +357,12 @@ object PartnershipBuilder {
 }
 
 case class CompanyTrusteeBuilder(
-  hasUtr: Boolean,
-  hasCrn: Boolean,
-  hasVat: Boolean,
-  hasPaye: Boolean,
-  hasPreviousAddress: Boolean
-) {
+                                  hasUtr: Boolean,
+                                  hasCrn: Boolean,
+                                  hasVat: Boolean,
+                                  hasPaye: Boolean,
+                                  hasPreviousAddress: Boolean
+                                ) {
 
   import EstablishersTestData._
 
