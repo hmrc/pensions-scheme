@@ -36,7 +36,7 @@ class EmailResponseController @Inject()(
       validatePsaId(id) match {
         case Left(result) => result
         case Right(psaId) => request.body.validate[EmailEvents].fold(
-          _ => BadRequest,
+          _ => BadRequest("Bad request received for email call back event"),
           valid => {
             Logger.debug(s"Email event received for $requestType is $valid")
             valid.events
