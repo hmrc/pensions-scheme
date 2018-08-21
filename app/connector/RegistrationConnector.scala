@@ -87,20 +87,21 @@ class RegistrationConnectorImpl @Inject()(
       handleResponse andThen sendPSARegistrationEvent(withId = false, user, "Organisation", Json.toJson(registerData), noIdIsUk(registerData))(auditService.sendEvent) andThen logWarning("registrationNoIdOrganisation")
 
   }
-
+  //scalastyle:off cyclomatic.complexity
   private def handleResponse(response: HttpResponse): Either[HttpException, JsValue] = {
+    val badResponseSeq = Seq("INVALID_NINO", "INVALID_PAYLOAD", "INVALID_UTR")
     response.status match {
       case OK => Right(response.json)
-      case BAD_REQUEST if response.body.contains("INVALID_NINO") | response.body.contains("INVALID_PAYLOAD") | response.body.contains("INVALID_UTR") => Left(new BadRequestException(response.body))
+      case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
       case NOT_FOUND => Left(new NotFoundException(response.body))
       case CONFLICT => Left(new ConflictException(response.body))
       case FORBIDDEN if response.body.contains("INVALID_SUBMISSION") => Left(new ForbiddenException(response.body))
-      case status if is4xx(status) => throw Upstream4xxResponse(response.body, status, 400, response.allHeaders)
-      case status if is5xx(status) => throw Upstream5xxResponse(response.body, status, 502)
+      case status if is4xx(status) => throw Upstream4xxResponse(response.body, status, BAD_REQUEST, response.allHeaders)
+      case status if is5xx(status) => throw Upstream5xxResponse(response.body, status, BAD_GATEWAY)
       case status => throw new Exception(s"Business Partner Matching fail with status $status. Response body: '${response.body}'")
     }
   }
-
+  //scalastyle:on cyclomatic.complexity
 }
 
 @ImplementedBy(classOf[RegistrationConnectorImpl])

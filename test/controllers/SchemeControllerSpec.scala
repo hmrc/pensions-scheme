@@ -155,7 +155,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
           Matchers.eq(validRequestData)
         )(any(), any(), any())
       ).thenReturn(
-        Future.successful(HttpResponse(OK, Some(successResponse)))
+        Future.successful(Right(successResponse))
       )
 
       val result = schemeController.registerPSA(fakeRequest(validRequestData))

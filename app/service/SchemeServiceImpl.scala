@@ -16,7 +16,7 @@
 
 package service
 
-import audit.{AuditService, PSASubscription, SchemeList, SchemeSubscription, SchemeType => AuditSchemeType}
+import audit.{AuditService, SchemeAuditService, SchemeList, SchemeSubscription, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector,
-                                  auditService: AuditService, appConfig: AppConfig) extends SchemeService {
+                                  auditService: AuditService, appConfig: AppConfig) extends SchemeService with SchemeAuditService {
 
   override def listOfSchemes(psaId: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
@@ -50,18 +50,13 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   }
 
   override def registerPSA(json: JsValue)
-                          (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, rh: RequestHeader): Future[HttpResponse] = {
+                          (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, rh: RequestHeader): Future[Either[HttpException, JsValue]] = {
     Try(json.convertTo[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)) match {
       case Success(pensionSchemeAdministrator) =>
         val psaJsValue = Json.toJson(pensionSchemeAdministrator)(PensionSchemeAdministrator.psaSubmissionWrites)
         Logger.debug(s"[PSA-Registration-Outgoing-Payload]$psaJsValue")
 
-        schemeConnector.registerPSA(psaJsValue) andThen {
-          case Success(httpResponse) =>
-            sendPSASubscriptionEvent(pensionSchemeAdministrator, Status.OK, psaJsValue, Some(httpResponse.json))
-          case Failure(error: HttpException) =>
-            sendPSASubscriptionEvent(pensionSchemeAdministrator, error.responseCode, psaJsValue, None)
-        }
+        schemeConnector.registerPSA(psaJsValue) andThen sendPSASubscriptionEvent(pensionSchemeAdministrator, psaJsValue)(auditService.sendEvent)
 
       case Failure(e) =>
         Logger.warn(s"Bad Request returned from frontend for PSA $e")
@@ -73,21 +68,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   private def sendSchemeListEvent(psaId: String, status: Int, response: Option[JsValue])(implicit request: RequestHeader, ec: ExecutionContext): Unit = {
 
     auditService.sendEvent(SchemeList(psaId, status, response))
-
-  }
-
-  private def sendPSASubscriptionEvent(psa: PensionSchemeAdministrator, status: Int, request: JsValue, response: Option[JsValue])
-                                      (implicit rh: RequestHeader, ec: ExecutionContext): Unit = {
-
-    auditService.sendEvent(
-      PSASubscription(
-        existingUser = psa.pensionSchemeAdministratoridentifierStatus.isExistingPensionSchemaAdministrator,
-        legalStatus = psa.legalStatus,
-        status = status,
-        request = request,
-        response = response
-      )
-    )
 
   }
 
