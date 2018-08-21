@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package audit
+package models
 
-import models.{EmailEventType, Event}
-import uk.gov.hmrc.domain.PsaId
+import utils.{Enumerable, WithName}
 
-case class EmailAuditEvent(requestType: EmailEventType, psaId: PsaId, event: Event) extends AuditEvent {
+sealed trait EmailEventType
 
-  override def auditType: String = s"${requestType}EmailEvent"
+case object PensionAdministratorSubscription extends WithName("PSA") with EmailEventType
+case object PensionSchemeSubscription extends WithName("Scheme") with EmailEventType
 
-  override def details: Map[String, String] = Map("psaId" -> psaId.id, "event" -> event.toString)
+object EmailEventType {
+
+  implicit val enumerable: Enumerable[EmailEventType] = Enumerable(
+    Seq(PensionAdministratorSubscription, PensionSchemeSubscription).map(v => v.toString -> v): _*
+  )
 
 }

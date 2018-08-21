@@ -18,7 +18,7 @@ package controllers
 
 import audit.{AuditService, EmailAuditEvent}
 import com.google.inject.Inject
-import models.{EmailEvents, Opened}
+import models.{EmailEventType, EmailEvents, Opened}
 import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, BodyParsers, Result}
@@ -30,30 +30,41 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class EmailResponseController @Inject()(
                                          auditService: AuditService,
-                                         crypto: ApplicationCrypto) extends BaseController {
+                                         crypto: ApplicationCrypto
+                                       ) extends BaseController {
+
   def retrieveStatus(requestType: String, id: String): Action[JsValue] = Action(BodyParsers.parse.tolerantJson) {
     implicit request =>
-      validatePsaId(id) match {
-        case Left(result) => result
-        case Right(psaId) => request.body.validate[EmailEvents].fold(
-          _ => BadRequest("Bad request received for email call back event"),
-          valid => {
-            Logger.debug(s"Email event received for $requestType is $valid")
-            valid.events
-              .map {
-                _.event
-              }
-              .filterNot {
-                case Opened => true
-                case _ => false
-              }
-              .foreach { event =>
-                auditService.sendEvent(EmailAuditEvent(requestType, psaId.id, event))
-              }
-            Ok
-          }
-        )
-      }
+
+      validateEventType(requestType)
+        .right
+        .flatMap{ eventType =>
+          validatePsaId(id)
+            .right
+            .flatMap(psaId => Right((eventType, psaId)))
+        }
+        .fold(result => result, { case (eventType, psaId) =>
+
+          request.body.validate[EmailEvents].fold(
+            _ => BadRequest("Bad request received for email call back event"),
+            valid => {
+              valid.events
+                .map {
+                  _.event
+                }
+                .filterNot {
+                  case Opened => true
+                  case _ => false
+                }
+                .foreach { event =>
+                  auditService.sendEvent(EmailAuditEvent(eventType, psaId, event))
+                }
+              Ok
+            }
+          )
+
+        }
+      )
   }
 
   private def validatePsaId(id: String): Either[Result, PsaId] =
@@ -64,4 +75,11 @@ class EmailResponseController @Inject()(
     } catch {
       case _: IllegalArgumentException => Left(Forbidden("Malformed PSAID"))
     }
+
+  private def validateEventType(requestType: String): Either[Result, EmailEventType] =
+    EmailEventType.enumerable.withName(requestType) match {
+      case Some(eventType) => Right(eventType)
+      case None => Left(Forbidden("Unknown Event Type"))
+    }
+
 }

@@ -19,12 +19,13 @@ package controllers
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, EmailAuditEvent}
 import base.SpecBase
-import models.{Delivered, EmailEvent, EmailEvents, Opened}
+import models._
 import org.joda.time.DateTime
 import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.crypto.{ApplicationCrypto, PlainText}
+import uk.gov.hmrc.domain.PsaId
 
 class EmailResponseControllerSpec extends SpecBase {
 
@@ -40,15 +41,15 @@ class EmailResponseControllerSpec extends SpecBase {
           bind[AuditService].to(fakeAuditService)
         )) { app =>
 
-          val encrypted = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText(psa)).value
+          val encrypted = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText(psa.id)).value
 
           val controller = app.injector.instanceOf[EmailResponseController]
 
-          val result = controller.retrieveStatus(service, encrypted)(fakeRequest.withBody(Json.toJson(emailEvents)))
+          val result = controller.retrieveStatus(requestType.toString, encrypted)(fakeRequest.withBody(Json.toJson(emailEvents)))
 
           status(result) mustBe OK
-          fakeAuditService.verifySent(EmailAuditEvent(service, psa, Delivered)) mustBe true
-          fakeAuditService.verifySent(EmailAuditEvent(service, psa, Opened)) mustBe false
+          fakeAuditService.verifySent(EmailAuditEvent(requestType, psa, Delivered)) mustBe true
+          fakeAuditService.verifySent(EmailAuditEvent(requestType, psa, Opened)) mustBe false
 
         }
       }
@@ -65,11 +66,11 @@ class EmailResponseControllerSpec extends SpecBase {
 
       fakeAuditService.reset()
 
-      val encrypted = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText(psa)).value
+      val encrypted = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText(psa.id)).value
 
       val controller = app.injector.instanceOf[EmailResponseController]
 
-      val result = controller.retrieveStatus(service, encrypted)(fakeRequest.withBody(validJson))
+      val result = controller.retrieveStatus(requestType.toString, encrypted)(fakeRequest.withBody(validJson))
 
       status(result) mustBe BAD_REQUEST
       fakeAuditService.verifyNothingSent mustBe true
@@ -78,23 +79,47 @@ class EmailResponseControllerSpec extends SpecBase {
 
   }
 
-  "respond with FORBIDDEN when URL contains an id does not match PSAID pattern" in {
+  "respond with FORBIDDEN" when {
+    "URL contains an id does not match PSAID pattern" in {
 
-    running(_.overrides(
-      bind[AuditService].to(fakeAuditService)
-    )) { app =>
+      running(_.overrides(
+        bind[AuditService].to(fakeAuditService)
+      )) { app =>
 
-      fakeAuditService.reset()
+        fakeAuditService.reset()
 
-      val psa = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText("psa")).value
+        val psa = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText("psa")).value
 
-      val controller = app.injector.instanceOf[EmailResponseController]
+        val controller = app.injector.instanceOf[EmailResponseController]
 
-      val result = controller.retrieveStatus(service, psa)(fakeRequest.withBody(Json.toJson(emailEvents)))
+        val result = controller.retrieveStatus(requestType.toString, psa)(fakeRequest.withBody(Json.toJson(emailEvents)))
 
-      status(result) mustBe FORBIDDEN
-      fakeAuditService.verifyNothingSent mustBe true
+        status(result) mustBe FORBIDDEN
+        contentAsString(result) mustBe "Malformed PSAID"
+        fakeAuditService.verifyNothingSent mustBe true
 
+      }
+    }
+
+    "URL contains an request type that is not permitted" in {
+
+      running(_.overrides(
+        bind[AuditService].to(fakeAuditService)
+      )) { app =>
+
+        fakeAuditService.reset()
+
+        val encrypted = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText(psa.id)).value
+
+        val controller = app.injector.instanceOf[EmailResponseController]
+
+        val result = controller.retrieveStatus(invalidRequestType, encrypted)(fakeRequest.withBody(Json.toJson(emailEvents)))
+
+        status(result) mustBe FORBIDDEN
+        contentAsString(result) mustBe "Unknown Event Type"
+        fakeAuditService.verifyNothingSent mustBe true
+
+      }
     }
   }
 
@@ -102,8 +127,9 @@ class EmailResponseControllerSpec extends SpecBase {
 
 object EmailResponseControllerSpec {
 
-  val psa = "A7654321"
-  val service = "PSA"
+  val psa = PsaId("A7654321")
+  val requestType = PensionAdministratorSubscription
+  val invalidRequestType = ""
 
   val emailEvents = EmailEvents(Seq(EmailEvent(Delivered, DateTime.now()), EmailEvent(Opened, DateTime.now())))
 
