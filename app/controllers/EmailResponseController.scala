@@ -38,6 +38,7 @@ class EmailResponseController @Inject()(
         case Right(psaId) => request.body.validate[EmailEvents].fold(
           _ => BadRequest,
           valid => {
+            Logger.debug(s"Email event received for $requestType is $valid")
             valid.events
               .map {
                 _.event
@@ -47,7 +48,6 @@ class EmailResponseController @Inject()(
                 case _ => false
               }
               .foreach { event =>
-                Logger.debug(s"Email Audit event for $requestType is $event")
                 auditService.sendEvent(EmailAuditEvent(requestType, psaId.id, event))
               }
             Ok
