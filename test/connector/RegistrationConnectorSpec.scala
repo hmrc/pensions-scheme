@@ -37,7 +37,7 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
   with Matchers
   with WireMockHelper
   with EitherValues
-  with RegistrationConnectorBehaviours {
+  with ConnectorBehaviours {
 
   import RegistrationConnectorSpec._
 
@@ -89,6 +89,20 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
         response.left.value.message should include("INVALID_NINO")
     }
 
+  }
+
+  it should "handle CONFLICT (409)" in {
+    server.stubFor(
+      post(urlEqualTo(registerIndividualWithIdUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(CONFLICT)
+        )
+    )
+    connector.registerWithIdIndividual(testNino, testIndividual, testRegisterDataIndividual).map {
+      response =>
+        response.left.value shouldBe a[ConflictException]
+    }
   }
 
   it should behave like errorHandlerForApiFailures(
@@ -211,6 +225,20 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
 
   }
 
+  it should "handle CONFLICT (409)" in {
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithIdUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(CONFLICT)
+        )
+    )
+    connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation).map {
+      response =>
+        response.left.value shouldBe a[ConflictException]
+    }
+  }
+
   it should behave like errorHandlerForApiFailures(
     connector.registerWithIdOrganisation(testUtr, testOrganisation, testRegisterDataOrganisation),
     registerOrganisationWithIdUrl
@@ -324,6 +352,20 @@ class RegistrationConnectorSpec extends AsyncFlatSpec
         response.left.value.message should include("INVALID_SUBMISSION")
     }
 
+  }
+
+  it should "handle CONFLICT (409)" in {
+    server.stubFor(
+      post(urlEqualTo(registerOrganisationWithoutIdUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(CONFLICT)
+        )
+    )
+    connector.registrationNoIdOrganisation(testOrganisation, organisationRegistrant).map {
+      response =>
+        response.left.value shouldBe a[ConflictException]
+    }
   }
 
   it should behave like errorHandlerForApiFailures(
