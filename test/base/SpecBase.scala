@@ -21,6 +21,8 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Environment
 import play.api.inject.Injector
+import play.api.mvc.AnyContentAsEmpty
+import play.api.test.FakeRequest
 
 trait SpecBase extends PlaySpec with GuiceOneAppPerSuite with JsonFileReader {
   def injector: Injector = app.injector
@@ -28,4 +30,6 @@ trait SpecBase extends PlaySpec with GuiceOneAppPerSuite with JsonFileReader {
   def environment: Environment = injector.instanceOf[Environment]
 
   def appConfig: AppConfig = injector.instanceOf[AppConfig]
+
+  def fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("", "")
 }

@@ -33,11 +33,11 @@ object Event extends Enumerable.Implicits {
   )
 }
 
-case object Sent extends WithName("sent") with Event
-case object Delivered extends WithName("delivered") with Event
-case object PermanentBounce extends WithName("permanentBounce") with Event
-case object Opened extends WithName("opened") with Event
-case object Complained extends WithName("complained") with Event
+case object Sent extends WithName("Sent") with Event
+case object Delivered extends WithName("Delivered") with Event
+case object PermanentBounce extends WithName("PermanentBounce") with Event
+case object Opened extends WithName("Opened") with Event
+case object Complained extends WithName("Complained") with Event
 
 case class EmailEvent(event: Event, detected: DateTime)
 

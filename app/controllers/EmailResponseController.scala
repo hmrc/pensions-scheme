@@ -19,28 +19,49 @@ package controllers
 import audit.{AuditService, EmailAuditEvent}
 import com.google.inject.Inject
 import models.{EmailEvents, Opened}
+import play.api.Logger
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, BodyParsers}
+import play.api.mvc.{Action, BodyParsers, Result}
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted}
+import uk.gov.hmrc.domain.PsaId
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class EmailResponseController @Inject()(
-                                         auditService: AuditService) extends BaseController {
-
-
-  def retrieveStatus(id: String): Action[JsValue] = Action(BodyParsers.parse.tolerantJson) {
+                                         auditService: AuditService,
+                                         crypto: ApplicationCrypto) extends BaseController {
+  def retrieveStatus(requestType: String, id: String): Action[JsValue] = Action(BodyParsers.parse.tolerantJson) {
     implicit request =>
-      val crypto = ApplicationCrypto.QueryParameterCrypto
-      val decryptedPsaId = crypto.decrypt(Crypted(id)).value
-      request.body.validate[EmailEvents].fold(
-        _ => BadRequest("Bad Request received from Email Call back event"),
-        emailEvents => {
-          emailEvents.events.filterNot(_.event == Opened).foreach { emailEvent =>
-            auditService.sendEvent(EmailAuditEvent(decryptedPsaId, emailEvent.event))
+      validatePsaId(id) match {
+        case Left(result) => result
+        case Right(psaId) => request.body.validate[EmailEvents].fold(
+          _ => BadRequest,
+          valid => {
+            valid.events
+              .map {
+                _.event
+              }
+              .filterNot {
+                case Opened => true
+                case _ => false
+              }
+              .foreach { event =>
+                Logger.debug(s"Email Audit event for $requestType is $event")
+                auditService.sendEvent(EmailAuditEvent(requestType, psaId.id, event))
+              }
+            Ok
           }
-          Ok
-        }
-      )
+        )
+      }
   }
+
+  private def validatePsaId(id: String): Either[Result, PsaId] =
+    try {
+      Right(PsaId {
+        crypto.QueryParameterCrypto.decrypt(Crypted(id)).value
+      })
+    } catch {
+      case _: IllegalArgumentException => Left(Forbidden("Malformed PSAID"))
+    }
 }
