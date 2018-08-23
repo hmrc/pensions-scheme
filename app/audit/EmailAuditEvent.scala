@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package base
+package audit
 
-import config.AppConfig
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Environment
-import play.api.inject.Injector
-import play.api.mvc.AnyContentAsEmpty
-import play.api.test.FakeRequest
+import models.{EmailEventType, Event}
+import uk.gov.hmrc.domain.PsaId
 
-trait SpecBase extends PlaySpec with GuiceOneAppPerSuite with JsonFileReader {
-  def injector: Injector = app.injector
+case class EmailAuditEvent(requestType: EmailEventType, psaId: PsaId, event: Event) extends AuditEvent {
 
-  def environment: Environment = injector.instanceOf[Environment]
+  override def auditType: String = s"${requestType}EmailEvent"
 
-  def appConfig: AppConfig = injector.instanceOf[AppConfig]
+  override def details: Map[String, String] = Map("psaId" -> psaId.id, "event" -> event.toString)
 
-  def fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("", "")
 }
