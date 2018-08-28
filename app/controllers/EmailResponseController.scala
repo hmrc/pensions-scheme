@@ -49,7 +49,7 @@ class EmailResponseController @Inject()(
             _ => BadRequest("Bad request received for email call back event"),
             valid => {
               val events = valid.events.map(_.event)
-              if(!events.contains(Opened)) {
+              if(!(events contains Opened)) {
                 auditService.sendEvent(EmailAuditEvent(eventType, psaId, events.last))
               }
               Ok
