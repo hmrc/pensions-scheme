@@ -48,13 +48,17 @@ class EmailResponseController @Inject()(
           request.body.validate[EmailEvents].fold(
             _ => BadRequest("Bad request received for email call back event"),
             valid => {
-              val events = valid.events.map(_.event)
-
-              Logger.debug(s"Events received: $events")
-
-              if(!(events contains Opened)) {
-                auditService.sendEvent(EmailAuditEvent(eventType, psaId, events.last))
-              }
+              valid.events
+                .map {
+                  _.event
+                }
+                .filterNot {
+                  case Opened => true
+                  case _ => false
+                }
+                .foreach { event =>
+                  auditService.sendEvent(EmailAuditEvent(eventType, psaId, event))
+                }
               Ok
             }
           )
