@@ -23,11 +23,12 @@ import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.InvalidPayloadHandler
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -49,6 +50,11 @@ trait SchemeConnector {
                                    request: RequestHeader): Future[HttpResponse]
 
   def getCorrelationId(requestId: Option[String]): String
+
+  def getSchemeDetails(schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
+                                                               ec: ExecutionContext,
+                                                               request: RequestHeader): Future[Either[HttpException,JsValue]]
+
 }
 
 class SchemeConnectorImpl @Inject()(
@@ -74,7 +80,7 @@ class SchemeConnectorImpl @Inject()(
 
   //scalastyle:off cyclomatic.complexity
   private def handleResponse(response: HttpResponse): Either[HttpException, JsValue] = {
-    val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD")
+    val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
       case OK => Right(response.json)
       case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
@@ -127,6 +133,23 @@ class SchemeConnectorImpl @Inject()(
 
     http.POST[JsValue, HttpResponse](schemeAdminRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly, implicitly[HeaderCarrier](hc), implicitly) map handleResponse andThen logFailures("register PSA", registerData, psaSchema)
+  }
+
+
+  override def getSchemeDetails(schemeIdType: String, idNumber: String)(implicit
+                                                                        headerCarrier: HeaderCarrier,
+                                                                        ec: ExecutionContext,
+                                                                        request: RequestHeader): Future[Either[HttpException,JsValue]] = {
+
+    implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+      override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
+    }
+
+    val schemeDetailsUrl = config.schemeDetailsUrl.format(schemeIdType, idNumber)
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+
+    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc,
+      implicitly) map handleResponse
   }
 
   override def listOfSchemes(psaId: String)(implicit
