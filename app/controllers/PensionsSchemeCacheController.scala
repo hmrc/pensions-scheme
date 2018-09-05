@@ -39,6 +39,7 @@ abstract class PensionsSchemeCacheController(
       authorised() {
         request.body.asBytes().map {
           bytes =>
+            Logger.debug(s"controllers.PensionsSchemeCacheController.save: Response for request Id $id")
             repository.upsert(id, bytes.toArray[Byte])
               .map(_ => Ok)
         } getOrElse Future.successful(EntityTooLarge)
@@ -50,7 +51,7 @@ abstract class PensionsSchemeCacheController(
       authorised() {
         Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
         repository.get(id).map { response =>
-          Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
+          Logger.debug(s"controllers.PensionsSchemeCacheController.get: Response for request Id $id is $response")
           response.map {
             Ok(_)
           }
