@@ -16,12 +16,12 @@
 
 package audit
 
-import models.{EmailEventType, Event}
+import models.Event
 import uk.gov.hmrc.domain.PsaId
 
-case class EmailAuditEvent(requestType: EmailEventType, psaId: PsaId, event: Event) extends AuditEvent {
+case class EmailAuditEvent(psaId: PsaId, event: Event) extends AuditEvent {
 
-  override def auditType: String = s"${requestType}EmailEvent"
+  override def auditType: String = "SchemeEmailEvent"
 
   override def details: Map[String, String] = Map("psaId" -> psaId.id, "event" -> event.toString)
 

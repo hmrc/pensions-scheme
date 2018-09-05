@@ -20,4 +20,4 @@ DELETE      /journey-cache/psa/:id                      controllers.PSAJourneyCa
 GET         /psa-name/:id                               controllers.PSANameController.get(id: String)
 POST        /psa-name/:id                               controllers.PSANameController.save(id: String)
 
-POST        /:requestType/email-response/*id            controllers.EmailResponseController.retrieveStatus(requestType: String, id: String)
+POST        /email-response/*id                         controllers.EmailResponseController.retrieveStatus(id: String)
