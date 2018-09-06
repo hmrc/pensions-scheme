@@ -39,7 +39,6 @@ abstract class PensionsSchemeCacheController(
       authorised() {
         request.body.asBytes().map {
           bytes =>
-            Logger.debug(s"controllers.PensionsSchemeCacheController.save: Response for request Id $id")
             repository.upsert(id, bytes.toArray[Byte])
               .map(_ => Ok)
         } getOrElse Future.successful(EntityTooLarge)
