@@ -19,6 +19,7 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{PSASubscription, SchemeList}
 import base.SpecBase
+import connector.SchemeConnectorSpec.readJsonFromFile
 import connector.{BarsConnector, SchemeConnector}
 import models._
 import org.joda.time.LocalDate
@@ -229,6 +230,12 @@ class FakeSchemeConnector extends SchemeConnector {
                                             ec: ExecutionContext,
                                             request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
+  override def getSchemeDetails(schemeIdType: String,
+                                idNumber: String
+                               )(implicit headerCarrier: HeaderCarrier,
+                                 ec: ExecutionContext,
+                                 request: RequestHeader): Future[Either[HttpException,JsValue]] = validSchemeDetailsResponse
+
   override def getCorrelationId(requestId: Option[String]): String = "4725c81192514c069b8ff1d84659b2df"
 }
 
@@ -252,6 +259,8 @@ object FakeSchemeConnector {
       "formBundle" -> "1121313",
       "psaId" -> "A21999999"
     )
+
+  private val validSchemeDetailsResponse = Future.successful(Right(readJsonFromFile("/data/validSchemeDetailsResponse.json")))
 
 }
 
