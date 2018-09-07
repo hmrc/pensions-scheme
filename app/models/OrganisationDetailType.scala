@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, Reads}
 
 case class OrganisationDetailType(name: String, crnNumber: Option[String] = None,
-                                  vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None) extends PSADetail
+                                  vatRegistrationNumber: Option[String] = None, payeReference: Option[String] = None)
 
 object OrganisationDetailType {
   implicit val formats = Json.format[OrganisationDetailType]

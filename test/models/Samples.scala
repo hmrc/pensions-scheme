@@ -16,8 +16,6 @@
 
 package models
 
-import java.time.LocalDate
-
 import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
 
 trait Samples {
@@ -25,44 +23,11 @@ trait Samples {
   val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")
   val nonUkAddressSample = InternationalAddress("line1", Some("line2"), Some("line3"), Some("line4"), "IT", Some("NE1"))
   val ukAddressSample = UkAddress("line1", Some("line2"), Some("line3"), Some("line4"), "GB", "NE1")
-  val numberOfDirectorOrPartnersSample = NumberOfDirectorOrPartnersType(isMorethanTenDirectors = Some(true), isMorethanTenPartners = Some(true))
   val previousAddressDetailsSample = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   val contactDetailsSample = ContactDetails("07592113", email = "test@test.com")
-  val declarationSample = PensionSchemeAdministratorDeclarationType(box1 = true, box2 = true, box3 = true, box4 = true, Some(true), None, box7 = true, None)
-  val pensionSchemeAdministratorSample = PensionSchemeAdministrator(customerType = "TestCustomer",
-    legalStatus = "Limited Company",
-    sapNumber = "NumberTest",
-    noIdentifier = true,
-    idType = Some("TestId"),
-    idNumber = Some("TestIdNumber"),
-    organisationDetail = None,
-    individualDetail = None,
-    pensionSchemeAdministratoridentifierStatus = PensionSchemeAdministratorIdentifierStatusType(isExistingPensionSchemaAdministrator = false),
-    correspondenceAddressDetail = ukAddressSample,
-    correspondenceContactDetail = contactDetailsSample,
-    previousAddressDetail = previousAddressDetailsSample,
-    numberOfDirectorOrPartners = Some(numberOfDirectorOrPartnersSample),
-    directorOrPartnerDetail = None, declaration = declarationSample)
-  val correspondenceCommonDetails = CorrespondenceCommonDetail(nonUkAddressSample, contactDetailsSample)
-
-  def directorOrPartnerSample(personType: String): DirectorOrPartnerDetailTypeItem = DirectorOrPartnerDetailTypeItem(sequenceId = "000",
-    entityType = personType.capitalize,
-    title = None,
-    firstName = "John",
-    middleName = Some("Does Does"),
-    lastName = "Doe",
-    dateOfBirth = LocalDate.parse("2019-01-31"),
-    referenceOrNino = Some("SL211111A"),
-    noNinoReason = Some("he can't find it"),
-    utr = Some("123456789"),
-    noUtrReason = Some("he can't find it"),
-    correspondenceCommonDetail = correspondenceCommonDetails,
-    previousAddressDetail = PreviousAddressDetails(isPreviousAddressLast12Month = false))
 
   val companySample = OrganisationDetailType("Company Test", vatRegistrationNumber = Some("VAT11111"),
     payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
-
-  val individualSample = IndividualDetailType(firstName = "John", middleName = Some("Does Does"), lastName = "Doe", dateOfBirth = LocalDate.parse("2019-01-31"))
 
   val pensionAdviserSample = PensionAdvisorDetail("John", ukAddressSample, contactDetailsSample)
 

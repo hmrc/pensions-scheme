@@ -26,16 +26,7 @@ class InvalidPayloadHandlerSpec extends FlatSpec with Matchers {
 
   import InvalidPayloadHandlerSpec._
 
-  "loadSchema" should "load the PSA Subscription schema" in {
-
-    val logger = testFixture().handler
-    val schema = logger.loadSchema("/resources/schemas/psaSubscription.json")
-    schema shouldBe a[JsonSchema]
-    schema.toString should include("API#1358")
-
-  }
-
-  it should "load the Scheme Subscription schema" in {
+  "loadSchema" should "load the Scheme Subscription schema" in {
 
     val logger = testFixture().handler
     val schema = logger.loadSchema("/resources/schemas/schemeSubscription.json")
