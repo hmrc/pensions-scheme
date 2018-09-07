@@ -16,13 +16,12 @@
 
 package service
 
+import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{PSASubscription, SchemeList}
 import base.SpecBase
 import connector.SchemeConnectorSpec.readJsonFromFile
 import connector.{BarsConnector, SchemeConnector}
 import models._
-import org.joda.time.LocalDate
 import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
@@ -73,71 +72,6 @@ class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers with EitherValue
 
   }
 
-  "registerPSA" should "return the result from the connector" in {
-
-    val fixture = testFixture()
-
-    fixture.schemeService.registerPSA(psaJson).map {
-      httpResponse =>
-        httpResponse.right.value shouldBe registerPsaResponseJson
-    }
-
-  }
-
-  it should "throw BadRequestException if the JSON cannot be parsed as PensionSchemeAdministrator" in {
-
-    val fixture = testFixture()
-
-    recoverToSucceededIf[BadRequestException] {
-      fixture.schemeService.registerPSA(Json.obj())
-    }
-
-  }
-
-  it should "send an audit event on success" in {
-
-    val fixture = testFixture()
-    val requestJson = registerPsaRequestJson(psaJson)
-
-    fixture.schemeService.registerPSA(psaJson).map {
-      httpResponse =>
-        fixture.auditService.lastEvent shouldBe
-          Some(
-            PSASubscription(
-              existingUser = false,
-              legalStatus = "test-legal-status",
-              status = Status.OK,
-              request = requestJson,
-              response = Some(httpResponse.right.value)
-            )
-          )
-    }
-
-  }
-
-  it should "send an audit event on failure" in {
-
-    val fixture = testFixture()
-    val requestJson = registerPsaRequestJson(psaJson)
-
-    fixture.schemeConnector.setRegisterPsaResponse(Future.successful(Left(new BadRequestException("bad request"))))
-
-    fixture.schemeService.registerPSA(psaJson).map {
-      _ =>
-        fixture.auditService.lastEvent shouldBe
-          Some(
-            PSASubscription(
-              existingUser = false,
-              legalStatus = "test-legal-status",
-              status = Status.BAD_REQUEST,
-              request = requestJson,
-              response = None
-            )
-          )
-    }
-
-  }
-
 }
 
 object SchemeServiceImplSpec extends SpecBase {
@@ -161,44 +95,6 @@ object SchemeServiceImplSpec extends SpecBase {
 
   val psaId: String = "test-psa-id"
 
-  val psaJson: JsValue = Json.obj(
-    "registrationInfo" -> Json.obj(
-      "legalStatus" -> "test-legal-status",
-      "sapNumber" -> "test-sap-number",
-      "noIdentifier" -> false,
-      "customerType" -> "test-customer-type"
-    ),
-    "individualContactDetails" -> Json.obj(
-      "phone" -> "test-phone",
-      "email" -> "test-email"
-    ),
-    "individualContactAddress" -> Json.obj(
-      "addressLine1" -> "test-address-line-1",
-      "countryCode" -> "GB",
-      "postalCode" -> "test-postal-code"
-    ),
-    "individualAddressYears" -> "test-individual-address-years",
-    "existingPSA" -> Json.obj(
-      "isExistingPSA" -> false
-    ),
-    "individualDetails" -> Json.obj(
-      "firstName" -> "test-first-name",
-      "lastName" -> "test-last-name",
-      "dateOfBirth" -> "2000-01-01"
-    ),
-    "declaration" -> true,
-    "declarationWorkingKnowledge" -> "test-declaration-working-knowledge",
-    "declarationFitAndProper" -> true
-  )
-
-  def registerPsaRequestJson(userAnswersJson: JsValue): JsValue = {
-    implicit val contactAddressEnabled: Boolean = true
-    val psa = userAnswersJson.as[PensionSchemeAdministrator](PensionSchemeAdministrator.apiReads)
-    val requestJson = Json.toJson(psa)(PensionSchemeAdministrator.psaSubmissionWrites)
-
-    requestJson
-  }
-
 }
 
 class FakeSchemeConnector extends SchemeConnector {
@@ -207,23 +103,15 @@ class FakeSchemeConnector extends SchemeConnector {
 
   private var registerSchemeResponse = Future.successful(HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
   private var listOfSchemesResponse = Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))
-  private var registerPsaResponse: Future[Either[HttpException, JsValue]] = Future.successful(Right(registerPsaResponseJson))
 
   def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit = this.registerSchemeResponse = response
 
   def setListOfSchemesResponse(response: Future[HttpResponse]): Unit = this.listOfSchemesResponse = response
 
-  def setRegisterPsaResponse(response: Future[Either[HttpException, JsValue]]): Unit = this.registerPsaResponse = response
-
   override def registerScheme(psaId: String, registerData: JsValue)(implicit
                                                                     headerCarrier: HeaderCarrier,
                                                                     ec: ExecutionContext,
                                                                     request: RequestHeader): Future[HttpResponse] = registerSchemeResponse
-
-  override def registerPSA(registerData: JsValue)(implicit
-                                                  headerCarrier: HeaderCarrier,
-                                                  ec: ExecutionContext,
-                                                  request: RequestHeader): Future[Either[HttpException, JsValue]] = registerPsaResponse
 
   override def listOfSchemes(psaId: String)(implicit
                                             headerCarrier: HeaderCarrier,
@@ -252,13 +140,6 @@ object FakeSchemeConnector {
     )
 
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
-
-  val registerPsaResponseJson: JsValue =
-    Json.obj(
-      "processingDate" -> LocalDate.now,
-      "formBundle" -> "1121313",
-      "psaId" -> "A21999999"
-    )
 
   private val validSchemeDetailsResponse = Future.successful(Right(readJsonFromFile("/data/validSchemeDetailsResponse.json")))
 

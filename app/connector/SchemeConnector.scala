@@ -39,11 +39,6 @@ trait SchemeConnector {
                                                            ec: ExecutionContext,
                                                            request: RequestHeader): Future[HttpResponse]
 
-  def registerPSA(registerData: JsValue)(implicit
-                                         headerCarrier: HeaderCarrier,
-                                         ec: ExecutionContext,
-                                         request: RequestHeader): Future[Either[HttpException, JsValue]]
-
   def listOfSchemes(psaId: String)(implicit
                                    headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
@@ -117,24 +112,6 @@ class SchemeConnectorImpl @Inject()(
           invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
       }
   }
-
-  override def registerPSA(registerData: JsValue)(implicit
-                                                  headerCarrier: HeaderCarrier,
-                                                  ec: ExecutionContext,
-                                                  request: RequestHeader): Future[Either[HttpException, JsValue]] = {
-
-    implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-      override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
-    }
-
-    val psaSchema = "/resources/schemas/psaSubscription.json"
-    val schemeAdminRegisterUrl = config.schemeAdminRegistrationUrl
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
-
-    http.POST[JsValue, HttpResponse](schemeAdminRegisterUrl, registerData)(implicitly[Writes[JsValue]],
-      implicitly, implicitly[HeaderCarrier](hc), implicitly) map handleResponse andThen logFailures("register PSA", registerData, psaSchema)
-  }
-
 
   override def getSchemeDetails(schemeIdType: String, idNumber: String)(implicit
                                                                         headerCarrier: HeaderCarrier,

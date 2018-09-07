@@ -32,7 +32,4 @@ trait SchemeService {
   def listOfSchemes(psaId: String)
                    (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
 
-  def registerPSA(json: JsValue)
-                   (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[Either[HttpException, JsValue]]
-
 }

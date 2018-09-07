@@ -50,22 +50,6 @@ class SchemeController @Inject()(schemeService: SchemeService) extends BaseContr
     } recoverWith recoverFromError
   }
 
-  def registerPSA: Action[AnyContent] = Action.async {
-    implicit request => {
-      val feJson = request.body.asJson
-      Logger.debug(s"[PSA-Registration-Incoming-Payload]$feJson")
-
-      feJson match {
-        case Some(jsValue) =>
-          schemeService.registerPSA(jsValue).map {
-            case Right(json) => Ok(json)
-            case Left(e) => result(e)
-          }
-        case _ => Future.failed(new BadRequestException("Bad Request with no request body"))
-      }
-    } recoverWith recoverFromError
-  }
-
   def listOfSchemes: Action[AnyContent] = Action.async {
     implicit request => {
       val psaId = request.headers.get("psaId")

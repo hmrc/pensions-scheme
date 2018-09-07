@@ -17,15 +17,23 @@
 package connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import connector.RegistrationConnectorSpec.errorResponse
 import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
 import utils.WireMockHelper
+
 import scala.concurrent.Future
 
 trait ConnectorBehaviours extends AsyncFlatSpec with WireMockHelper with EitherValues with Matchers {
+
+  def errorResponse(code: String): String = {
+    Json.obj(
+      "code" -> code,
+      "reason" -> s"Reason for $code"
+    ).toString()
+  }
+
   //scalastyle:off method.length
   def errorHandlerForApiFailures(call: => Future[Either[HttpException, JsValue]], url: String): Unit = {
 

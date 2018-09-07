@@ -152,99 +152,6 @@ class SchemeConnectorSpec extends AsyncFlatSpec
       }
   }
 
-  "SchemeConnector registerPSA" should "handle OK (200)" in {
-    val successResponse = Json.obj(
-      "processingDate" -> LocalDate.now,
-      "formBundle" -> "1121313",
-      "psaId" -> "A21999999"
-    )
-    server.stubFor(
-      post(urlEqualTo(registerPsaUrl))
-        .withHeader("Content-Type", equalTo("application/json"))
-        .withRequestBody(equalToJson(Json.stringify(registerPsaData)))
-        .willReturn(
-          ok(Json.stringify(successResponse))
-            .withHeader("Content-Type", "application/json")
-        )
-    )
-    connector.registerPSA(registerPsaData).map { response =>
-      response.right.value shouldBe successResponse
-    }
-  }
-
-  it should "return a BadRequestException for a 400 INVALID_CORRELATION_ID response" in {
-    server.stubFor(
-      post(urlEqualTo(registerPsaUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(invalidCorrelationIdResponse)
-        )
-    )
-    connector.registerPSA(registerPsaData).map {
-      response =>
-        response.left.value shouldBe a[BadRequestException]
-        response.left.value.message should include("INVALID_CORRELATION_ID")
-    }
-  }
-
-  it should "log details of an INVALID_PAYLOAD for a 400 BAD request" in {
-    server.stubFor(
-      post(urlEqualTo(registerPsaUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody("INVALID_PAYLOAD")
-        )
-    )
-
-    logger.reset()
-    connector.registerPSA(registerPsaData).map {
-      _ =>
-        logger.getLogEntries.size shouldBe 1
-        logger.getLogEntries.head.level shouldBe Level.WARN
-    }
-  }
-
-  it should "return a ForbiddenException for a 403 INVALID_BUSINESS_PARTNER response" in {
-    server.stubFor(
-      post(urlEqualTo(registerPsaUrl))
-        .willReturn(
-          forbidden
-            .withHeader("Content-Type", "application/json")
-            .withBody(invalidBusinessPartnerResponse)
-        )
-    )
-
-    connector.registerPSA(registerPsaData).map {
-      response =>
-        response.left.value shouldBe a[ForbiddenException]
-        response.left.value.message should include("INVALID_BUSINESS_PARTNER")
-    }
-  }
-
-  it should behave like errorHandlerForApiFailures(
-    connector.registerPSA(registerPsaData),
-    registerPsaUrl
-  )
-
-  it should "return a ConflictException for a 409 DUPLICATE_SUBMISSION response" in {
-    server.stubFor(
-      post(urlEqualTo(registerPsaUrl))
-        .willReturn(
-          aResponse()
-            .withStatus(Status.CONFLICT)
-            .withHeader("Content-Type", "application/json")
-            .withBody(duplicateSubmissionResponse)
-        )
-    )
-    connector.registerPSA(registerPsaData).map {
-      response =>
-        response.left.value shouldBe a[ConflictException]
-        response.left.value.message should include("DUPLICATE_SUBMISSION")
-    }
-  }
-
   "SchemeConnector listOfScheme" should "return OK with the list of schemes response" in {
     server.stubFor(
       get(listOfSchemeUrl)
@@ -470,8 +377,6 @@ object SchemeConnectorSpec extends JsonFileReader {
   val schemeIdType = "srn"
   val idNumber = "S1234567890"
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-  private val registerPsaData = readJsonFromFile("/data/validPsaRequest.json")
-  val registerPsaUrl = "/pension-online/subscription"
   val schemeUrl = s"/pension-online/scheme-subscription/$psaId"
   val listOfSchemeUrl = s"/pension-online/subscription/$psaId/list"
   val schemeDetailsUrl = s"/pension-online/psa-scheme-details/$schemeIdType/$idNumber"
@@ -482,14 +387,6 @@ object SchemeConnectorSpec extends JsonFileReader {
     Json.stringify(
       Json.obj(
         "code" -> "INVALID_BUSINESS_PARTNER",
-        "reason" -> "test-reason"
-      )
-    )
-
-  private val invalidCorrelationIdResponse =
-    Json.stringify(
-      Json.obj(
-        "code" -> "INVALID_CORRELATION_ID",
         "reason" -> "test-reason"
       )
     )
