@@ -16,8 +16,6 @@
 
 package models
 
-import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
-
 trait Samples {
 
   val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")
@@ -30,18 +28,6 @@ trait Samples {
     payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
 
   val pensionAdviserSample = PensionAdvisorDetail("John", ukAddressSample, contactDetailsSample)
-
-  def testDirectorOrPartner(personType: String): JsObject = Json.obj(s"${personType}Details" -> Json.obj("firstName" -> JsString("John"),
-    "lastName" -> JsString("Doe"),
-    "middleName" -> JsString("Does Does"),
-    "dateOfBirth" -> JsString("2019-01-31"),
-    "isDeleted" -> JsBoolean(false)),
-    s"${personType}Nino" -> Json.obj("hasNino" -> JsBoolean(true), "nino" -> JsString("SL211111A")),
-    s"${personType}Utr" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> JsString("123456789")),
-    s"${personType}AddressYears" -> JsString("over_a_year")) +
-    (s"${personType}ContactDetails" -> Json.obj("email" -> "test@test.com", "phone" -> "07592113")) +
-    (s"${personType}Address" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
-      "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"), "postcode" -> JsString("NE1"), "country" -> JsString("IT")))
 
   val trusteePartnershipData = PartnershipTrustee(
     organizationName = "test partnership",
