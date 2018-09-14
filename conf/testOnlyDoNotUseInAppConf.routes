@@ -11,3 +11,5 @@
 
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes
+
+DELETE      /test-only/psa-name                                   controllers.PSANameController.dropCollection

@@ -117,4 +117,8 @@ abstract class PensionsSchemeCacheRepository(
     val selector = BSONDocument("id" -> id)
     collection.remove(selector).map(_.ok)
   }
+
+  def dropCollection()(implicit ec: ExecutionContext): Future[Unit] = {
+    collection.drop()
+  }
 }
