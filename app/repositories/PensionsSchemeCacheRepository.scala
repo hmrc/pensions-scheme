@@ -17,13 +17,14 @@
 package repositories
 
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.Subtype.GenericBinarySubtype
 import reactivemongo.bson.{BSONBinary, BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.crypto.{ApplicationCrypto, PlainText}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -32,12 +33,16 @@ import scala.concurrent.{ExecutionContext, Future}
 abstract class PensionsSchemeCacheRepository(
                                               index: String,
                                               ttl: Option[Int],
-                                              component: ReactiveMongoComponent
+                                              component: ReactiveMongoComponent,
+                                              crypto: ApplicationCrypto,
+                                              config: Configuration
                                             ) extends ReactiveRepository[JsValue, BSONObjectID](
   index,
   component.mongoConnector.db,
   implicitly
 ) {
+
+  private val encrypted: Boolean = config.underlying.getBoolean("encrypted")
 
   private case class DataEntry(
                                 id: String,
@@ -52,6 +57,19 @@ abstract class PensionsSchemeCacheRepository(
 
     private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
     implicit val format: Format[DataEntry] = Json.format[DataEntry]
+  }
+
+  private case class JsonDataEntry(
+                                    id: String,
+                                    data: JsValue,
+                                    lastUpdated: DateTime
+                                  )
+
+  private object JsonDataEntry {
+//        def apply(id: String, data: JsValue, lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)): JsonDataEntry =
+//          JsonDataEntry(id, data, lastUpdated)
+    private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
+    implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
   }
 
   private val fieldName = "lastUpdated"
@@ -85,21 +103,56 @@ abstract class PensionsSchemeCacheRepository(
     }
   }
 
-  def upsert(id: String, data: Array[Byte])(implicit ec: ExecutionContext): Future[Boolean] = {
+//  def upsert(id: String, data: Array[Byte])(implicit ec: ExecutionContext): Future[Boolean] = {
+//
+//    val document = Json.toJson(DataEntry(id, data))
+//    val selector = BSONDocument("id" -> id)
+//    val modifier = BSONDocument("$set" -> document)
+//
+//    collection.update(selector, modifier, upsert = true)
+//      .map(_.ok)
+//  }
 
-    val document = Json.toJson(DataEntry(id, data))
+  def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
+
+    val unencrypted = PlainText(Json.stringify(data))
+    val encryptedData = crypto.JsonCrypto.encrypt(unencrypted).value.toArray[Byte]
+
+    val document: JsValue = {
+      if(encrypted)
+        Json.toJson(DataEntry(id, encryptedData))
+      else
+        Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC)))
+    }
     val selector = BSONDocument("id" -> id)
     val modifier = BSONDocument("$set" -> document)
-
     collection.update(selector, modifier, upsert = true)
       .map(_.ok)
   }
 
-  def get(id: String)(implicit ec: ExecutionContext): Future[Option[Array[Byte]]] = {
-    collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
-      _.map {
-        dataEntry =>
-          dataEntry.data.byteArray
+//  def get(id: String)(implicit ec: ExecutionContext): Future[Option[Array[Byte]]] = {
+//    collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
+//      _.map {
+//        dataEntry =>
+//          dataEntry.data.byteArray
+//      }
+//    }
+//  }
+
+  def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
+    if(encrypted) {
+      collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
+        _.map {
+          dataEntry =>
+            Json.toJson(dataEntry.data)
+        }
+      }
+    } else {
+      collection.find(BSONDocument("id" -> id)).one[JsonDataEntry].map {
+        _.map {
+          dataEntry =>
+            dataEntry.data
+        }
       }
     }
   }
