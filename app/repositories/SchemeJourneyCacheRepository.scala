@@ -23,12 +23,11 @@ import uk.gov.hmrc.crypto.ApplicationCrypto
 
 class SchemeJourneyCacheRepository @Inject()(
                                               config: Configuration,
-                                              component: ReactiveMongoComponent,
-                                              crypto: ApplicationCrypto
+                                              component: ReactiveMongoComponent
                                             ) extends PensionsSchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.scheme-journey.name"),
   Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-journey.timeToLiveInSeconds")),
   component,
-  crypto,
+  "scheme.json.encryption",
   config
 )

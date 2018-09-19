@@ -16,6 +16,7 @@
 
 package repositories
 
+import org.apache.commons.lang3.SerializationUtils
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.{Configuration, Logger}
 import play.api.libs.json._
@@ -24,7 +25,7 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.Subtype.GenericBinarySubtype
 import reactivemongo.bson.{BSONBinary, BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.crypto.{ApplicationCrypto, PlainText}
+import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, CryptoWithKeysFromConfig, PlainText}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -34,13 +35,14 @@ abstract class PensionsSchemeCacheRepository(
                                               index: String,
                                               ttl: Option[Int],
                                               component: ReactiveMongoComponent,
-                                              crypto: ApplicationCrypto,
+                                              encryptionKey: String,
                                               config: Configuration
                                             ) extends ReactiveRepository[JsValue, BSONObjectID](
   index,
   component.mongoConnector.db,
   implicitly
 ) {
+
 
   private val encrypted: Boolean = config.underlying.getBoolean("encrypted")
 
@@ -115,13 +117,16 @@ abstract class PensionsSchemeCacheRepository(
 
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
 
+    val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
+
     val unencrypted = PlainText(Json.stringify(data))
-    val encryptedData = Json.toJson(crypto.JsonCrypto.encrypt(unencrypted).value)
+    val encryptedData = jsonCrypto.encrypt(unencrypted).value
 
     val document: JsValue = {
-      if(encrypted)
-        Json.toJson(JsonDataEntry(id, encryptedData, DateTime.now(DateTimeZone.UTC)))
-      else
+      if(encrypted) {
+        val dataAsByteArray = SerializationUtils.serialize(encryptedData)
+        Json.toJson(DataEntry(id, dataAsByteArray))
+      } else
         Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC)))
     }
     val selector = BSONDocument("id" -> id)
@@ -141,10 +146,12 @@ abstract class PensionsSchemeCacheRepository(
 
   def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
     if(encrypted) {
+      val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
       collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
         _.map {
           dataEntry =>
-            Json.toJson(dataEntry.data)
+            val decrypted: PlainText = jsonCrypto.decrypt(Crypted(SerializationUtils.deserialize(dataEntry.data.byteArray)))
+            Json.parse(decrypted.value)
         }
       }
     } else {

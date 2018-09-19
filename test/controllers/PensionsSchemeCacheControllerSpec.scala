@@ -26,7 +26,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.Configuration
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.PensionsSchemeCacheRepository
@@ -58,14 +58,14 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
 
     "return 200 and the relevant data when it exists" in {
       when(repo.get(eqTo("foo"))(any())) thenReturn Future.successful {
-        Some(Array.empty[Byte])
+        Some(Json.obj())
       }
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
       val result = controller(repo, authConnector).get("foo")(FakeRequest())
 
       status(result) mustEqual OK
-      contentAsBytes(result) mustEqual Array.empty
+      contentAsString(result) mustEqual "{}"
     }
 
     "return 404 when the data doesn't exist" in {
@@ -108,10 +108,11 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
   ".save" must {
 
     "return 200 when the request body can be parsed and passed to the repository successfully" in {
-      when(repo.upsert(eqTo("foo"), eqTo("foo".getBytes()))(any())) thenReturn Future.successful(true)
+      val s = Json.parse("{\"x\":\"x\"}")
+      when(repo.upsert(any(), any())(any())) thenReturn Future.successful(true)
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
-      val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withRawBody(ByteString("foo")))
+      val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withBody(s))
 
       status(result) mustEqual OK
     }
