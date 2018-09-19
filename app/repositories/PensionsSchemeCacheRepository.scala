@@ -68,8 +68,6 @@ abstract class PensionsSchemeCacheRepository(
                                   )
 
   private object JsonDataEntry {
-//        def apply(id: String, data: JsValue, lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)): JsonDataEntry =
-//          JsonDataEntry(id, data, lastUpdated)
     private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
     implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
   }
@@ -105,16 +103,6 @@ abstract class PensionsSchemeCacheRepository(
     }
   }
 
-//  def upsert(id: String, data: Array[Byte])(implicit ec: ExecutionContext): Future[Boolean] = {
-//
-//    val document = Json.toJson(DataEntry(id, data))
-//    val selector = BSONDocument("id" -> id)
-//    val modifier = BSONDocument("$set" -> document)
-//
-//    collection.update(selector, modifier, upsert = true)
-//      .map(_.ok)
-//  }
-
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
 
     val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
@@ -134,15 +122,6 @@ abstract class PensionsSchemeCacheRepository(
     collection.update(selector, modifier, upsert = true)
       .map(_.ok)
   }
-
-//  def get(id: String)(implicit ec: ExecutionContext): Future[Option[Array[Byte]]] = {
-//    collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
-//      _.map {
-//        dataEntry =>
-//          dataEntry.data.byteArray
-//      }
-//    }
-//  }
 
   def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
     if(encrypted) {

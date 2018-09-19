@@ -37,7 +37,6 @@ abstract class PensionsSchemeCacheController(
   def save(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>" + request.body.asJson)
         request.body.asJson.map {
           jsValue =>
             repository.upsert(id, jsValue)
