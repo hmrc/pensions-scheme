@@ -116,11 +116,11 @@ abstract class PensionsSchemeCacheRepository(
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
 
     val unencrypted = PlainText(Json.stringify(data))
-    val encryptedData = crypto.JsonCrypto.encrypt(unencrypted).value.toArray[Byte]
+    val encryptedData = Json.toJson(crypto.JsonCrypto.encrypt(unencrypted).value)
 
     val document: JsValue = {
       if(encrypted)
-        Json.toJson(DataEntry(id, encryptedData))
+        Json.toJson(JsonDataEntry(id, encryptedData, DateTime.now(DateTimeZone.UTC)))
       else
         Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC)))
     }

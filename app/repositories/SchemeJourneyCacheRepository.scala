@@ -19,12 +19,16 @@ package repositories
 import com.google.inject.Inject
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
+import uk.gov.hmrc.crypto.ApplicationCrypto
 
 class SchemeJourneyCacheRepository @Inject()(
                                               config: Configuration,
-                                              component: ReactiveMongoComponent
+                                              component: ReactiveMongoComponent,
+                                              crypto: ApplicationCrypto
                                             ) extends PensionsSchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.scheme-journey.name"),
   Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-journey.timeToLiveInSeconds")),
-  component
+  component,
+  crypto,
+  config
 )
