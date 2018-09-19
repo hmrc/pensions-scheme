@@ -27,6 +27,7 @@ import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.PensionsSchemeCacheRepository
@@ -108,11 +109,11 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
   ".save" must {
 
     "return 200 when the request body can be parsed and passed to the repository successfully" in {
-      val s = Json.parse("{\"x\":\"x\"}")
+
       when(repo.upsert(any(), any())(any())) thenReturn Future.successful(true)
       when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
-      val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withBody(s))
+      val result = call(controller(repo, authConnector).save("foo"), FakeRequest("POST", "/").withJsonBody(Json.obj("abc" -> "def")))
 
       status(result) mustEqual OK
     }

@@ -19,7 +19,6 @@ package repositories
 import com.google.inject.Inject
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
-import uk.gov.hmrc.crypto.ApplicationCrypto
 
 class PSANameCacheRepository @Inject()(
                                         config: Configuration,
