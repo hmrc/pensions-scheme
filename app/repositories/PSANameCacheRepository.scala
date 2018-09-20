@@ -27,7 +27,7 @@ class PSANameCacheRepository @Inject()(
   config.underlying.getString("mongodb.pensions-scheme-cache.psa-name.name"),
   None,
   component,
-  "",
+  "psa.json.encryption",
   config
 )
 

@@ -18,14 +18,14 @@ package repositories
 
 import org.apache.commons.lang3.SerializationUtils
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.{Configuration, Logger}
 import play.api.libs.json._
+import play.api.{Configuration, Logger}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.Subtype.GenericBinarySubtype
 import reactivemongo.bson.{BSONBinary, BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, CryptoWithKeysFromConfig, PlainText}
+import uk.gov.hmrc.crypto.{Crypted, CryptoWithKeysFromConfig, PlainText}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -44,7 +44,7 @@ abstract class PensionsSchemeCacheRepository(
 ) {
 
 
-  private val encrypted: Boolean = config.underlying.getBoolean("encrypted")
+  private val encrypted: Boolean = config.getBoolean("encrypted").getOrElse(true)
 
   private case class DataEntry(
                                 id: String,
@@ -111,7 +111,7 @@ abstract class PensionsSchemeCacheRepository(
     val encryptedData = jsonCrypto.encrypt(unencrypted).value
 
     val document: JsValue = {
-      if(encrypted) {
+      if (encrypted) {
         val dataAsByteArray = SerializationUtils.serialize(encryptedData)
         Json.toJson(DataEntry(id, dataAsByteArray))
       } else
@@ -124,7 +124,7 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
-    if(encrypted) {
+    if (encrypted) {
       val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
       collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
         _.map {
@@ -144,10 +144,19 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   def getLastUpdated(id: String)(implicit ec: ExecutionContext): Future[Option[DateTime]] = {
-    collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
-      _.map {
-        dataEntry =>
-          dataEntry.lastUpdated
+    if (encrypted) {
+      collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
+        _.map {
+          dataEntry =>
+            dataEntry.lastUpdated
+        }
+      }
+    } else {
+      collection.find(BSONDocument("id" -> id)).one[JsonDataEntry].map {
+        _.map {
+          dataEntry =>
+            dataEntry.lastUpdated
+        }
       }
     }
   }
