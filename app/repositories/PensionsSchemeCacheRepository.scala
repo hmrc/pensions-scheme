@@ -16,8 +16,11 @@
 
 package repositories
 
+import java.nio.charset.StandardCharsets
+
 import org.apache.commons.lang3.SerializationUtils
 import org.joda.time.{DateTime, DateTimeZone}
+import play.api.http.Writeable
 import play.api.libs.json._
 import play.api.{Configuration, Logger}
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -129,7 +132,8 @@ abstract class PensionsSchemeCacheRepository(
       collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
         _.map {
           dataEntry =>
-            val decrypted: PlainText = jsonCrypto.decrypt(Crypted(SerializationUtils.deserialize(dataEntry.data.byteArray)))
+            val dataAsString = new String(dataEntry.data.byteArray, StandardCharsets.UTF_8)
+            val decrypted: PlainText = jsonCrypto.decrypt(Crypted(dataAsString))
             Json.parse(decrypted.value)
         }
       }
