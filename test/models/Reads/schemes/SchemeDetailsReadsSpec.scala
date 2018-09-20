@@ -121,15 +121,15 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have current scheme members" in {
-        output.currentNumberOfMembers mustBe (schemeDetails \ "currentSchemeMembers").as[String]
+        output.members.currentNumber mustBe (schemeDetails \ "currentSchemeMembers").as[String]
       }
 
       "we have future scheme members" in {
-        output.futureNumberOfMembers mustBe (schemeDetails \ "futureSchemeMembers").as[String]
+        output.members.futureNumber mustBe (schemeDetails \ "futureSchemeMembers").as[String]
       }
 
       "we have an is regulated flag" in {
-        output.isInvestmentedRegulated mustBe (schemeDetails \ "isReguledSchemeInvestment").as[Boolean]
+        output.isInvestmentRegulated mustBe (schemeDetails \ "isReguledSchemeInvestment").as[Boolean]
       }
 
       "we have an is occupational flag" in {
@@ -149,36 +149,54 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have an insurance company name" in {
-        output.insuranceName.value mustBe (schemeDetails \ "insuranceCompanyName").as[String]
+        output.insuranceCompany.value.name.value mustBe (schemeDetails \ "insuranceCompanyName").as[String]
       }
 
       "we don't have an insurance company name" in {
         val output = (schemeDetails - "insuranceCompanyName").as[SchemeDetails]
 
-        output.insuranceName mustBe None
+        output.insuranceCompany.value.name mustBe None
       }
 
-      "we have an insurance police number" in {
-        output.policeNumber.value mustBe (schemeDetails \ "policyNumber").as[String]
+      "we have an insurance policu number" in {
+        output.insuranceCompany.value.policyNumber.value mustBe (schemeDetails \ "policyNumber").as[String]
       }
 
-      "we don't have an insurance police number" in {
+      "we don't have an insurance policy number" in {
         val output = (schemeDetails - "policyNumber").as[SchemeDetails]
 
-        output.policeNumber mustBe None
+        output.insuranceCompany.value.policyNumber mustBe None
       }
 
       "we have the address of the insurance company" in {
-        output.insuranceAddress.value.addressLine1 mustBe (schemeDetails \ "insuranceCompanyAddressDetails" \ "line1").as[String]
+        output.insuranceCompany.value.address.value.addressLine1 mustBe (schemeDetails \ "insuranceCompanyAddressDetails" \ "line1").as[String]
       }
 
       "we don't have the address of the insurance company" in {
         val output = (schemeDetails - "insuranceCompanyAddressDetails").as[SchemeDetails]
 
-        output.insuranceAddress mustBe None
+        output.insuranceCompany.value.address mustBe None
+      }
+
+      "we don't have policy number, address or name for an insurance company" in {
+        val output = (schemeDetails - "policyNumber" - "insuranceCompanyAddressDetails" - "insuranceCompanyName").as[SchemeDetails]
+
+        output.insuranceCompany mustBe None
       }
     }
   }
+}
+
+case class SchemeMembers(currentNumber: String, futureNumber: String)
+
+object SchemeMembers {
+  implicit val formats : Format[SchemeMembers] = Json.format[SchemeMembers]
+}
+
+case class InsuranceCompany(name: Option[String],policyNumber: Option[String], address: Option[CorrespondenceAddress])
+
+object InsuranceCompany {
+  implicit val formats : Format[InsuranceCompany] = Json.format[InsuranceCompany]
 }
 
 case class SchemeDetails(srn: Option[String],
@@ -189,16 +207,14 @@ case class SchemeDetails(srn: Option[String],
                          typeOfScheme: Option[String],
                          otherTypeOfScheme: Option[String],
                          hasMoreThanTenTrustees: Boolean,
-                         currentNumberOfMembers: String,
-                         futureNumberOfMembers: String,
-                         isInvestmentedRegulated: Boolean,
+                         members: SchemeMembers,
+                         isInvestmentRegulated: Boolean,
                          isOccupational: Boolean,
                          benefits: String,
                          country: String,
                          areBenefitsSecured: Boolean,
-                         insuranceName: Option[String],
-                         policeNumber: Option[String],
-                         insuranceAddress: Option[CorrespondenceAddress])
+                         insuranceCompany: Option[InsuranceCompany]) {
+}
 
 object SchemeDetails {
   implicit val reads : Reads[SchemeDetails] = (
@@ -221,7 +237,14 @@ object SchemeDetails {
       (JsPath \ "policyNumber").readNullable[String] and
       (JsPath \ "insuranceCompanyAddressDetails").readNullable[CorrespondenceAddress]
   )((srn,pstr,status,name,isMasterTrust,typeOfScheme,otherTypeOfScheme,moreThan10Trustees,members,futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy,insuranceAddress) =>
-    SchemeDetails(srn,pstr,status,name,isMasterTrust.getOrElse(false),typeOfScheme,otherTypeOfScheme,moreThan10Trustees.getOrElse(false),members,
-      futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy,insuranceAddress))
+    SchemeDetails(srn,pstr,status,name,isMasterTrust.getOrElse(false),typeOfScheme,otherTypeOfScheme,moreThan10Trustees.getOrElse(false),SchemeMembers(members,futureMembers),isRegulated,isOccupational,benefits,country,benefitsSecured,
+      getInsuranceCompany(insuranceName,policy,insuranceAddress)))
   implicit val writes : Writes[SchemeDetails] = Json.writes[SchemeDetails]
+
+  private def getInsuranceCompany(name: Option[String],policyNumber: Option[String], address: Option[CorrespondenceAddress]) : Option[InsuranceCompany] = {
+    (name,policyNumber,address) match {
+      case (None,None,None) => None
+      case _ => Some(InsuranceCompany(name,policyNumber,address))
+    }
+  }
 }
