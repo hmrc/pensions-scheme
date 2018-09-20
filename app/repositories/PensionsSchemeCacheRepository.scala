@@ -115,7 +115,7 @@ abstract class PensionsSchemeCacheRepository(
 
     val document: JsValue = {
       if (encrypted) {
-        val dataAsByteArray = SerializationUtils.serialize(encryptedData)
+        val dataAsByteArray: Array[Byte] = encryptedData.getBytes("UTF-8")
         Json.toJson(DataEntry(id, dataAsByteArray))
       } else
         Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC)))
