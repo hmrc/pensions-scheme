@@ -16,6 +16,7 @@
 
 package models.Reads.schemes
 
+import models.CorrespondenceAddress
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -39,7 +40,13 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       "schemeEstablishedCountry" -> "GB",
       "isSchemeBenefitsInsuranceCompany" -> JsBoolean(true),
       "insuranceCompanyName" -> "Test Insurance",
-      "policyNumber" -> "ADN3JDA")
+      "policyNumber" -> "ADN3JDA",
+      "insuranceCompanyAddressDetails" -> Json.obj("line1" -> JsString("line1"),
+        "line2" -> JsString("line2"),
+        "line3" -> JsString("line3"),
+        "line4" -> JsString("line4"),
+        "postalCode" -> JsString("NE1"),
+        "countryCode" -> JsString("GB")))
 
     val output = schemeDetails.as[SchemeDetails]
 
@@ -160,6 +167,16 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
 
         output.policeNumber mustBe None
       }
+
+      "we have the address of the insurance company" in {
+        output.insuranceAddress.value.addressLine1 mustBe (schemeDetails \ "insuranceCompanyAddressDetails" \ "line1").as[String]
+      }
+
+      "we don't have the address of the insurance company" in {
+        val output = (schemeDetails - "insuranceCompanyAddressDetails").as[SchemeDetails]
+
+        output.insuranceAddress mustBe None
+      }
     }
   }
 }
@@ -180,7 +197,8 @@ case class SchemeDetails(srn: Option[String],
                          country: String,
                          areBenefitsSecured: Boolean,
                          insuranceName: Option[String],
-                         policeNumber: Option[String])
+                         policeNumber: Option[String],
+                         insuranceAddress: Option[CorrespondenceAddress])
 
 object SchemeDetails {
   implicit val reads : Reads[SchemeDetails] = (
@@ -200,9 +218,10 @@ object SchemeDetails {
       (JsPath \ "schemeEstablishedCountry").read[String] and
       (JsPath \ "isSchemeBenefitsInsuranceCompany").read[Boolean] and
       (JsPath \ "insuranceCompanyName").readNullable[String] and
-      (JsPath \ "policyNumber").readNullable[String]
-  )((srn,pstr,status,name,isMasterTrust,typeOfScheme,otherTypeOfScheme,moreThan10Trustees,members,futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy) =>
+      (JsPath \ "policyNumber").readNullable[String] and
+      (JsPath \ "insuranceCompanyAddressDetails").readNullable[CorrespondenceAddress]
+  )((srn,pstr,status,name,isMasterTrust,typeOfScheme,otherTypeOfScheme,moreThan10Trustees,members,futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy,insuranceAddress) =>
     SchemeDetails(srn,pstr,status,name,isMasterTrust.getOrElse(false),typeOfScheme,otherTypeOfScheme,moreThan10Trustees.getOrElse(false),members,
-      futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy))
+      futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy,insuranceAddress))
   implicit val writes : Writes[SchemeDetails] = Json.writes[SchemeDetails]
 }
