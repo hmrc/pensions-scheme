@@ -30,12 +30,18 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       "isSchemeMasterTrust" -> JsBoolean(true),
       "pensionSchemeStructure" -> "Other",
       "otherPensionSchemeStructure" -> "Other type",
-      "hasMoreThanTenTrustees" -> JsBoolean(true))
+      "hasMoreThanTenTrustees" -> JsBoolean(true),
+      "currentSchemeMembers" -> "1",
+      "futureSchemeMembers" -> "2",
+      "isReguledSchemeInvestment" -> JsBoolean(true),
+      "isOccupationalPensionScheme" -> JsBoolean(true),
+      "schemeProvideBenefits" -> "Defined Benefits only")
+
+    val output = schemeDetails.as[SchemeDetails]
+
 
     "correctly parse to a model of SchemeDetails" when {
       "we have a srn" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.srn.value mustBe (schemeDetails \ "srn").as[String]
       }
 
@@ -46,8 +52,6 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have a pstr" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.pstr.value mustBe (schemeDetails \ "pstr").as[String]
       }
 
@@ -58,20 +62,14 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have a status" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.status mustBe (schemeDetails \ "schemeStatus").as[String]
       }
 
       "we have a name" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.name mustBe (schemeDetails \ "schemeName").as[String]
       }
 
       "we have a flag to say if it is a master trust" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.isMasterTrust mustBe (schemeDetails \ "isSchemeMasterTrust").as[Boolean]
       }
 
@@ -82,8 +80,6 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have a type of scheme" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.typeOfScheme.value mustBe (schemeDetails \ "pensionSchemeStructure").as[String]
       }
 
@@ -94,8 +90,6 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have other types of schemes" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.otherTypeOfScheme.value mustBe (schemeDetails \ "otherPensionSchemeStructure").as[String]
       }
 
@@ -106,8 +100,6 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have a flag that tells us if there is more than 10 trustees" in {
-        val output = schemeDetails.as[SchemeDetails]
-
         output.hasMoreThanTenTrustees mustBe (schemeDetails \ "hasMoreThanTenTrustees").as[Boolean]
       }
 
@@ -116,11 +108,43 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
 
         output.hasMoreThanTenTrustees mustBe false
       }
+
+      "we have current scheme members" in {
+        output.currentNumberOfMembers mustBe (schemeDetails \ "currentSchemeMembers").as[String]
+      }
+
+      "we have future scheme members" in {
+        output.futureNumberOfMembers mustBe (schemeDetails \ "futureSchemeMembers").as[String]
+      }
+
+      "we have an is regulated flag" in {
+        output.isInvestmentedRegulated mustBe (schemeDetails \ "isReguledSchemeInvestment").as[Boolean]
+      }
+
+      "we have an is occupational flag" in {
+        output.isOccupational mustBe (schemeDetails \ "isOccupationalPensionScheme").as[Boolean]
+      }
+
+      "we have the way the scheme provides its benefits" in {
+        output.benefits mustBe (schemeDetails \ "schemeProvideBenefits").as[String]
+      }
     }
   }
 }
 
-case class SchemeDetails(srn: Option[String], pstr: Option[String], status: String, name: String, isMasterTrust: Boolean, typeOfScheme: Option[String], otherTypeOfScheme: Option[String], hasMoreThanTenTrustees: Boolean)
+case class SchemeDetails(srn: Option[String],
+                         pstr: Option[String],
+                         status: String,
+                         name: String,
+                         isMasterTrust: Boolean,
+                         typeOfScheme: Option[String],
+                         otherTypeOfScheme: Option[String],
+                         hasMoreThanTenTrustees: Boolean,
+                         currentNumberOfMembers: String,
+                         futureNumberOfMembers: String,
+                         isInvestmentedRegulated: Boolean,
+                         isOccupational: Boolean,
+                         benefits: String)
 
 object SchemeDetails {
   implicit val reads : Reads[SchemeDetails] = (
@@ -131,7 +155,13 @@ object SchemeDetails {
       (JsPath \ "isSchemeMasterTrust").readNullable[Boolean] and
       (JsPath \ "pensionSchemeStructure").readNullable[String] and
       (JsPath \ "otherPensionSchemeStructure").readNullable[String] and
-      (JsPath \ "hasMoreThanTenTrustees").readNullable[Boolean]
-  )((srn,pstr,status,name,isMasterTrust,typeOfScheme,otherTypeOfScheme,moreThan10Trustees) => SchemeDetails(srn,pstr,status,name,isMasterTrust.getOrElse(false),typeOfScheme,otherTypeOfScheme,moreThan10Trustees.getOrElse(false)))
+      (JsPath \ "hasMoreThanTenTrustees").readNullable[Boolean] and
+      (JsPath \ "currentSchemeMembers").read[String] and
+      (JsPath \ "futureSchemeMembers").read[String] and
+      (JsPath \ "isReguledSchemeInvestment").read[Boolean] and
+      (JsPath \ "isOccupationalPensionScheme").read[Boolean] and
+      (JsPath \ "schemeProvideBenefits").read[String]
+  )((srn,pstr,status,name,isMasterTrust,typeOfScheme,otherTypeOfScheme,moreThan10Trustees,members,futureMembers,isRegulated,isOccupational,benefits) =>
+    SchemeDetails(srn,pstr,status,name,isMasterTrust.getOrElse(false),typeOfScheme,otherTypeOfScheme,moreThan10Trustees.getOrElse(false),members,futureMembers,isRegulated,isOccupational,benefits))
   implicit val writes : Writes[SchemeDetails] = Json.writes[SchemeDetails]
 }
