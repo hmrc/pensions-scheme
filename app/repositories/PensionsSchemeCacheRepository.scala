@@ -16,6 +16,7 @@
 
 package repositories
 
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
 import org.apache.commons.lang3.SerializationUtils
@@ -110,12 +111,11 @@ abstract class PensionsSchemeCacheRepository(
 
     val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
 
-    val unencrypted = PlainText(Json.stringify(data))
-    val encryptedData = jsonCrypto.encrypt(unencrypted).value
-
     val document: JsValue = {
       if (encrypted) {
-        val dataAsByteArray = SerializationUtils.serialize(encryptedData)
+        val unencrypted = PlainText(Json.stringify(data))
+        val encryptedData = jsonCrypto.encrypt(unencrypted).value
+        val dataAsByteArray = StandardCharsets.UTF_8.encode(encryptedData).array
         Json.toJson(DataEntry(id, dataAsByteArray))
       } else
         Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC)))
