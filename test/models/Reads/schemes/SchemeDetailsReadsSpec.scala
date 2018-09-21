@@ -16,9 +16,8 @@
 
 package models.Reads.schemes
 
-import models.CorrespondenceAddress
+import models.SchemeDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
@@ -183,68 +182,6 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
 
         output.insuranceCompany mustBe None
       }
-    }
-  }
-}
-
-case class SchemeMembers(currentNumber: String, futureNumber: String)
-
-object SchemeMembers {
-  implicit val formats : Format[SchemeMembers] = Json.format[SchemeMembers]
-}
-
-case class InsuranceCompany(name: Option[String],policyNumber: Option[String], address: Option[CorrespondenceAddress])
-
-object InsuranceCompany {
-  implicit val formats : Format[InsuranceCompany] = Json.format[InsuranceCompany]
-}
-
-case class SchemeDetails(srn: Option[String],
-                         pstr: Option[String],
-                         status: String,
-                         name: String,
-                         isMasterTrust: Boolean,
-                         typeOfScheme: Option[String],
-                         otherTypeOfScheme: Option[String],
-                         hasMoreThanTenTrustees: Boolean,
-                         members: SchemeMembers,
-                         isInvestmentRegulated: Boolean,
-                         isOccupational: Boolean,
-                         benefits: String,
-                         country: String,
-                         areBenefitsSecured: Boolean,
-                         insuranceCompany: Option[InsuranceCompany]) {
-}
-
-object SchemeDetails {
-  implicit val reads : Reads[SchemeDetails] = (
-    (JsPath \ "srn").readNullable[String] and
-      (JsPath \ "pstr").readNullable[String] and
-    (JsPath \ "schemeStatus").read[String] and
-      (JsPath \ "schemeName").read[String] and
-      (JsPath \ "isSchemeMasterTrust").readNullable[Boolean] and
-      (JsPath \ "pensionSchemeStructure").readNullable[String] and
-      (JsPath \ "otherPensionSchemeStructure").readNullable[String] and
-      (JsPath \ "hasMoreThanTenTrustees").readNullable[Boolean] and
-      (JsPath \ "currentSchemeMembers").read[String] and
-      (JsPath \ "futureSchemeMembers").read[String] and
-      (JsPath \ "isReguledSchemeInvestment").read[Boolean] and
-      (JsPath \ "isOccupationalPensionScheme").read[Boolean] and
-      (JsPath \ "schemeProvideBenefits").read[String] and
-      (JsPath \ "schemeEstablishedCountry").read[String] and
-      (JsPath \ "isSchemeBenefitsInsuranceCompany").read[Boolean] and
-      (JsPath \ "insuranceCompanyName").readNullable[String] and
-      (JsPath \ "policyNumber").readNullable[String] and
-      (JsPath \ "insuranceCompanyAddressDetails").readNullable[CorrespondenceAddress]
-  )((srn,pstr,status,name,isMasterTrust,typeOfScheme,otherTypeOfScheme,moreThan10Trustees,members,futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy,insuranceAddress) =>
-    SchemeDetails(srn,pstr,status,name,isMasterTrust.getOrElse(false),typeOfScheme,otherTypeOfScheme,moreThan10Trustees.getOrElse(false),SchemeMembers(members,futureMembers),isRegulated,isOccupational,benefits,country,benefitsSecured,
-      getInsuranceCompany(insuranceName,policy,insuranceAddress)))
-  implicit val writes : Writes[SchemeDetails] = Json.writes[SchemeDetails]
-
-  private def getInsuranceCompany(name: Option[String],policyNumber: Option[String], address: Option[CorrespondenceAddress]) : Option[InsuranceCompany] = {
-    (name,policyNumber,address) match {
-      case (None,None,None) => None
-      case _ => Some(InsuranceCompany(name,policyNumber,address))
     }
   }
 }
