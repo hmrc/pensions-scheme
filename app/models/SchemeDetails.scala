@@ -31,7 +31,7 @@ case class InsuranceCompany(name: Option[String],policyNumber: Option[String], a
 object InsuranceCompany {
   implicit val formats : Format[InsuranceCompany] = Json.format[InsuranceCompany]
 }
-
+//TODO: Do not use, this is part of ticket PODS-1589 still being worked on.
 case class SchemeDetails(srn: Option[String],
                          pstr: Option[String],
                          status: String,
