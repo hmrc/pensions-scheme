@@ -69,8 +69,37 @@ object SchemeDetails {
       (JsPath \ "insuranceCompanyName").readNullable[String] and
       (JsPath \ "policyNumber").readNullable[String] and
       (JsPath \ "insuranceCompanyAddressDetails").readNullable[CorrespondenceAddress]
-    )((srn,pstr,status,name,isMasterTrust,typeOfScheme,otherTypeOfScheme,moreThan10Trustees,members,futureMembers,isRegulated,isOccupational,benefits,country,benefitsSecured,insuranceName,policy,insuranceAddress) =>
-    SchemeDetails(srn,pstr,status,name,isMasterTrust.getOrElse(false),typeOfScheme,otherTypeOfScheme,moreThan10Trustees.getOrElse(false),SchemeMembers(members,futureMembers),isRegulated,isOccupational,benefits,country,benefitsSecured,
+    )((srn,
+       pstr,
+       status,
+       name,
+       isMasterTrust,
+       typeOfScheme,
+       otherTypeOfScheme,
+       moreThan10Trustees,
+       members,futureMembers,
+       isRegulated,
+       isOccupational,
+       benefits,
+       country,
+       benefitsSecured,
+       insuranceName,
+       policy,
+       insuranceAddress) =>
+    SchemeDetails(srn,
+      pstr,
+      status,
+      name,
+      isMasterTrust.getOrElse(false),
+      typeOfScheme,
+      otherTypeOfScheme,
+      moreThan10Trustees.getOrElse(false),
+      SchemeMembers(members,futureMembers),
+      isRegulated,
+      isOccupational,
+      benefits,
+      country,
+      benefitsSecured,
       getInsuranceCompany(insuranceName,policy,insuranceAddress)))
   implicit val writes : Writes[SchemeDetails] = Json.writes[SchemeDetails]
 
