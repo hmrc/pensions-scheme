@@ -120,11 +120,11 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we have current scheme members" in {
-        output.members.currentNumber mustBe (schemeDetails \ "currentSchemeMembers").as[String]
+        output.members.current mustBe (schemeDetails \ "currentSchemeMembers").as[String]
       }
 
       "we have future scheme members" in {
-        output.members.futureNumber mustBe (schemeDetails \ "futureSchemeMembers").as[String]
+        output.members.future mustBe (schemeDetails \ "futureSchemeMembers").as[String]
       }
 
       "we have an is regulated flag" in {
