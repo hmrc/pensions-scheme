@@ -20,10 +20,10 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 
-case class SchemeMembers(currentNumber: String, futureNumber: String)
+case class SchemeMemberNumbers(current: String, future: String)
 
-object SchemeMembers {
-  implicit val formats : Format[SchemeMembers] = Json.format[SchemeMembers]
+object SchemeMemberNumbers {
+  implicit val formats : Format[SchemeMemberNumbers] = Json.format[SchemeMemberNumbers]
 }
 
 case class InsuranceCompany(name: Option[String],policyNumber: Option[String], address: Option[CorrespondenceAddress])
@@ -40,7 +40,7 @@ case class SchemeDetails(srn: Option[String],
                          typeOfScheme: Option[String],
                          otherTypeOfScheme: Option[String],
                          hasMoreThanTenTrustees: Boolean,
-                         members: SchemeMembers,
+                         members: SchemeMemberNumbers,
                          isInvestmentRegulated: Boolean,
                          isOccupational: Boolean,
                          benefits: String,
@@ -94,7 +94,7 @@ object SchemeDetails {
       typeOfScheme,
       otherTypeOfScheme,
       moreThan10Trustees.getOrElse(false),
-      SchemeMembers(members,futureMembers),
+      SchemeMemberNumbers(members,futureMembers),
       isRegulated,
       isOccupational,
       benefits,
