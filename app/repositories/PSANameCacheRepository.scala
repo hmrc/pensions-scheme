@@ -26,6 +26,8 @@ class PSANameCacheRepository @Inject()(
                                       ) extends PensionsSchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.psa-name.name"),
   None,
-  component
+  component,
+  "psa.json.encryption",
+  config
 )
 

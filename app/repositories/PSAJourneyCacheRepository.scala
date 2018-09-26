@@ -19,6 +19,7 @@ package repositories
 import com.google.inject.Inject
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
+import uk.gov.hmrc.crypto.ApplicationCrypto
 
 class PSAJourneyCacheRepository @Inject()(
                                            config: Configuration,
@@ -26,6 +27,8 @@ class PSAJourneyCacheRepository @Inject()(
                                          ) extends PensionsSchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.psa-journey.name"),
   Some(config.underlying.getInt("mongodb.pensions-scheme-cache.psa-journey.timeToLiveInSeconds")),
-  component
+  component,
+  "psa.json.encryption",
+  config
 )
 
