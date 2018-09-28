@@ -98,7 +98,7 @@ abstract class PensionsSchemeCacheRepository(
 
     collection.indexesManager.ensure(index) map {
       result => {
-        Logger.debug(s"set [$indexName] with value $ttl -> result : $result")
+        Logger.warn(s"Created index $indexName on collection ${collection.name} with TTL value $ttl -> result: $result")
         result
       }
     } recover {
@@ -166,6 +166,7 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   def remove(id: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    Logger.warn(s"Removing row from collection ${collection.name} externalId:$id")
     val selector = BSONDocument("id" -> id)
     collection.remove(selector).map(_.ok)
   }
@@ -173,4 +174,5 @@ abstract class PensionsSchemeCacheRepository(
   def dropCollection()(implicit ec: ExecutionContext): Future[Unit] = {
     collection.drop()
   }
+
 }
