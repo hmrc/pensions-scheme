@@ -123,4 +123,15 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
         Matchers.any())(any(), any(), any())
     }
   }
+
+  "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
+    when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+      Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
+
+    val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(("psaId", psaIdNumber), ("schemeReferenceNumber", schemeReferenceNumber)))
+    ScalaFutures.whenReady(result.failed) { e =>
+      e mustBe a[BadRequestException]
+      e.getMessage mustBe errorResponse("INVALID_IDTYPE")
+    }
+  }
 }
