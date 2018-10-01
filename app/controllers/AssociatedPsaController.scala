@@ -30,18 +30,16 @@ import scala.concurrent.Future
 
 
 class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
-
   def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
-      val psaId: Option[String] = request.headers.get("psaId")
-      val srn: Option[String] = request.headers.get("schemeReferenceNumber")
+      val psaId = request.headers.get("psaId")
+      val srn = request.headers.get("schemeReferenceNumber")
 
-      srn match {
-        case Some(schemeReferenceNumber) =>
+      (srn,psaId) match {
+        case (Some(schemeReferenceNumber),Some(id)) =>
           schemeConnector.getSchemeDetails("srn", schemeReferenceNumber).map {
             case Right(schemeDetails) =>
-              val isAssociated = psaId.exists(id => schemeDetails.psaDetails.fold(false)(psaDetails => psaDetails.exists(psa => psa.id == id)))
-
+              val isAssociated = schemeDetails.psaDetails.fold(false)(psaDetails => psaDetails.exists(psa => psa.id == id))
               Ok(Json.toJson(isAssociated))
             case Left(e) => result(e)
           }
