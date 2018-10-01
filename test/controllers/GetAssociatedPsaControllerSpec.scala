@@ -58,16 +58,35 @@ class GetAssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
     def fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
       FakeRequest("GET", "/").withHeaders(("psaId", psaIdNumber), ("schemeReferenceNumber", schemeReferenceNumber))
 
-    "return OK when the scheme is registered successfully" in {
-
-      val successResponse = Json.toJson(psaDetailsSample)
+    "return OK when we retrieve whether if the psa is associated or not" in {
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
-      associatedPsaController.getSchemeDetails()(fakeRequest) map { result =>
-        result.header.status mustBe OK
-        result.body mustBe successResponse
-      }
+      val result = associatedPsaController.getSchemeDetails()(fakeRequest)
+
+      status(result) mustBe OK
+    }
+
+    "return false when the psa we retrieve is not associated" in {
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+        Future.successful(Right(psaSchemeDetailsSample)))
+
+      val result = associatedPsaController.getSchemeDetails()(fakeRequest)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(false)
+    }
+
+    "return true when the psa we retrieve is associated" in {
+      val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
+
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+        Future.successful(Right(psaSchemeDetailsSample)))
+
+      val result = associatedPsaController.getSchemeDetails()(request)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(true)
     }
   }
 

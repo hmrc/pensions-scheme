@@ -33,15 +33,17 @@ class GetAssociatedPsaController @Inject()(schemeConnector: SchemeConnector) ext
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
-      val psaId = request.headers.get("psaId")
-      val srn = request.headers.get("schemeReferenceNumber")
+      val psaId: Option[String] = request.headers.get("psaId")
+      val srn: Option[String] = request.headers.get("schemeReferenceNumber")
 
       srn match {
         case Some(schemeReferenceNumber) =>
           schemeConnector.getSchemeDetails("srn", schemeReferenceNumber).map {
-            case Right(httpResponse) => Ok(Json.toJson(httpResponse))
-            case Left(e)
-            => result(e)
+            case Right(schemeDetails) => {
+              val isAssociated = schemeDetails.psaDetails.fold(false)(psaDetails => psaDetails.exists(psa=>psa.id == psaId.get))
+              Ok(Json.toJson(isAssociated))
+            }
+            case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters PSA Id or SRN"))
       }
