@@ -62,4 +62,29 @@ trait Samples {
     correspondenceAddressDetails = CorrespondenceAddressDetails(ukAddressSample),
     correspondenceContactDetails = CorrespondenceContactDetails(contactDetailsSample),
     previousAddressDetails = Some(PreviousAddressDetails(isPreviousAddressLast12Month = true, Some(ukAddressSample))))
+
+  val psaSchemeDetailsSample = PsaSchemeDetails(
+    SchemeDetails(
+      Some("AAABA932JASDA"),
+      Some("A3DCADAA"),
+      "Pending",
+      "Test Scheme",
+      true,
+      Some("Other"),
+      Some("Other type"),
+      true,
+      SchemeMemberNumbers("1","2"),
+      true,
+      true,
+      "Defined Benefits only",
+      "GB",
+      true,
+      Some(InsuranceCompany(
+        Some("Test Insurance"),
+        Some("ADN3JDA"),
+        Some(CorrespondenceAddress(
+          "line1","line2",Some("line3"),Some("line4"),"GB",Some("NE1")))))),
+    Some(List(PsaDetails("2432374232",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))),
+      PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))))))
+
 }

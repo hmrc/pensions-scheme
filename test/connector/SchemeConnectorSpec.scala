@@ -20,6 +20,7 @@ import audit.AuditService
 import audit.testdoubles.StubSuccessfulAuditService
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
+import models._
 import org.joda.time.LocalDate
 import org.scalatest._
 import org.slf4j.event.Level
@@ -27,7 +28,7 @@ import play.api.LoggerLike
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http._
@@ -40,6 +41,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   with OptionValues
   with RecoverMethods
   with EitherValues
+  with Samples
   with ConnectorBehaviours {
 
   import SchemeConnectorSpec._
@@ -211,11 +213,11 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         .willReturn(
           ok
             .withHeader("Content-Type", "application/json")
-            .withBody(validSchemeDetailsResponse.toString())
+            .withBody(validSchemeDetailsResponseFromHOD.toString())
         )
     )
     connector.getSchemeDetails(schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe validSchemeDetailsResponse
+      response.right.value shouldBe psaSchemeDetailsSample
     }
   }
 
@@ -381,7 +383,35 @@ object SchemeConnectorSpec extends JsonFileReader {
   val listOfSchemeUrl = s"/pension-online/subscription/$psaId/list"
   val schemeDetailsUrl = s"/pension-online/psa-scheme-details/$schemeIdType/$idNumber"
   private val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
-  private val validSchemeDetailsResponse = readJsonFromFile("/data/validSchemeDetailsResponse.json")
+
+  private val schemeDetails = Json.obj("srn" -> JsString("AAABA932JASDA"),
+    "pstr" -> JsString("A3DCADAA"),
+    "schemeStatus" -> "Pending",
+    "schemeName" -> "Test Scheme",
+    "isSchemeMasterTrust" -> JsBoolean(true),
+    "pensionSchemeStructure" -> "Other",
+    "otherPensionSchemeStructure" -> "Other type",
+    "hasMoreThanTenTrustees" -> JsBoolean(true),
+    "currentSchemeMembers" -> "1",
+    "futureSchemeMembers" -> "2",
+    "isReguledSchemeInvestment" -> JsBoolean(true),
+    "isOccupationalPensionScheme" -> JsBoolean(true),
+    "schemeProvideBenefits" -> "Defined Benefits only",
+    "schemeEstablishedCountry" -> "GB",
+    "isSchemeBenefitsInsuranceCompany" -> JsBoolean(true),
+    "insuranceCompanyName" -> "Test Insurance",
+    "policyNumber" -> "ADN3JDA",
+    "insuranceCompanyAddressDetails" -> Json.obj("line1" -> JsString("line1"),
+      "line2" -> JsString("line2"),
+      "line3" -> JsString("line3"),
+      "line4" -> JsString("line4"),
+      "postalCode" -> JsString("NE1"),
+      "countryCode" -> JsString("GB")))
+  private val psaDetail1 = Json.obj("psaid" -> "2432374232", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
+  private val psaDetail2 = Json.obj("psaid" -> "1234444444", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
+
+  private val psaDetails = Json.arr(psaDetail1,psaDetail2)
+  val validSchemeDetailsResponseFromHOD = Json.obj("schemeDetails" -> schemeDetails, "psaDetails" -> psaDetails)
 
   private val invalidBusinessPartnerResponse =
     Json.stringify(

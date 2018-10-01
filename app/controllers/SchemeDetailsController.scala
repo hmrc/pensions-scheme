@@ -37,7 +37,7 @@ class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector) extend
       (idType,id) match {
         case (Some(schemeIdType),Some(idNumber)) =>
           schemeConnector.getSchemeDetails(schemeIdType, idNumber).map {
-            case Right(httpResponse) => Ok(httpResponse)
+            case Right(psaSchemeDetails) => Ok(Json.toJson(psaSchemeDetails))
             case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType or idNumber"))
