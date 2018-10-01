@@ -62,7 +62,7 @@ class AssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
-      val result = associatedPsaController.getSchemeDetails()(fakeRequest)
+      val result = associatedPsaController.isPsaAssociated()(fakeRequest)
 
       status(result) mustBe OK
     }
@@ -71,7 +71,7 @@ class AssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
-      val result = associatedPsaController.getSchemeDetails()(fakeRequest)
+      val result = associatedPsaController.isPsaAssociated()(fakeRequest)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(false)
@@ -83,7 +83,7 @@ class AssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
-      val result = associatedPsaController.getSchemeDetails()(request)
+      val result = associatedPsaController.isPsaAssociated()(request)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(false)
@@ -95,7 +95,7 @@ class AssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
-      val result = associatedPsaController.getSchemeDetails()(request)
+      val result = associatedPsaController.isPsaAssociated()(request)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(true)
@@ -109,7 +109,7 @@ class AssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
 //      Matchers.any())(any(), any(), any())
 
     recoverToSucceededIf[BadRequestException] {
-      associatedPsaController.getSchemeDetails()(FakeRequest("GET", "/").withHeaders(("psaIdNumber", psaIdNumber)))
+      associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(("psaIdNumber", psaIdNumber)))
     }
 
   }

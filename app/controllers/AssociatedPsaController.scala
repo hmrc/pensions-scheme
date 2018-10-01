@@ -31,7 +31,7 @@ import scala.concurrent.Future
 
 class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
 
-  def getSchemeDetails: Action[AnyContent] = Action.async {
+  def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
       val psaId: Option[String] = request.headers.get("psaId")
       val srn: Option[String] = request.headers.get("schemeReferenceNumber")
