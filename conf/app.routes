@@ -20,4 +20,4 @@ POST          /psa-name/*id                                controllers.PSANameCo
 
 POST          /email-response/*id                          controllers.EmailResponseController.retrieveStatus(id: String)
 
-GET           /psa-associated                               controllers.GetAssociatedPsaController.getSchemeDetails
+GET           /psa-associated                               controllers.AssociatedPsaController.getSchemeDetails

@@ -32,11 +32,11 @@ import uk.gov.hmrc.http.BadRequestException
 
 import scala.concurrent.Future
 
-class GetAssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
+class AssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
   with BeforeAndAfter with MustMatchers with JsonFileReader with RecoverMethods with Samples {
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val associatedPsaController = new GetAssociatedPsaController(mockSchemeConnector)
+  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector)
   private val schemeReferenceNumber = "S999999999"
   private val psaIdNumber = "A1234567"
 

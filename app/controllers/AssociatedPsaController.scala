@@ -29,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class GetAssociatedPsaController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
+class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
