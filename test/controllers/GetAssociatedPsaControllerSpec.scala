@@ -67,7 +67,7 @@ class GetAssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
       status(result) mustBe OK
     }
 
-    "return false when the psa we retrieve is not associated" in {
+    "return false when the psa we retrieve does not exist within the list of PSAs we receive from getSchemeDetails" in {
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
@@ -77,7 +77,19 @@ class GetAssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
       contentAsJson(result) mustBe Json.toJson(false)
     }
 
-    "return true when the psa we retrieve is associated" in {
+    "return false if we have no psa id available in the headers" in {
+      val request = FakeRequest("GET", "/").withHeaders(("schemeReferenceNumber", schemeReferenceNumber))
+
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+        Future.successful(Right(psaSchemeDetailsSample)))
+
+      val result = associatedPsaController.getSchemeDetails()(request)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(false)
+    }
+
+    "return true when the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails" in {
       val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
 
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
