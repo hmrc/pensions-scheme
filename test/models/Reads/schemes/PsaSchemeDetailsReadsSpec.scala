@@ -16,11 +16,9 @@
 
 package models.Reads.schemes
 
-import models.{PsaDetails, SchemeDetails}
+import models.PsaSchemeDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
-
 
 class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
   "A JSON payload containing a PsaSchemeDetails" should {
@@ -66,13 +64,4 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
       }
     }
   }
-}
-
-case class PsaSchemeDetails(schemeDetails: SchemeDetails, psaDetails: Option[Seq[PsaDetails]])
-
-object PsaSchemeDetails {
-  implicit val reads : Reads[PsaSchemeDetails] = (
-    (JsPath \ "schemeDetails").read[SchemeDetails] and
-    (JsPath \ "psaDetails").readNullable[Seq[PsaDetails]])((schemeDetails,psaDetails) => PsaSchemeDetails(schemeDetails,psaDetails))
-  implicit val writes : Writes[PsaSchemeDetails] = Json.writes[PsaSchemeDetails]
 }
