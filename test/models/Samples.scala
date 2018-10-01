@@ -87,4 +87,7 @@ trait Samples {
     Some(List(PsaDetails("2432374232",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))),
       PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))))))
 
+  val psaDetailsSample =
+    List(PsaDetails("2432374232",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))),
+      PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))))
 }

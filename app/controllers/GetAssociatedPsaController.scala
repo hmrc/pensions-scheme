@@ -19,7 +19,7 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeConnector
-import play.api.Logger
+import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -39,7 +39,7 @@ class GetAssociatedPsaController @Inject()(schemeConnector: SchemeConnector) ext
       srn match {
         case Some(schemeReferenceNumber) =>
           schemeConnector.getSchemeDetails("srn", schemeReferenceNumber).map {
-            case Right(schemeDetails) => Ok(schemeDetails)
+            case Right(httpResponse) => Ok(Json.toJson(httpResponse))
             case Left(e)
             => result(e)
           }

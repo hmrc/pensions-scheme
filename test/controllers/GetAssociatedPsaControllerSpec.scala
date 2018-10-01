@@ -18,12 +18,13 @@ package controllers
 
 import base.JsonFileReader
 import connector.SchemeConnector
+import models.Samples
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{reset, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{AsyncWordSpec, BeforeAndAfter, MustMatchers, RecoverMethods}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -31,7 +32,8 @@ import uk.gov.hmrc.http.BadRequestException
 
 import scala.concurrent.Future
 
-class GetAssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar with BeforeAndAfter with MustMatchers with JsonFileReader with RecoverMethods {
+class GetAssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar
+  with BeforeAndAfter with MustMatchers with JsonFileReader with RecoverMethods with Samples {
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
   val associatedPsaController = new GetAssociatedPsaController(mockSchemeConnector)
@@ -58,10 +60,9 @@ class GetAssociatedPsaControllerSpec extends AsyncWordSpec with MockitoSugar wit
 
     "return OK when the scheme is registered successfully" in {
 
-      val successResponse: JsValue = readJsonFromFile("/data/validAssociatedPsaResponse.json")
-
+      val successResponse = Json.toJson(psaDetailsSample)
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
-        Future.successful(Right(successResponse)))
+        Future.successful(Right(psaSchemeDetailsSample)))
 
       associatedPsaController.getSchemeDetails()(fakeRequest) map { result =>
         result.header.status mustBe OK
