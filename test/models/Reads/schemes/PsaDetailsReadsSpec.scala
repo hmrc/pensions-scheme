@@ -16,9 +16,9 @@
 
 package models.Reads.schemes
 
+import models.PsaDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 
 class PsaDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
@@ -77,35 +77,4 @@ class PsaDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
       }
     }
   }
-
-  case class PsaIndividual(firstName: Option[String], middleName: Option[String], lastName: Option[String])
-
-  object PsaIndividual {
-    implicit val formats : OFormat[PsaIndividual] = Json.format[PsaIndividual]
-  }
-
-  case class PsaDetails(id: String, organisationOrPartnershipName: Option[String], individual: Option[PsaIndividual])
-
-  private def getPsaIndividual(firstName : Option[String], middleName : Option[String], lastName: Option[String]) : Option[PsaIndividual] = {
-    (firstName,middleName,lastName) match {
-      case (None,None,None) => None
-      case  _ => Some(PsaIndividual(firstName,middleName,lastName))
-    }
-  }
-
-  object PsaDetails {
-    implicit val reads: Reads[PsaDetails] = (
-      (JsPath \ "psaid").read[String] and
-        (JsPath \ "organizationOrPartnershipName").readNullable[String] and
-        (JsPath \ "firstName").readNullable[String] and
-        (JsPath \ "middleName").readNullable[String] and
-        (JsPath \ "lastName").readNullable[String]
-    )((psaid,
-       organizationOrPartnershipName,
-       firstName,
-       middleName,
-       lastName) => PsaDetails(psaid, organizationOrPartnershipName, getPsaIndividual(firstName, middleName, lastName)))
-    implicit val writes: Writes[PsaDetails] = Json.writes[PsaDetails]
-  }
-
 }
