@@ -39,15 +39,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
   val associatedPsaController = new AssociatedPsaController(mockSchemeConnector)
   private val schemeReferenceNumber = "S999999999"
   private val psaIdNumber = "A1234567"
-
-  def errorResponse(code: String): String = {
-    Json.stringify(
-      Json.obj(
-        "code" -> code,
-        "reason" -> s"Reason for $code"
-      )
-    )
-  }
+  val srnRequest = "srn"
 
   before {
     reset(mockSchemeConnector)
@@ -59,7 +51,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       FakeRequest("GET", "/").withHeaders(("psaId", psaIdNumber), ("schemeReferenceNumber", schemeReferenceNumber))
 
     "return OK when we retrieve whether if the psa is associated or not" in {
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
       val result = associatedPsaController.isPsaAssociated()(fakeRequest)
@@ -80,7 +72,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
     "return true when the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails" in {
       val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.successful(Right(psaSchemeDetailsSample)))
 
       val result = associatedPsaController.isPsaAssociated()(request)
@@ -103,7 +95,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
 
 
   "throw BadRequestException when the PsaId is not present in the header" in {
-    val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(("srn", schemeReferenceNumber)))
+    val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders((srnRequest, schemeReferenceNumber)))
 
     ScalaFutures.whenReady(result.failed) { e =>
       e mustBe a[BadRequestException]
@@ -125,7 +117,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
   }
 
   "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
-    when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+    when(mockSchemeConnector.getSchemeDetails(Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
       Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
     val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(("psaId", psaIdNumber), ("schemeReferenceNumber", schemeReferenceNumber)))

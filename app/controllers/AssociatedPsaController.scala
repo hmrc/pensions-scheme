@@ -34,10 +34,11 @@ class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector) extend
     implicit request => {
       val psaId = request.headers.get("psaId")
       val srn = request.headers.get("schemeReferenceNumber")
+      val srnRequest = "srn"
 
       (srn,psaId) match {
         case (Some(schemeReferenceNumber),Some(id)) =>
-          schemeConnector.getSchemeDetails("srn", schemeReferenceNumber).map {
+          schemeConnector.getSchemeDetails(srnRequest, schemeReferenceNumber).map {
             case Right(schemeDetails) =>
               val isAssociated = schemeDetails.psaDetails.fold(false)(psaDetails => psaDetails.exists(psa => psa.id == id))
               Ok(Json.toJson(isAssociated))
