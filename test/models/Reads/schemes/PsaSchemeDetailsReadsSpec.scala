@@ -50,21 +50,23 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
       val psaDetail2 = Json.obj("psaid" -> "1234444444", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
 
       val psaDetails = Json.arr(psaDetail1,psaDetail2)
-      val psaSchemeDetails = Json.obj("schemeDetails" -> schemeDetails, "psaDetails" -> psaDetails)
+      val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails, "psaDetails" -> psaDetails))
 
       val output = psaSchemeDetails.as[PsaSchemeDetails]
 
       "we have a valid Scheme Details object within it" in {
-        output.schemeDetails.srn.value mustBe (psaSchemeDetails \ "schemeDetails" \ "srn").as[String]
+        output.schemeDetails.srn.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").as[String]
       }
 
       "we have a valid list of psa details within it" in {
-        output.psaDetails.value.head.id mustBe (psaSchemeDetails \ "psaDetails" \ 0 \ "psaid").as[String]
-        output.psaDetails.value(1).id mustBe (psaSchemeDetails \ "psaDetails" \ 1 \ "psaid").as[String]
+        output.psaDetails.value.head.id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 0 \ "psaid").as[String]
+        output.psaDetails.value(1).id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 1 \ "psaid").as[String]
       }
 
       "we don't have psa details" in {
-        val output = (psaSchemeDetails - "psaDetails").as[PsaSchemeDetails]
+        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
+
+        val output = psaSchemeDetails.as[PsaSchemeDetails]
         output.psaDetails mustBe None
       }
     }

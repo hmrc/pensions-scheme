@@ -411,7 +411,7 @@ object SchemeConnectorSpec extends JsonFileReader {
   private val psaDetail2 = Json.obj("psaid" -> "1234444444", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
 
   private val psaDetails = Json.arr(psaDetail1,psaDetail2)
-  val validSchemeDetailsResponseFromHOD = Json.obj("schemeDetails" -> schemeDetails, "psaDetails" -> psaDetails)
+  val validSchemeDetailsResponseFromHOD = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails, "psaDetails" -> psaDetails))
 
   private val invalidBusinessPartnerResponse =
     Json.stringify(
