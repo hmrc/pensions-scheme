@@ -23,8 +23,8 @@ case class PsaSchemeDetails(schemeDetails: SchemeDetails, psaDetails: Option[Seq
 
 object PsaSchemeDetails {
   implicit val reads : Reads[PsaSchemeDetails] = (
-    (JsPath \ "schemeDetails").read[SchemeDetails] and
-      (JsPath \ "psaDetails").readNullable[Seq[PsaDetails]])((schemeDetails,psaDetails) => PsaSchemeDetails(schemeDetails,psaDetails))
+    (JsPath \ "psaSchemeDetails" \ "schemeDetails").read[SchemeDetails] and
+      (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable[Seq[PsaDetails]])((schemeDetails,psaDetails) => PsaSchemeDetails(schemeDetails,psaDetails))
   implicit val writes : Writes[PsaSchemeDetails] = Json.writes[PsaSchemeDetails]
 }
 
