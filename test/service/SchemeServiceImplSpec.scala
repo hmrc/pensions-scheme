@@ -19,7 +19,6 @@ package service
 import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
-import connector.SchemeConnectorSpec.readJsonFromFile
 import connector.{BarsConnector, SchemeConnector}
 import models._
 import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
@@ -122,12 +121,12 @@ class FakeSchemeConnector extends SchemeConnector {
                                 idNumber: String
                                )(implicit headerCarrier: HeaderCarrier,
                                  ec: ExecutionContext,
-                                 request: RequestHeader): Future[Either[HttpException,JsValue]] = validSchemeDetailsResponse
+                                 request: RequestHeader): Future[Either[HttpException,PsaSchemeDetails]] = validSchemeDetailsResponse
 
   override def getCorrelationId(requestId: Option[String]): String = "4725c81192514c069b8ff1d84659b2df"
 }
 
-object FakeSchemeConnector {
+object FakeSchemeConnector extends Samples {
 
   val schemeRegistrationResponse = SchemeRegistrationResponse("test-processing-date", "test-scheme-reference-number")
   val schemeRegistrationResponseJson: JsValue = Json.toJson(schemeRegistrationResponse)
@@ -141,8 +140,7 @@ object FakeSchemeConnector {
 
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
 
-  private val validSchemeDetailsResponse = Future.successful(Right(readJsonFromFile("/data/validSchemeDetailsResponse.json")))
-
+  private val validSchemeDetailsResponse = Future.successful(Right(psaSchemeDetailsSample))
 }
 
 class FakeBarsConnector extends BarsConnector {

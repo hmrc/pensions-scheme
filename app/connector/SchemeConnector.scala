@@ -21,9 +21,10 @@ import java.util.UUID.randomUUID
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
+import models.PsaSchemeDetails
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{JsValue, Writes}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -48,7 +49,7 @@ trait SchemeConnector {
 
   def getSchemeDetails(schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
                                                                ec: ExecutionContext,
-                                                               request: RequestHeader): Future[Either[HttpException,JsValue]]
+                                                               request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]]
 
 }
 
@@ -74,10 +75,12 @@ class SchemeConnectorImpl @Inject()(
   }
 
   //scalastyle:off cyclomatic.complexity
-  private def handleResponse(response: HttpResponse): Either[HttpException, JsValue] = {
+  private def handleResponse(response: HttpResponse): Either[HttpException, PsaSchemeDetails] = {
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
-      case OK => Right(response.json)
+      case OK => response.json.validate[PsaSchemeDetails].fold(
+        _ => Left(new BadRequestException("INVALID PAYLOAD")),
+        value => Right(value))
       case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
       case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
       case NOT_FOUND => Left(new NotFoundException(response.body))
@@ -87,6 +90,7 @@ class SchemeConnectorImpl @Inject()(
       case status => throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
     }
   }
+
   //scalastyle:on cyclomatic.complexity
   private def logFailures(endpoint: String, data: JsValue, schemaPath: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
     case Success(Left(e: BadRequestException)) if e.message.contains("INVALID_PAYLOAD") =>
@@ -116,7 +120,7 @@ class SchemeConnectorImpl @Inject()(
   override def getSchemeDetails(schemeIdType: String, idNumber: String)(implicit
                                                                         headerCarrier: HeaderCarrier,
                                                                         ec: ExecutionContext,
-                                                                        request: RequestHeader): Future[Either[HttpException,JsValue]] = {
+                                                                        request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]] = {
 
     implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
       override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
@@ -125,8 +129,7 @@ class SchemeConnectorImpl @Inject()(
     val schemeDetailsUrl = config.schemeDetailsUrl.format(schemeIdType, idNumber)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc,
-      implicitly) map handleResponse
+    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly) map handleResponse
   }
 
   override def listOfSchemes(psaId: String)(implicit
