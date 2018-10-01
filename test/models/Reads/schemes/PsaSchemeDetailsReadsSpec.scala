@@ -62,6 +62,11 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
         output.psaDetails.value.head.id mustBe (psaSchemeDetails \ "psaDetails" \ 0 \ "psaid").as[String]
         output.psaDetails.value(1).id mustBe (psaSchemeDetails \ "psaDetails" \ 1 \ "psaid").as[String]
       }
+
+      "we don't have psa details" in {
+        val output = (psaSchemeDetails - "psaDetails").as[PsaSchemeDetails]
+        output.psaDetails mustBe None
+      }
     }
   }
 }
