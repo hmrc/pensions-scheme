@@ -1,9 +1,9 @@
 {
   "psaSchemeDetails": {
     "schemeDetails": {
-      "srn": "S9000000000",
-      "pstr": "00000000AA",
-      "schemeStatus": "Pending",
+      "srn": "S2100000005",
+      "pstr": "21000005AA",
+      "schemeStatus": "Open",
       "schemeName": "Benefits Scheme",
       "isSchemeMasterTrust": true,
       "pensionSchemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
@@ -118,14 +118,24 @@
         }
       ]
     },
-    "psaDetails": {
+      "psaDetails": [{
       "psaid": "A0000000",
-      "organizationOrPartnershipName": "partnetship name",
+      "organizationOrPartnershipName": "partnership name",
       "firstName": "Taylor",
       "middleName": "Middle",
       "lastName": "Rayon",
       "relationshipType": "Primary",
       "relationshipDate": "1978-03-22"
-    }
+    },
+      {
+        "psaid": "A0000001",
+        "organizationOrPartnershipName": "partnership name 1",
+        "firstName": "Smith",
+        "middleName": "A",
+        "lastName": "Tony",
+        "relationshipType": "Primary",
+        "relationshipDate": "1977-03-22"
+      }
+    ]
   }
 }

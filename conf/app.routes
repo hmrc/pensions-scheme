@@ -1,21 +1,23 @@
 # microservice specific routes
 
-POST        /register-scheme                            controllers.SchemeController.registerScheme
-GET         /list-of-schemes                            controllers.SchemeController.listOfSchemes
+POST          /register-scheme                             controllers.SchemeController.registerScheme
+GET           /list-of-schemes                             controllers.SchemeController.listOfSchemes
 
-GET         /scheme                                     controllers.SchemeDetailsController.getSchemeDetails
+GET           /scheme                                      controllers.SchemeDetailsController.getSchemeDetails
 
 # answers caching in protected mongo
-GET         /journey-cache/scheme/:id                   controllers.SchemeJourneyCacheController.get(id: String)
-POST        /journey-cache/scheme/:id                   controllers.SchemeJourneyCacheController.save(id: String)
-DELETE      /journey-cache/scheme/:id                   controllers.SchemeJourneyCacheController.remove(id: String)
-GET         /journey-cache/scheme/:id/lastUpdated       controllers.SchemeJourneyCacheController.lastUpdated(id: String)
+GET           /journey-cache/scheme/:id                    controllers.SchemeJourneyCacheController.get(id: String)
+POST          /journey-cache/scheme/:id                    controllers.SchemeJourneyCacheController.save(id: String)
+DELETE        /journey-cache/scheme/:id                    controllers.SchemeJourneyCacheController.remove(id: String)
+GET           /journey-cache/scheme/:id/lastUpdated        controllers.SchemeJourneyCacheController.lastUpdated(id: String)
 
-GET         /journey-cache/psa/:id                      controllers.PSAJourneyCacheController.get(id: String)
-POST        /journey-cache/psa/:id                      controllers.PSAJourneyCacheController.save(id: String)
-DELETE      /journey-cache/psa/:id                      controllers.PSAJourneyCacheController.remove(id: String)
+GET           /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.get(id: String)
+POST          /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.save(id: String)
+DELETE        /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.remove(id: String)
 
-GET         /psa-name/*id                               controllers.PSANameController.get(id: String)
-POST        /psa-name/*id                               controllers.PSANameController.save(id: String)
+GET           /psa-name/*id                                controllers.PSANameController.get(id: String)
+POST          /psa-name/*id                                controllers.PSANameController.save(id: String)
 
-POST        /email-response/*id                         controllers.EmailResponseController.retrieveStatus(id: String)
+POST          /email-response/*id                          controllers.EmailResponseController.retrieveStatus(id: String)
+
+GET           /is-psa-associated                               controllers.AssociatedPsaController.isPsaAssociated

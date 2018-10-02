@@ -407,7 +407,7 @@ object SchemeConnectorSpec extends JsonFileReader {
       "line4" -> JsString("line4"),
       "postalCode" -> JsString("NE1"),
       "countryCode" -> JsString("GB")))
-  private val psaDetail1 = Json.obj("psaid" -> "2432374232", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
+  private val psaDetail1 = Json.obj("psaid" -> "A0000001", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
   private val psaDetail2 = Json.obj("psaid" -> "1234444444", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
 
   private val psaDetails = Json.arr(psaDetail1,psaDetail2)

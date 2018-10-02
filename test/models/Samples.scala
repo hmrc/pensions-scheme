@@ -84,7 +84,6 @@ trait Samples {
         Some("ADN3JDA"),
         Some(CorrespondenceAddress(
           "line1","line2",Some("line3"),Some("line4"),"GB",Some("NE1")))))),
-    Some(List(PsaDetails("2432374232",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))),
+    Some(List(PsaDetails("A0000001",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))),
       PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))))))
-
 }
