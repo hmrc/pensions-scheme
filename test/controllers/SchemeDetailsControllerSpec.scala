@@ -39,15 +39,6 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
   private val schemeIdType = "pstr"
   private val idNumber = "00000000AA"
 
-  def errorResponse(code: String): String = {
-    Json.stringify(
-      Json.obj(
-        "code" -> code,
-        "reason" -> s"Reason for $code"
-      )
-    )
-  }
-
   before {
     reset(mockSchemeConnector)
   }
