@@ -13,3 +13,5 @@
 ->         /                          prod.Routes
 
 DELETE      /test-only/psa-name                                   controllers.PSANameController.dropCollection
+
+GET         /test-only/mongo-diagnostics                          controllers.MongoDiagnosticsController.mongoDiagnostics()
