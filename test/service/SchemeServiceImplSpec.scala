@@ -21,6 +21,7 @@ import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
 import models._
+import models.schemes.PsaSchemeDetails
 import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}

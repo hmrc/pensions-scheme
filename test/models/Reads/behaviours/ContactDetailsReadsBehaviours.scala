@@ -14,23 +14,30 @@
  * limitations under the License.
  */
 
-package models.Reads
+package models.Reads.behaviours
 
 import models.ContactDetails
-import models.Reads.behaviours.ContactDetailsReadsBehaviours
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.JsObject
 
-class ContactDetailsReadsSpec extends ContactDetailsReadsBehaviours {
+trait ContactDetailsReadsBehaviours extends WordSpec with MustMatchers with OptionValues {
 
-  "A JSON payload containing contact details" should {
+  def commonContactDetails(contactDetails: JsObject): Unit ={
 
-    "Map to a valid ContactDetails object" when {
+    val result =  contactDetails.as[ContactDetails](ContactDetails.apiReads)
 
-      val input = Json.obj("phone" -> "0758237281", "email" -> "test@test.com")
+    "A JSON payload containing contact details" should {
 
-      behave like commonContactDetails(input)
+      "read into a valid contact details object " when {
 
+        "we have a email" in {
+          result.email mustBe (contactDetails \ "email").as[String]
+        }
+
+        "we have a phone" in {
+          result.telephone mustBe (contactDetails \ "phone").as[String]
+        }
+      }
     }
   }
 }
