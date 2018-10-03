@@ -119,5 +119,4 @@ object IndividualsDetailsReadsSpec {
 
   val individualDetails = Json.obj("personDetails" -> personalDetails, "nino" -> "AA999999A", "utr" -> "1234567892",
     "correspondenceAddressDetails" -> addressDetails, "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails)
-
 }

@@ -25,51 +25,51 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
     "Map correctly to an Address type" when {
 
       "we have an incoming address coming from DES" when {
-        val address = Json.obj("line1" -> JsString("line1"), "line2" -> JsString("line2"), "line3" -> JsString("line3"), "line4" -> JsString("line4"),
-          "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
-        val result = address.as[CorrespondenceAddress]
+          val address = Json.obj("line1" -> JsString("line1"), "line2" -> JsString("line2"), "line3" -> JsString("line3"), "line4" -> JsString("line4"),
+            "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
+          val result = address.as[CorrespondenceAddress]
 
-        "with addressLine 1" in {
-          result.addressLine1 mustBe (address \ "line1").as[String]
-        }
+          "with addressLine 1" in {
+            result.addressLine1 mustBe (address \ "line1").as[String]
+          }
 
-        "with addressLine 2" in {
-          result.addressLine2 mustBe (address \ "line2").as[String]
-        }
+          "with addressLine 2" in {
+            result.addressLine2 mustBe (address \ "line2").as[String]
+          }
 
-        "with addressLine 3" in {
-          result.addressLine3.value mustBe (address \ "line3").as[String]
-        }
+          "with addressLine 3" in {
+            result.addressLine3.value mustBe (address \ "line3").as[String]
+          }
 
-        "with no address line 3" in {
-          val result = (address - "line3").as[CorrespondenceAddress]
+          "with no address line 3" in {
+            val result = (address - "line3").as[CorrespondenceAddress]
 
-          result.addressLine3 mustBe None
-        }
+            result.addressLine3 mustBe None
+          }
 
-        "with addressLine 4" in {
-          result.addressLine4.value mustBe (address \ "line4").as[String]
-        }
+          "with addressLine 4" in {
+            result.addressLine4.value mustBe (address \ "line4").as[String]
+          }
 
-        "with no address line 4" in {
-          val result = (address - "line4").as[CorrespondenceAddress]
+          "with no address line 4" in {
+            val result = (address - "line4").as[CorrespondenceAddress]
 
-          result.addressLine4 mustBe None
-        }
+            result.addressLine4 mustBe None
+          }
 
-        "with postalCode" in {
-          result.postalCode.value mustBe (address \ "postalCode").as[String]
-        }
+          "with postalCode" in {
+            result.postalCode.value mustBe (address \ "postalCode").as[String]
+          }
 
-        "with no postalCode" in {
-          val result = (address - "postalCode").as[CorrespondenceAddress]
+          "with no postalCode" in {
+            val result = (address - "postalCode").as[CorrespondenceAddress]
 
-          result.postalCode mustBe None
-        }
+            result.postalCode mustBe None
+          }
 
-        "with countryCode" in {
-          result.countryCode mustBe (address \ "countryCode").as[String]
-        }
+          "with countryCode" in {
+            result.countryCode mustBe (address \ "countryCode").as[String]
+          }
       }
 
       val address = Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"), "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
