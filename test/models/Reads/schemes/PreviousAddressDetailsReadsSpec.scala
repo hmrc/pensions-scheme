@@ -19,16 +19,10 @@ package models.Reads.schemes
 import models.CorrespondenceAddress
 import models.schemes.PreviousAddressDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsBoolean, JsString, Json}
 
-class PreviousAddressDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
+class PreviousAddressDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with MockData {
 
-  val addressDetails = Json.obj("nonUKAddress" -> JsBoolean(false), "line1" -> JsString("line1"), "line2" -> JsString("line2"), "line3" -> JsString("line3"), "line4" -> JsString("line4"),
-    "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
-
-  val previousAddressDetails = Json.obj("isPreviousAddressLast12Month" -> JsBoolean(true), "previousAddress" -> addressDetails)
-
-  "A Json payload containing previous address details" should {
+   "A Json payload containing previous address details" should {
 
     "read into a valid previous address details object" when {
 

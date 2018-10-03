@@ -16,17 +16,16 @@
 
 package models.Reads.schemes
 
-import models.Reads.behaviours.ContactDetailsReadsBehaviours
+import models.Reads.behaviours.{AddressReadsBehaviours, ContactDetailsReadsBehaviours}
 import models.schemes._
 import models.{ContactDetails, CorrespondenceAddress}
-import play.api.libs.json._
 
 
-class IndividualsDetailsReadsSpec extends ContactDetailsReadsBehaviours {
-
-  import IndividualsDetailsReadsSpec._
+class IndividualsDetailsReadsSpec extends AddressReadsBehaviours with ContactDetailsReadsBehaviours with MockData {
 
   behave like commonContactDetails(fullContactDetails)
+
+  behave like correspondenceAddressDetails(addressDetails)
 
   "A JSON payload containing personal details" should {
 
@@ -103,20 +102,4 @@ class IndividualsDetailsReadsSpec extends ContactDetailsReadsBehaviours {
 
     }
   }
-}
-
-
-object IndividualsDetailsReadsSpec {
-
-  val personalDetails = Json.obj("firstName" -> "abcdef", "middleName" -> "fdgdgfggfdg", "lastName" -> "dfgfdgdfg", "dateOfBirth" -> "1955-03-29")
-
-  val addressDetails = Json.obj("nonUKAddress" -> JsBoolean(false), "line1" -> "line1", "line2" -> "line2", "line3" -> JsString("line3"), "line4" -> JsString("line4"),
-    "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
-
-  val fullContactDetails = Json.obj("phone" -> "0758237281", "email" -> "test@test.com", "mobileNumber" -> "4564564664", "fax" -> "4654654313")
-
-  val previousAddressDetails = Json.obj("isPreviousAddressLast12Month" -> JsBoolean(true), "previousAddress" -> addressDetails)
-
-  val individualDetails = Json.obj("personDetails" -> personalDetails, "nino" -> "AA999999A", "utr" -> "1234567892",
-    "correspondenceAddressDetails" -> addressDetails, "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails)
 }
