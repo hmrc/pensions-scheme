@@ -18,7 +18,7 @@ package models.Reads.schemes
 
 import play.api.libs.json.{JsBoolean, JsString, Json}
 
-trait MockData {
+trait MockSchemeData {
 
   val personalDetails = Json.obj("firstName" -> "abcdef", "middleName" -> "fdgdgfggfdg", "lastName" -> "dfgfdgdfg", "dateOfBirth" -> "1955-03-29")
 

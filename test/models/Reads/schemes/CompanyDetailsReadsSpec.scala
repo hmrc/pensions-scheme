@@ -21,7 +21,7 @@ import models.schemes.{CompanyDetails, IndividualDetails, PreviousAddressDetails
 import models.{ContactDetails, CorrespondenceAddress}
 import play.api.libs.json.Json
 
-class CompanyDetailsReadsSpec extends AddressReadsBehaviours with ContactDetailsReadsBehaviours with MockData {
+class CompanyDetailsReadsSpec extends AddressReadsBehaviours with ContactDetailsReadsBehaviours with MockSchemeData {
 
   behave like commonContactDetails(fullContactDetails)
 

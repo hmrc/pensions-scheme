@@ -21,7 +21,7 @@ import models.schemes._
 import models.{ContactDetails, CorrespondenceAddress}
 
 
-class IndividualsDetailsReadsSpec extends AddressReadsBehaviours with ContactDetailsReadsBehaviours with MockData {
+class IndividualsDetailsReadsSpec extends AddressReadsBehaviours with ContactDetailsReadsBehaviours with MockSchemeData {
 
   behave like commonContactDetails(fullContactDetails)
 
