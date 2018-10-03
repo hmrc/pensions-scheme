@@ -16,16 +16,12 @@
 
 package models.Reads.schemes
 
-import models.Reads.behaviours.{AddressReadsBehaviours, ContactDetailsReadsBehaviours}
 import models.schemes.{CompanyDetails, IndividualDetails, PreviousAddressDetails}
-import models.{ContactDetails, CorrespondenceAddress}
+import models.{ContactDetails, CorrespondenceAddress, Samples}
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Json
 
-class CompanyDetailsReadsSpec extends AddressReadsBehaviours with ContactDetailsReadsBehaviours with MockSchemeData {
-
-  behave like commonContactDetails(fullContactDetails)
-
-  behave like correspondenceAddressDetails(addressDetails)
+class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with MockSchemeData {
 
   "A JSON payload containing company or organisationDetails details" should {
 
@@ -102,9 +98,10 @@ class CompanyDetailsReadsSpec extends AddressReadsBehaviours with ContactDetails
           "crnNumber"-> "AA999999A", "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999",
           "correspondenceAddressDetails"-> addressDetails, "correspondenceContactDetails" -> fullContactDetails,
           "previousAddressDetails" -> previousAddressDetails, "directorsDetails" -> Json.arr(individualDetails, individualDetails))
+        val result = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
 
-        companyOrOrganisationDetails.as(CompanyDetails.apiReads).directorsDetails.value mustBe (companyOrOrganisationDetails \ "directorsDetails").as(CompanyDetails.seq(IndividualDetails.apiReads))
-        companyOrOrganisationDetails.as(CompanyDetails.apiReads).directorsDetails.value.length mustBe 2
+        result.directorsDetails.value mustBe (companyOrOrganisationDetails \ "directorsDetails").as(CompanyDetails.seq(IndividualDetails.apiReads))
+        result.directorsDetails.value.length mustBe 2
       }
 
       "we don't have a directorsDetails" in {
