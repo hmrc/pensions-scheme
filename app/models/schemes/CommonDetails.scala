@@ -69,13 +69,13 @@ object IndividualDetails {
 }
 
 
-case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
+case class PreviousAddressDetails(isPreviousAddressLast12Month: Option[Boolean],
                                   previousAddress: Option[CorrespondenceAddress] = None)
 
 object PreviousAddressDetails {
 
   val apiReads: Reads[PreviousAddressDetails] = (
-    (JsPath \ s"isPreviousAddressLast12Month").read[Boolean] and
+    (JsPath \ s"isPreviousAddressLast12Month").readNullable[Boolean] and
       (JsPath \ s"previousAddress").readNullable[CorrespondenceAddress]
     ) ((addressLast12Months, address) => {
     PreviousAddressDetails(addressLast12Months, address)

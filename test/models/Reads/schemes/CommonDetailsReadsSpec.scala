@@ -89,7 +89,13 @@ class CommonDetailsReadsSpec extends CommonAddressTest with CommonContactDetails
     "read into a valid previous address details object" when {
 
       "we have a isPreviousAddressLast12Month" in {
-        previousAddressDetails.as[PreviousAddressDetails].isPreviousAddressLast12Month mustBe (previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
+        previousAddressDetails.as[PreviousAddressDetails].isPreviousAddressLast12Month.value mustBe (previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
+      }
+
+      "we don't have a isPreviousAddressLast12Month" in {
+        val inputWithoutPreviousAddress = previousAddressDetails - "isPreviousAddressLast12Month"
+
+        inputWithoutPreviousAddress.as[PreviousAddressDetails].isPreviousAddressLast12Month mustBe None
       }
 
       "we have a previousAddress" in {
