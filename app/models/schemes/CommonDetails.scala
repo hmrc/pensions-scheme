@@ -33,7 +33,7 @@ object PersonalDetails {
     ) ((firstName, middleName, lastName, dateOfBirth) => PersonalDetails(getName(firstName, middleName, lastName), dateOfBirth))
 
 
-  implicit val formats : OFormat[PersonalDetails] = Json.format[PersonalDetails]
+  implicit val formats: OFormat[PersonalDetails] = Json.format[PersonalDetails]
 
 
   private def getName(firstName: Option[String], middleName: Option[String], lastName: Option[String]): Option[Name] = {

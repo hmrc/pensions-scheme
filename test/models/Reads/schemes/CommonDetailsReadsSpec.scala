@@ -22,7 +22,8 @@ import models.{ContactDetails, CorrespondenceAddress}
 import play.api.libs.json._
 
 
-class CommonDetailsReadsSpec extends CommonAddressTest with CommonContactDetailsReads{
+class CommonDetailsReadsSpec extends CommonAddressTest with CommonContactDetailsReads {
+
   import CommonDetailsReadsSpec._
 
   behave like commonContactDetails(fullContactDetails)
@@ -170,8 +171,6 @@ class CommonDetailsReadsSpec extends CommonAddressTest with CommonContactDetails
       }
     }
   }
-
-
 }
 
 
@@ -184,9 +183,9 @@ object CommonDetailsReadsSpec {
 
   val fullContactDetails = Json.obj("phone" -> "0758237281", "email" -> "test@test.com", "mobileNumber" -> "4564564664", "fax" -> "4654654313")
 
-  val previousAddressDetails = Json.obj("isPreviousAddressLast12Month"->JsBoolean(true), "previousAddress"-> addressDetails)
+  val previousAddressDetails = Json.obj("isPreviousAddressLast12Month" -> JsBoolean(true), "previousAddress" -> addressDetails)
 
-  val individualDetails = Json.obj("personDetails" -> personalDetails, "nino"-> "AA999999A", "utr"-> "1234567892",
-    "correspondenceAddressDetails"-> addressDetails, "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails)
+  val individualDetails = Json.obj("personDetails" -> personalDetails, "nino" -> "AA999999A", "utr" -> "1234567892",
+    "correspondenceAddressDetails" -> addressDetails, "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails)
 
 }
