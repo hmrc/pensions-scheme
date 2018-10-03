@@ -16,43 +16,18 @@
 
 package models.schemes
 
+import models.CorrespondenceAddress
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-
-
-case class AddressDetails(isNonUK: Boolean,
-                          addressLine1: String,
-                          addressLine2: String,
-                          addressLine3: Option[String],
-                          addressLine4: Option[String],
-                          countryCode: String,
-                          postalCode: Option[String])
-
-object AddressDetails {
-
-  val apiReads: Reads[AddressDetails] = (
-    (JsPath \ "nonUKAddress").read[Boolean] and
-    (JsPath \ "line1").read[String] and
-      (JsPath \ "line2").read[String] and
-      (JsPath \ "line3").readNullable[String] and
-      (JsPath \ "line4").readNullable[String] and
-      (JsPath \ "countryCode").read[String] and
-      (JsPath \ "postalCode").readNullable[String]
-    ) (AddressDetails.apply _)
-
-  implicit val formats: OFormat[AddressDetails] = Json.format[AddressDetails]
-
-}
-
 case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddress: Option[AddressDetails] = None)
+                                  previousAddress: Option[CorrespondenceAddress] = None)
 
 object PreviousAddressDetails {
 
   val apiReads: Reads[PreviousAddressDetails] = (
     (JsPath \ s"isPreviousAddressLast12Month").read[Boolean] and
-      (JsPath \ s"previousAddress").readNullable(AddressDetails.apiReads)
+      (JsPath \ s"previousAddress").readNullable(CorrespondenceAddress.reads)
     ) ((addressLast12Months, address) => {
     PreviousAddressDetails(addressLast12Months, address)
   })
