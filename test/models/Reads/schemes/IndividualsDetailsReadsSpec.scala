@@ -90,7 +90,7 @@ class IndividualsDetailsReadsSpec extends ContactDetailsReadsBehaviours {
       }
 
       "we have a correspondenceAddressDetails" in {
-        result.address mustBe (individualDetails \ "correspondenceAddressDetails").as(AddressDetails.apiReads)
+        result.address mustBe (individualDetails \ "correspondenceAddressDetails").as(CorrespondenceAddress.reads)
       }
 
       "we have a correspondenceContactDetails" in {

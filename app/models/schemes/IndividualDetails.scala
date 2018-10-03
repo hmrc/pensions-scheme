@@ -16,7 +16,7 @@
 
 package models.schemes
 
-import models.ContactDetails
+import models.{ContactDetails, CorrespondenceAddress}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 
@@ -24,7 +24,7 @@ import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 case class IndividualDetails(personalDetails: PersonalDetails,
                              nino: Option[String],
                              utr: Option[String],
-                             address: AddressDetails,
+                             address: CorrespondenceAddress,
                              contact: ContactDetails,
                              previousAddress: PreviousAddressDetails)
 
@@ -34,7 +34,7 @@ object IndividualDetails {
     (JsPath \ "personDetails").read(PersonalDetails.apiReads) and
       (JsPath \ "nino").readNullable[String] and
       (JsPath \ "utr").readNullable[String] and
-      (JsPath \ "correspondenceAddressDetails").read(AddressDetails.apiReads) and
+      (JsPath \ "correspondenceAddressDetails").read(CorrespondenceAddress.reads) and
       (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
       (JsPath \ "previousAddressDetails").read(PreviousAddressDetails.apiReads)
     ) ((personal, nino, utr, address, contact, previousAddress) =>
