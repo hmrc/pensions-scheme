@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package models
+package models.schemes
 
-import play.api.libs.json._
+import models.CorrespondenceAddress
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 
 case class SchemeMemberNumbers(current: String, future: String)

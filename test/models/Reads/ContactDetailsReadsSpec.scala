@@ -18,21 +18,39 @@ package models.Reads
 
 import models.ContactDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 
-class ContactDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
+class ContactDetailsReadsSpec extends CommonContactDetailsReads {
 
   "A JSON payload containing contact details" should {
-    "Map to a valid ContactDetails object" when {
-      val input = Json.obj("phone" -> "0758237281", "email" -> "test@test.com")
-      "We have a telephone number" in {
-        val result: ContactDetails = input.as[ContactDetails](ContactDetails.apiReads)
-        result.telephone mustBe "0758237281"
-      }
 
-      "We have an email address" in {
-        val result: ContactDetails = input.as[ContactDetails](ContactDetails.apiReads)
-        result.email mustBe "test@test.com"
+    "Map to a valid ContactDetails object" when {
+
+      val input = Json.obj("phone" -> "0758237281", "email" -> "test@test.com")
+
+      behave like commonContactDetails(input)
+
+    }
+  }
+}
+
+trait CommonContactDetailsReads extends WordSpec with MustMatchers with OptionValues {
+
+  def commonContactDetails(contactDetails: JsObject): Unit ={
+
+    val result =  contactDetails.as[ContactDetails](ContactDetails.apiReads)
+
+    "A JSON payload containing contact details" should {
+
+      "read into a valid contact details object " when {
+
+        "we have a email" in {
+          result.email mustBe (contactDetails \ "email").as[String]
+        }
+
+        "we have a phone" in {
+          result.telephone mustBe (contactDetails \ "phone").as[String]
+        }
       }
     }
   }

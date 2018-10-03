@@ -16,7 +16,7 @@
 
 package models.Reads.schemes
 
-import models.SchemeDetails
+import models.schemes.SchemeDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 

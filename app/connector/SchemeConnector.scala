@@ -21,7 +21,7 @@ import java.util.UUID.randomUUID
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
-import models.PsaSchemeDetails
+import models.schemes.PsaSchemeDetails
 import play.Logger
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Writes}

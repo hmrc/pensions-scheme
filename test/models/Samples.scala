@@ -16,6 +16,8 @@
 
 package models
 
+import models.schemes._
+
 trait Samples {
 
   val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")
