@@ -41,7 +41,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       "we don't have a utr" in {
         val inputWithoutUTR= establisherPartnershipDetails - "utr"
 
-        inputWithoutUTR.as[PartnershipDetails](PartnershipDetails.apiReads).utr mustBe None
+        inputWithoutUTR.as(PartnershipDetails.apiReads).utr mustBe None
       }
 
       "we have a vatRegistrationNumber" in {
@@ -51,13 +51,13 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       "we don't have a vatRegistrationNumber" in {
         val inputWithoutVatRegistrationNumber = establisherPartnershipDetails - "vatRegistrationNumber"
 
-        inputWithoutVatRegistrationNumber.as[PartnershipDetails](PartnershipDetails.apiReads).vatRegistration mustBe None
+        inputWithoutVatRegistrationNumber.as(PartnershipDetails.apiReads).vatRegistration mustBe None
       }
 
       "we don't have a payeReference" in {
         val inputWithoutPayeReference = establisherPartnershipDetails - "payeReference"
 
-        inputWithoutPayeReference.as[PartnershipDetails](PartnershipDetails.apiReads).payeRef mustBe None
+        inputWithoutPayeReference.as(PartnershipDetails.apiReads).payeRef mustBe None
       }
 
       "we have a correspondenceAddressDetails" in {
@@ -91,7 +91,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       "we don't have a partnerDetails" in {
         val inputWithoutPartnerDetails = establisherPartnershipDetails - "partnerDetails"
 
-        inputWithoutPartnerDetails.as[PartnershipDetails](PartnershipDetails.apiReads).partnerDetails mustBe None
+        inputWithoutPartnerDetails.as(PartnershipDetails.apiReads).partnerDetails mustBe None
       }
     }
   }

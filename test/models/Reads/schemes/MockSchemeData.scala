@@ -22,7 +22,8 @@ trait MockSchemeData {
 
   val personalDetails = Json.obj("firstName" -> "abcdef", "middleName" -> "fdgdgfggfdg", "lastName" -> "dfgfdgdfg", "dateOfBirth" -> "1955-03-29")
 
-  val addressDetails = Json.obj("nonUKAddress" -> JsBoolean(false), "line1" -> "line1", "line2" -> "line2", "line3" -> JsString("line3"), "line4" -> JsString("line4"),
+  val addressDetails = Json.obj("nonUKAddress" -> JsBoolean(false),
+    "line1" -> "line1", "line2" -> "line2", "line3" -> JsString("line3"), "line4" -> JsString("line4"),
     "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
   val fullContactDetails = Json.obj("phone" -> "0758237281", "email" -> "test@test.com", "mobileNumber" -> "4564564664", "fax" -> "4654654313")
@@ -41,4 +42,12 @@ trait MockSchemeData {
     "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999", "correspondenceAddressDetails"-> addressDetails,
     "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails,
     "partnerDetails" -> Json.arr(individualDetails))
+
+  val establisherDetails = Json.obj("individualDetails" -> Json.arr(individualDetails),
+    "companyOrOrganisationDetails" -> Json.arr(companyOrOrganisationDetails),
+    "partnershipTrusteeDetail" -> Json.arr(establisherPartnershipDetails))
+
+  val establisherDetailsWithMultipleData = Json.obj("individualDetails" -> Json.arr(individualDetails, individualDetails),
+    "companyOrOrganisationDetails" -> Json.arr(companyOrOrganisationDetails, companyOrOrganisationDetails),
+    "partnershipTrusteeDetail" -> Json.arr(establisherPartnershipDetails, establisherPartnershipDetails))
 }

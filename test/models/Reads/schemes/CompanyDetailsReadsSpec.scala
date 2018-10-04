@@ -40,7 +40,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       "we don't have a utr" in {
         val inputWithoutUTR= companyOrOrganisationDetails - "utr"
 
-        inputWithoutUTR.as[CompanyDetails](CompanyDetails.apiReads).utr mustBe None
+        inputWithoutUTR.as(CompanyDetails.apiReads).utr mustBe None
       }
 
       "we have a crnNumber" in {
@@ -50,7 +50,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       "we don't have a crnNumber" in {
         val inputWithoutCrnNumber = companyOrOrganisationDetails - "crnNumber"
 
-        inputWithoutCrnNumber.as[CompanyDetails](CompanyDetails.apiReads).crn mustBe None
+        inputWithoutCrnNumber.as(CompanyDetails.apiReads).crn mustBe None
       }
 
       "we have a vatRegistrationNumber" in {
@@ -60,13 +60,13 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       "we don't have a vatRegistrationNumber" in {
         val inputWithoutVatRegistrationNumber = companyOrOrganisationDetails - "vatRegistrationNumber"
 
-        inputWithoutVatRegistrationNumber.as[CompanyDetails](CompanyDetails.apiReads).vatRegistration mustBe None
+        inputWithoutVatRegistrationNumber.as(CompanyDetails.apiReads).vatRegistration mustBe None
       }
 
       "we don't have a payeReference" in {
         val inputWithoutPayeReference = companyOrOrganisationDetails - "payeReference"
 
-        inputWithoutPayeReference.as[CompanyDetails](CompanyDetails.apiReads).payeRef mustBe None
+        inputWithoutPayeReference.as(CompanyDetails.apiReads).payeRef mustBe None
       }
 
       "we have a correspondenceAddressDetails" in {
@@ -84,7 +84,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       "we don't have a previousAddressDetails" in {
         val inputWithoutPreviousAddressDetails = companyOrOrganisationDetails - "previousAddressDetails"
 
-        inputWithoutPreviousAddressDetails.as[CompanyDetails](CompanyDetails.apiReads).previousAddress mustBe None
+        inputWithoutPreviousAddressDetails.as(CompanyDetails.apiReads).previousAddress mustBe None
       }
 
       "we have a directorsDetails" in {
@@ -107,7 +107,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       "we don't have a directorsDetails" in {
         val inputWithoutDirectorsDetails = companyOrOrganisationDetails - "directorsDetails"
 
-        inputWithoutDirectorsDetails.as[CompanyDetails](CompanyDetails.apiReads).directorsDetails mustBe None
+        inputWithoutDirectorsDetails.as(CompanyDetails.apiReads).directorsDetails mustBe None
       }
     }
   }
