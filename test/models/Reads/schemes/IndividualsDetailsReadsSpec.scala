@@ -20,7 +20,7 @@ import models.schemes._
 import models.{ContactDetails, CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with MockSchemeData {
+class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
   "A JSON payload containing personal details" should {
 

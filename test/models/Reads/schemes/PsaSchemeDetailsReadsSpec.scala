@@ -20,7 +20,7 @@ import models.schemes.{EstablisherInfo, IndividualDetails, PsaSchemeDetails}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
-class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with MockSchemeData {
+class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with SchemeDetailsStubJsonData {
   "A JSON payload containing a PsaSchemeDetails" should {
     "Parse correctly to a PsaSchemeDetails object" when {
 

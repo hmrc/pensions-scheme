@@ -21,7 +21,7 @@ import models.{ContactDetails, CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Json
 
-class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with MockSchemeData {
+class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
   "A JSON payload containing company or organisationDetails details" should {
 

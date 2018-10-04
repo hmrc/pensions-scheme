@@ -20,7 +20,7 @@ import models.Samples
 import models.schemes.{CompanyDetails, EstablisherInfo, IndividualDetails, PartnershipDetails}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with MockSchemeData {
+class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
   "A JSON payload containing establisher details" should {
 

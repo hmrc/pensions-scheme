@@ -20,7 +20,7 @@ import models.CorrespondenceAddress
 import models.schemes.PreviousAddressInfo
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-class PreviousAddressInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with MockSchemeData {
+class PreviousAddressInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with SchemeDetailsStubJsonData {
 
    "A Json payload containing previous address details" should {
 

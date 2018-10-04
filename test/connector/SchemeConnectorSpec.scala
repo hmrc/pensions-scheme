@@ -20,7 +20,7 @@ import audit.AuditService
 import audit.testdoubles.StubSuccessfulAuditService
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import models.Reads.schemes.MockSchemeData
+import models.Reads.schemes.SchemeDetailsStubJsonData
 import models._
 import org.joda.time.LocalDate
 import org.scalatest._
@@ -373,7 +373,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 }
 
-object SchemeConnectorSpec extends JsonFileReader with MockSchemeData {
+object SchemeConnectorSpec extends JsonFileReader with SchemeDetailsStubJsonData {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
   val psaId = "test"
