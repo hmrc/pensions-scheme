@@ -16,46 +16,41 @@
 
 package models.Reads.schemes
 
-import models.schemes.PsaSchemeDetails
+import models.schemes.{EstablisherDetails, IndividualDetails, PsaSchemeDetails}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
-class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
+class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with MockSchemeData {
   "A JSON payload containing a PsaSchemeDetails" should {
     "Parse correctly to a PsaSchemeDetails object" when {
-      val schemeDetails = Json.obj("srn" -> JsString("AAABA932JASDA"),
-        "pstr" -> JsString("A3DCADAA"),
-        "schemeStatus" -> "Pending",
-        "schemeName" -> "Test Scheme",
-        "isSchemeMasterTrust" -> JsBoolean(true),
-        "pensionSchemeStructure" -> "Other",
-        "otherPensionSchemeStructure" -> "Other type",
-        "hasMoreThanTenTrustees" -> JsBoolean(true),
-        "currentSchemeMembers" -> "1",
-        "futureSchemeMembers" -> "2",
-        "isReguledSchemeInvestment" -> JsBoolean(true),
-        "isOccupationalPensionScheme" -> JsBoolean(true),
-        "schemeProvideBenefits" -> "Defined Benefits only",
-        "schemeEstablishedCountry" -> "GB",
-        "isSchemeBenefitsInsuranceCompany" -> JsBoolean(true),
-        "insuranceCompanyName" -> "Test Insurance",
-        "policyNumber" -> "ADN3JDA",
-        "insuranceCompanyAddressDetails" -> Json.obj("line1" -> JsString("line1"),
-          "line2" -> JsString("line2"),
-          "line3" -> JsString("line3"),
-          "line4" -> JsString("line4"),
-          "postalCode" -> JsString("NE1"),
-          "countryCode" -> JsString("GB")))
-      val psaDetail1 = Json.obj("psaid" -> "2432374232", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
-      val psaDetail2 = Json.obj("psaid" -> "1234444444", "organizationOrPartnershipName" -> "org name test", "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
-
-      val psaDetails = Json.arr(psaDetail1,psaDetail2)
-      val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails, "psaDetails" -> psaDetails))
 
       val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
       "we have a valid Scheme Details object within it" in {
         output.schemeDetails.srn.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").as[String]
+      }
+
+      "we have a establisherDetails" in {
+        output.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
+          PsaSchemeDetails.seq(EstablisherDetails.apiReads))
+        output.establisherDetails.value.length mustBe 1
+      }
+
+      "we have multiple establisherDetails" in {
+        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails,
+          "establisherDetails" -> Json.arr(establisherDetails, establisherDetails)))
+        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
+
+        output.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
+          EstablisherDetails.seq(EstablisherDetails.apiReads))
+        output.establisherDetails.value.length mustBe 2
+      }
+
+      "we don't have a establisherDetails" in {
+        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
+        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
+
+        output.establisherDetails mustBe None
       }
 
       "we have a valid list of psa details within it" in {

@@ -19,7 +19,9 @@ package models.schemes
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class PsaSchemeDetails(schemeDetails: SchemeDetails, psaDetails: Option[Seq[PsaDetails]])
+case class PsaSchemeDetails(schemeDetails: SchemeDetails,
+                            establisherDetails : Option[Seq[EstablisherDetails]],
+                            psaDetails: Option[Seq[PsaDetails]])
 
 object PsaSchemeDetails {
 
@@ -27,8 +29,9 @@ object PsaSchemeDetails {
 
   val apiReads : Reads[PsaSchemeDetails] = (
     (JsPath \ "psaSchemeDetails" \ "schemeDetails").read(SchemeDetails.apiReads) and
+    (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(seq(EstablisherDetails.apiReads)) and
       (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable(seq(PsaDetails.apiReads)))(
-    (schemeDetails,psaDetails) => PsaSchemeDetails(schemeDetails,psaDetails))
+    (schemeDetails, establisherDetails, psaDetails) => PsaSchemeDetails(schemeDetails, establisherDetails, psaDetails))
 
   implicit val formats: OFormat[PsaSchemeDetails] = Json.format[PsaSchemeDetails]
 

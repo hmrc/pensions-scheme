@@ -20,25 +20,26 @@ import play.api.libs.json.{JsBoolean, JsString, Json}
 
 trait MockSchemeData {
 
-  val personalDetails = Json.obj("firstName" -> "abcdef", "middleName" -> "fdgdgfggfdg", "lastName" -> "dfgfdgdfg", "dateOfBirth" -> "1955-03-29")
+  val personalDetails = Json.obj("firstName" -> "fName", "middleName" -> "mName", "lastName" -> "lName", "dateOfBirth" -> "1955-03-29")
 
   val addressDetails = Json.obj("nonUKAddress" -> JsBoolean(false),
     "line1" -> "line1", "line2" -> "line2", "line3" -> JsString("line3"), "line4" -> JsString("line4"),
     "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
-  val fullContactDetails = Json.obj("phone" -> "0758237281", "email" -> "test@test.com", "mobileNumber" -> "4564564664", "fax" -> "4654654313")
+  val fullContactDetails = Json.obj("phone" -> "07592113", "email" -> "test@test.com", "mobileNumber" -> "4564564664", "fax" -> "4654654313")
 
   val previousAddressDetails = Json.obj("isPreviousAddressLast12Month" -> JsBoolean(true), "previousAddress" -> addressDetails)
 
   val individualDetails = Json.obj("personDetails" -> personalDetails, "nino" -> "AA999999A", "utr" -> "1234567892",
-    "correspondenceAddressDetails" -> addressDetails, "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails)
+    "correspondenceAddressDetails" -> addressDetails, "correspondenceContactDetails" -> fullContactDetails,
+    "previousAddressDetails" -> previousAddressDetails)
 
   val companyOrOrganisationDetails = Json.obj("organisationName" -> "abc organisation", "utr"-> "7897700000",
     "crnNumber"-> "AA999999A", "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999",
     "correspondenceAddressDetails"-> addressDetails, "correspondenceContactDetails" -> fullContactDetails,
     "previousAddressDetails" -> previousAddressDetails, "directorsDetails" -> Json.arr(individualDetails))
 
-  val establisherPartnershipDetails = Json.obj("partnershipName" -> "abc organisation", "utr"-> "7897700000",
+  val establisherPartnershipDetails = Json.obj("partnershipName" -> "abc partnership", "utr"-> "7897700000",
     "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999", "correspondenceAddressDetails"-> addressDetails,
     "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails,
     "partnerDetails" -> Json.arr(individualDetails))
@@ -50,4 +51,40 @@ trait MockSchemeData {
   val establisherDetailsWithMultipleData = Json.obj("individualDetails" -> Json.arr(individualDetails, individualDetails),
     "companyOrOrganisationDetails" -> Json.arr(companyOrOrganisationDetails, companyOrOrganisationDetails),
     "partnershipTrusteeDetail" -> Json.arr(establisherPartnershipDetails, establisherPartnershipDetails))
+
+  val schemeDetails = Json.obj("srn" -> JsString("AAABA932JASDA"),
+    "pstr" -> JsString("A3DCADAA"),
+    "schemeStatus" -> "Pending",
+    "schemeName" -> "Test Scheme",
+    "isSchemeMasterTrust" -> JsBoolean(true),
+    "pensionSchemeStructure" -> "Other",
+    "otherPensionSchemeStructure" -> "Other type",
+    "hasMoreThanTenTrustees" -> JsBoolean(true),
+    "currentSchemeMembers" -> "1",
+    "futureSchemeMembers" -> "2",
+    "isReguledSchemeInvestment" -> JsBoolean(true),
+    "isOccupationalPensionScheme" -> JsBoolean(true),
+    "schemeProvideBenefits" -> "Defined Benefits only",
+    "schemeEstablishedCountry" -> "GB",
+    "isSchemeBenefitsInsuranceCompany" -> JsBoolean(true),
+    "insuranceCompanyName" -> "Test Insurance",
+    "policyNumber" -> "ADN3JDA",
+    "insuranceCompanyAddressDetails" -> Json.obj("line1" -> JsString("line1"),
+      "line2" -> JsString("line2"),
+      "line3" -> JsString("line3"),
+      "line4" -> JsString("line4"),
+      "postalCode" -> JsString("NE1"),
+      "countryCode" -> JsString("GB")))
+
+  val psaDetail1 = Json.obj("psaid" -> "A0000001", "organizationOrPartnershipName" -> "org name test",
+    "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
+
+  val psaDetail2 = Json.obj("psaid" -> "1234444444", "organizationOrPartnershipName" -> "org name test",
+    "firstName" -> "Mickey", "middleName" -> "m", "lastName" -> "Mouse")
+
+  val psaDetails = Json.arr(psaDetail1,psaDetail2)
+
+  val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails,
+    "establisherDetails" -> Json.arr(establisherDetails),
+    "psaDetails" -> psaDetails))
 }
