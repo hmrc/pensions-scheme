@@ -78,7 +78,7 @@ class SchemeConnectorImpl @Inject()(
   private def handleResponse(response: HttpResponse): Either[HttpException, PsaSchemeDetails] = {
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
-      case OK => response.json.validate[PsaSchemeDetails].fold(
+      case OK => response.json.validate(PsaSchemeDetails.apiReads).fold(
         _ => Left(new BadRequestException("INVALID PAYLOAD")),
         value => Right(value))
       case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))

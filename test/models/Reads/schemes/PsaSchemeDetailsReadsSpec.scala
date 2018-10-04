@@ -52,7 +52,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
       val psaDetails = Json.arr(psaDetail1,psaDetail2)
       val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails, "psaDetails" -> psaDetails))
 
-      val output = psaSchemeDetails.as[PsaSchemeDetails]
+      val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
       "we have a valid Scheme Details object within it" in {
         output.schemeDetails.srn.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").as[String]
@@ -66,7 +66,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
       "we don't have psa details" in {
         val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
 
-        val output = psaSchemeDetails.as[PsaSchemeDetails]
+        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
         output.psaDetails mustBe None
       }
     }
