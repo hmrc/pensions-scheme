@@ -42,7 +42,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   with OptionValues
   with RecoverMethods
   with EitherValues
-  with SchemeDetailsSample
+  with SchemeDetailsStubData
   with ConnectorBehaviours {
 
   import SchemeConnectorSpec._

@@ -18,7 +18,7 @@ package models
 
 import models.schemes.{PersonalInfo, EstablisherInfo, PreviousAddressInfo, _}
 
-trait SchemeDetailsSample {
+trait SchemeDetailsStubData {
 
   val personalName = IndividualName("fName", Some("mName"), "lName")
   val personalDetails =  PersonalInfo(personalName, "1955-03-29")
