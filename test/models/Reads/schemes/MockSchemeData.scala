@@ -36,4 +36,9 @@ trait MockSchemeData {
     "crnNumber"-> "AA999999A", "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999",
     "correspondenceAddressDetails"-> addressDetails, "correspondenceContactDetails" -> fullContactDetails,
     "previousAddressDetails" -> previousAddressDetails, "directorsDetails" -> Json.arr(individualDetails))
+
+  val establisherPartnershipDetails = Json.obj("partnershipName" -> "abc organisation", "utr"-> "7897700000",
+    "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999", "correspondenceAddressDetails"-> addressDetails,
+    "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails,
+    "partnerDetails" -> Json.arr(individualDetails))
 }

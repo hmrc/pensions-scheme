@@ -16,16 +16,12 @@
 
 package models.Reads.schemes
 
-import models.Reads.behaviours.{AddressReadsBehaviours, ContactDetailsReadsBehaviours}
 import models.schemes._
-import models.{ContactDetails, CorrespondenceAddress}
+import models.{ContactDetails, CorrespondenceAddress, Samples}
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
 
-class IndividualsDetailsReadsSpec extends AddressReadsBehaviours with ContactDetailsReadsBehaviours with MockSchemeData {
-
-  behave like commonContactDetails(fullContactDetails)
-
-  behave like correspondenceAddressDetails(addressDetails)
+class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with MockSchemeData {
 
   "A JSON payload containing personal details" should {
 

@@ -17,20 +17,23 @@
 package models.Reads
 
 import models.ContactDetails
-import models.Reads.behaviours.ContactDetailsReadsBehaviours
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 
-class ContactDetailsReadsSpec extends ContactDetailsReadsBehaviours {
+class ContactDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues {
 
   "A JSON payload containing contact details" should {
-
     "Map to a valid ContactDetails object" when {
-
       val input = Json.obj("phone" -> "0758237281", "email" -> "test@test.com")
+      "We have a telephone number" in {
+        val result: ContactDetails = input.as[ContactDetails](ContactDetails.apiReads)
+        result.telephone mustBe "0758237281"
+      }
 
-      behave like commonContactDetails(input)
-
+      "We have an email address" in {
+        val result: ContactDetails = input.as[ContactDetails](ContactDetails.apiReads)
+        result.email mustBe "test@test.com"
+      }
     }
   }
 }
