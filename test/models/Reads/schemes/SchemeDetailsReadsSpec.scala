@@ -47,7 +47,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
         "postalCode" -> JsString("NE1"),
         "countryCode" -> JsString("GB")))
 
-    val output = schemeDetails.as[SchemeDetails]
+    val output = schemeDetails.as(SchemeDetails.apiReads)
 
 
     "correctly parse to a model of SchemeDetails" when {
@@ -56,7 +56,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have an srn" in {
-        val output =  (schemeDetails - "srn").as[SchemeDetails]
+        val output =  (schemeDetails - "srn").as(SchemeDetails.apiReads)
 
         output.srn mustBe None
       }
@@ -66,7 +66,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have pstr" in {
-        val output = (schemeDetails - "pstr").as[SchemeDetails]
+        val output = (schemeDetails - "pstr").as(SchemeDetails.apiReads)
 
         output.pstr mustBe None
       }
@@ -84,7 +84,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "there is no flag to say it is a master trust so we assume it is not" in {
-        val output = (schemeDetails - "isSchemeMasterTrust").as[SchemeDetails]
+        val output = (schemeDetails - "isSchemeMasterTrust").as(SchemeDetails.apiReads)
 
         output.isMasterTrust mustBe false
       }
@@ -94,7 +94,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have a type of scheme" in {
-        val output = (schemeDetails - "pensionSchemeStructure").as[SchemeDetails]
+        val output = (schemeDetails - "pensionSchemeStructure").as(SchemeDetails.apiReads)
 
         output.typeOfScheme mustBe None
       }
@@ -104,7 +104,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have other types of scheme" in {
-        val output = (schemeDetails - "otherPensionSchemeStructure").as[SchemeDetails]
+        val output = (schemeDetails - "otherPensionSchemeStructure").as(SchemeDetails.apiReads)
 
         output.otherTypeOfScheme mustBe None
       }
@@ -114,7 +114,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have a flag that tells us if there is more than 10 trustees so we assume we haven't" in {
-        val output = (schemeDetails - "hasMoreThanTenTrustees").as[SchemeDetails]
+        val output = (schemeDetails - "hasMoreThanTenTrustees").as(SchemeDetails.apiReads)
 
         output.hasMoreThanTenTrustees mustBe false
       }
@@ -152,7 +152,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have an insurance company name" in {
-        val output = (schemeDetails - "insuranceCompanyName").as[SchemeDetails]
+        val output = (schemeDetails - "insuranceCompanyName").as(SchemeDetails.apiReads)
 
         output.insuranceCompany.value.name mustBe None
       }
@@ -162,7 +162,7 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have an insurance policy number" in {
-        val output = (schemeDetails - "policyNumber").as[SchemeDetails]
+        val output = (schemeDetails - "policyNumber").as(SchemeDetails.apiReads)
 
         output.insuranceCompany.value.policyNumber mustBe None
       }
@@ -172,13 +172,13 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
       }
 
       "we don't have the address of the insurance company" in {
-        val output = (schemeDetails - "insuranceCompanyAddressDetails").as[SchemeDetails]
+        val output = (schemeDetails - "insuranceCompanyAddressDetails").as(SchemeDetails.apiReads)
 
         output.insuranceCompany.value.address mustBe None
       }
 
       "we don't have policy number, address or name for an insurance company" in {
-        val output = (schemeDetails - "policyNumber" - "insuranceCompanyAddressDetails" - "insuranceCompanyName").as[SchemeDetails]
+        val output = (schemeDetails - "policyNumber" - "insuranceCompanyAddressDetails" - "insuranceCompanyName").as(SchemeDetails.apiReads)
 
         output.insuranceCompany mustBe None
       }
