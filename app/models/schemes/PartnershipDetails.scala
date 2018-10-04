@@ -26,7 +26,7 @@ case class PartnershipDetails(partnershipName: String,
                               payeRef: Option[String],
                               address: CorrespondenceAddress,
                               contact: ContactDetails,
-                              previousAddress: PreviousAddressDetails,
+                              previousAddress: PreviousAddressInfo,
                               partnerDetails: Option[Seq[IndividualDetails]])
 
 object PartnershipDetails {
@@ -40,7 +40,7 @@ object PartnershipDetails {
       (JsPath \ "payeReference").readNullable[String] and
       (JsPath \ "correspondenceAddressDetails").read[CorrespondenceAddress] and
       (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
-      (JsPath \ "previousAddressDetails").read(PreviousAddressDetails.apiReads) and
+      (JsPath \ "previousAddressDetails").read(PreviousAddressInfo.apiReads) and
       (JsPath \ "partnerDetails").readNullable(seq(IndividualDetails.apiReads))
     ) ((partnershipName, utr, vatRegistration, payeRef, address, contact, previousAddress, partnerDetails) =>
     PartnershipDetails(partnershipName, utr, vatRegistration, payeRef, address, contact, previousAddress, partnerDetails))

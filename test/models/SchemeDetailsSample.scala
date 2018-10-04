@@ -16,16 +16,15 @@
 
 package models
 
-import models.schemes.{PreviousAddressDetails => SchemePreviousAddressDetails, PersonalDetails => SchemePersonalDetails, _}
-import models.schemes.{EstablisherDetails => SchemeEstablisherDetails}
+import models.schemes.{PersonalInfo, EstablisherInfo, PreviousAddressInfo, _}
 
 trait SchemeDetailsSample {
 
   val personalName = IndividualName("fName", Some("mName"), "lName")
-  val personalDetails =  SchemePersonalDetails(personalName, "1955-03-29")
+  val personalDetails =  PersonalInfo(personalName, "1955-03-29")
   val correspondenceAddressDetails = CorrespondenceAddress("line1", "line2", Some("line3"), Some("line4"), "GB", Some("NE1"))
   val correspondenceContactDetails = ContactDetails(telephone="07592113", email = "test@test.com")
-  val previousAddressDetails = SchemePreviousAddressDetails(true, Some(correspondenceAddressDetails))
+  val previousAddressDetails = PreviousAddressInfo(true, Some(correspondenceAddressDetails))
 
   val inviduals = IndividualDetails(personalDetails, Some("AA999999A"), Some("1234567892"),
     correspondenceAddressDetails,  correspondenceContactDetails, previousAddressDetails)
@@ -36,7 +35,10 @@ trait SchemeDetailsSample {
   val partnershipDetails = PartnershipDetails("abc partnership", Some("7897700000"), Some("789770000"), Some("9999"),
     correspondenceAddressDetails,  correspondenceContactDetails, previousAddressDetails, Some(Seq(inviduals)))
 
-  val establisherDetails = SchemeEstablisherDetails(Some(Seq(inviduals)), Some(Seq(companyDetails)), Some(Seq(partnershipDetails)))
+  val establisherDetails = EstablisherInfo(Some(Seq(inviduals)), Some(Seq(companyDetails)), Some(Seq(partnershipDetails)))
+
+  val psaDetails1 = PsaDetails("A0000001",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
+  val psaDetails2 = PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
 
   val psaSchemeDetailsSample = PsaSchemeDetails(
     SchemeDetails(
@@ -59,7 +61,6 @@ trait SchemeDetailsSample {
         Some("ADN3JDA"),
         Some(CorrespondenceAddress(
           "line1","line2",Some("line3"),Some("line4"),"GB",Some("NE1")))))),
-    Some(List(establisherDetails)),
-    Some(List(PsaDetails("A0000001",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))),
-      PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse")))))))
+      Some(List(establisherDetails)),
+      Some(List(psaDetails1, psaDetails2)))
 }

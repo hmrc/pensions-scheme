@@ -16,7 +16,7 @@
 
 package models.Reads.schemes
 
-import models.schemes.{EstablisherDetails, IndividualDetails, PsaSchemeDetails}
+import models.schemes.{EstablisherInfo, IndividualDetails, PsaSchemeDetails}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
@@ -32,7 +32,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
 
       "we have a establisherDetails" in {
         output.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          PsaSchemeDetails.seq(EstablisherDetails.apiReads))
+          PsaSchemeDetails.seq(EstablisherInfo.apiReads))
         output.establisherDetails.value.length mustBe 1
       }
 
@@ -42,7 +42,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
         output.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          EstablisherDetails.seq(EstablisherDetails.apiReads))
+          EstablisherInfo.seq(EstablisherInfo.apiReads))
         output.establisherDetails.value.length mustBe 2
       }
 

@@ -27,7 +27,7 @@ case class CompanyDetails(organizationName: String,
                           payeRef: Option[String],
                           address: CorrespondenceAddress,
                           contact: ContactDetails,
-                          previousAddress: Option[PreviousAddressDetails],
+                          previousAddress: Option[PreviousAddressInfo],
                           directorsDetails: Option[Seq[IndividualDetails]])
 
 object CompanyDetails {
@@ -42,7 +42,7 @@ object CompanyDetails {
       (JsPath \ "payeReference").readNullable[String] and
       (JsPath \ "correspondenceAddressDetails").read[CorrespondenceAddress] and
       (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
-      (JsPath \ "previousAddressDetails").readNullable(PreviousAddressDetails.apiReads) and
+      (JsPath \ "previousAddressDetails").readNullable(PreviousAddressInfo.apiReads) and
       (JsPath \ "directorsDetails").readNullable(seq(IndividualDetails.apiReads))
     ) ((orgName, utr, crn, vatRegistration, payeRef, address, contact, previousAddress, directorsDetails) =>
     CompanyDetails(orgName, utr, crn, vatRegistration, payeRef, address, contact, previousAddress, directorsDetails))

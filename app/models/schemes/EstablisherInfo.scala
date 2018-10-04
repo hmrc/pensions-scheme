@@ -19,22 +19,22 @@ package models.schemes
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 
-case class EstablisherDetails(individual: Option[Seq[IndividualDetails]],
-                              company: Option[Seq[CompanyDetails]],
-                              partnership: Option[Seq[PartnershipDetails]])
+case class EstablisherInfo(individual: Option[Seq[IndividualDetails]],
+                           company: Option[Seq[CompanyDetails]],
+                           partnership: Option[Seq[PartnershipDetails]])
 
-object EstablisherDetails {
+object EstablisherInfo {
 
   def seq[A](implicit reads: Reads[A]): Reads[Seq[A]] = Reads.traversableReads[Seq, A]
 
-  val apiReads: Reads[EstablisherDetails] = (
+  val apiReads: Reads[EstablisherInfo] = (
     (JsPath \ "individualDetails").readNullable(seq(IndividualDetails.apiReads)) and
       (JsPath \ "companyOrOrganisationDetails").readNullable(seq(CompanyDetails.apiReads)) and
       (JsPath \ "partnershipTrusteeDetail").readNullable(seq(PartnershipDetails.apiReads))
     ) ((individual, organization, partnership) =>
-    EstablisherDetails(individual, organization, partnership))
+    EstablisherInfo(individual, organization, partnership))
 
-  implicit val formats: OFormat[EstablisherDetails] = Json.format[EstablisherDetails]
+  implicit val formats: OFormat[EstablisherInfo] = Json.format[EstablisherInfo]
 
 }
 

@@ -16,7 +16,7 @@
 
 package models.Reads.schemes
 
-import models.schemes.{CompanyDetails, IndividualDetails, PreviousAddressDetails}
+import models.schemes.{CompanyDetails, IndividualDetails, PreviousAddressInfo}
 import models.{ContactDetails, CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Json
@@ -78,7 +78,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a previousAddressDetails" in {
-        result.previousAddress.value mustBe (companyOrOrganisationDetails \ "previousAddressDetails").as(PreviousAddressDetails.apiReads)
+        result.previousAddress.value mustBe (companyOrOrganisationDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
       }
 
       "we don't have a previousAddressDetails" in {

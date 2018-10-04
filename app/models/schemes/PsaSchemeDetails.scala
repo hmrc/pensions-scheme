@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class PsaSchemeDetails(schemeDetails: SchemeDetails,
-                            establisherDetails : Option[Seq[EstablisherDetails]],
+                            establisherDetails : Option[Seq[EstablisherInfo]],
                             psaDetails: Option[Seq[PsaDetails]])
 
 object PsaSchemeDetails {
@@ -29,7 +29,7 @@ object PsaSchemeDetails {
 
   val apiReads : Reads[PsaSchemeDetails] = (
     (JsPath \ "psaSchemeDetails" \ "schemeDetails").read(SchemeDetails.apiReads) and
-    (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(seq(EstablisherDetails.apiReads)) and
+    (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(seq(EstablisherInfo.apiReads)) and
       (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable(seq(PsaDetails.apiReads)))(
     (schemeDetails, establisherDetails, psaDetails) => PsaSchemeDetails(schemeDetails, establisherDetails, psaDetails))
 

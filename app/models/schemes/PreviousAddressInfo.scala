@@ -20,17 +20,17 @@ import models.CorrespondenceAddress
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class PreviousAddressDetails(isPreviousAddressLast12Month: Boolean,
-                                  previousAddress: Option[CorrespondenceAddress] = None)
+case class PreviousAddressInfo(isPreviousAddressLast12Month: Boolean,
+                               previousAddress: Option[CorrespondenceAddress] = None)
 
-object PreviousAddressDetails {
+object PreviousAddressInfo {
 
-  val apiReads: Reads[PreviousAddressDetails] = (
+  val apiReads: Reads[PreviousAddressInfo] = (
     (JsPath \ s"isPreviousAddressLast12Month").read[Boolean] and
       (JsPath \ s"previousAddress").readNullable(CorrespondenceAddress.reads)
     ) ((addressLast12Months, address) => {
-    PreviousAddressDetails(addressLast12Months, address)
+    PreviousAddressInfo(addressLast12Months, address)
   })
 
-  implicit val formats: OFormat[PreviousAddressDetails] = Json.format[PreviousAddressDetails]
+  implicit val formats: OFormat[PreviousAddressInfo] = Json.format[PreviousAddressInfo]
 }

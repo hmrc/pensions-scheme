@@ -26,7 +26,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
 
     "read into a valid personal details object" when {
 
-      var result = personalDetails.as(PersonalDetails.apiReads)
+      var result = personalDetails.as(PersonalInfo.apiReads)
 
       "we have a firstName" in {
         result.name.firstName mustBe (personalDetails \ "firstName").as[String]
@@ -39,7 +39,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       "we don't have a middleName" in {
         val inputWithoutMiddleName = personalDetails - "middleName"
 
-        inputWithoutMiddleName.as(PersonalDetails.apiReads).name.middleName mustBe None
+        inputWithoutMiddleName.as(PersonalInfo.apiReads).name.middleName mustBe None
       }
 
       "we have a lastName" in {
@@ -60,7 +60,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       val result = individualDetails.as(IndividualDetails.apiReads)
 
       "we have a personalDetails" in {
-        result.personalDetails mustBe (individualDetails \ "personDetails").as(PersonalDetails.apiReads)
+        result.personalDetails mustBe (individualDetails \ "personDetails").as(PersonalInfo.apiReads)
       }
 
       "we have a nino" in {
@@ -92,7 +92,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a previousAddressDetails" in {
-        result.previousAddress mustBe (individualDetails \ "previousAddressDetails").as(PreviousAddressDetails.apiReads)
+        result.previousAddress mustBe (individualDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
       }
 
     }
