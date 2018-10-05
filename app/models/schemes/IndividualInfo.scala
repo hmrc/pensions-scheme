@@ -21,16 +21,16 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 
 
-case class IndividualDetails(personalDetails: PersonalInfo,
-                             nino: Option[String],
-                             utr: Option[String],
-                             address: CorrespondenceAddress,
-                             contact: ContactDetails,
-                             previousAddress: PreviousAddressInfo)
+case class IndividualInfo(personalDetails: PersonalInfo,
+                          nino: Option[String],
+                          utr: Option[String],
+                          address: CorrespondenceAddress,
+                          contact: ContactDetails,
+                          previousAddress: PreviousAddressInfo)
 
-object IndividualDetails {
+object IndividualInfo {
 
-  val apiReads: Reads[IndividualDetails] = (
+  val apiReads: Reads[IndividualInfo] = (
     (JsPath \ "personDetails").read(PersonalInfo.apiReads) and
       (JsPath \ "nino").readNullable[String] and
       (JsPath \ "utr").readNullable[String] and
@@ -38,10 +38,10 @@ object IndividualDetails {
       (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
       (JsPath \ "previousAddressDetails").read(PreviousAddressInfo.apiReads)
     ) ((personal, nino, utr, address, contact, previousAddress) =>
-    IndividualDetails(personal, nino, utr, address, contact, previousAddress))
+    IndividualInfo(personal, nino, utr, address, contact, previousAddress))
 
 
-  implicit val formats: OFormat[IndividualDetails] = Json.format[IndividualDetails]
+  implicit val formats: OFormat[IndividualInfo] = Json.format[IndividualInfo]
 
 }
 

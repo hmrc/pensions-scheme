@@ -27,7 +27,7 @@ trait SchemeDetailsStubData {
   val correspondenceContactDetails = ContactDetails(telephone="07592113", email = "test@test.com")
   val previousAddressDetails = PreviousAddressInfo(isPreviousAddressLast12Month=true, Some(correspondenceAddressDetails))
 
-  val individuals = IndividualDetails(personalDetails, Some("AA999999A"), Some("1234567892"),
+  val individuals = IndividualInfo(personalDetails, Some("AA999999A"), Some("1234567892"),
     correspondenceAddressDetails,  correspondenceContactDetails, previousAddressDetails)
 
   val companyDetails = CompanyDetails("abc organisation", Some("7897700000"), Some("AA999999A"), Some("789770000"), Some("9999"),

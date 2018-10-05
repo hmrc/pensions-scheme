@@ -20,14 +20,14 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 import play.api.libs.json.Reads.seq
 
-case class TrusteeInfo(individual: Seq[IndividualDetails],
+case class TrusteeInfo(individual: Seq[IndividualInfo],
                        company: Seq[CompanyDetails],
                        partnership: Seq[PartnershipDetails])
 
 object TrusteeInfo {
 
   val apiReads: Reads[TrusteeInfo] = (
-    (JsPath \ "individualTrusteeDetails").readNullable(seq(IndividualDetails.apiReads)) and
+    (JsPath \ "individualTrusteeDetails").readNullable(seq(IndividualInfo.apiReads)) and
       (JsPath \ "companyTrusteeDetails").readNullable(seq(CompanyDetails.apiReads)) and
       (JsPath \ "partnershipTrusteeDetails").readNullable(seq(PartnershipDetails.apiReads))
     ) ((individual, organization, partnership) =>

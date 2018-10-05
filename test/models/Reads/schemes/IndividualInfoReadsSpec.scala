@@ -20,7 +20,7 @@ import models.schemes._
 import models.{ContactDetails, CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
+class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
   "A JSON payload containing personal details" should {
 
@@ -57,7 +57,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
 
     "read into a valid individuals details object" when {
 
-      val actualResult = individualDetails.as(IndividualDetails.apiReads)
+      val actualResult = individualDetails.as(IndividualInfo.apiReads)
 
       "we have a personalDetails" in {
         actualResult.personalDetails mustBe (individualDetails \ "personDetails").as(PersonalInfo.apiReads)
@@ -70,7 +70,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       "we don't have a nino" in {
         val inputWithoutNino = individualDetails - "nino"
 
-        inputWithoutNino.as(IndividualDetails.apiReads).nino mustBe None
+        inputWithoutNino.as(IndividualInfo.apiReads).nino mustBe None
       }
 
       "we have a utr" in {
@@ -80,7 +80,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       "we don't have a utr" in {
         val inputWithoutUTR = individualDetails - "utr"
 
-        inputWithoutUTR.as(IndividualDetails.apiReads).utr mustBe None
+        inputWithoutUTR.as(IndividualInfo.apiReads).utr mustBe None
       }
 
       "we have a correspondenceAddressDetails" in {

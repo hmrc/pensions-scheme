@@ -17,7 +17,7 @@
 package models.Reads.schemes
 
 import models.Samples
-import models.schemes.{CompanyDetails, EstablisherInfo, IndividualDetails, PartnershipDetails}
+import models.schemes.{CompanyDetails, EstablisherInfo, IndividualInfo, PartnershipDetails}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Reads
 
@@ -31,7 +31,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
 
       "we have a individualDetails" in {
         actualResult.individual mustBe (establisherDetails \ "individualDetails").as(
-          Reads.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualInfo.apiReads))
         actualResult.individual.length mustBe 1
       }
 
@@ -39,7 +39,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
         val actualMultipleIndividualDetails = establisherDetailsWithMultipleData.as(EstablisherInfo.apiReads)
 
         actualMultipleIndividualDetails.individual mustBe (establisherDetailsWithMultipleData \ "individualDetails").as(
-          Reads.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualInfo.apiReads))
         actualMultipleIndividualDetails.individual.length mustBe 2
       }
 
