@@ -24,7 +24,8 @@ import play.api.libs.json._
 case class PsaDetails(id: String, organisationOrPartnershipName: Option[String], individual: Option[Name])
 
 object PsaDetails {
-  implicit val reads: Reads[PsaDetails] = (
+
+  val apiReads: Reads[PsaDetails] = (
     (JsPath \ "psaid").read[String] and
       (JsPath \ "organizationOrPartnershipName").readNullable[String] and
       (JsPath \ "firstName").readNullable[String] and
@@ -35,7 +36,8 @@ object PsaDetails {
        firstName,
        middleName,
        lastName) => PsaDetails(psaId, organizationOrPartnershipName, getPsaIndividual(firstName, middleName, lastName)))
-  implicit val writes: Writes[PsaDetails] = Json.writes[PsaDetails]
+
+  implicit val formats: OFormat[PsaDetails] = Json.format[PsaDetails]
 
   private def getPsaIndividual(firstName : Option[String], middleName : Option[String], lastName: Option[String]) : Option[Name] = {
     (firstName,middleName,lastName) match {

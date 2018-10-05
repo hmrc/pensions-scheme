@@ -47,138 +47,138 @@ class SchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValue
         "postalCode" -> JsString("NE1"),
         "countryCode" -> JsString("GB")))
 
-    val output = schemeDetails.as[SchemeDetails]
+    val actualOutput = schemeDetails.as(SchemeDetails.apiReads)
 
 
     "correctly parse to a model of SchemeDetails" when {
       "we have a srn" in {
-        output.srn.value mustBe (schemeDetails \ "srn").as[String]
+        actualOutput.srn.value mustBe (schemeDetails \ "srn").as[String]
       }
 
       "we don't have an srn" in {
-        val output =  (schemeDetails - "srn").as[SchemeDetails]
+        val output =  (schemeDetails - "srn").as(SchemeDetails.apiReads)
 
         output.srn mustBe None
       }
 
       "we have a pstr" in {
-        output.pstr.value mustBe (schemeDetails \ "pstr").as[String]
+        actualOutput.pstr.value mustBe (schemeDetails \ "pstr").as[String]
       }
 
       "we don't have pstr" in {
-        val output = (schemeDetails - "pstr").as[SchemeDetails]
+        val output = (schemeDetails - "pstr").as(SchemeDetails.apiReads)
 
         output.pstr mustBe None
       }
 
       "we have a status" in {
-        output.status mustBe (schemeDetails \ "schemeStatus").as[String]
+        actualOutput.status mustBe (schemeDetails \ "schemeStatus").as[String]
       }
 
       "we have a name" in {
-        output.name mustBe (schemeDetails \ "schemeName").as[String]
+        actualOutput.name mustBe (schemeDetails \ "schemeName").as[String]
       }
 
       "we have a flag to say if it is a master trust" in {
-        output.isMasterTrust mustBe (schemeDetails \ "isSchemeMasterTrust").as[Boolean]
+        actualOutput.isMasterTrust mustBe (schemeDetails \ "isSchemeMasterTrust").as[Boolean]
       }
 
       "there is no flag to say it is a master trust so we assume it is not" in {
-        val output = (schemeDetails - "isSchemeMasterTrust").as[SchemeDetails]
+        val output = (schemeDetails - "isSchemeMasterTrust").as(SchemeDetails.apiReads)
 
         output.isMasterTrust mustBe false
       }
 
       "we have a type of scheme" in {
-        output.typeOfScheme.value mustBe (schemeDetails \ "pensionSchemeStructure").as[String]
+        actualOutput.typeOfScheme.value mustBe (schemeDetails \ "pensionSchemeStructure").as[String]
       }
 
       "we don't have a type of scheme" in {
-        val output = (schemeDetails - "pensionSchemeStructure").as[SchemeDetails]
+        val output = (schemeDetails - "pensionSchemeStructure").as(SchemeDetails.apiReads)
 
         output.typeOfScheme mustBe None
       }
 
       "we have other types of schemes" in {
-        output.otherTypeOfScheme.value mustBe (schemeDetails \ "otherPensionSchemeStructure").as[String]
+        actualOutput.otherTypeOfScheme.value mustBe (schemeDetails \ "otherPensionSchemeStructure").as[String]
       }
 
       "we don't have other types of scheme" in {
-        val output = (schemeDetails - "otherPensionSchemeStructure").as[SchemeDetails]
+        val output = (schemeDetails - "otherPensionSchemeStructure").as(SchemeDetails.apiReads)
 
         output.otherTypeOfScheme mustBe None
       }
 
       "we have a flag that tells us if there is more than 10 trustees" in {
-        output.hasMoreThanTenTrustees mustBe (schemeDetails \ "hasMoreThanTenTrustees").as[Boolean]
+        actualOutput.hasMoreThanTenTrustees mustBe (schemeDetails \ "hasMoreThanTenTrustees").as[Boolean]
       }
 
       "we don't have a flag that tells us if there is more than 10 trustees so we assume we haven't" in {
-        val output = (schemeDetails - "hasMoreThanTenTrustees").as[SchemeDetails]
+        val output = (schemeDetails - "hasMoreThanTenTrustees").as(SchemeDetails.apiReads)
 
         output.hasMoreThanTenTrustees mustBe false
       }
 
       "we have current scheme members" in {
-        output.members.current mustBe (schemeDetails \ "currentSchemeMembers").as[String]
+        actualOutput.members.current mustBe (schemeDetails \ "currentSchemeMembers").as[String]
       }
 
       "we have future scheme members" in {
-        output.members.future mustBe (schemeDetails \ "futureSchemeMembers").as[String]
+        actualOutput.members.future mustBe (schemeDetails \ "futureSchemeMembers").as[String]
       }
 
       "we have an is regulated flag" in {
-        output.isInvestmentRegulated mustBe (schemeDetails \ "isReguledSchemeInvestment").as[Boolean]
+        actualOutput.isInvestmentRegulated mustBe (schemeDetails \ "isReguledSchemeInvestment").as[Boolean]
       }
 
       "we have an is occupational flag" in {
-        output.isOccupational mustBe (schemeDetails \ "isOccupationalPensionScheme").as[Boolean]
+        actualOutput.isOccupational mustBe (schemeDetails \ "isOccupationalPensionScheme").as[Boolean]
       }
 
       "we have the way the scheme provides its benefits" in {
-        output.benefits mustBe (schemeDetails \ "schemeProvideBenefits").as[String]
+        actualOutput.benefits mustBe (schemeDetails \ "schemeProvideBenefits").as[String]
       }
 
       "we have a country" in {
-        output.country mustBe (schemeDetails \ "schemeEstablishedCountry").as[String]
+        actualOutput.country mustBe (schemeDetails \ "schemeEstablishedCountry").as[String]
       }
 
       "we have a flag that tells us whether if the benefits are secured" in {
-        output.areBenefitsSecured mustBe (schemeDetails \ "isSchemeBenefitsInsuranceCompany").as[Boolean]
+        actualOutput.areBenefitsSecured mustBe (schemeDetails \ "isSchemeBenefitsInsuranceCompany").as[Boolean]
       }
 
       "we have an insurance company name" in {
-        output.insuranceCompany.value.name.value mustBe (schemeDetails \ "insuranceCompanyName").as[String]
+        actualOutput.insuranceCompany.value.name.value mustBe (schemeDetails \ "insuranceCompanyName").as[String]
       }
 
       "we don't have an insurance company name" in {
-        val output = (schemeDetails - "insuranceCompanyName").as[SchemeDetails]
+        val output = (schemeDetails - "insuranceCompanyName").as(SchemeDetails.apiReads)
 
         output.insuranceCompany.value.name mustBe None
       }
 
       "we have an insurance policu number" in {
-        output.insuranceCompany.value.policyNumber.value mustBe (schemeDetails \ "policyNumber").as[String]
+        actualOutput.insuranceCompany.value.policyNumber.value mustBe (schemeDetails \ "policyNumber").as[String]
       }
 
       "we don't have an insurance policy number" in {
-        val output = (schemeDetails - "policyNumber").as[SchemeDetails]
+        val output = (schemeDetails - "policyNumber").as(SchemeDetails.apiReads)
 
         output.insuranceCompany.value.policyNumber mustBe None
       }
 
       "we have the address of the insurance company" in {
-        output.insuranceCompany.value.address.value.addressLine1 mustBe (schemeDetails \ "insuranceCompanyAddressDetails" \ "line1").as[String]
+        actualOutput.insuranceCompany.value.address.value.addressLine1 mustBe (schemeDetails \ "insuranceCompanyAddressDetails" \ "line1").as[String]
       }
 
       "we don't have the address of the insurance company" in {
-        val output = (schemeDetails - "insuranceCompanyAddressDetails").as[SchemeDetails]
+        val output = (schemeDetails - "insuranceCompanyAddressDetails").as(SchemeDetails.apiReads)
 
         output.insuranceCompany.value.address mustBe None
       }
 
       "we don't have policy number, address or name for an insurance company" in {
-        val output = (schemeDetails - "policyNumber" - "insuranceCompanyAddressDetails" - "insuranceCompanyName").as[SchemeDetails]
+        val output = (schemeDetails - "policyNumber" - "insuranceCompanyAddressDetails" - "insuranceCompanyName").as(SchemeDetails.apiReads)
 
         output.insuranceCompany mustBe None
       }

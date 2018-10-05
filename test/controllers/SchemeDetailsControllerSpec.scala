@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
-import models.Samples
+import models.Reads.schemes.SchemeDetailsStubData
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -33,7 +33,7 @@ import uk.gov.hmrc.http._
 
 import scala.concurrent.Future
 
-class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with Samples {
+class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubData {
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
   val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector)
   private val schemeIdType = "pstr"

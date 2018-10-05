@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
-import models.Samples
+import models.Reads.schemes.SchemeDetailsStubData
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{never, reset, verify, when}
@@ -33,7 +33,7 @@ import uk.gov.hmrc.http.BadRequestException
 
 import scala.concurrent.Future
 
-class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with Samples {
+class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubData {
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
   val associatedPsaController = new AssociatedPsaController(mockSchemeConnector)

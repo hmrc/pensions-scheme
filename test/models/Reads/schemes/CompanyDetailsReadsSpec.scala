@@ -16,80 +16,80 @@
 
 package models.Reads.schemes
 
-import models.schemes.{CompanyDetails, IndividualDetails, PreviousAddressDetails}
+import models.schemes.{CompanyDetails, IndividualDetails, PreviousAddressInfo}
 import models.{ContactDetails, CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Json
 
-class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with MockSchemeData {
+class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
   "A JSON payload containing company or organisationDetails details" should {
 
     "read into a valid company or organisationDetails object" when {
 
-      val result = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
+      val actualResult = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
 
       "we have a organisationName" in {
-        result.organizationName mustBe (companyOrOrganisationDetails \ "organisationName").as[String]
+        actualResult.organizationName mustBe (companyOrOrganisationDetails \ "organisationName").as[String]
       }
 
       "we have a utr" in {
-        result.utr.value mustBe (companyOrOrganisationDetails \ "utr").as[String]
+        actualResult.utr.value mustBe (companyOrOrganisationDetails \ "utr").as[String]
       }
 
       "we don't have a utr" in {
         val inputWithoutUTR= companyOrOrganisationDetails - "utr"
 
-        inputWithoutUTR.as[CompanyDetails](CompanyDetails.apiReads).utr mustBe None
+        inputWithoutUTR.as(CompanyDetails.apiReads).utr mustBe None
       }
 
       "we have a crnNumber" in {
-        result.crn.value mustBe (companyOrOrganisationDetails \ "crnNumber").as[String]
+        actualResult.crn.value mustBe (companyOrOrganisationDetails \ "crnNumber").as[String]
       }
 
       "we don't have a crnNumber" in {
         val inputWithoutCrnNumber = companyOrOrganisationDetails - "crnNumber"
 
-        inputWithoutCrnNumber.as[CompanyDetails](CompanyDetails.apiReads).crn mustBe None
+        inputWithoutCrnNumber.as(CompanyDetails.apiReads).crn mustBe None
       }
 
       "we have a vatRegistrationNumber" in {
-        result.vatRegistration.value mustBe (companyOrOrganisationDetails \ "vatRegistrationNumber").as[String]
+        actualResult.vatRegistration.value mustBe (companyOrOrganisationDetails \ "vatRegistrationNumber").as[String]
       }
 
       "we don't have a vatRegistrationNumber" in {
         val inputWithoutVatRegistrationNumber = companyOrOrganisationDetails - "vatRegistrationNumber"
 
-        inputWithoutVatRegistrationNumber.as[CompanyDetails](CompanyDetails.apiReads).vatRegistration mustBe None
+        inputWithoutVatRegistrationNumber.as(CompanyDetails.apiReads).vatRegistration mustBe None
       }
 
       "we don't have a payeReference" in {
         val inputWithoutPayeReference = companyOrOrganisationDetails - "payeReference"
 
-        inputWithoutPayeReference.as[CompanyDetails](CompanyDetails.apiReads).payeRef mustBe None
+        inputWithoutPayeReference.as(CompanyDetails.apiReads).payeRef mustBe None
       }
 
       "we have a correspondenceAddressDetails" in {
-        result.address mustBe (companyOrOrganisationDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
+        actualResult.address mustBe (companyOrOrganisationDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
       }
 
       "we have a correspondenceContactDetails" in {
-        result.contact mustBe (companyOrOrganisationDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        actualResult.contact mustBe (companyOrOrganisationDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
       }
 
       "we have a previousAddressDetails" in {
-        result.previousAddress.value mustBe (companyOrOrganisationDetails \ "previousAddressDetails").as(PreviousAddressDetails.apiReads)
+        actualResult.previousAddress.value mustBe (companyOrOrganisationDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
       }
 
       "we don't have a previousAddressDetails" in {
         val inputWithoutPreviousAddressDetails = companyOrOrganisationDetails - "previousAddressDetails"
 
-        inputWithoutPreviousAddressDetails.as[CompanyDetails](CompanyDetails.apiReads).previousAddress mustBe None
+        inputWithoutPreviousAddressDetails.as(CompanyDetails.apiReads).previousAddress mustBe None
       }
 
       "we have a directorsDetails" in {
-        result.directorsDetails.value mustBe (companyOrOrganisationDetails \ "directorsDetails").as(CompanyDetails.seq(IndividualDetails.apiReads))
-        result.directorsDetails.value.length mustBe 1
+        actualResult.directorsDetails mustBe (companyOrOrganisationDetails \ "directorsDetails").as(CompanyDetails.seq(IndividualDetails.apiReads))
+        actualResult.directorsDetails.length mustBe 1
       }
 
       "we have a multiple directorsDetails" in {
@@ -98,16 +98,17 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
           "crnNumber"-> "AA999999A", "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999",
           "correspondenceAddressDetails"-> addressDetails, "correspondenceContactDetails" -> fullContactDetails,
           "previousAddressDetails" -> previousAddressDetails, "directorsDetails" -> Json.arr(individualDetails, individualDetails))
-        val result = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
+        val actulaMultipleDirectorsDetails = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
 
-        result.directorsDetails.value mustBe (companyOrOrganisationDetails \ "directorsDetails").as(CompanyDetails.seq(IndividualDetails.apiReads))
-        result.directorsDetails.value.length mustBe 2
+        actulaMultipleDirectorsDetails.directorsDetails mustBe (companyOrOrganisationDetails \ "directorsDetails").as(
+          CompanyDetails.seq(IndividualDetails.apiReads))
+        actulaMultipleDirectorsDetails.directorsDetails.length mustBe 2
       }
 
       "we don't have a directorsDetails" in {
         val inputWithoutDirectorsDetails = companyOrOrganisationDetails - "directorsDetails"
 
-        inputWithoutDirectorsDetails.as[CompanyDetails](CompanyDetails.apiReads).directorsDetails mustBe None
+        inputWithoutDirectorsDetails.as(CompanyDetails.apiReads).directorsDetails mustBe Nil
       }
     }
   }

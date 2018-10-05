@@ -20,6 +20,7 @@ import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
+import models.Reads.schemes.SchemeDetailsStubData
 import models._
 import models.schemes.PsaSchemeDetails
 import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
@@ -127,7 +128,7 @@ class FakeSchemeConnector extends SchemeConnector {
   override def getCorrelationId(requestId: Option[String]): String = "4725c81192514c069b8ff1d84659b2df"
 }
 
-object FakeSchemeConnector extends Samples {
+object FakeSchemeConnector extends SchemeDetailsStubData {
 
   val schemeRegistrationResponse = SchemeRegistrationResponse("test-processing-date", "test-scheme-reference-number")
   val schemeRegistrationResponseJson: JsValue = Json.toJson(schemeRegistrationResponse)

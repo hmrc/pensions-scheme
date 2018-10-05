@@ -17,27 +17,29 @@
 package models.Reads.schemes
 
 import models.CorrespondenceAddress
-import models.schemes.PreviousAddressDetails
+import models.schemes.PreviousAddressInfo
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-class PreviousAddressDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with MockSchemeData {
+class PreviousAddressInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with SchemeDetailsStubJsonData {
 
    "A Json payload containing previous address details" should {
 
     "read into a valid previous address details object" when {
 
+      val actualInput = previousAddressDetails.as(PreviousAddressInfo.apiReads)
+
       "we have a isPreviousAddressLast12Month" in {
-        previousAddressDetails.as(PreviousAddressDetails.apiReads).isPreviousAddressLast12Month mustBe (previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
+        actualInput.isPreviousAddressLast12Month mustBe (previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
       }
 
       "we have a previousAddress" in {
-        previousAddressDetails.as(PreviousAddressDetails.apiReads).previousAddress.value mustBe (previousAddressDetails \ "previousAddress").as(CorrespondenceAddress.reads)
+        actualInput.previousAddress.value mustBe (previousAddressDetails \ "previousAddress").as(CorrespondenceAddress.reads)
       }
 
       "we don't have a previousAddress" in {
         val inputWithoutPreviousAddress = previousAddressDetails - "previousAddress"
 
-        inputWithoutPreviousAddress.as(PreviousAddressDetails.apiReads).previousAddress mustBe None
+        inputWithoutPreviousAddress.as(PreviousAddressInfo.apiReads).previousAddress mustBe None
       }
     }
   }

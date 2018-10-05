@@ -24,13 +24,13 @@ import play.api.libs.json._
 case class SchemeMemberNumbers(current: String, future: String)
 
 object SchemeMemberNumbers {
-  implicit val formats : Format[SchemeMemberNumbers] = Json.format[SchemeMemberNumbers]
+  implicit val formats : OFormat[SchemeMemberNumbers] = Json.format[SchemeMemberNumbers]
 }
 
 case class InsuranceCompany(name: Option[String],policyNumber: Option[String], address: Option[CorrespondenceAddress])
 
 object InsuranceCompany {
-  implicit val formats : Format[InsuranceCompany] = Json.format[InsuranceCompany]
+  implicit val formats : OFormat[InsuranceCompany] = Json.format[InsuranceCompany]
 }
 //TODO: Do not use, this is part of ticket PODS-1589 still being worked on.
 case class SchemeDetails(srn: Option[String],
@@ -51,7 +51,8 @@ case class SchemeDetails(srn: Option[String],
 }
 
 object SchemeDetails {
-  implicit val reads : Reads[SchemeDetails] = (
+
+  val apiReads : Reads[SchemeDetails] = (
     (JsPath \ "srn").readNullable[String] and
       (JsPath \ "pstr").readNullable[String] and
       (JsPath \ "schemeStatus").read[String] and
@@ -102,7 +103,8 @@ object SchemeDetails {
       country,
       benefitsSecured,
       getInsuranceCompany(insuranceName,policy,insuranceAddress)))
-  implicit val writes : Writes[SchemeDetails] = Json.writes[SchemeDetails]
+
+  implicit val formats: OFormat[SchemeDetails] = Json.format[SchemeDetails]
 
   private def getInsuranceCompany(name: Option[String],policyNumber: Option[String], address: Option[CorrespondenceAddress]) : Option[InsuranceCompany] = {
     (name,policyNumber,address) match {

@@ -21,22 +21,22 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 
 
-case class IndividualDetails(personalDetails: PersonalDetails,
+case class IndividualDetails(personalDetails: PersonalInfo,
                              nino: Option[String],
                              utr: Option[String],
                              address: CorrespondenceAddress,
                              contact: ContactDetails,
-                             previousAddress: PreviousAddressDetails)
+                             previousAddress: PreviousAddressInfo)
 
 object IndividualDetails {
 
   val apiReads: Reads[IndividualDetails] = (
-    (JsPath \ "personDetails").read(PersonalDetails.apiReads) and
+    (JsPath \ "personDetails").read(PersonalInfo.apiReads) and
       (JsPath \ "nino").readNullable[String] and
       (JsPath \ "utr").readNullable[String] and
       (JsPath \ "correspondenceAddressDetails").read(CorrespondenceAddress.reads) and
       (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
-      (JsPath \ "previousAddressDetails").read(PreviousAddressDetails.apiReads)
+      (JsPath \ "previousAddressDetails").read(PreviousAddressInfo.apiReads)
     ) ((personal, nino, utr, address, contact, previousAddress) =>
     IndividualDetails(personal, nino, utr, address, contact, previousAddress))
 
@@ -45,20 +45,20 @@ object IndividualDetails {
 
 }
 
-case class PersonalDetails(name: IndividualName, dateOfBirth: String)
+case class PersonalInfo(name: IndividualName, dateOfBirth: String)
 
-object PersonalDetails {
+object PersonalInfo {
 
-  val apiReads: Reads[PersonalDetails] = (
+  val apiReads: Reads[PersonalInfo] = (
     (JsPath \ "firstName").read[String] and
       (JsPath \ "middleName").readNullable[String] and
       (JsPath \ "lastName").read[String] and
       (JsPath \ "dateOfBirth").read[String]
     ) ((firstName, middleName, lastName, dateOfBirth) =>
-    PersonalDetails(IndividualName(firstName, middleName, lastName), dateOfBirth))
+    PersonalInfo(IndividualName(firstName, middleName, lastName), dateOfBirth))
 
 
-  implicit val formats: OFormat[PersonalDetails] = Json.format[PersonalDetails]
+  implicit val formats: OFormat[PersonalInfo] = Json.format[PersonalInfo]
 
 }
 
