@@ -38,6 +38,11 @@ trait SchemeDetailsStubData {
 
   val establisherDetails = EstablisherInfo(Seq(individuals), Seq(companyDetails), Seq(partnershipDetails))
 
+  val trusteePartnershipDetails = PartnershipDetails("abc partnership", Some("7897700000"), Some("789770000"), Some("9999"),
+    correspondenceAddressDetails,  correspondenceContactDetails, previousAddressDetails, Nil)
+
+  val trusteeDetails = TrusteeInfo(Seq(individuals), Seq(companyDetails), Seq(trusteePartnershipDetails))
+
   val psaDetails1 = PsaDetails("A0000001",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
   val psaDetails2 = PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
 
@@ -63,5 +68,6 @@ trait SchemeDetailsStubData {
         Some(CorrespondenceAddress(
           "line1","line2",Some("line3"),Some("line4"),"GB",Some("NE1")))))),
       List(establisherDetails),
+      List(trusteeDetails),
       List(psaDetails1, psaDetails2))
 }
