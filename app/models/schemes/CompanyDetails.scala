@@ -19,6 +19,7 @@ package models.schemes
 import models.{ContactDetails, CorrespondenceAddress}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
+import play.api.libs.json.Reads.seq
 
 case class CompanyDetails(organizationName: String,
                           utr: Option[String],
@@ -31,8 +32,6 @@ case class CompanyDetails(organizationName: String,
                           directorsDetails: Seq[IndividualDetails])
 
 object CompanyDetails {
-
-  def seq[A](implicit reads: Reads[A]): Reads[Seq[A]] = Reads.traversableReads[Seq, A]
 
   val apiReads: Reads[CompanyDetails] = (
     (JsPath \ "organisationName").read[String] and

@@ -19,6 +19,7 @@ package models.Reads.schemes
 import models.Samples
 import models.schemes.{CompanyDetails, IndividualDetails, PartnershipDetails, TrusteeInfo}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import play.api.libs.json.Reads
 
 class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
@@ -30,7 +31,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
 
       "we have a individualTrusteeDetails" in {
         actualResult.individual mustBe (trusteeDetails \ "individualTrusteeDetails").as(
-          TrusteeInfo.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualDetails.apiReads))
         actualResult.individual.length mustBe 1
       }
 
@@ -38,7 +39,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
         val actualMultipleIndividualDetails = trusteeDetailsWithMultipleData.as(TrusteeInfo.apiReads)
 
         actualMultipleIndividualDetails.individual mustBe (trusteeDetailsWithMultipleData \ "individualTrusteeDetails").as(
-          TrusteeInfo.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualDetails.apiReads))
         actualMultipleIndividualDetails.individual.length mustBe 2
       }
 
@@ -50,7 +51,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
 
       "we have a companyTrusteeDetails" in {
         actualResult.company mustBe (trusteeDetails \ "companyTrusteeDetails").as(
-          TrusteeInfo.seq(CompanyDetails.apiReads))
+          Reads.seq(CompanyDetails.apiReads))
         actualResult.company.length mustBe 1
       }
 
@@ -58,7 +59,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
         val actulaMultipleCompanyOrOrganisationDetails = trusteeDetailsWithMultipleData.as(TrusteeInfo.apiReads)
 
         actulaMultipleCompanyOrOrganisationDetails.company mustBe (trusteeDetailsWithMultipleData \ "companyTrusteeDetails").as(
-          TrusteeInfo.seq(CompanyDetails.apiReads))
+          Reads.seq(CompanyDetails.apiReads))
         actulaMultipleCompanyOrOrganisationDetails.company.length mustBe 2
       }
 
@@ -70,7 +71,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
 
       "we have a partnershipTrusteeDetail" in {
         actualResult.partnership mustBe (trusteeDetails \ "partnershipTrusteeDetails").as(
-          TrusteeInfo.seq(PartnershipDetails.apiReads))
+          Reads.seq(PartnershipDetails.apiReads))
         actualResult.partnership.length mustBe 1
       }
 
@@ -78,7 +79,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
         val actualMultiplePrtnershipTrusteeDetail = trusteeDetailsWithMultipleData.as(TrusteeInfo.apiReads)
 
         actualMultiplePrtnershipTrusteeDetail.partnership mustBe (trusteeDetailsWithMultipleData \ "partnershipTrusteeDetails").as(
-          TrusteeInfo.seq(PartnershipDetails.apiReads))
+          Reads.seq(PartnershipDetails.apiReads))
         actualMultiplePrtnershipTrusteeDetail.partnership.length mustBe 2
       }
 

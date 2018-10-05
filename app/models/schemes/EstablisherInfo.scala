@@ -18,14 +18,14 @@ package models.schemes
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
+import play.api.libs.json.Reads.seq
+
 
 case class EstablisherInfo(individual: Seq[IndividualDetails],
                            company: Seq[CompanyDetails],
                            partnership: Seq[PartnershipDetails])
 
 object EstablisherInfo {
-
-  def seq[A](implicit reads: Reads[A]): Reads[Seq[A]] = Reads.traversableReads[Seq, A]
 
   val apiReads: Reads[EstablisherInfo] = (
     (JsPath \ "individualDetails").readNullable(seq(IndividualDetails.apiReads)) and

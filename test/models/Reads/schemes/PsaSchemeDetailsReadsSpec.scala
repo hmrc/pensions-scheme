@@ -32,7 +32,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
 
       "we have a establisherDetails" in {
         actualOutput.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          PsaSchemeDetails.seq(EstablisherInfo.apiReads))
+          Reads.seq(EstablisherInfo.apiReads))
         actualOutput.establisherDetails.length mustBe 1
       }
 
@@ -42,7 +42,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
         output.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          PsaSchemeDetails.seq(EstablisherInfo.apiReads))
+          Reads.seq(EstablisherInfo.apiReads))
         output.establisherDetails.length mustBe 2
       }
 
@@ -55,7 +55,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
 
       "we have a trusteeDetails" in {
         actualOutput.truesteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
-          PsaSchemeDetails.seq(TrusteeInfo.apiReads))
+          Reads.seq(TrusteeInfo.apiReads))
         actualOutput.truesteeDetails.length mustBe 1
       }
 
@@ -65,7 +65,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
         output.truesteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
-          PsaSchemeDetails.seq(TrusteeInfo.apiReads))
+          Reads.seq(TrusteeInfo.apiReads))
         output.truesteeDetails.length mustBe 2
       }
 
