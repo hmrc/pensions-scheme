@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
-import models.{Samples, SchemeDetailsStubData}
+import models.Reads.schemes.SchemeDetailsStubData
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{never, reset, verify, when}

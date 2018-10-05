@@ -20,21 +20,20 @@ import audit.AuditService
 import audit.testdoubles.StubSuccessfulAuditService
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import models.Reads.schemes.SchemeDetailsStubJsonData
-import models._
+import models.Reads.schemes.{SchemeDetailsStubData, SchemeDetailsStubJsonData}
 import org.joda.time.LocalDate
 import org.scalatest._
 import org.slf4j.event.Level
 import play.api.LoggerLike
 import play.api.http.Status
+import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http._
 import utils.{StubLogger, WireMockHelper}
-import play.api.http.Status._
 
 class SchemeConnectorSpec extends AsyncFlatSpec
   with Matchers

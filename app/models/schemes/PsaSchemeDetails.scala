@@ -20,8 +20,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class PsaSchemeDetails(schemeDetails: SchemeDetails,
-                            establisherDetails : Option[Seq[EstablisherInfo]],
-                            psaDetails: Option[Seq[PsaDetails]])
+                            establisherDetails : Seq[EstablisherInfo],
+                            psaDetails: Seq[PsaDetails])
 
 object PsaSchemeDetails {
 
@@ -31,7 +31,8 @@ object PsaSchemeDetails {
     (JsPath \ "psaSchemeDetails" \ "schemeDetails").read(SchemeDetails.apiReads) and
     (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(seq(EstablisherInfo.apiReads)) and
       (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable(seq(PsaDetails.apiReads)))(
-    (schemeDetails, establisherDetails, psaDetails) => PsaSchemeDetails(schemeDetails, establisherDetails, psaDetails))
+    (schemeDetails, establisherDetails, psaDetails) =>
+      PsaSchemeDetails(schemeDetails, establisherDetails.getOrElse(Nil), psaDetails.getOrElse(Nil)))
 
   implicit val formats: OFormat[PsaSchemeDetails] = Json.format[PsaSchemeDetails]
 

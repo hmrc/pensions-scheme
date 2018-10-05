@@ -20,6 +20,7 @@ import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
+import models.Reads.schemes.SchemeDetailsStubData
 import models._
 import models.schemes.PsaSchemeDetails
 import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}

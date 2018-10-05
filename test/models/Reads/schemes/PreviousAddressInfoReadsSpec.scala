@@ -26,12 +26,14 @@ class PreviousAddressInfoReadsSpec extends WordSpec with MustMatchers with Optio
 
     "read into a valid previous address details object" when {
 
+      val actualInput = previousAddressDetails.as(PreviousAddressInfo.apiReads)
+
       "we have a isPreviousAddressLast12Month" in {
-        previousAddressDetails.as(PreviousAddressInfo.apiReads).isPreviousAddressLast12Month mustBe (previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
+        actualInput.isPreviousAddressLast12Month mustBe (previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
       }
 
       "we have a previousAddress" in {
-        previousAddressDetails.as(PreviousAddressInfo.apiReads).previousAddress.value mustBe (previousAddressDetails \ "previousAddress").as(CorrespondenceAddress.reads)
+        actualInput.previousAddress.value mustBe (previousAddressDetails \ "previousAddress").as(CorrespondenceAddress.reads)
       }
 
       "we don't have a previousAddress" in {

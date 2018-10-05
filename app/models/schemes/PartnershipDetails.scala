@@ -27,7 +27,7 @@ case class PartnershipDetails(partnershipName: String,
                               address: CorrespondenceAddress,
                               contact: ContactDetails,
                               previousAddress: PreviousAddressInfo,
-                              partnerDetails: Option[Seq[IndividualDetails]])
+                              partnerDetails: Seq[IndividualDetails])
 
 object PartnershipDetails {
 
@@ -43,7 +43,7 @@ object PartnershipDetails {
       (JsPath \ "previousAddressDetails").read(PreviousAddressInfo.apiReads) and
       (JsPath \ "partnerDetails").readNullable(seq(IndividualDetails.apiReads))
     ) ((partnershipName, utr, vatRegistration, payeRef, address, contact, previousAddress, partnerDetails) =>
-    PartnershipDetails(partnershipName, utr, vatRegistration, payeRef, address, contact, previousAddress, partnerDetails))
+    PartnershipDetails(partnershipName, utr, vatRegistration, payeRef, address, contact, previousAddress, partnerDetails.getOrElse(Nil)))
 
 
   implicit val formats: OFormat[PartnershipDetails] = Json.format[PartnershipDetails]

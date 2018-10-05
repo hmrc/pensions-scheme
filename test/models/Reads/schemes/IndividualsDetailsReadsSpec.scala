@@ -26,14 +26,14 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
 
     "read into a valid personal details object" when {
 
-      var result = personalDetails.as(PersonalInfo.apiReads)
+      val actualResult = personalDetails.as(PersonalInfo.apiReads)
 
       "we have a firstName" in {
-        result.name.firstName mustBe (personalDetails \ "firstName").as[String]
+        actualResult.name.firstName mustBe (personalDetails \ "firstName").as[String]
       }
 
       "we have a middleName" in {
-        result.name.middleName.value mustBe (personalDetails \ "middleName").as[String]
+        actualResult.name.middleName.value mustBe (personalDetails \ "middleName").as[String]
       }
 
       "we don't have a middleName" in {
@@ -43,11 +43,11 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a lastName" in {
-        result.name.lastName mustBe (personalDetails \ "lastName").as[String]
+        actualResult.name.lastName mustBe (personalDetails \ "lastName").as[String]
       }
 
       "we have a dateOfBirth" in {
-        result.dateOfBirth mustBe (personalDetails \ "dateOfBirth").as[String]
+        actualResult.dateOfBirth mustBe (personalDetails \ "dateOfBirth").as[String]
       }
 
     }
@@ -57,14 +57,14 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
 
     "read into a valid individuals details object" when {
 
-      val result = individualDetails.as(IndividualDetails.apiReads)
+      val actualResult = individualDetails.as(IndividualDetails.apiReads)
 
       "we have a personalDetails" in {
-        result.personalDetails mustBe (individualDetails \ "personDetails").as(PersonalInfo.apiReads)
+        actualResult.personalDetails mustBe (individualDetails \ "personDetails").as(PersonalInfo.apiReads)
       }
 
       "we have a nino" in {
-        result.nino.value mustBe (individualDetails \ "nino").as[String]
+        actualResult.nino.value mustBe (individualDetails \ "nino").as[String]
       }
 
       "we don't have a nino" in {
@@ -74,7 +74,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a utr" in {
-        result.utr.value mustBe (individualDetails \ "utr").as[String]
+        actualResult.utr.value mustBe (individualDetails \ "utr").as[String]
       }
 
       "we don't have a utr" in {
@@ -84,15 +84,15 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a correspondenceAddressDetails" in {
-        result.address mustBe (individualDetails \ "correspondenceAddressDetails").as(CorrespondenceAddress.reads)
+        actualResult.address mustBe (individualDetails \ "correspondenceAddressDetails").as(CorrespondenceAddress.reads)
       }
 
       "we have a correspondenceContactDetails" in {
-        result.contact mustBe (individualDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        actualResult.contact mustBe (individualDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
       }
 
       "we have a previousAddressDetails" in {
-        result.previousAddress mustBe (individualDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
+        actualResult.previousAddress mustBe (individualDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
       }
 
     }

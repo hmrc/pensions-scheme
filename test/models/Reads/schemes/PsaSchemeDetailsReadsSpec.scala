@@ -16,7 +16,7 @@
 
 package models.Reads.schemes
 
-import models.schemes.{EstablisherInfo, IndividualDetails, PsaSchemeDetails}
+import models.schemes.{EstablisherInfo, PsaSchemeDetails}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
@@ -24,16 +24,16 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
   "A JSON payload containing a PsaSchemeDetails" should {
     "Parse correctly to a PsaSchemeDetails object" when {
 
-      val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
+      val actualOutput = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
       "we have a valid Scheme Details object within it" in {
-        output.schemeDetails.srn.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").as[String]
+        actualOutput.schemeDetails.srn.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").as[String]
       }
 
       "we have a establisherDetails" in {
-        output.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
+        actualOutput.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
           PsaSchemeDetails.seq(EstablisherInfo.apiReads))
-        output.establisherDetails.value.length mustBe 1
+        actualOutput.establisherDetails.length mustBe 1
       }
 
       "we have multiple establisherDetails" in {
@@ -41,28 +41,28 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
           "establisherDetails" -> Json.arr(establisherDetails, establisherDetails)))
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
-        output.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
+        output.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
           EstablisherInfo.seq(EstablisherInfo.apiReads))
-        output.establisherDetails.value.length mustBe 2
+        output.establisherDetails.length mustBe 2
       }
 
       "we don't have a establisherDetails" in {
         val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
-        output.establisherDetails mustBe None
+        output.establisherDetails mustBe Nil
       }
 
       "we have a valid list of psa details within it" in {
-        output.psaDetails.value.head.id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 0 \ "psaid").as[String]
-        output.psaDetails.value(1).id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 1 \ "psaid").as[String]
+        actualOutput.psaDetails.head.id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 0 \ "psaid").as[String]
+        actualOutput.psaDetails(1).id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 1 \ "psaid").as[String]
       }
 
       "we don't have psa details" in {
         val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
 
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
-        output.psaDetails mustBe None
+        output.psaDetails mustBe Nil
       }
     }
   }

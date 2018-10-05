@@ -28,14 +28,14 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
 
     "read into a valid company or organisationDetails object" when {
 
-      val result = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
+      val actualResult = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
 
       "we have a partnershipName" in {
-        result.partnershipName mustBe (establisherPartnershipDetails \ "partnershipName").as[String]
+        actualResult.partnershipName mustBe (establisherPartnershipDetails \ "partnershipName").as[String]
       }
 
       "we have a utr" in {
-        result.utr.value mustBe (establisherPartnershipDetails \ "utr").as[String]
+        actualResult.utr.value mustBe (establisherPartnershipDetails \ "utr").as[String]
       }
 
       "we don't have a utr" in {
@@ -45,7 +45,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a vatRegistrationNumber" in {
-        result.vatRegistration.value mustBe (establisherPartnershipDetails \ "vatRegistrationNumber").as[String]
+        actualResult.vatRegistration.value mustBe (establisherPartnershipDetails \ "vatRegistrationNumber").as[String]
       }
 
       "we don't have a vatRegistrationNumber" in {
@@ -61,20 +61,20 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a correspondenceAddressDetails" in {
-        result.address mustBe (establisherPartnershipDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
+        actualResult.address mustBe (establisherPartnershipDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
       }
 
       "we have a correspondenceContactDetails" in {
-        result.contact mustBe (establisherPartnershipDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        actualResult.contact mustBe (establisherPartnershipDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
       }
 
       "we have a previousAddressDetails" in {
-        result.previousAddress mustBe (establisherPartnershipDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
+        actualResult.previousAddress mustBe (establisherPartnershipDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
       }
 
       "we have a partnerDetails" in {
-        result.partnerDetails.value mustBe (establisherPartnershipDetails \ "partnerDetails").as(PartnershipDetails.seq(IndividualDetails.apiReads))
-        result.partnerDetails.value.length mustBe 1
+        actualResult.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(PartnershipDetails.seq(IndividualDetails.apiReads))
+        actualResult.partnerDetails.length mustBe 1
       }
 
       "we have multiple partnerDetails" in {
@@ -82,16 +82,17 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
           "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999", "correspondenceAddressDetails"-> addressDetails,
           "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails,
           "partnerDetails" -> Json.arr(individualDetails,individualDetails))
-        val result = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
+        val actualMultiplePartnerDetails = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
 
-        result.partnerDetails.value mustBe (establisherPartnershipDetails \ "partnerDetails").as(PartnershipDetails.seq(IndividualDetails.apiReads))
-        result.partnerDetails.value.length mustBe 2
+        actualMultiplePartnerDetails.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(
+          PartnershipDetails.seq(IndividualDetails.apiReads))
+        actualMultiplePartnerDetails.partnerDetails.length mustBe 2
       }
 
       "we don't have a partnerDetails" in {
         val inputWithoutPartnerDetails = establisherPartnershipDetails - "partnerDetails"
 
-        inputWithoutPartnerDetails.as(PartnershipDetails.apiReads).partnerDetails mustBe None
+        inputWithoutPartnerDetails.as(PartnershipDetails.apiReads).partnerDetails mustBe Nil
       }
     }
   }
