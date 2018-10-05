@@ -19,35 +19,45 @@ package models.Reads.schemes
 import models.schemes._
 import models.{ContactDetails, CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.prop.PropertyChecks._
 
-class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
+class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples
+  with SchemeDetailsStubJsonData with PSASchemeDetailsGenerator {
 
   "A JSON payload containing personal details" should {
 
     "read into a valid personal details object" when {
 
-      val actualResult = personalDetails.as(PersonalInfo.apiReads)
-
       "we have a firstName" in {
-        actualResult.name.firstName mustBe (personalDetails \ "firstName").as[String]
+        forAll(personalDetailsGenerator) { personalDetails=>
+          personalDetails.as(PersonalInfo.apiReads).name.firstName mustBe (personalDetails \ "firstName").as[String]
+        }
       }
 
       "we have a middleName" in {
-        actualResult.name.middleName.value mustBe (personalDetails \ "middleName").as[String]
+        forAll(personalDetailsGenerator) { personalDetails=>
+          personalDetails.as(PersonalInfo.apiReads).name.middleName.value mustBe (personalDetails \ "middleName").as[String]
+        }
       }
 
       "we don't have a middleName" in {
-        val inputWithoutMiddleName = personalDetails - "middleName"
+        forAll(personalDetailsGenerator) { personalDetails =>
+          val inputWithoutMiddleName = personalDetails - "middleName"
+          inputWithoutMiddleName.as(PersonalInfo.apiReads).name.middleName mustBe None
+        }
 
-        inputWithoutMiddleName.as(PersonalInfo.apiReads).name.middleName mustBe None
       }
 
       "we have a lastName" in {
-        actualResult.name.lastName mustBe (personalDetails \ "lastName").as[String]
+        forAll(personalDetailsGenerator) { personalDetails =>
+          personalDetails.as(PersonalInfo.apiReads).name.lastName mustBe (personalDetails \ "lastName").as[String]
+        }
       }
 
       "we have a dateOfBirth" in {
-        actualResult.dateOfBirth mustBe (personalDetails \ "dateOfBirth").as[String]
+        forAll(personalDetailsGenerator) { personalDetails=>
+          personalDetails.as(PersonalInfo.apiReads).dateOfBirth mustBe (personalDetails \ "dateOfBirth").as[String]
+        }
       }
 
     }
