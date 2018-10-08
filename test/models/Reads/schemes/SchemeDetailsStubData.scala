@@ -24,10 +24,10 @@ trait SchemeDetailsStubData {
   val personalName = IndividualName("fName", Some("mName"), "lName")
   val personalDetails =  PersonalInfo(personalName, "1955-03-29")
   val correspondenceAddressDetails = CorrespondenceAddress("line1", "line2", Some("line3"), Some("line4"), "GB", Some("NE1"))
-  val correspondenceContactDetails = ContactDetails(telephone="07592113", email = "test@test.com")
+  val correspondenceContactDetails = IndividualContactDetails(telephone="07592113", email = "test@test.com")
   val previousAddressDetails = PreviousAddressInfo(isPreviousAddressLast12Month=true, Some(correspondenceAddressDetails))
 
-  val individuals = IndividualDetails(personalDetails, Some("AA999999A"), Some("1234567892"),
+  val individuals = IndividualInfo(personalDetails, Some("AA999999A"), Some("1234567892"),
     correspondenceAddressDetails,  correspondenceContactDetails, previousAddressDetails)
 
   val companyDetails = CompanyDetails("abc organisation", Some("7897700000"), Some("AA999999A"), Some("789770000"), Some("9999"),
@@ -37,6 +37,11 @@ trait SchemeDetailsStubData {
     correspondenceAddressDetails,  correspondenceContactDetails, previousAddressDetails, Seq(individuals))
 
   val establisherDetails = EstablisherInfo(Seq(individuals), Seq(companyDetails), Seq(partnershipDetails))
+
+  val trusteePartnershipDetails = PartnershipDetails("abc partnership", Some("7897700000"), Some("789770000"), Some("9999"),
+    correspondenceAddressDetails,  correspondenceContactDetails, previousAddressDetails, Nil)
+
+  val trusteeDetails = TrusteeInfo(Seq(individuals), Seq(companyDetails), Seq(trusteePartnershipDetails))
 
   val psaDetails1 = PsaDetails("A0000001",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
   val psaDetails2 = PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
@@ -62,6 +67,7 @@ trait SchemeDetailsStubData {
         Some("ADN3JDA"),
         Some(CorrespondenceAddress(
           "line1","line2",Some("line3"),Some("line4"),"GB",Some("NE1")))))),
-      List(establisherDetails),
+      Some(establisherDetails),
+      Some(trusteeDetails),
       List(psaDetails1, psaDetails2))
 }

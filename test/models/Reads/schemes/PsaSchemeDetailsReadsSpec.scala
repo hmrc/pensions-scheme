@@ -16,7 +16,7 @@
 
 package models.Reads.schemes
 
-import models.schemes.{EstablisherInfo, PsaSchemeDetails}
+import models.schemes.{EstablisherInfo, PsaSchemeDetails, TrusteeInfo}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
@@ -31,26 +31,27 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
       }
 
       "we have a establisherDetails" in {
-        actualOutput.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          PsaSchemeDetails.seq(EstablisherInfo.apiReads))
-        actualOutput.establisherDetails.length mustBe 1
-      }
-
-      "we have multiple establisherDetails" in {
-        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails,
-          "establisherDetails" -> Json.arr(establisherDetails, establisherDetails)))
-        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
-
-        output.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          EstablisherInfo.seq(EstablisherInfo.apiReads))
-        output.establisherDetails.length mustBe 2
+        actualOutput.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
+          EstablisherInfo.apiReads)
       }
 
       "we don't have a establisherDetails" in {
         val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
-        output.establisherDetails mustBe Nil
+        output.establisherDetails mustBe None
+      }
+
+      "we have a trusteeDetails" in {
+        actualOutput.trusteeDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
+         TrusteeInfo.apiReads)
+      }
+
+      "we don't have a trusteeDetails" in {
+        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
+        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
+
+        output.trusteeDetails mustBe None
       }
 
       "we have a valid list of psa details within it" in {

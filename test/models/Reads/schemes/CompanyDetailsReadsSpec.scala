@@ -16,10 +16,10 @@
 
 package models.Reads.schemes
 
-import models.schemes.{CompanyDetails, IndividualDetails, PreviousAddressInfo}
-import models.{ContactDetails, CorrespondenceAddress, Samples}
+import models.schemes.{CompanyDetails, IndividualContactDetails, IndividualInfo, PreviousAddressInfo}
+import models.{CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads}
 
 class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
@@ -74,7 +74,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a correspondenceContactDetails" in {
-        actualResult.contact mustBe (companyOrOrganisationDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        actualResult.contact mustBe (companyOrOrganisationDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
       }
 
       "we have a previousAddressDetails" in {
@@ -88,7 +88,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a directorsDetails" in {
-        actualResult.directorsDetails mustBe (companyOrOrganisationDetails \ "directorsDetails").as(CompanyDetails.seq(IndividualDetails.apiReads))
+        actualResult.directorsDetails mustBe (companyOrOrganisationDetails \ "directorsDetails").as(Reads.seq(IndividualInfo.apiReads))
         actualResult.directorsDetails.length mustBe 1
       }
 
@@ -101,7 +101,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
         val actulaMultipleDirectorsDetails = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
 
         actulaMultipleDirectorsDetails.directorsDetails mustBe (companyOrOrganisationDetails \ "directorsDetails").as(
-          CompanyDetails.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualInfo.apiReads))
         actulaMultipleDirectorsDetails.directorsDetails.length mustBe 2
       }
 

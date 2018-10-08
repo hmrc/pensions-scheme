@@ -16,8 +16,9 @@
 
 package models.schemes
 
-import models.{ContactDetails, CorrespondenceAddress}
+import models.CorrespondenceAddress
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads.seq
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 
 case class PartnershipDetails(partnershipName: String,
@@ -25,13 +26,11 @@ case class PartnershipDetails(partnershipName: String,
                               vatRegistration: Option[String],
                               payeRef: Option[String],
                               address: CorrespondenceAddress,
-                              contact: ContactDetails,
+                              contact: IndividualContactDetails,
                               previousAddress: PreviousAddressInfo,
-                              partnerDetails: Seq[IndividualDetails])
+                              partnerDetails: Seq[IndividualInfo])
 
 object PartnershipDetails {
-
-  def seq[A](implicit reads: Reads[A]): Reads[Seq[A]] = Reads.traversableReads[Seq, A]
 
   val apiReads: Reads[PartnershipDetails] = (
     (JsPath \ "partnershipName").read[String] and
@@ -39,9 +38,9 @@ object PartnershipDetails {
       (JsPath \ "vatRegistrationNumber").readNullable[String] and
       (JsPath \ "payeReference").readNullable[String] and
       (JsPath \ "correspondenceAddressDetails").read[CorrespondenceAddress] and
-      (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
+      (JsPath \ "correspondenceContactDetails").read(IndividualContactDetails.apiReads) and
       (JsPath \ "previousAddressDetails").read(PreviousAddressInfo.apiReads) and
-      (JsPath \ "partnerDetails").readNullable(seq(IndividualDetails.apiReads))
+      (JsPath \ "partnerDetails").readNullable(seq(IndividualInfo.apiReads))
     ) ((partnershipName, utr, vatRegistration, payeRef, address, contact, previousAddress, partnerDetails) =>
     PartnershipDetails(partnershipName, utr, vatRegistration, payeRef, address, contact, previousAddress, partnerDetails.getOrElse(Nil)))
 

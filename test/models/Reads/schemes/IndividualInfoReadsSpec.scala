@@ -17,12 +17,13 @@
 package models.Reads.schemes
 
 import models.schemes._
-import models.{ContactDetails, CorrespondenceAddress, Samples}
+import models.{CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import org.scalatest.prop.PropertyChecks._
 
-class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples
+class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples
   with SchemeDetailsStubJsonData with PSASchemeDetailsGenerator {
+
 
   "A JSON payload containing personal details" should {
 
@@ -36,7 +37,7 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
 
       "we have a middleName" in {
         forAll(personalDetailsGenerator) { personalDetails=>
-          personalDetails.as(PersonalInfo.apiReads).name.middleName.value mustBe (personalDetails \ "middleName").as[String]
+          personalDetails.as(PersonalInfo.apiReads).name.middleName mustBe (personalDetails \ "middleName").asOpt[String]
         }
       }
 
@@ -67,44 +68,62 @@ class IndividualsDetailsReadsSpec extends WordSpec with MustMatchers with Option
 
     "read into a valid individuals details object" when {
 
-      val actualResult = individualDetails.as(IndividualDetails.apiReads)
-
       "we have a personalDetails" in {
-        actualResult.personalDetails mustBe (individualDetails \ "personDetails").as(PersonalInfo.apiReads)
+        forAll(individualDetailsGenerator) { individualDetails =>
+          individualDetails.as(IndividualInfo.apiReads).personalDetails mustBe (individualDetails \ "personDetails").as(
+            PersonalInfo.apiReads)
+        }
       }
 
       "we have a nino" in {
-        actualResult.nino.value mustBe (individualDetails \ "nino").as[String]
+        forAll(individualDetailsGenerator) { individualDetails =>
+          individualDetails.as(IndividualInfo.apiReads).nino mustBe (individualDetails \ "nino").asOpt[String]
+        }
       }
 
       "we don't have a nino" in {
-        val inputWithoutNino = individualDetails - "nino"
+        forAll(individualDetailsGenerator) { individualDetails =>
+          val inputWithoutNino = individualDetails - "nino"
 
-        inputWithoutNino.as(IndividualDetails.apiReads).nino mustBe None
+          inputWithoutNino.as(IndividualInfo.apiReads).nino mustBe None
+        }
+
       }
 
       "we have a utr" in {
-        actualResult.utr.value mustBe (individualDetails \ "utr").as[String]
+        forAll(individualDetailsGenerator) { individualDetails =>
+          individualDetails.as(IndividualInfo.apiReads).utr mustBe (individualDetails \ "utr").asOpt[String]
+        }
       }
 
       "we don't have a utr" in {
-        val inputWithoutUTR = individualDetails - "utr"
+        forAll(individualDetailsGenerator) { individualDetails =>
+          val inputWithoutUTR = individualDetails - "utr"
 
-        inputWithoutUTR.as(IndividualDetails.apiReads).utr mustBe None
+          inputWithoutUTR.as(IndividualInfo.apiReads).utr mustBe None
+        }
       }
 
       "we have a correspondenceAddressDetails" in {
-        actualResult.address mustBe (individualDetails \ "correspondenceAddressDetails").as(CorrespondenceAddress.reads)
+        forAll(individualDetailsGenerator) { individualDetails =>
+          individualDetails.as(IndividualInfo.apiReads).address mustBe (individualDetails \ "correspondenceAddressDetails").as(
+            CorrespondenceAddress.reads)
+        }
       }
 
       "we have a correspondenceContactDetails" in {
-        actualResult.contact mustBe (individualDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        forAll(individualDetailsGenerator) { individualDetails =>
+          individualDetails.as(IndividualInfo.apiReads).contact mustBe (individualDetails \ "correspondenceContactDetails").as(
+            IndividualContactDetails.apiReads)
+        }
       }
 
       "we have a previousAddressDetails" in {
-        actualResult.previousAddress mustBe (individualDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
+        forAll(individualDetailsGenerator) { individualDetails =>
+          individualDetails.as(IndividualInfo.apiReads).previousAddress mustBe (individualDetails \ "previousAddressDetails").as(
+            PreviousAddressInfo.apiReads)
+        }
       }
-
     }
   }
 }
