@@ -54,9 +54,9 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
       }
 
       "we have a trusteeDetails" in {
-        actualOutput.truesteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
+        actualOutput.trusteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
           Reads.seq(TrusteeInfo.apiReads))
-        actualOutput.truesteeDetails.length mustBe 1
+        actualOutput.trusteeDetails.length mustBe 1
       }
 
       "we have multiple trusteeDetails" in {
@@ -64,16 +64,16 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
           "trusteeDetails" -> Json.arr(trusteeDetails, trusteeDetails)))
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
-        output.truesteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
+        output.trusteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
           Reads.seq(TrusteeInfo.apiReads))
-        output.truesteeDetails.length mustBe 2
+        output.trusteeDetails.length mustBe 2
       }
 
       "we don't have a trusteeDetails" in {
         val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
-        output.truesteeDetails mustBe Nil
+        output.trusteeDetails mustBe Nil
       }
 
       "we have a valid list of psa details within it" in {
