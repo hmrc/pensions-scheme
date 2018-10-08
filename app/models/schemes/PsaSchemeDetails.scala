@@ -22,7 +22,7 @@ import play.api.libs.json.Reads.seq
 
 case class PsaSchemeDetails(schemeDetails: SchemeDetails,
                             establisherDetails: Seq[EstablisherInfo],
-                            truesteeDetails: Seq[TrusteeInfo],
+                            trusteeDetails: Seq[TrusteeInfo],
                             psaDetails: Seq[PsaDetails])
 
 object PsaSchemeDetails {
