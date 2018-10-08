@@ -80,13 +80,6 @@ class SchemeConnectorImpl @Inject()(
     response.status match {
       case OK => response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
         error => {
-
-          println("############")
-
-          println(Json.prettyPrint(response.json))
-
-          println("############")
-
           invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
           Left(new BadRequestException("INVALID PAYLOAD"))
         },
