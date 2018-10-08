@@ -16,7 +16,7 @@
 
 package models.Reads.schemes
 
-import models.schemes.{EstablisherInfo, PsaSchemeDetails}
+import models.schemes.{EstablisherInfo, PsaSchemeDetails, TrusteeInfo}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
@@ -32,7 +32,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
 
       "we have a establisherDetails" in {
         actualOutput.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          PsaSchemeDetails.seq(EstablisherInfo.apiReads))
+          Reads.seq(EstablisherInfo.apiReads))
         actualOutput.establisherDetails.length mustBe 1
       }
 
@@ -42,7 +42,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
         output.establisherDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          EstablisherInfo.seq(EstablisherInfo.apiReads))
+          Reads.seq(EstablisherInfo.apiReads))
         output.establisherDetails.length mustBe 2
       }
 
@@ -51,6 +51,29 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
         val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
 
         output.establisherDetails mustBe Nil
+      }
+
+      "we have a trusteeDetails" in {
+        actualOutput.truesteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
+          Reads.seq(TrusteeInfo.apiReads))
+        actualOutput.truesteeDetails.length mustBe 1
+      }
+
+      "we have multiple trusteeDetails" in {
+        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails,
+          "trusteeDetails" -> Json.arr(trusteeDetails, trusteeDetails)))
+        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
+
+        output.truesteeDetails mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
+          Reads.seq(TrusteeInfo.apiReads))
+        output.truesteeDetails.length mustBe 2
+      }
+
+      "we don't have a trusteeDetails" in {
+        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
+        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
+
+        output.truesteeDetails mustBe Nil
       }
 
       "we have a valid list of psa details within it" in {

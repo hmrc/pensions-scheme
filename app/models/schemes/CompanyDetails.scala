@@ -19,6 +19,7 @@ package models.schemes
 import models.{ContactDetails, CorrespondenceAddress}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
+import play.api.libs.json.Reads.seq
 
 case class CompanyDetails(organizationName: String,
                           utr: Option[String],
@@ -28,11 +29,9 @@ case class CompanyDetails(organizationName: String,
                           address: CorrespondenceAddress,
                           contact: ContactDetails,
                           previousAddress: Option[PreviousAddressInfo],
-                          directorsDetails: Seq[IndividualDetails])
+                          directorsDetails: Seq[IndividualInfo])
 
 object CompanyDetails {
-
-  def seq[A](implicit reads: Reads[A]): Reads[Seq[A]] = Reads.traversableReads[Seq, A]
 
   val apiReads: Reads[CompanyDetails] = (
     (JsPath \ "organisationName").read[String] and
@@ -43,7 +42,7 @@ object CompanyDetails {
       (JsPath \ "correspondenceAddressDetails").read[CorrespondenceAddress] and
       (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
       (JsPath \ "previousAddressDetails").readNullable(PreviousAddressInfo.apiReads) and
-      (JsPath \ "directorsDetails").readNullable(seq(IndividualDetails.apiReads))
+      (JsPath \ "directorsDetails").readNullable(seq(IndividualInfo.apiReads))
     ) ((orgName, utr, crn, vatRegistration, payeRef, address, contact, previousAddress, directorsDetails) =>
     CompanyDetails(orgName, utr, crn, vatRegistration, payeRef, address, contact, previousAddress, directorsDetails.getOrElse(Nil)))
 

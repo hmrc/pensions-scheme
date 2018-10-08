@@ -17,8 +17,9 @@
 package models.Reads.schemes
 
 import models.Samples
-import models.schemes.{CompanyDetails, EstablisherInfo, IndividualDetails, PartnershipDetails}
+import models.schemes.{CompanyDetails, EstablisherInfo, IndividualInfo, PartnershipDetails}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import play.api.libs.json.Reads
 
 class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
@@ -30,7 +31,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
 
       "we have a individualDetails" in {
         actualResult.individual mustBe (establisherDetails \ "individualDetails").as(
-          EstablisherInfo.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualInfo.apiReads))
         actualResult.individual.length mustBe 1
       }
 
@@ -38,7 +39,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
         val actualMultipleIndividualDetails = establisherDetailsWithMultipleData.as(EstablisherInfo.apiReads)
 
         actualMultipleIndividualDetails.individual mustBe (establisherDetailsWithMultipleData \ "individualDetails").as(
-          EstablisherInfo.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualInfo.apiReads))
         actualMultipleIndividualDetails.individual.length mustBe 2
       }
 
@@ -50,7 +51,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
 
       "we have a companyOrOrganisationDetails" in {
         actualResult.company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
-          EstablisherInfo.seq(CompanyDetails.apiReads))
+          Reads.seq(CompanyDetails.apiReads))
         actualResult.company.length mustBe 1
       }
 
@@ -58,7 +59,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
         val actulaMultipleCompanyOrOrganisationDetails = establisherDetailsWithMultipleData.as(EstablisherInfo.apiReads)
 
         actulaMultipleCompanyOrOrganisationDetails.company mustBe (establisherDetailsWithMultipleData \ "companyOrOrganisationDetails").as(
-          EstablisherInfo.seq(CompanyDetails.apiReads))
+          Reads.seq(CompanyDetails.apiReads))
         actulaMultipleCompanyOrOrganisationDetails.company.length mustBe 2
       }
 
@@ -70,7 +71,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
 
       "we have a partnershipTrusteeDetail" in {
         actualResult.partnership mustBe (establisherDetails \ "partnershipTrusteeDetail").as(
-          EstablisherInfo.seq(PartnershipDetails.apiReads))
+          Reads.seq(PartnershipDetails.apiReads))
         actualResult.partnership.length mustBe 1
       }
 
@@ -78,7 +79,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
         val actualMultiplePrtnershipTrusteeDetail = establisherDetailsWithMultipleData.as(EstablisherInfo.apiReads)
 
         actualMultiplePrtnershipTrusteeDetail.partnership mustBe (establisherDetailsWithMultipleData \ "partnershipTrusteeDetail").as(
-          EstablisherInfo.seq(PartnershipDetails.apiReads))
+          Reads.seq(PartnershipDetails.apiReads))
         actualMultiplePrtnershipTrusteeDetail.partnership.length mustBe 2
       }
 

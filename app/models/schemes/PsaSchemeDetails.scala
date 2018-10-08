@@ -18,21 +18,25 @@ package models.schemes
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.libs.json.Reads.seq
 
 case class PsaSchemeDetails(schemeDetails: SchemeDetails,
-                            establisherDetails : Seq[EstablisherInfo],
+                            establisherDetails: Seq[EstablisherInfo],
+                            truesteeDetails: Seq[TrusteeInfo],
                             psaDetails: Seq[PsaDetails])
 
 object PsaSchemeDetails {
 
-  def seq[A](implicit reads: Reads[A]): Reads[Seq[A]] = Reads.traversableReads[Seq, A]
-
-  val apiReads : Reads[PsaSchemeDetails] = (
+  val apiReads: Reads[PsaSchemeDetails] = (
     (JsPath \ "psaSchemeDetails" \ "schemeDetails").read(SchemeDetails.apiReads) and
-    (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(seq(EstablisherInfo.apiReads)) and
-      (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable(seq(PsaDetails.apiReads)))(
-    (schemeDetails, establisherDetails, psaDetails) =>
-      PsaSchemeDetails(schemeDetails, establisherDetails.getOrElse(Nil), psaDetails.getOrElse(Nil)))
+      (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(seq(EstablisherInfo.apiReads)) and
+      (JsPath \ "psaSchemeDetails" \ "trusteeDetails").readNullable(seq(TrusteeInfo.apiReads)) and
+      (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable(seq(PsaDetails.apiReads))) (
+    (schemeDetails, establisherDetails, trusteeDetails, psaDetails) =>
+      PsaSchemeDetails(schemeDetails,
+        establisherDetails.getOrElse(Nil),
+        trusteeDetails.getOrElse(Nil),
+        psaDetails.getOrElse(Nil)))
 
   implicit val formats: OFormat[PsaSchemeDetails] = Json.format[PsaSchemeDetails]
 

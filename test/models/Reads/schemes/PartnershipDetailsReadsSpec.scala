@@ -16,10 +16,10 @@
 
 package models.Reads.schemes
 
-import models.schemes.{IndividualDetails, PartnershipDetails, PreviousAddressInfo}
+import models.schemes.{IndividualInfo, PartnershipDetails, PreviousAddressInfo}
 import models.{ContactDetails, CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads}
 
 class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
@@ -73,7 +73,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a partnerDetails" in {
-        actualResult.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(PartnershipDetails.seq(IndividualDetails.apiReads))
+        actualResult.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(Reads.seq(IndividualInfo.apiReads))
         actualResult.partnerDetails.length mustBe 1
       }
 
@@ -85,7 +85,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
         val actualMultiplePartnerDetails = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
 
         actualMultiplePartnerDetails.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(
-          PartnershipDetails.seq(IndividualDetails.apiReads))
+          Reads.seq(IndividualInfo.apiReads))
         actualMultiplePartnerDetails.partnerDetails.length mustBe 2
       }
 

@@ -20,22 +20,19 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 import play.api.libs.json.Reads.seq
 
+case class TrusteeInfo(individual: Seq[IndividualInfo],
+                       company: Seq[CompanyDetails],
+                       partnership: Seq[PartnershipDetails])
 
-case class EstablisherInfo(individual: Seq[IndividualInfo],
-                           company: Seq[CompanyDetails],
-                           partnership: Seq[PartnershipDetails])
+object TrusteeInfo {
 
-object EstablisherInfo {
-
-  val apiReads: Reads[EstablisherInfo] = (
-    (JsPath \ "individualDetails").readNullable(seq(IndividualInfo.apiReads)) and
-      (JsPath \ "companyOrOrganisationDetails").readNullable(seq(CompanyDetails.apiReads)) and
-      (JsPath \ "partnershipTrusteeDetail").readNullable(seq(PartnershipDetails.apiReads))
+  val apiReads: Reads[TrusteeInfo] = (
+    (JsPath \ "individualTrusteeDetails").readNullable(seq(IndividualInfo.apiReads)) and
+      (JsPath \ "companyTrusteeDetails").readNullable(seq(CompanyDetails.apiReads)) and
+      (JsPath \ "partnershipTrusteeDetails").readNullable(seq(PartnershipDetails.apiReads))
     ) ((individual, organization, partnership) =>
-    EstablisherInfo(individual.getOrElse(Nil), organization.getOrElse(Nil), partnership.getOrElse(Nil)))
+    TrusteeInfo(individual.getOrElse(Nil), organization.getOrElse(Nil), partnership.getOrElse(Nil)))
 
-  implicit val formats: OFormat[EstablisherInfo] = Json.format[EstablisherInfo]
+  implicit val formats: OFormat[TrusteeInfo] = Json.format[TrusteeInfo]
 
 }
-
-
