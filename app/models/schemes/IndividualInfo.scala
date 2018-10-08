@@ -25,7 +25,7 @@ case class IndividualInfo(personalDetails: PersonalInfo,
                           nino: Option[String],
                           utr: Option[String],
                           address: CorrespondenceAddress,
-                          contact: ContactDetails,
+                          contact: IndividualContactDetails,
                           previousAddress: PreviousAddressInfo)
 
 object IndividualInfo {
@@ -35,7 +35,7 @@ object IndividualInfo {
       (JsPath \ "nino").readNullable[String] and
       (JsPath \ "utr").readNullable[String] and
       (JsPath \ "correspondenceAddressDetails").read(CorrespondenceAddress.reads) and
-      (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
+      (JsPath \ "correspondenceContactDetails").read(IndividualContactDetails.apiReads) and
       (JsPath \ "previousAddressDetails").read(PreviousAddressInfo.apiReads)
     ) ((personal, nino, utr, address, contact, previousAddress) =>
     IndividualInfo(personal, nino, utr, address, contact, previousAddress))
@@ -43,6 +43,19 @@ object IndividualInfo {
 
   implicit val formats: OFormat[IndividualInfo] = Json.format[IndividualInfo]
 
+}
+
+case class IndividualContactDetails(telephone: String, email: String)
+
+object IndividualContactDetails {
+
+  val apiReads: Reads[IndividualContactDetails] = (
+    (JsPath \ "telephone").read[String] and
+      (JsPath \ "email").read[String]
+    ) ((telephone, email) => IndividualContactDetails(telephone, email)
+  )
+
+  implicit val formats: OFormat[IndividualContactDetails] = Json.format[IndividualContactDetails]
 }
 
 case class PersonalInfo(name: IndividualName, dateOfBirth: String)

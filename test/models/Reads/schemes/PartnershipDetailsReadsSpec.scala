@@ -16,8 +16,8 @@
 
 package models.Reads.schemes
 
-import models.schemes.{IndividualInfo, PartnershipDetails, PreviousAddressInfo}
-import models.{ContactDetails, CorrespondenceAddress, Samples}
+import models.schemes.{IndividualContactDetails, IndividualInfo, PartnershipDetails, PreviousAddressInfo}
+import models.{CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{Json, Reads}
 
@@ -65,7 +65,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a correspondenceContactDetails" in {
-        actualResult.contact mustBe (establisherPartnershipDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        actualResult.contact mustBe (establisherPartnershipDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
       }
 
       "we have a previousAddressDetails" in {

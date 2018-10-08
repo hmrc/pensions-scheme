@@ -24,7 +24,7 @@ import config.AppConfig
 import models.schemes.PsaSchemeDetails
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.{JsValue, Writes, Json}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -79,7 +79,17 @@ class SchemeConnectorImpl @Inject()(
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
       case OK => response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
-        _ => Left(new BadRequestException("INVALID PAYLOAD")),
+        error => {
+
+          println("############")
+
+          println(Json.prettyPrint(response.json))
+
+          println("############")
+
+          invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
+          Left(new BadRequestException("INVALID PAYLOAD"))
+        },
         value => Right(value))
       case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
       case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
@@ -89,13 +99,6 @@ class SchemeConnectorImpl @Inject()(
       case status if is5xx(status) => throw Upstream5xxResponse(response.body, status, BAD_GATEWAY)
       case status => throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
     }
-  }
-
-  //scalastyle:on cyclomatic.complexity
-  private def logFailures(endpoint: String, data: JsValue, schemaPath: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
-    case Success(Left(e: BadRequestException)) if e.message.contains("INVALID_PAYLOAD") =>
-      invalidPayloadHandler.logFailures(schemaPath, data)
-    case Success(Left(e: HttpResponse)) => Logger.warn(s"$endpoint received error response from DES", e)
   }
 
   override def registerScheme(psaId: String, registerData: JsValue)(implicit

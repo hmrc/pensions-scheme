@@ -16,10 +16,10 @@
 
 package models.schemes
 
-import models.{ContactDetails, CorrespondenceAddress}
+import models.CorrespondenceAddress
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 import play.api.libs.json.Reads.seq
+import play.api.libs.json.{JsPath, Json, OFormat, Reads}
 
 case class CompanyDetails(organizationName: String,
                           utr: Option[String],
@@ -27,7 +27,7 @@ case class CompanyDetails(organizationName: String,
                           vatRegistration: Option[String],
                           payeRef: Option[String],
                           address: CorrespondenceAddress,
-                          contact: ContactDetails,
+                          contact: IndividualContactDetails,
                           previousAddress: Option[PreviousAddressInfo],
                           directorsDetails: Seq[IndividualInfo])
 
@@ -40,7 +40,7 @@ object CompanyDetails {
       (JsPath \ "vatRegistrationNumber").readNullable[String] and
       (JsPath \ "payeReference").readNullable[String] and
       (JsPath \ "correspondenceAddressDetails").read[CorrespondenceAddress] and
-      (JsPath \ "correspondenceContactDetails").read(ContactDetails.apiReads) and
+      (JsPath \ "correspondenceContactDetails").read(IndividualContactDetails.apiReads) and
       (JsPath \ "previousAddressDetails").readNullable(PreviousAddressInfo.apiReads) and
       (JsPath \ "directorsDetails").readNullable(seq(IndividualInfo.apiReads))
     ) ((orgName, utr, crn, vatRegistration, payeRef, address, contact, previousAddress, directorsDetails) =>

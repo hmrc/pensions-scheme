@@ -17,7 +17,7 @@
 package models.Reads.schemes
 
 import models.schemes._
-import models.{ContactDetails, CorrespondenceAddress, Samples}
+import models.{CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
 class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
@@ -88,7 +88,7 @@ class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a correspondenceContactDetails" in {
-        actualResult.contact mustBe (individualDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        actualResult.contact mustBe (individualDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
       }
 
       "we have a previousAddressDetails" in {

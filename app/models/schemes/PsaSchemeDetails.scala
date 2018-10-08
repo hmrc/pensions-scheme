@@ -21,21 +21,21 @@ import play.api.libs.json._
 import play.api.libs.json.Reads.seq
 
 case class PsaSchemeDetails(schemeDetails: SchemeDetails,
-                            establisherDetails: Seq[EstablisherInfo],
-                            trusteeDetails: Seq[TrusteeInfo],
+                            establisherDetails: Option[EstablisherInfo],
+                            trusteeDetails: Option[TrusteeInfo],
                             psaDetails: Seq[PsaDetails])
 
 object PsaSchemeDetails {
 
   val apiReads: Reads[PsaSchemeDetails] = (
     (JsPath \ "psaSchemeDetails" \ "schemeDetails").read(SchemeDetails.apiReads) and
-      (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(seq(EstablisherInfo.apiReads)) and
-      (JsPath \ "psaSchemeDetails" \ "trusteeDetails").readNullable(seq(TrusteeInfo.apiReads)) and
+      (JsPath \ "psaSchemeDetails" \ "establisherDetails").readNullable(EstablisherInfo.apiReads) and
+      (JsPath \ "psaSchemeDetails" \ "trusteeDetails").readNullable(TrusteeInfo.apiReads) and
       (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable(seq(PsaDetails.apiReads))) (
     (schemeDetails, establisherDetails, trusteeDetails, psaDetails) =>
       PsaSchemeDetails(schemeDetails,
-        establisherDetails.getOrElse(Nil),
-        trusteeDetails.getOrElse(Nil),
+        establisherDetails,
+        trusteeDetails,
         psaDetails.getOrElse(Nil)))
 
   implicit val formats: OFormat[PsaSchemeDetails] = Json.format[PsaSchemeDetails]

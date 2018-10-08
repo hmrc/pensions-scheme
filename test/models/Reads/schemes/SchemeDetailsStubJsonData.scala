@@ -27,7 +27,7 @@ trait SchemeDetailsStubJsonData {
     "line1" -> "line1", "line2" -> "line2", "line3" -> JsString("line3"), "line4" -> JsString("line4"),
     "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
 
-  val fullContactDetails : JsObject = Json.obj("phone" -> "07592113", "email" -> "test@test.com", "mobileNumber" -> "4564564664", "fax" -> "4654654313")
+  val fullContactDetails : JsObject = Json.obj("telephone" -> "07592113", "email" -> "test@test.com", "mobileNumber" -> "4564564664", "fax" -> "4654654313")
 
   val previousAddressDetails : JsObject = Json.obj("isPreviousAddressLast12Month" -> JsBoolean(true), "previousAddress" -> addressDetails)
 
@@ -98,6 +98,6 @@ trait SchemeDetailsStubJsonData {
   val psaDetails : JsArray = Json.arr(psaDetail1,psaDetail2)
 
   val psaSchemeDetails : JsObject = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails,
-    "establisherDetails" -> Json.arr(establisherDetails), "trusteeDetails" -> Json.arr(trusteeDetails),
+    "establisherDetails" -> establisherDetails, "trusteeDetails" -> trusteeDetails,
     "psaDetails" -> psaDetails))
 }
