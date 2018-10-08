@@ -16,11 +16,10 @@
 
 package models.Reads.schemes
 
-import models.schemes.{CompanyDetails, IndividualInfo, PreviousAddressInfo}
-import models.{ContactDetails, CorrespondenceAddress, Samples}
+import models.schemes.{CompanyDetails, IndividualContactDetails, IndividualInfo, PreviousAddressInfo}
+import models.{CorrespondenceAddress, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.Json
-import play.api.libs.json.Reads
+import play.api.libs.json.{Json, Reads}
 
 class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
 
@@ -75,7 +74,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a correspondenceContactDetails" in {
-        actualResult.contact mustBe (companyOrOrganisationDetails \ "correspondenceContactDetails").as(ContactDetails.apiReads)
+        actualResult.contact mustBe (companyOrOrganisationDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
       }
 
       "we have a previousAddressDetails" in {

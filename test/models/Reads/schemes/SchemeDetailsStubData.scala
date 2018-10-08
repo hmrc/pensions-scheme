@@ -24,7 +24,7 @@ trait SchemeDetailsStubData {
   val personalName = IndividualName("fName", Some("mName"), "lName")
   val personalDetails =  PersonalInfo(personalName, "1955-03-29")
   val correspondenceAddressDetails = CorrespondenceAddress("line1", "line2", Some("line3"), Some("line4"), "GB", Some("NE1"))
-  val correspondenceContactDetails = ContactDetails(telephone="07592113", email = "test@test.com")
+  val correspondenceContactDetails = IndividualContactDetails(telephone="07592113", email = "test@test.com")
   val previousAddressDetails = PreviousAddressInfo(isPreviousAddressLast12Month=true, Some(correspondenceAddressDetails))
 
   val individuals = IndividualInfo(personalDetails, Some("AA999999A"), Some("1234567892"),
@@ -67,7 +67,7 @@ trait SchemeDetailsStubData {
         Some("ADN3JDA"),
         Some(CorrespondenceAddress(
           "line1","line2",Some("line3"),Some("line4"),"GB",Some("NE1")))))),
-      List(establisherDetails),
-      List(trusteeDetails),
+      Some(establisherDetails),
+      Some(trusteeDetails),
       List(psaDetails1, psaDetails2))
 }
