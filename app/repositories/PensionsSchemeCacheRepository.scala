@@ -16,12 +16,9 @@
 
 package repositories
 
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
-import org.apache.commons.lang3.SerializationUtils
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.http.Writeable
 import play.api.libs.json._
 import play.api.{Configuration, Logger}
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -34,6 +31,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class PensionsSchemeCacheRepository(
                                               index: String,
@@ -80,7 +78,9 @@ abstract class PensionsSchemeCacheRepository(
   private val createdIndexName = "userAnswersExpiry"
   private val expireAfterSeconds = "expireAfterSeconds"
 
-  ensureIndex(fieldName, createdIndexName, ttl)
+  ensureIndex(fieldName, createdIndexName, ttl) andThen {
+    case _  => CollectionDiagnostics.logCollectionInfo(collection)
+  }
 
   private def ensureIndex(field: String, indexName: String, ttl: Option[Int]): Future[Boolean] = {
 
@@ -172,7 +172,7 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   def dropCollection()(implicit ec: ExecutionContext): Future[Unit] = {
-    collection.drop()
+    collection.drop(false).map(_ => ())
   }
 
 }
