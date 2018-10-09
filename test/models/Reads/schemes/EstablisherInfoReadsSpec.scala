@@ -29,7 +29,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
     "read into a valid establisher details object" when {
 
       "we have a individualDetails" in {
-        forAll(establisherDetailsGenerator) { establisherDetails =>
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
           establisherDetails.as(EstablisherInfo.apiReads).individual mustBe (establisherDetails \ "individualDetails").as(
             Reads.seq(IndividualInfo.apiReads))
           establisherDetails.as(EstablisherInfo.apiReads).individual.length mustBe 1
@@ -37,7 +37,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we have multiple individualDetails" in {
-        forAll(establisherDetailsGenerator(2)) { establisherDetails =>
+        forAll(establisherDetailsGenerator(noOfElements = 2)) { establisherDetails =>
           establisherDetails.as(EstablisherInfo.apiReads).individual mustBe (establisherDetails \ "individualDetails").as(
             Reads.seq(IndividualInfo.apiReads))
           establisherDetails.as(EstablisherInfo.apiReads).individual.length mustBe 2
@@ -45,7 +45,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we don't have a individualDetails" in {
-        forAll(establisherDetailsGenerator) { establisherDetails =>
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
           val inputWithoutIndividualDetails = establisherDetails - "individualDetails"
 
           inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).individual mustBe Nil
@@ -53,7 +53,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we have a companyOrOrganisationDetails" in {
-        forAll(establisherDetailsGenerator) { establisherDetails =>
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
           establisherDetails.as(EstablisherInfo.apiReads).company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
             Reads.seq(CompanyDetails.apiReads))
           establisherDetails.as(EstablisherInfo.apiReads).company.length mustBe 1
@@ -61,7 +61,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we have multiple companyOrOrganisationDetails" in {
-        forAll(establisherDetailsGenerator(2)) { establisherDetails =>
+        forAll(establisherDetailsGenerator(noOfElements = 2)) { establisherDetails =>
           val actulaMultipleCompanyOrOrganisationDetails = establisherDetails.as(EstablisherInfo.apiReads)
 
           actulaMultipleCompanyOrOrganisationDetails.company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
@@ -71,7 +71,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we don't have a companyOrOrganisationDetails" in {
-        forAll(establisherDetailsGenerator) { establisherDetails =>
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
           val inputWithoutIndividualDetails = establisherDetails - "companyOrOrganisationDetails"
 
           inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).company mustBe Nil
@@ -79,7 +79,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we have a partnershipTrusteeDetail" in {
-        forAll(establisherDetailsGenerator) { establisherDetails =>
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
           establisherDetails.as(EstablisherInfo.apiReads).partnership mustBe (establisherDetails \ "partnershipTrusteeDetail").as(
             Reads.seq(PartnershipDetails.apiReads))
           establisherDetails.as(EstablisherInfo.apiReads).partnership.length mustBe 1
@@ -87,7 +87,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we have multiple partnershipTrusteeDetail" in {
-        forAll(establisherDetailsGenerator(2)) { establisherDetails =>
+        forAll(establisherDetailsGenerator(noOfElements = 2)) { establisherDetails =>
           val actualMultiplePrtnershipTrusteeDetail = establisherDetails.as(EstablisherInfo.apiReads)
 
           actualMultiplePrtnershipTrusteeDetail.partnership mustBe (establisherDetails \ "partnershipTrusteeDetail").as(
@@ -97,7 +97,7 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
       }
 
       "we don't have a partnershipTrusteeDetail" in {
-        forAll(establisherDetailsGenerator) { establisherDetails =>
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
           val inputWithoutIndividualDetails = establisherDetails - "partnershipTrusteeDetail"
 
           inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).partnership mustBe Nil

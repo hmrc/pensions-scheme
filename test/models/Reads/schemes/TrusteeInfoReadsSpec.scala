@@ -29,7 +29,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
     "read into a valid trustee details object" when {
 
       "we have a individualTrusteeDetails" in {
-        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator()) { trusteeDetails =>
           trusteeDetails.as(TrusteeInfo.apiReads).individual mustBe (trusteeDetails \ "individualTrusteeDetails").as(
             Reads.seq(IndividualInfo.apiReads))
           trusteeDetails.as(TrusteeInfo.apiReads).individual.length mustBe 1
@@ -37,7 +37,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we have multiple individualTrusteeDetails" in {
-        forAll(trusteeDetailsGenerator(2)) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator(noOfElements = 2)) { trusteeDetails =>
           val actualMultipleIndividualDetails = trusteeDetails.as(TrusteeInfo.apiReads)
 
           actualMultipleIndividualDetails.individual mustBe (trusteeDetails \ "individualTrusteeDetails").as(
@@ -47,7 +47,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we don't have a individualTrusteeDetails" in {
-        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator()) { trusteeDetails =>
           val inputWithoutIndividualDetails = trusteeDetails - "individualTrusteeDetails"
 
           inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).individual mustBe Nil
@@ -55,7 +55,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we have a companyTrusteeDetails" in {
-        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator()) { trusteeDetails =>
           trusteeDetails.as(TrusteeInfo.apiReads).company mustBe (trusteeDetails \ "companyTrusteeDetails").as(
             Reads.seq(CompanyDetails.apiReads))
           trusteeDetails.as(TrusteeInfo.apiReads).company.length mustBe 1
@@ -63,7 +63,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we have multiple companyTrusteeDetails" in {
-        forAll(trusteeDetailsGenerator(2)) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator(noOfElements = 2)) { trusteeDetails =>
           val actulaMultipleCompanyOrOrganisationDetails = trusteeDetails.as(TrusteeInfo.apiReads)
 
           actulaMultipleCompanyOrOrganisationDetails.company mustBe (trusteeDetails \ "companyTrusteeDetails").as(
@@ -73,7 +73,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we don't have a companyTrusteeDetails" in {
-        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator()) { trusteeDetails =>
           val inputWithoutIndividualDetails = trusteeDetails - "companyTrusteeDetails"
 
           inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).company mustBe Nil
@@ -81,7 +81,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we have a partnershipTrusteeDetail" in {
-        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator()) { trusteeDetails =>
           trusteeDetails.as(TrusteeInfo.apiReads).partnership mustBe (trusteeDetails \ "partnershipTrusteeDetails").as(
             Reads.seq(PartnershipDetails.apiReads))
           trusteeDetails.as(TrusteeInfo.apiReads).partnership.length mustBe 1
@@ -89,7 +89,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we have multiple partnershipTrusteeDetail" in {
-        forAll(trusteeDetailsGenerator(2)) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator(noOfElements = 2)) { trusteeDetails =>
           val actualMultiplePrtnershipTrusteeDetail = trusteeDetails.as(TrusteeInfo.apiReads)
 
           actualMultiplePrtnershipTrusteeDetail.partnership mustBe (trusteeDetails \ "partnershipTrusteeDetails").as(
@@ -99,7 +99,7 @@ class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues 
       }
 
       "we don't have a partnershipTrusteeDetail" in {
-        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+        forAll(trusteeDetailsGenerator()) { trusteeDetails =>
           val inputWithoutIndividualDetails = trusteeDetails - "partnershipTrusteeDetails"
 
           inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).partnership mustBe Nil

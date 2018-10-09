@@ -30,20 +30,20 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
     "read into a valid company or organisationDetails object" when {
 
       "we have a partnershipName" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).partnershipName mustBe (
             establisherPartnershipDetails \ "partnershipName").as[String]
         }
       }
 
       "we have a utr" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).utr mustBe (establisherPartnershipDetails \ "utr").asOpt[String]
         }
       }
 
       "we don't have a utr" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           val inputWithoutUTR = establisherPartnershipDetails - "utr"
 
           inputWithoutUTR.as(PartnershipDetails.apiReads).utr mustBe None
@@ -51,14 +51,14 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a vatRegistrationNumber" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).vatRegistration mustBe (
             establisherPartnershipDetails \ "vatRegistrationNumber").asOpt[String]
         }
       }
 
       "we don't have a vatRegistrationNumber" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           val inputWithoutVatRegistrationNumber = establisherPartnershipDetails - "vatRegistrationNumber"
 
           inputWithoutVatRegistrationNumber.as(PartnershipDetails.apiReads).vatRegistration mustBe None
@@ -66,7 +66,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we don't have a payeReference" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           val inputWithoutPayeReference = establisherPartnershipDetails - "payeReference"
 
           inputWithoutPayeReference.as(PartnershipDetails.apiReads).payeRef mustBe None
@@ -74,28 +74,28 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have a correspondenceAddressDetails" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).address mustBe (
             establisherPartnershipDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
         }
       }
 
       "we have a correspondenceContactDetails" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).contact mustBe (
             establisherPartnershipDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
         }
       }
 
       "we have a previousAddressDetails" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).previousAddress mustBe (
             establisherPartnershipDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
         }
       }
 
       "we have a partnerDetails" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator()) { establisherPartnershipDetails =>
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).partnerDetails mustBe (
             establisherPartnershipDetails \ "partnerDetails").as(Reads.seq(IndividualInfo.apiReads))
           establisherPartnershipDetails.as(PartnershipDetails.apiReads).partnerDetails.length mustBe 1
@@ -103,7 +103,7 @@ class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with Option
       }
 
       "we have multiple partnerDetails" in {
-        forAll(establisherPartnershipDetailsDetailsGenerator(2)) { establisherPartnershipDetails =>
+        forAll(establisherPartnershipDetailsDetailsGenerator(noOfElements = 2)) { establisherPartnershipDetails =>
           val actualMultiplePartnerDetails = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
 
           actualMultiplePartnerDetails.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(

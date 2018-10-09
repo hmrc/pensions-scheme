@@ -29,14 +29,14 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
     "Parse correctly to a PsaSchemeDetails object" when {
       
       "we have a valid Scheme Details object within it" in {
-        forAll(psaSchemeDetailsGenerator) { psaSchemeDetails =>
+        forAll(psaSchemeDetailsGenerator()) { psaSchemeDetails =>
           psaSchemeDetails.as(PsaSchemeDetails.apiReads).schemeDetails.srn mustBe (
             psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").asOpt[String]
         }
       }
 
       "we have a establisherDetails" in {
-        forAll(psaSchemeDetailsGenerator) { psaSchemeDetails =>
+        forAll(psaSchemeDetailsGenerator()) { psaSchemeDetails =>
           psaSchemeDetails.as(PsaSchemeDetails.apiReads).establisherDetails mustBe (
             psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").asOpt(EstablisherInfo.apiReads)
         }
@@ -49,7 +49,7 @@ class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionVa
       }
 
       "we have a trusteeDetails" in {
-        forAll(psaSchemeDetailsGenerator) { psaSchemeDetails =>
+        forAll(psaSchemeDetailsGenerator()) { psaSchemeDetails =>
           psaSchemeDetails.as(PsaSchemeDetails.apiReads).trusteeDetails mustBe (
             psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").asOpt(TrusteeInfo.apiReads)
         }

@@ -24,6 +24,19 @@ import wolfendale.scalacheck.regexp.RegexpGen
 
 //scalastyle:off magic.number
 trait PSASchemeDetailsGenerator {
+  val ninoGen: Gen[String] = RegexpGen.from(""""^((?!(BG|GB|KN|NK|NT|TN|ZZ)|(D|F|I|Q|U|V)[A-Z]|[A-Z](D|F|I|O|Q|U|V))[A-Z]{2})[0-9]{6}[A-D]?$""")
+
+  val utrGen: Gen[String] = RegexpGen.from(""""^[0-9]{10}""")
+
+  val srnGen: Gen[String] = RegexpGen.from("""^S[0-9]{10}$""")
+
+  val pstrGen: Gen[String] = RegexpGen.from("""^[0-9]{8}[A-Z]{2}$""")
+
+  val crnGen: Gen[String] = RegexpGen.from("""^[A-Za-z0-9 -]{1,8}$""")
+
+  val vatRegGen: Gen[String] = RegexpGen.from("""^[0-9]{9}$""")
+
+  val payeRefGen: Gen[String] = RegexpGen.from("""^[0-9]{3}[0-9A-Za-z]{1,13}$""")
 
   val dateGenerator: Gen[LocalDate] = for {
     day <- Gen.choose(1, 28)
@@ -100,7 +113,7 @@ trait PSASchemeDetailsGenerator {
       "previousAddressDetails" -> previousAddressDetails)
   }
 
-  def companyOrOrganisationDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+  def companyOrOrganisationDetailsGenerator(noOfElements: Int = 1): Gen[JsObject] = for {
     organisationName <- nonEmptyString
     utr <- Gen.option[String](utrGen)
     crnNumber <- Gen.option[String](crnGen)
@@ -122,7 +135,7 @@ trait PSASchemeDetailsGenerator {
       "directorsDetails" -> directorsDetails)
   }
 
-  def establisherPartnershipDetailsDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+  def establisherPartnershipDetailsDetailsGenerator(noOfElements: Int = 1): Gen[JsObject] = for {
     partnershipName <- nonEmptyString
     utr <- utrGen
     vatRegistrationNumber <- Gen.option[String](vatRegGen)
@@ -142,33 +155,32 @@ trait PSASchemeDetailsGenerator {
       "partnerDetails" -> partnerDetails)
   }
 
-  def establisherDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+  def establisherDetailsGenerator(noOfElements: Int = 1): Gen[JsObject] = for {
     individualDetails <- Gen.listOfN(noOfElements, individualDetailsGenerator)
-    companyOrOrganisationDetails <- Gen.listOfN(noOfElements, companyOrOrganisationDetailsGenerator)
-    partnershipTrusteeDetail <- Gen.listOfN(noOfElements, establisherPartnershipDetailsDetailsGenerator)
+    companyOrOrganisationDetails <- Gen.listOfN(noOfElements, companyOrOrganisationDetailsGenerator())
+    partnershipTrusteeDetail <- Gen.listOfN(noOfElements, establisherPartnershipDetailsDetailsGenerator())
   } yield {
     Json.obj("individualDetails" -> individualDetails,
       "companyOrOrganisationDetails" -> companyOrOrganisationDetails,
       "partnershipTrusteeDetail" -> partnershipTrusteeDetail)
   }
 
-  def trusteeDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+  def trusteeDetailsGenerator(noOfElements: Int = 1): Gen[JsObject] = for {
     individualDetails <- Gen.listOfN(noOfElements, individualDetailsGenerator)
-    companyOrOrganisationDetails <- Gen.listOfN(noOfElements, companyOrOrganisationDetailsGenerator)
-    partnershipTrusteeDetail <- Gen.listOfN(noOfElements, establisherPartnershipDetailsDetailsGenerator)
+    companyOrOrganisationDetails <- Gen.listOfN(noOfElements, companyOrOrganisationDetailsGenerator())
+    partnershipTrusteeDetail <- Gen.listOfN(noOfElements, establisherPartnershipDetailsDetailsGenerator())
   } yield {
     Json.obj("individualTrusteeDetails" -> individualDetails,
       "companyTrusteeDetails" -> companyOrOrganisationDetails,
       "partnershipTrusteeDetails" -> partnershipTrusteeDetail)
   }
 
-  def psaDetailsGenerator(implicit mustName : Boolean = false): Gen[JsObject] = for {
+  def psaDetailsGenerator(enforceProperty : Boolean = false): Gen[JsObject] = for {
     psaid <- nonEmptyString
     organizationOrPartnershipName <- Gen.option[String](nonEmptyString)
-    partnershipTrusteeDetail <- Gen.option[String](nonEmptyString)
-    firstName <- mustStringForOption(mustName)
-    middleName <- mustStringForOption(mustName)
-    lastName <- mustStringForOption(mustName)
+    firstName <- mustStringForOption(enforceProperty)
+    middleName <- mustStringForOption(enforceProperty)
+    lastName <- mustStringForOption(enforceProperty)
   } yield {
     Json.obj("psaid" -> psaid,
       "organizationOrPartnershipName" -> organizationOrPartnershipName,
@@ -177,7 +189,8 @@ trait PSASchemeDetailsGenerator {
       "lastName" -> lastName)
   }
 
-  def schemeDetailsGenerator(implicit withCompanyAddress : Boolean =  false) : Gen[JsObject] = for {
+
+  def schemeDetailsGenerator(withCompanyAddress : Boolean =  false) : Gen[JsObject] = for {
     srn <- Gen.option[String](srnGen)
     pstr <- Gen.option[String](pstrGen)
     schemeStatus <- generateSchemeStatus
@@ -218,11 +231,11 @@ trait PSASchemeDetailsGenerator {
   }
 
 
-  def psaSchemeDetailsGenerator(implicit withAllEmpty: Boolean = false, noOfElements: Int = 1): Gen[JsObject] = for {
-    schemeDetails <- schemeDetailsGenerator
-    establisherDetails <- if(withAllEmpty) Gen.const(None) else Gen.option(establisherDetailsGenerator)
-    trusteeDetails <- if(withAllEmpty) Gen.const(None) else Gen.option(trusteeDetailsGenerator)
-    psaDetails <- if(withAllEmpty) Gen.const(Nil) else Gen.listOfN(noOfElements, psaDetailsGenerator)
+  def psaSchemeDetailsGenerator(withAllEmpty: Boolean = false, noOfElements: Int = 1): Gen[JsObject] = for {
+    schemeDetails <- schemeDetailsGenerator()
+    establisherDetails <- if(withAllEmpty) Gen.const(None) else Gen.option(establisherDetailsGenerator())
+    trusteeDetails <- if(withAllEmpty) Gen.const(None) else Gen.option(trusteeDetailsGenerator())
+    psaDetails <- if(withAllEmpty) Gen.const(Nil) else Gen.listOfN(noOfElements, psaDetailsGenerator())
   } yield {
     val psaSchemeDetails =  (establisherDetails, trusteeDetails) match {
       case (None, None) => Json.obj("schemeDetails" -> schemeDetails,"psaDetails" -> psaDetails)
@@ -238,11 +251,11 @@ trait PSASchemeDetailsGenerator {
   }
 
   def mustStringForOption(mustName : Boolean): Gen[Option[String]] =  {
-    if(mustName) Gen.option[String](nonEmptyString).suchThat(!_.isEmpty) else Gen.option[String](nonEmptyString)
+    if(mustName) Gen.option[String](nonEmptyString).suchThat(_.isDefined) else Gen.option[String](nonEmptyString)
   }
 
   def mustAddressForOption(mustName : Boolean): Gen[Option[JsObject]] =  {
-    if(mustName) Gen.option(addressGenerator).suchThat(!_.isEmpty) else Gen.option(addressGenerator)
+    if(mustName) Gen.option(addressGenerator).suchThat(_.isDefined) else Gen.option(addressGenerator)
   }
 
   def generateSchemeStatus: Gen[String] = {
@@ -252,19 +265,6 @@ trait PSASchemeDetailsGenerator {
 
   def nonEmptyString: Gen[String] = Gen.alphaStr.suchThat(!_.isEmpty)
 
-  val ninoGen: Gen[String] = RegexpGen.from(""""^((?!(BG|GB|KN|NK|NT|TN|ZZ)|(D|F|I|Q|U|V)[A-Z]|[A-Z](D|F|I|O|Q|U|V))[A-Z]{2})[0-9]{6}[A-D]?$""")
-
-  val utrGen: Gen[String] = RegexpGen.from(""""^[0-9]{10}""")
-
-  val srnGen: Gen[String] = RegexpGen.from("""^S[0-9]{10}$""")
-
-  val pstrGen: Gen[String] = RegexpGen.from("""^[0-9]{8}[A-Z]{2}$""")
-
-  val crnGen: Gen[String] = RegexpGen.from("""^[A-Za-z0-9 -]{1,8}$""")
-
-  val vatRegGen: Gen[String] = RegexpGen.from("""^[0-9]{9}$""")
-
-  val payeRefGen: Gen[String] = RegexpGen.from("""^[0-9]{3}[0-9A-Za-z]{1,13}$""")
-
 }
+
 

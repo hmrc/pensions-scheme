@@ -29,19 +29,19 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
     "read into a valid company or organisationDetails object" when {
 
       "we have a organisationName" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).organizationName mustBe (companyDetails \ "organisationName").as[String]
         }
       }
 
       "we have a utr" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).utr mustBe (companyDetails \ "utr").asOpt[String]
         }
       }
 
       "we don't have a utr" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           val inputWithoutUTR = companyDetails - "utr"
 
           inputWithoutUTR.as(CompanyDetails.apiReads).utr mustBe None
@@ -49,13 +49,13 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a crnNumber" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).crn mustBe (companyDetails \ "crnNumber").asOpt[String]
         }
       }
 
       "we don't have a crnNumber" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           val inputWithoutCrnNumber = companyDetails - "crnNumber"
 
           inputWithoutCrnNumber.as(CompanyDetails.apiReads).crn mustBe None
@@ -63,13 +63,13 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a vatRegistrationNumber" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).vatRegistration mustBe (companyDetails \ "vatRegistrationNumber").asOpt[String]
         }
       }
 
       "we don't have a vatRegistrationNumber" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           val inputWithoutVatRegistrationNumber = companyDetails - "vatRegistrationNumber"
 
           inputWithoutVatRegistrationNumber.as(CompanyDetails.apiReads).vatRegistration mustBe None
@@ -77,13 +77,13 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a payeReference" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).payeRef mustBe (companyDetails \ "payeReference").asOpt[String]
         }
       }
 
       "we don't have a payeReference" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           val inputWithoutPayeReference = companyDetails - "payeReference"
 
           inputWithoutPayeReference.as(CompanyDetails.apiReads).payeRef mustBe None
@@ -91,25 +91,25 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a correspondenceAddressDetails" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).address mustBe (companyDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
         }
       }
 
       "we have a correspondenceContactDetails" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).contact mustBe (companyDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
         }
       }
 
       "we have a previousAddressDetails" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).previousAddress mustBe (companyDetails \ "previousAddressDetails").asOpt(PreviousAddressInfo.apiReads)
         }
       }
 
       "we don't have a previousAddressDetails" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           val inputWithoutPreviousAddressDetails = companyDetails - "previousAddressDetails"
 
           inputWithoutPreviousAddressDetails.as(CompanyDetails.apiReads).previousAddress mustBe None
@@ -117,7 +117,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have directorsDetails" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).directorsDetails mustBe (companyDetails \ "directorsDetails").as(
             Reads.seq(IndividualInfo.apiReads))
           //companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 1
@@ -125,7 +125,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a multiple directorsDetails" in {
-        forAll(companyOrOrganisationDetailsGenerator(2)) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator(noOfElements = 2)) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).directorsDetails mustBe (companyDetails \ "directorsDetails").as(
             Reads.seq(IndividualInfo.apiReads))
           //companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 2
@@ -133,7 +133,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we don't have a directorsDetails" in {
-        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+        forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           val inputWithoutDirectorsDetails = companyDetails - "directorsDetails"
 
           inputWithoutDirectorsDetails.as(CompanyDetails.apiReads).directorsDetails mustBe Nil
