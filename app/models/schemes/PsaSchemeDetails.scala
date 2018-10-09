@@ -17,8 +17,8 @@
 package models.schemes
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json._
 import play.api.libs.json.Reads.seq
+import play.api.libs.json._
 
 case class PsaSchemeDetails(schemeDetails: SchemeDetails,
                             establisherDetails: Option[EstablisherInfo],
@@ -34,11 +34,25 @@ object PsaSchemeDetails {
       (JsPath \ "psaSchemeDetails" \ "psaDetails").readNullable(seq(PsaDetails.apiReads))) (
     (schemeDetails, establisherDetails, trusteeDetails, psaDetails) =>
       PsaSchemeDetails(schemeDetails,
-        establisherDetails,
-        trusteeDetails,
-        psaDetails.getOrElse(Nil)))
+        validateEstablisher(establisherDetails),
+        validateTrustee(trusteeDetails),
+        psaDetails.getOrElse(Nil))
+  )
 
   implicit val formats: OFormat[PsaSchemeDetails] = Json.format[PsaSchemeDetails]
 
+  private def validateEstablisher(establisherDetails: Option[EstablisherInfo]): Option[EstablisherInfo] = {
+    establisherDetails match {
+      case Some(EstablisherInfo(Nil, Nil, Nil)) => None
+      case _ => establisherDetails
+    }
+  }
+
+  private def validateTrustee(trusteeDetails: Option[TrusteeInfo]): Option[TrusteeInfo] = {
+    trusteeDetails match {
+      case Some(TrusteeInfo(Nil, Nil, Nil)) => None
+      case _ => trusteeDetails
+    }
+  }
 }
 

@@ -17,53 +17,63 @@
 package models.Reads.schemes
 
 import models.schemes.{EstablisherInfo, PsaSchemeDetails, TrusteeInfo}
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import play.api.libs.json.Json
 import play.api.libs.json._
 
-class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with SchemeDetailsStubJsonData {
+class PsaSchemeDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with PSASchemeDetailsGenerator {
+  
   "A JSON payload containing a PsaSchemeDetails" should {
+    
     "Parse correctly to a PsaSchemeDetails object" when {
-
-      val actualOutput = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
-
+      
       "we have a valid Scheme Details object within it" in {
-        actualOutput.schemeDetails.srn.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").as[String]
+        forAll(psaSchemeDetailsGenerator) { psaSchemeDetails =>
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).schemeDetails.srn mustBe (
+            psaSchemeDetails \ "psaSchemeDetails" \ "schemeDetails" \ "srn").asOpt[String]
+        }
       }
 
       "we have a establisherDetails" in {
-        actualOutput.establisherDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").as(
-          EstablisherInfo.apiReads)
+        forAll(psaSchemeDetailsGenerator) { psaSchemeDetails =>
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).establisherDetails mustBe (
+            psaSchemeDetails \ "psaSchemeDetails" \ "establisherDetails").asOpt(EstablisherInfo.apiReads)
+        }
       }
 
       "we don't have a establisherDetails" in {
-        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
-        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
-
-        output.establisherDetails mustBe None
+        forAll(psaSchemeDetailsGenerator(withAllEmpty = true)) { psaSchemeDetails =>
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).establisherDetails mustBe None
+        }
       }
 
       "we have a trusteeDetails" in {
-        actualOutput.trusteeDetails.value mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").as(
-         TrusteeInfo.apiReads)
+        forAll(psaSchemeDetailsGenerator) { psaSchemeDetails =>
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).trusteeDetails mustBe (
+            psaSchemeDetails \ "psaSchemeDetails" \ "trusteeDetails").asOpt(TrusteeInfo.apiReads)
+        }
       }
 
       "we don't have a trusteeDetails" in {
-        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
-        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
-
-        output.trusteeDetails mustBe None
+        forAll(psaSchemeDetailsGenerator(withAllEmpty = true)) { psaSchemeDetails =>
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).trusteeDetails mustBe None
+        }
       }
 
       "we have a valid list of psa details within it" in {
-        actualOutput.psaDetails.head.id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 0 \ "psaid").as[String]
-        actualOutput.psaDetails(1).id mustBe (psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 1 \ "psaid").as[String]
+        forAll(psaSchemeDetailsGenerator(noOfElements = 2)) { psaSchemeDetails =>
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).psaDetails.head.id mustBe (
+            psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 0 \ "psaid").as[String]
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).psaDetails(1).id mustBe (
+            psaSchemeDetails \ "psaSchemeDetails" \ "psaDetails" \ 1 \ "psaid").as[String]
+        }
       }
 
       "we don't have psa details" in {
-        val psaSchemeDetails = Json.obj("psaSchemeDetails" -> Json.obj("schemeDetails" -> schemeDetails))
-
-        val output = psaSchemeDetails.as(PsaSchemeDetails.apiReads)
-        output.psaDetails mustBe Nil
+        forAll(psaSchemeDetailsGenerator(withAllEmpty = true)) { psaSchemeDetails =>
+          psaSchemeDetails.as(PsaSchemeDetails.apiReads).psaDetails mustBe Nil
+        }
       }
     }
   }

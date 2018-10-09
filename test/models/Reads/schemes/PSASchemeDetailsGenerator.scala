@@ -17,30 +17,28 @@
 package models.Reads.schemes
 
 import org.joda.time.LocalDate
-import org.scalacheck.Arbitrary._
+import org.scalacheck.Arbitrary.{arbitrary, _}
 import org.scalacheck.Gen
-import org.scalacheck.Arbitrary.arbitrary
-import play.api.libs.json.{JsArray, JsObject, Json}
+import play.api.libs.json.{JsObject, Json}
+import wolfendale.scalacheck.regexp.RegexpGen
 
 //scalastyle:off magic.number
 trait PSASchemeDetailsGenerator {
 
-  def nonEmptyString:Gen[String] = Gen.alphaStr.suchThat(!_.isEmpty)
-
   val dateGenerator: Gen[LocalDate] = for {
-    day <- Gen.choose(1,28)
-    month <-Gen.choose(1,12)
-    year <-Gen.choose(2000,2018)
-  } yield new LocalDate(year,month,day)
+    day <- Gen.choose(1, 28)
+    month <- Gen.choose(1, 12)
+    year <- Gen.choose(1990, 2000)
+  } yield new LocalDate(year, month, day)
 
-  val addressGenerator : Gen[JsObject] = for {
+  val addressGenerator: Gen[JsObject] = for {
     nonUkAddress <- arbitrary[Boolean]
     line1 <- nonEmptyString
     line2 <- nonEmptyString
     line3 <- Gen.option(nonEmptyString)
     line4 <- Gen.option(nonEmptyString)
     postalCode <- Gen.option(nonEmptyString)
-    countryCode <- Gen.listOfN(2, nonEmptyString).map(_.mkString)
+    countryCode <- Gen.listOfN(2, Gen.alphaChar).map(_.mkString)
   } yield {
     Json.obj(
       "nonUKAddress" -> nonUkAddress,
@@ -53,7 +51,7 @@ trait PSASchemeDetailsGenerator {
     )
   }
 
-  val previousAddressGenerator : Gen[JsObject] = for {
+  val previousAddressGenerator: Gen[JsObject] = for {
     isPreviousAddressLast12Month <- arbitrary[Boolean]
     previousAddress <- Gen.option(addressGenerator)
   } yield {
@@ -61,7 +59,7 @@ trait PSASchemeDetailsGenerator {
       "previousAddress" -> previousAddress)
   }
 
-  val contactDetailsGenerator : Gen[JsObject] = for {
+  val contactDetailsGenerator: Gen[JsObject] = for {
     telephone <- Gen.numStr
     email <- nonEmptyString
   } yield {
@@ -71,8 +69,7 @@ trait PSASchemeDetailsGenerator {
     )
   }
 
-
-  val personalDetailsGenerator : Gen[JsObject] = for {
+  val personalDetailsGenerator: Gen[JsObject] = for {
     firstName <- nonEmptyString
     middleName <- Gen.option[String](nonEmptyString)
     lastName <- nonEmptyString
@@ -86,132 +83,188 @@ trait PSASchemeDetailsGenerator {
     )
   }
 
-  val individualDetailsGenerator : Gen[JsObject] = for {
+  val individualDetailsGenerator: Gen[JsObject] = for {
     personalDetails <- personalDetailsGenerator
-    nino <- Gen.option[String](Gen.alphaUpperStr)
-    utr <- Gen.option[String](Gen.alphaUpperStr)
+    nino <- Gen.option[String](ninoGen)
+    utr <- Gen.option[String](utrGen)
     addressDetails <- addressGenerator
     contactDetails <- contactDetailsGenerator
     previousAddressDetails <- previousAddressGenerator
   } yield {
     Json.obj(
       "personDetails" -> personalDetails,
-       "nino" -> nino,
+      "nino" -> nino,
       "utr" -> utr,
       "correspondenceAddressDetails" -> addressDetails,
       "correspondenceContactDetails" -> contactDetails,
       "previousAddressDetails" -> previousAddressDetails)
   }
 
+  def companyOrOrganisationDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+    organisationName <- nonEmptyString
+    utr <- Gen.option[String](utrGen)
+    crnNumber <- Gen.option[String](crnGen)
+    vatRegistrationNumber <- Gen.option[String](vatRegGen)
+    payeReference <- Gen.option[String](payeRefGen)
+    addressDetails <- addressGenerator
+    contactDetails <- contactDetailsGenerator
+    previousAddressDetails <- Gen.option[JsObject](previousAddressGenerator)
+    directorsDetails <- Gen.listOfN(noOfElements, individualDetailsGenerator)
+  } yield {
+    Json.obj("organisationName" -> organisationName,
+      "utr" -> utr,
+      "crnNumber" -> crnNumber,
+      "vatRegistrationNumber" -> vatRegistrationNumber,
+      "payeReference" -> payeReference,
+      "correspondenceAddressDetails" -> addressDetails,
+      "correspondenceContactDetails" -> contactDetails,
+      "previousAddressDetails" -> previousAddressDetails,
+      "directorsDetails" -> directorsDetails)
+  }
 
-//  val legalStatus: Gen[String] = Gen.oneOf("Individual","Partnership","Limited Company")
-//
-//  val idType: Gen[Option[String]] = Gen.option(Gen.oneOf("NINO","UTR"))
-//
-//  val customerIdentificationDetailsGenerator: Gen[JsObject] = for {
-//    legalStatus <- legalStatus
-//    idType <- idType
-//    idNumber <- Gen.option(nonEmptyString)
-//    noIdentifier <- arbitrary[Boolean]
-//  } yield {
-//    Json.obj(
-//      "legalStatus" -> legalStatus,
-//      "idType" -> idType,
-//      "idNumber" -> idNumber,
-//      "noIdentifier" -> noIdentifier
-//    )
-//  }
-//  val orgOrPartnerDetailsGenerator: Gen[JsObject] = for {
-//    name <- nonEmptyString
-//    crnNumber <- Gen.option(nonEmptyString)
-//    vatRegistrationNumber <- Gen.option(nonEmptyString)
-//    payeReference <- Gen.option(nonEmptyString)
-//  } yield {
-//    Json.obj(
-//      "name" -> name,
-//      "crnNumber" -> crnNumber,
-//      "vatRegistrationNumber" -> vatRegistrationNumber,
-//      "payeReference" -> payeReference
-//    )
-//  }
-//
-//
-//  val correspondenceDetailsGenerator: Gen[JsObject] = for {
-//    addressDetails <- addressGenerator
-//    contactDetails <- Gen.option(contactDetailsGenerator)
-//  } yield {
-//    Json.obj(
-//      "addressDetails" -> addressDetails,
-//      "contactDetails" -> contactDetails
-//    )
-//  }
-//
-//  val correspondenceCommonDetailsGenerator : Gen[JsObject] = for {
-//    addressDetails <- addressGenerator
-//    contactDetails <- Gen.option(contactDetailsGenerator)
-//  } yield {
-//    Json.obj(
-//      "addressDetails" -> addressDetails,
-//      "contactDetails" -> contactDetails
-//    )
-//  }
-//  val psaDirectorOrPartnerDetailsGenerator : Gen[JsObject] = for {
-//    entityType <- Gen.oneOf("Director","Partner")
-//    firstName <- nonEmptyString
-//    middleName <- Gen.option(nonEmptyString)
-//    lastName <- nonEmptyString
-//    dateOfBirth <- dateGenerator
-//    nino <- Gen.alphaUpperStr
-//    utr <- Gen.alphaUpperStr
-//    previousAddressDetails <- previousAddressGenerator
-//    correspondenceCommonDetails <- Gen.option(correspondenceCommonDetailsGenerator)
-//  } yield {
-//    Json.obj(
-//      "entityType" -> entityType,
-//      "firstName" -> firstName,
-//      "middleName" -> middleName,
-//      "lastName" -> lastName,
-//      "dateOfBirth" -> dateOfBirth,
-//      "nino" -> nino,
-//      "utr" -> utr,
-//      "previousAddressDetails" -> previousAddressDetails,
-//      "correspondenceCommonDetails" -> correspondenceCommonDetails)
-//  }
-//  val pensionAdvisorGenerator: Gen[JsObject] = for {
-//    name <- nonEmptyString
-//    addressDetails <- addressGenerator
-//    contactDetails <- Gen.option(contactDetailsGenerator)
-//  } yield {
-//    Json.obj(
-//      "name" -> name,
-//      "addressDetails" -> addressDetails,
-//      "contactDetails" -> contactDetails
-//    )
-//  }
-//  val directorsOrPartners = JsArray(Gen.listOf(psaDirectorOrPartnerDetailsGenerator).sample.get)
-//
-//  val psaSubscriptionDetailsGenerator: Gen[JsObject] = for {
-//    isPSASuspension <- arbitrary[Boolean]
-//    customerIdentificationDetails <- customerIdentificationDetailsGenerator
-//    organisationOrPartnerDetails <- Gen.option(orgOrPartnerDetailsGenerator)
-//    individualDetails <- Gen.option(personalDetailsGenerator)
-//    correspondenceAddressDetails <- addressGenerator
-//    correspondenceContactDetails <- contactDetailsGenerator
-//    previousAddressDetails <- previousAddressGenerator
-//    directorOrPartnerDetails <- Gen.option(directorsOrPartners)
-//    pensionAdvisorDetails <- pensionAdvisorGenerator
-//  } yield {
-//    Json.obj(
-//      "isPSASuspension" -> isPSASuspension,
-//      "customerIdentificationDetails" -> customerIdentificationDetails,
-//      "organisationOrPartnerDetails" -> organisationOrPartnerDetails,
-//      "individualDetails" -> individualDetails,
-//      "correspondenceAddressDetails" -> correspondenceAddressDetails,
-//      "correspondenceContactDetails" -> correspondenceContactDetails,
-//      "previousAddressDetails" -> previousAddressDetails,
-//      "directorOrpartnerDetails" -> directorOrPartnerDetails,
-//      "declarationDetails" -> Json.obj("pensionAdvisorDetails" -> pensionAdvisorDetails)
-//    )
-//  }
-//  val psaDetailsGenerator: Gen[JsObject] = psaSubscriptionDetailsGenerator.map(psaSubscriptionDetails => Json.obj("psaSubscriptionDetails" -> psaSubscriptionDetails))
+  def establisherPartnershipDetailsDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+    partnershipName <- nonEmptyString
+    utr <- utrGen
+    vatRegistrationNumber <- Gen.option[String](vatRegGen)
+    payeReference <- Gen.option[String](payeRefGen)
+    addressDetails <- addressGenerator
+    contactDetails <- contactDetailsGenerator
+    previousAddressDetails <- previousAddressGenerator
+    partnerDetails <- Gen.listOfN(noOfElements, individualDetailsGenerator)
+  } yield {
+    Json.obj("partnershipName" -> partnershipName,
+      "utr" -> utr,
+      "vatRegistrationNumber" -> vatRegistrationNumber,
+      "payeReference" -> payeReference,
+      "correspondenceAddressDetails" -> addressDetails,
+      "correspondenceContactDetails" -> contactDetails,
+      "previousAddressDetails" -> previousAddressDetails,
+      "partnerDetails" -> partnerDetails)
+  }
+
+  def establisherDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+    individualDetails <- Gen.listOfN(noOfElements, individualDetailsGenerator)
+    companyOrOrganisationDetails <- Gen.listOfN(noOfElements, companyOrOrganisationDetailsGenerator)
+    partnershipTrusteeDetail <- Gen.listOfN(noOfElements, establisherPartnershipDetailsDetailsGenerator)
+  } yield {
+    Json.obj("individualDetails" -> individualDetails,
+      "companyOrOrganisationDetails" -> companyOrOrganisationDetails,
+      "partnershipTrusteeDetail" -> partnershipTrusteeDetail)
+  }
+
+  def trusteeDetailsGenerator(implicit noOfElements: Int = 1): Gen[JsObject] = for {
+    individualDetails <- Gen.listOfN(noOfElements, individualDetailsGenerator)
+    companyOrOrganisationDetails <- Gen.listOfN(noOfElements, companyOrOrganisationDetailsGenerator)
+    partnershipTrusteeDetail <- Gen.listOfN(noOfElements, establisherPartnershipDetailsDetailsGenerator)
+  } yield {
+    Json.obj("individualTrusteeDetails" -> individualDetails,
+      "companyTrusteeDetails" -> companyOrOrganisationDetails,
+      "partnershipTrusteeDetails" -> partnershipTrusteeDetail)
+  }
+
+  def psaDetailsGenerator(implicit mustName : Boolean = false): Gen[JsObject] = for {
+    psaid <- nonEmptyString
+    organizationOrPartnershipName <- Gen.option[String](nonEmptyString)
+    partnershipTrusteeDetail <- Gen.option[String](nonEmptyString)
+    firstName <- mustStringForOption(mustName)
+    middleName <- mustStringForOption(mustName)
+    lastName <- mustStringForOption(mustName)
+  } yield {
+    Json.obj("psaid" -> psaid,
+      "organizationOrPartnershipName" -> organizationOrPartnershipName,
+      "firstName" -> firstName,
+      "middleName" -> middleName,
+      "lastName" -> lastName)
+  }
+
+  def schemeDetailsGenerator(implicit withCompanyAddress : Boolean =  false) : Gen[JsObject] = for {
+    srn <- Gen.option[String](srnGen)
+    pstr <- Gen.option[String](pstrGen)
+    schemeStatus <- generateSchemeStatus
+    schemeName <- nonEmptyString
+    isSchemeMasterTrust <- arbitrary[Boolean]
+    pensionSchemeStructure <-Gen.option[String](nonEmptyString)
+    otherPensionSchemeStructure <- Gen.option[String](nonEmptyString)
+    hasMoreThanTenTrustees <- arbitrary[Boolean]
+    currentSchemeMembers <- Gen.numStr
+    futureSchemeMembers <- Gen.numStr
+    isReguledSchemeInvestment <- arbitrary[Boolean]
+    isOccupationalPensionScheme <- arbitrary[Boolean]
+    schemeProvideBenefits <- nonEmptyString
+    schemeEstablishedCountry <- nonEmptyString
+    isSchemeBenefitsInsuranceCompany <- arbitrary[Boolean]
+    insuranceCompanyName <- mustStringForOption(withCompanyAddress)
+    policyNumber <- mustStringForOption(withCompanyAddress)
+    insuranceCompanyAddressDetails <- mustAddressForOption(withCompanyAddress)
+  } yield {
+    Json.obj("srn" -> srn,
+      "pstr" -> pstr,
+      "schemeStatus" -> schemeStatus,
+      "schemeName" -> schemeName,
+      "isSchemeMasterTrust" -> isSchemeMasterTrust,
+      "pensionSchemeStructure" -> pensionSchemeStructure,
+      "otherPensionSchemeStructure" -> otherPensionSchemeStructure,
+      "hasMoreThanTenTrustees" -> hasMoreThanTenTrustees,
+      "currentSchemeMembers" -> currentSchemeMembers,
+      "futureSchemeMembers" -> futureSchemeMembers,
+      "isReguledSchemeInvestment" -> isReguledSchemeInvestment,
+      "isOccupationalPensionScheme" -> isOccupationalPensionScheme,
+      "schemeProvideBenefits" -> schemeProvideBenefits,
+      "schemeEstablishedCountry" -> schemeEstablishedCountry,
+      "isSchemeBenefitsInsuranceCompany" -> isSchemeBenefitsInsuranceCompany,
+      "insuranceCompanyName" -> insuranceCompanyName,
+      "policyNumber" -> policyNumber,
+      "insuranceCompanyAddressDetails" -> insuranceCompanyAddressDetails)
+  }
+
+
+  def psaSchemeDetailsGenerator(implicit withAllEmpty: Boolean = false, noOfElements: Int = 1): Gen[JsObject] = for {
+    schemeDetails <- schemeDetailsGenerator
+    establisherDetails <- if(withAllEmpty) Gen.const(None) else Gen.option(establisherDetailsGenerator)
+    trusteeDetails <- if(withAllEmpty) Gen.const(None) else Gen.option(trusteeDetailsGenerator)
+    psaDetails <- if(withAllEmpty) Gen.const(Nil) else Gen.listOfN(noOfElements, psaDetailsGenerator)
+  } yield {
+    val psaSchemeDetails =  (establisherDetails, trusteeDetails) match {
+      case (None, None) => Json.obj("schemeDetails" -> schemeDetails,"psaDetails" -> psaDetails)
+      case (_, None) => Json.obj("schemeDetails" -> schemeDetails, "establisherDetails" -> establisherDetails, "psaDetails" -> psaDetails)
+      case (None, _) =>Json.obj("schemeDetails" -> schemeDetails, "trusteeDetails" -> trusteeDetails, "psaDetails" -> psaDetails)
+      case (_,_) => Json.obj("schemeDetails" -> schemeDetails,
+        "establisherDetails" -> establisherDetails,
+        "trusteeDetails" -> trusteeDetails,
+        "psaDetails" -> psaDetails)
+    }
+
+    Json.obj("psaSchemeDetails" -> psaSchemeDetails)
+  }
+
+  def mustStringForOption(mustName : Boolean): Gen[Option[String]] =  {
+    if(mustName) Gen.option[String](nonEmptyString).suchThat(!_.isEmpty) else Gen.option[String](nonEmptyString)
+  }
+
+  def mustAddressForOption(mustName : Boolean): Gen[Option[JsObject]] =  {
+    if(mustName) Gen.option(addressGenerator).suchThat(!_.isEmpty) else Gen.option(addressGenerator)
+  }
+
+  def generateSchemeStatus: Gen[String] = {
+    Gen.oneOf[String]("Pending","Pending Info Required","Pending Info Received", "Rejected", "Open",
+      "Deregistered", "Wound-up", "Rejected Under Appeal")
+  }
+
+  def nonEmptyString: Gen[String] = Gen.alphaStr.suchThat(!_.isEmpty)
+
+  val ninoGen: Gen[String] = RegexpGen.from(""""^((?!(BG|GB|KN|NK|NT|TN|ZZ)|(D|F|I|Q|U|V)[A-Z]|[A-Z](D|F|I|O|Q|U|V))[A-Z]{2})[0-9]{6}[A-D]?$""")
+
+  val utrGen: Gen[String] = RegexpGen.from(""""^[0-9]{10}""")
+
+  val srnGen: Gen[String] = RegexpGen.from("""^S[0-9]{10}$""")
+
+  val pstrGen: Gen[String] = RegexpGen.from("""^[0-9]{8}[A-Z]{2}$""")
+
+  val crnGen: Gen[String] = RegexpGen.from("""^[A-Za-z0-9 -]{1,8}$""")
+
+  val vatRegGen: Gen[String] = RegexpGen.from("""^[0-9]{9}$""")
+
+  val payeRefGen: Gen[String] = RegexpGen.from("""^[0-9]{3}[0-9A-Za-z]{1,13}$""")
+
 }
+

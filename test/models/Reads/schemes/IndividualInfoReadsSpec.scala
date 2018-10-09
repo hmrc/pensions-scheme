@@ -18,11 +18,10 @@ package models.Reads.schemes
 
 import models.schemes._
 import models.{CorrespondenceAddress, Samples}
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import org.scalatest.prop.PropertyChecks._
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples
-  with SchemeDetailsStubJsonData with PSASchemeDetailsGenerator {
+class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with PSASchemeDetailsGenerator {
 
 
   "A JSON payload containing personal details" should {
@@ -30,13 +29,13 @@ class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValu
     "read into a valid personal details object" when {
 
       "we have a firstName" in {
-        forAll(personalDetailsGenerator) { personalDetails=>
+        forAll(personalDetailsGenerator) { personalDetails =>
           personalDetails.as(PersonalInfo.apiReads).name.firstName mustBe (personalDetails \ "firstName").as[String]
         }
       }
 
       "we have a middleName" in {
-        forAll(personalDetailsGenerator) { personalDetails=>
+        forAll(personalDetailsGenerator) { personalDetails =>
           personalDetails.as(PersonalInfo.apiReads).name.middleName mustBe (personalDetails \ "middleName").asOpt[String]
         }
       }
@@ -56,7 +55,7 @@ class IndividualInfoReadsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have a dateOfBirth" in {
-        forAll(personalDetailsGenerator) { personalDetails=>
+        forAll(personalDetailsGenerator) { personalDetails =>
           personalDetails.as(PersonalInfo.apiReads).dateOfBirth mustBe (personalDetails \ "dateOfBirth").as[String]
         }
       }

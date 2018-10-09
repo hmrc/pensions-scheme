@@ -18,75 +18,92 @@ package models.Reads.schemes
 
 import models.Samples
 import models.schemes.{CompanyDetails, IndividualInfo, PartnershipDetails, TrusteeInfo}
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Reads
 
-class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
+class TrusteeInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with PSASchemeDetailsGenerator {
 
   "A JSON payload containing trustee details" should {
 
     "read into a valid trustee details object" when {
 
-      val actualResult = trusteeDetails.as(TrusteeInfo.apiReads)
-
       "we have a individualTrusteeDetails" in {
-        actualResult.individual mustBe (trusteeDetails \ "individualTrusteeDetails").as(
-          Reads.seq(IndividualInfo.apiReads))
-        actualResult.individual.length mustBe 1
+        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+          trusteeDetails.as(TrusteeInfo.apiReads).individual mustBe (trusteeDetails \ "individualTrusteeDetails").as(
+            Reads.seq(IndividualInfo.apiReads))
+          trusteeDetails.as(TrusteeInfo.apiReads).individual.length mustBe 1
+        }
       }
 
       "we have multiple individualTrusteeDetails" in {
-        val actualMultipleIndividualDetails = trusteeDetailsWithMultipleData.as(TrusteeInfo.apiReads)
+        forAll(trusteeDetailsGenerator(2)) { trusteeDetails =>
+          val actualMultipleIndividualDetails = trusteeDetails.as(TrusteeInfo.apiReads)
 
-        actualMultipleIndividualDetails.individual mustBe (trusteeDetailsWithMultipleData \ "individualTrusteeDetails").as(
-          Reads.seq(IndividualInfo.apiReads))
-        actualMultipleIndividualDetails.individual.length mustBe 2
+          actualMultipleIndividualDetails.individual mustBe (trusteeDetails \ "individualTrusteeDetails").as(
+            Reads.seq(IndividualInfo.apiReads))
+          actualMultipleIndividualDetails.individual.length mustBe 2
+        }
       }
 
       "we don't have a individualTrusteeDetails" in {
-        val inputWithoutIndividualDetails = trusteeDetails - "individualTrusteeDetails"
+        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+          val inputWithoutIndividualDetails = trusteeDetails - "individualTrusteeDetails"
 
-        inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).individual mustBe Nil
+          inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).individual mustBe Nil
+        }
       }
 
       "we have a companyTrusteeDetails" in {
-        actualResult.company mustBe (trusteeDetails \ "companyTrusteeDetails").as(
-          Reads.seq(CompanyDetails.apiReads))
-        actualResult.company.length mustBe 1
+        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+          trusteeDetails.as(TrusteeInfo.apiReads).company mustBe (trusteeDetails \ "companyTrusteeDetails").as(
+            Reads.seq(CompanyDetails.apiReads))
+          trusteeDetails.as(TrusteeInfo.apiReads).company.length mustBe 1
+        }
       }
 
       "we have multiple companyTrusteeDetails" in {
-        val actulaMultipleCompanyOrOrganisationDetails = trusteeDetailsWithMultipleData.as(TrusteeInfo.apiReads)
+        forAll(trusteeDetailsGenerator(2)) { trusteeDetails =>
+          val actulaMultipleCompanyOrOrganisationDetails = trusteeDetails.as(TrusteeInfo.apiReads)
 
-        actulaMultipleCompanyOrOrganisationDetails.company mustBe (trusteeDetailsWithMultipleData \ "companyTrusteeDetails").as(
-          Reads.seq(CompanyDetails.apiReads))
-        actulaMultipleCompanyOrOrganisationDetails.company.length mustBe 2
+          actulaMultipleCompanyOrOrganisationDetails.company mustBe (trusteeDetails \ "companyTrusteeDetails").as(
+            Reads.seq(CompanyDetails.apiReads))
+          actulaMultipleCompanyOrOrganisationDetails.company.length mustBe 2
+        }
       }
 
       "we don't have a companyTrusteeDetails" in {
-        val inputWithoutIndividualDetails = trusteeDetails - "companyTrusteeDetails"
+        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+          val inputWithoutIndividualDetails = trusteeDetails - "companyTrusteeDetails"
 
-        inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).company mustBe Nil
+          inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).company mustBe Nil
+        }
       }
 
       "we have a partnershipTrusteeDetail" in {
-        actualResult.partnership mustBe (trusteeDetails \ "partnershipTrusteeDetails").as(
-          Reads.seq(PartnershipDetails.apiReads))
-        actualResult.partnership.length mustBe 1
+        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+          trusteeDetails.as(TrusteeInfo.apiReads).partnership mustBe (trusteeDetails \ "partnershipTrusteeDetails").as(
+            Reads.seq(PartnershipDetails.apiReads))
+          trusteeDetails.as(TrusteeInfo.apiReads).partnership.length mustBe 1
+        }
       }
 
       "we have multiple partnershipTrusteeDetail" in {
-        val actualMultiplePrtnershipTrusteeDetail = trusteeDetailsWithMultipleData.as(TrusteeInfo.apiReads)
+        forAll(trusteeDetailsGenerator(2)) { trusteeDetails =>
+          val actualMultiplePrtnershipTrusteeDetail = trusteeDetails.as(TrusteeInfo.apiReads)
 
-        actualMultiplePrtnershipTrusteeDetail.partnership mustBe (trusteeDetailsWithMultipleData \ "partnershipTrusteeDetails").as(
-          Reads.seq(PartnershipDetails.apiReads))
-        actualMultiplePrtnershipTrusteeDetail.partnership.length mustBe 2
+          actualMultiplePrtnershipTrusteeDetail.partnership mustBe (trusteeDetails \ "partnershipTrusteeDetails").as(
+            Reads.seq(PartnershipDetails.apiReads))
+          actualMultiplePrtnershipTrusteeDetail.partnership.length mustBe 2
+        }
       }
 
       "we don't have a partnershipTrusteeDetail" in {
-        val inputWithoutIndividualDetails = trusteeDetails - "partnershipTrusteeDetails"
+        forAll(trusteeDetailsGenerator) { trusteeDetails =>
+          val inputWithoutIndividualDetails = trusteeDetails - "partnershipTrusteeDetails"
 
-        inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).partnership mustBe Nil
+          inputWithoutIndividualDetails.as(TrusteeInfo.apiReads).partnership mustBe Nil
+        }
       }
     }
   }

@@ -18,81 +18,98 @@ package models.Reads.schemes
 
 import models.schemes.{IndividualContactDetails, IndividualInfo, PartnershipDetails, PreviousAddressInfo}
 import models.{CorrespondenceAddress, Samples}
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.Reads
 
-class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
+class PartnershipDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with PSASchemeDetailsGenerator {
 
 
   "A JSON payload containing establisher partnership details" should {
 
     "read into a valid company or organisationDetails object" when {
 
-      val actualResult = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
-
       "we have a partnershipName" in {
-        actualResult.partnershipName mustBe (establisherPartnershipDetails \ "partnershipName").as[String]
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).partnershipName mustBe (
+            establisherPartnershipDetails \ "partnershipName").as[String]
+        }
       }
 
       "we have a utr" in {
-        actualResult.utr.value mustBe (establisherPartnershipDetails \ "utr").as[String]
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).utr mustBe (establisherPartnershipDetails \ "utr").asOpt[String]
+        }
       }
 
       "we don't have a utr" in {
-        val inputWithoutUTR= establisherPartnershipDetails - "utr"
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          val inputWithoutUTR = establisherPartnershipDetails - "utr"
 
-        inputWithoutUTR.as(PartnershipDetails.apiReads).utr mustBe None
+          inputWithoutUTR.as(PartnershipDetails.apiReads).utr mustBe None
+        }
       }
 
       "we have a vatRegistrationNumber" in {
-        actualResult.vatRegistration.value mustBe (establisherPartnershipDetails \ "vatRegistrationNumber").as[String]
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).vatRegistration mustBe (
+            establisherPartnershipDetails \ "vatRegistrationNumber").asOpt[String]
+        }
       }
 
       "we don't have a vatRegistrationNumber" in {
-        val inputWithoutVatRegistrationNumber = establisherPartnershipDetails - "vatRegistrationNumber"
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          val inputWithoutVatRegistrationNumber = establisherPartnershipDetails - "vatRegistrationNumber"
 
-        inputWithoutVatRegistrationNumber.as(PartnershipDetails.apiReads).vatRegistration mustBe None
+          inputWithoutVatRegistrationNumber.as(PartnershipDetails.apiReads).vatRegistration mustBe None
+        }
       }
 
       "we don't have a payeReference" in {
-        val inputWithoutPayeReference = establisherPartnershipDetails - "payeReference"
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          val inputWithoutPayeReference = establisherPartnershipDetails - "payeReference"
 
-        inputWithoutPayeReference.as(PartnershipDetails.apiReads).payeRef mustBe None
+          inputWithoutPayeReference.as(PartnershipDetails.apiReads).payeRef mustBe None
+        }
       }
 
       "we have a correspondenceAddressDetails" in {
-        actualResult.address mustBe (establisherPartnershipDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).address mustBe (
+            establisherPartnershipDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
+        }
       }
 
       "we have a correspondenceContactDetails" in {
-        actualResult.contact mustBe (establisherPartnershipDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).contact mustBe (
+            establisherPartnershipDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
+        }
       }
 
       "we have a previousAddressDetails" in {
-        actualResult.previousAddress mustBe (establisherPartnershipDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).previousAddress mustBe (
+            establisherPartnershipDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
+        }
       }
 
       "we have a partnerDetails" in {
-        actualResult.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(Reads.seq(IndividualInfo.apiReads))
-        actualResult.partnerDetails.length mustBe 1
+        forAll(establisherPartnershipDetailsDetailsGenerator) { establisherPartnershipDetails =>
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).partnerDetails mustBe (
+            establisherPartnershipDetails \ "partnerDetails").as(Reads.seq(IndividualInfo.apiReads))
+          establisherPartnershipDetails.as(PartnershipDetails.apiReads).partnerDetails.length mustBe 1
+        }
       }
 
       "we have multiple partnerDetails" in {
-        val establisherPartnershipDetails = Json.obj("partnershipName" -> "abc organisation", "utr"-> "7897700000",
-          "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999", "correspondenceAddressDetails"-> addressDetails,
-          "correspondenceContactDetails" -> fullContactDetails, "previousAddressDetails" -> previousAddressDetails,
-          "partnerDetails" -> Json.arr(individualDetails,individualDetails))
-        val actualMultiplePartnerDetails = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
+        forAll(establisherPartnershipDetailsDetailsGenerator(2)) { establisherPartnershipDetails =>
+          val actualMultiplePartnerDetails = establisherPartnershipDetails.as(PartnershipDetails.apiReads)
 
-        actualMultiplePartnerDetails.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(
-          Reads.seq(IndividualInfo.apiReads))
-        actualMultiplePartnerDetails.partnerDetails.length mustBe 2
-      }
-
-      "we don't have a partnerDetails" in {
-        val inputWithoutPartnerDetails = establisherPartnershipDetails - "partnerDetails"
-
-        inputWithoutPartnerDetails.as(PartnershipDetails.apiReads).partnerDetails mustBe Nil
+          actualMultiplePartnerDetails.partnerDetails mustBe (establisherPartnershipDetails \ "partnerDetails").as(
+            Reads.seq(IndividualInfo.apiReads))
+          actualMultiplePartnerDetails.partnerDetails.length mustBe 2
+        }
       }
     }
   }

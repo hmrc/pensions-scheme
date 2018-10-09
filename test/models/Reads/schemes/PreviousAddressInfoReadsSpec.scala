@@ -18,28 +18,36 @@ package models.Reads.schemes
 
 import models.CorrespondenceAddress
 import models.schemes.PreviousAddressInfo
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-class PreviousAddressInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with SchemeDetailsStubJsonData {
+class PreviousAddressInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with PSASchemeDetailsGenerator {
 
-   "A Json payload containing previous address details" should {
+  "A Json payload containing previous address details" should {
 
     "read into a valid previous address details object" when {
 
-      val actualInput = previousAddressDetails.as(PreviousAddressInfo.apiReads)
-
       "we have a isPreviousAddressLast12Month" in {
-        actualInput.isPreviousAddressLast12Month mustBe (previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
+        forAll(previousAddressGenerator) { previousAddressDetails =>
+          previousAddressDetails.as(PreviousAddressInfo.apiReads).isPreviousAddressLast12Month mustBe (
+            previousAddressDetails \ "isPreviousAddressLast12Month").as[Boolean]
+        }
       }
 
       "we have a previousAddress" in {
-        actualInput.previousAddress.value mustBe (previousAddressDetails \ "previousAddress").as(CorrespondenceAddress.reads)
+        forAll(previousAddressGenerator) { previousAddressDetails =>
+          previousAddressDetails.as(PreviousAddressInfo.apiReads).previousAddress mustBe (
+            previousAddressDetails \ "previousAddress").asOpt(CorrespondenceAddress.reads)
+        }
       }
 
       "we don't have a previousAddress" in {
-        val inputWithoutPreviousAddress = previousAddressDetails - "previousAddress"
+        forAll(previousAddressGenerator) { previousAddressDetails =>
+          val inputWithoutPreviousAddress = previousAddressDetails - "previousAddress"
 
-        inputWithoutPreviousAddress.as(PreviousAddressInfo.apiReads).previousAddress mustBe None
+          inputWithoutPreviousAddress.as(PreviousAddressInfo.apiReads).previousAddress mustBe None
+        }
+
       }
     }
   }

@@ -18,100 +18,128 @@ package models.Reads.schemes
 
 import models.schemes.{CompanyDetails, IndividualContactDetails, IndividualInfo, PreviousAddressInfo}
 import models.{CorrespondenceAddress, Samples}
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.Reads
 
-class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
+class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with PSASchemeDetailsGenerator {
 
   "A JSON payload containing company or organisationDetails details" should {
 
     "read into a valid company or organisationDetails object" when {
 
-      val actualResult = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
-
       "we have a organisationName" in {
-        actualResult.organizationName mustBe (companyOrOrganisationDetails \ "organisationName").as[String]
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).organizationName mustBe (companyDetails \ "organisationName").as[String]
+        }
       }
 
       "we have a utr" in {
-        actualResult.utr.value mustBe (companyOrOrganisationDetails \ "utr").as[String]
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).utr mustBe (companyDetails \ "utr").asOpt[String]
+        }
       }
 
       "we don't have a utr" in {
-        val inputWithoutUTR= companyOrOrganisationDetails - "utr"
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          val inputWithoutUTR = companyDetails - "utr"
 
-        inputWithoutUTR.as(CompanyDetails.apiReads).utr mustBe None
+          inputWithoutUTR.as(CompanyDetails.apiReads).utr mustBe None
+        }
       }
 
       "we have a crnNumber" in {
-        actualResult.crn.value mustBe (companyOrOrganisationDetails \ "crnNumber").as[String]
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).crn mustBe (companyDetails \ "crnNumber").asOpt[String]
+        }
       }
 
       "we don't have a crnNumber" in {
-        val inputWithoutCrnNumber = companyOrOrganisationDetails - "crnNumber"
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          val inputWithoutCrnNumber = companyDetails - "crnNumber"
 
-        inputWithoutCrnNumber.as(CompanyDetails.apiReads).crn mustBe None
+          inputWithoutCrnNumber.as(CompanyDetails.apiReads).crn mustBe None
+        }
       }
 
       "we have a vatRegistrationNumber" in {
-        actualResult.vatRegistration.value mustBe (companyOrOrganisationDetails \ "vatRegistrationNumber").as[String]
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).vatRegistration mustBe (companyDetails \ "vatRegistrationNumber").asOpt[String]
+        }
       }
 
       "we don't have a vatRegistrationNumber" in {
-        val inputWithoutVatRegistrationNumber = companyOrOrganisationDetails - "vatRegistrationNumber"
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          val inputWithoutVatRegistrationNumber = companyDetails - "vatRegistrationNumber"
 
-        inputWithoutVatRegistrationNumber.as(CompanyDetails.apiReads).vatRegistration mustBe None
+          inputWithoutVatRegistrationNumber.as(CompanyDetails.apiReads).vatRegistration mustBe None
+        }
+      }
+
+      "we have a payeReference" in {
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).payeRef mustBe (companyDetails \ "payeReference").asOpt[String]
+        }
       }
 
       "we don't have a payeReference" in {
-        val inputWithoutPayeReference = companyOrOrganisationDetails - "payeReference"
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          val inputWithoutPayeReference = companyDetails - "payeReference"
 
-        inputWithoutPayeReference.as(CompanyDetails.apiReads).payeRef mustBe None
+          inputWithoutPayeReference.as(CompanyDetails.apiReads).payeRef mustBe None
+        }
       }
 
       "we have a correspondenceAddressDetails" in {
-        actualResult.address mustBe (companyOrOrganisationDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).address mustBe (companyDetails \ "correspondenceAddressDetails").as[CorrespondenceAddress]
+        }
       }
 
       "we have a correspondenceContactDetails" in {
-        actualResult.contact mustBe (companyOrOrganisationDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).contact mustBe (companyDetails \ "correspondenceContactDetails").as(IndividualContactDetails.apiReads)
+        }
       }
 
       "we have a previousAddressDetails" in {
-        actualResult.previousAddress.value mustBe (companyOrOrganisationDetails \ "previousAddressDetails").as(PreviousAddressInfo.apiReads)
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).previousAddress mustBe (companyDetails \ "previousAddressDetails").asOpt(PreviousAddressInfo.apiReads)
+        }
       }
 
       "we don't have a previousAddressDetails" in {
-        val inputWithoutPreviousAddressDetails = companyOrOrganisationDetails - "previousAddressDetails"
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          val inputWithoutPreviousAddressDetails = companyDetails - "previousAddressDetails"
 
-        inputWithoutPreviousAddressDetails.as(CompanyDetails.apiReads).previousAddress mustBe None
+          inputWithoutPreviousAddressDetails.as(CompanyDetails.apiReads).previousAddress mustBe None
+        }
       }
 
-      "we have a directorsDetails" in {
-        actualResult.directorsDetails mustBe (companyOrOrganisationDetails \ "directorsDetails").as(Reads.seq(IndividualInfo.apiReads))
-        actualResult.directorsDetails.length mustBe 1
+      "we have directorsDetails" in {
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).directorsDetails mustBe (companyDetails \ "directorsDetails").as(
+            Reads.seq(IndividualInfo.apiReads))
+          //companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 1
+        }
       }
 
       "we have a multiple directorsDetails" in {
-
-        val companyOrOrganisationDetails = Json.obj("organisationName" -> "abc organisation", "utr"-> "7897700000",
-          "crnNumber"-> "AA999999A", "vatRegistrationNumber"-> "789770000", "payeReference" -> "9999",
-          "correspondenceAddressDetails"-> addressDetails, "correspondenceContactDetails" -> fullContactDetails,
-          "previousAddressDetails" -> previousAddressDetails, "directorsDetails" -> Json.arr(individualDetails, individualDetails))
-        val actulaMultipleDirectorsDetails = companyOrOrganisationDetails.as(CompanyDetails.apiReads)
-
-        actulaMultipleDirectorsDetails.directorsDetails mustBe (companyOrOrganisationDetails \ "directorsDetails").as(
-          Reads.seq(IndividualInfo.apiReads))
-        actulaMultipleDirectorsDetails.directorsDetails.length mustBe 2
+        forAll(companyOrOrganisationDetailsGenerator(2)) { companyDetails =>
+          companyDetails.as(CompanyDetails.apiReads).directorsDetails mustBe (companyDetails \ "directorsDetails").as(
+            Reads.seq(IndividualInfo.apiReads))
+          //companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 2
+        }
       }
 
       "we don't have a directorsDetails" in {
-        val inputWithoutDirectorsDetails = companyOrOrganisationDetails - "directorsDetails"
+        forAll(companyOrOrganisationDetailsGenerator) { companyDetails =>
+          val inputWithoutDirectorsDetails = companyDetails - "directorsDetails"
 
-        inputWithoutDirectorsDetails.as(CompanyDetails.apiReads).directorsDetails mustBe Nil
+          inputWithoutDirectorsDetails.as(CompanyDetails.apiReads).directorsDetails mustBe Nil
+        }
       }
     }
   }
-
 
 }
