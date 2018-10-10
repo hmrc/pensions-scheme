@@ -120,7 +120,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
         forAll(companyOrOrganisationDetailsGenerator()) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).directorsDetails mustBe (companyDetails \ "directorsDetails").as(
             Reads.seq(IndividualInfo.apiReads))
-          //companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 1
+          companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 1
         }
       }
 
@@ -128,7 +128,7 @@ class CompanyDetailsReadsSpec extends WordSpec with MustMatchers with OptionValu
         forAll(companyOrOrganisationDetailsGenerator(noOfElements = 2)) { companyDetails =>
           companyDetails.as(CompanyDetails.apiReads).directorsDetails mustBe (companyDetails \ "directorsDetails").as(
             Reads.seq(IndividualInfo.apiReads))
-          //companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 2
+          companyDetails.as(CompanyDetails.apiReads).directorsDetails.length mustBe 2
         }
       }
 

@@ -62,11 +62,11 @@ class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionVal
 
       "we have multiple companyOrOrganisationDetails" in {
         forAll(establisherDetailsGenerator(noOfElements = 2)) { establisherDetails =>
-          val actulaMultipleCompanyOrOrganisationDetails = establisherDetails.as(EstablisherInfo.apiReads)
+          val actualMultipleCompanyOrOrganisationDetails = establisherDetails.as(EstablisherInfo.apiReads)
 
-          actulaMultipleCompanyOrOrganisationDetails.company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
+          actualMultipleCompanyOrOrganisationDetails.company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
             Reads.seq(CompanyDetails.apiReads))
-          actulaMultipleCompanyOrOrganisationDetails.company.length mustBe 2
+          actualMultipleCompanyOrOrganisationDetails.company.length mustBe 2
         }
       }
 
