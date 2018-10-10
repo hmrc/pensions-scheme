@@ -18,77 +18,91 @@ package models.Reads.schemes
 
 import models.Samples
 import models.schemes.{CompanyDetails, EstablisherInfo, IndividualInfo, PartnershipDetails}
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Reads
 
-class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemeDetailsStubJsonData {
+class EstablisherInfoReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples with PSASchemeDetailsGenerator {
 
   "A JSON payload containing establisher details" should {
 
     "read into a valid establisher details object" when {
 
-      val actualResult = establisherDetails.as(EstablisherInfo.apiReads)
-
       "we have a individualDetails" in {
-        actualResult.individual mustBe (establisherDetails \ "individualDetails").as(
-          Reads.seq(IndividualInfo.apiReads))
-        actualResult.individual.length mustBe 1
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
+          establisherDetails.as(EstablisherInfo.apiReads).individual mustBe (establisherDetails \ "individualDetails").as(
+            Reads.seq(IndividualInfo.apiReads))
+          establisherDetails.as(EstablisherInfo.apiReads).individual.length mustBe 1
+        }
       }
 
       "we have multiple individualDetails" in {
-        val actualMultipleIndividualDetails = establisherDetailsWithMultipleData.as(EstablisherInfo.apiReads)
-
-        actualMultipleIndividualDetails.individual mustBe (establisherDetailsWithMultipleData \ "individualDetails").as(
-          Reads.seq(IndividualInfo.apiReads))
-        actualMultipleIndividualDetails.individual.length mustBe 2
+        forAll(establisherDetailsGenerator(noOfElements = 2)) { establisherDetails =>
+          establisherDetails.as(EstablisherInfo.apiReads).individual mustBe (establisherDetails \ "individualDetails").as(
+            Reads.seq(IndividualInfo.apiReads))
+          establisherDetails.as(EstablisherInfo.apiReads).individual.length mustBe 2
+        }
       }
 
       "we don't have a individualDetails" in {
-        val inputWithoutIndividualDetails = establisherDetails - "individualDetails"
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
+          val inputWithoutIndividualDetails = establisherDetails - "individualDetails"
 
-        inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).individual mustBe Nil
+          inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).individual mustBe Nil
+        }
       }
 
       "we have a companyOrOrganisationDetails" in {
-        actualResult.company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
-          Reads.seq(CompanyDetails.apiReads))
-        actualResult.company.length mustBe 1
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
+          establisherDetails.as(EstablisherInfo.apiReads).company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
+            Reads.seq(CompanyDetails.apiReads))
+          establisherDetails.as(EstablisherInfo.apiReads).company.length mustBe 1
+        }
       }
 
       "we have multiple companyOrOrganisationDetails" in {
-        val actulaMultipleCompanyOrOrganisationDetails = establisherDetailsWithMultipleData.as(EstablisherInfo.apiReads)
+        forAll(establisherDetailsGenerator(noOfElements = 2)) { establisherDetails =>
+          val actualMultipleCompanyOrOrganisationDetails = establisherDetails.as(EstablisherInfo.apiReads)
 
-        actulaMultipleCompanyOrOrganisationDetails.company mustBe (establisherDetailsWithMultipleData \ "companyOrOrganisationDetails").as(
-          Reads.seq(CompanyDetails.apiReads))
-        actulaMultipleCompanyOrOrganisationDetails.company.length mustBe 2
+          actualMultipleCompanyOrOrganisationDetails.company mustBe (establisherDetails \ "companyOrOrganisationDetails").as(
+            Reads.seq(CompanyDetails.apiReads))
+          actualMultipleCompanyOrOrganisationDetails.company.length mustBe 2
+        }
       }
 
       "we don't have a companyOrOrganisationDetails" in {
-        val inputWithoutIndividualDetails = establisherDetails - "companyOrOrganisationDetails"
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
+          val inputWithoutIndividualDetails = establisherDetails - "companyOrOrganisationDetails"
 
-        inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).company mustBe Nil
+          inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).company mustBe Nil
+        }
       }
 
       "we have a partnershipTrusteeDetail" in {
-        actualResult.partnership mustBe (establisherDetails \ "partnershipTrusteeDetail").as(
-          Reads.seq(PartnershipDetails.apiReads))
-        actualResult.partnership.length mustBe 1
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
+          establisherDetails.as(EstablisherInfo.apiReads).partnership mustBe (establisherDetails \ "partnershipTrusteeDetail").as(
+            Reads.seq(PartnershipDetails.apiReads))
+          establisherDetails.as(EstablisherInfo.apiReads).partnership.length mustBe 1
+        }
       }
 
       "we have multiple partnershipTrusteeDetail" in {
-        val actualMultiplePrtnershipTrusteeDetail = establisherDetailsWithMultipleData.as(EstablisherInfo.apiReads)
+        forAll(establisherDetailsGenerator(noOfElements = 2)) { establisherDetails =>
+          val actualMultiplePrtnershipTrusteeDetail = establisherDetails.as(EstablisherInfo.apiReads)
 
-        actualMultiplePrtnershipTrusteeDetail.partnership mustBe (establisherDetailsWithMultipleData \ "partnershipTrusteeDetail").as(
-          Reads.seq(PartnershipDetails.apiReads))
-        actualMultiplePrtnershipTrusteeDetail.partnership.length mustBe 2
+          actualMultiplePrtnershipTrusteeDetail.partnership mustBe (establisherDetails \ "partnershipTrusteeDetail").as(
+            Reads.seq(PartnershipDetails.apiReads))
+          actualMultiplePrtnershipTrusteeDetail.partnership.length mustBe 2
+        }
       }
 
       "we don't have a partnershipTrusteeDetail" in {
-        val inputWithoutIndividualDetails = establisherDetails - "partnershipTrusteeDetail"
+        forAll(establisherDetailsGenerator()) { establisherDetails =>
+          val inputWithoutIndividualDetails = establisherDetails - "partnershipTrusteeDetail"
 
-        inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).partnership mustBe Nil
+          inputWithoutIndividualDetails.as(EstablisherInfo.apiReads).partnership mustBe Nil
+        }
       }
     }
   }
-
 }
