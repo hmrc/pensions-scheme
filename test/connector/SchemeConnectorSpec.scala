@@ -381,7 +381,7 @@ object SchemeConnectorSpec extends JsonFileReader with SchemeDetailsStubJsonData
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
   val schemeUrl = s"/pension-online/scheme-subscription/$psaId"
   val listOfSchemeUrl = s"/pension-online/subscription/$psaId/list"
-  val schemeDetailsUrl = s"/pension-online/psa-scheme-details/$schemeIdType/$idNumber"
+  val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$idNumber"
   private val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
 
   private val invalidBusinessPartnerResponse =
