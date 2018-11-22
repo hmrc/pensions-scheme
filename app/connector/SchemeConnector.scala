@@ -18,20 +18,21 @@ package connector
 
 import java.util.UUID.randomUUID
 
+import akka.actor.Status
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.schemes.PsaSchemeDetails
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.InvalidPayloadHandler
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Failure
+import scala.util.{Failure, Success, Try}
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
@@ -104,14 +105,8 @@ class SchemeConnectorImpl @Inject()(
 
     Logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
-    val ff = http.POST(schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
+    http.POST(schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
-
-      ff
-
-
-//      Future.failed(throw new BadRequestException("INVALID_PAYLOAD"))
-
       .andThen {
         case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
           invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
@@ -130,55 +125,37 @@ class SchemeConnectorImpl @Inject()(
     val schemeDetailsUrl = config.schemeDetailsUrl.format(schemeIdType, idNumber)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly) map { response =>
-      val gg = handleResponse(response)
-//      gg match {
-//        case Right(psaSchemeDetails) => psaSchemeDetails
-//      }
-
-     // sendGetSchemeDetailsAuditEvent(psaId = psaId)
-
-      gg
-    }
+    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly) map { handleResponse } andThen sendSchemeDetailsAuditEvent(psaId)
   }
 
+  private def sendSchemeDetailsAuditEvent(psaId: String)
+                                   (implicit rh: RequestHeader, ec: ExecutionContext):
+  PartialFunction[Try[Either[HttpException, PsaSchemeDetails]], Unit] = {
 
-
-//
-//  private def sendGetSchemeDetailsAuditEvent(psaId: String, psaName: String)
-//                                   (implicit rh: RequestHeader, ec: ExecutionContext):
-//  PartialFunction[Try[Either[HttpException, PSAMinimalDetails]], Unit] = {
-//
-//    case Success(Right(psaMinimalDetails)) =>
-//      auditService.sendEvent(
-//        MinimalPSADetails(
-//          psaId = psaId,
-//          psaName = psaMinimalDetails.name,
-//          isPsaSuspended = Some(psaMinimalDetails.isPsaSuspended),
-//          status = Status.OK
-//        )
-//      )
-//    case Success(Left(e)) =>
-//      auditService.sendEvent(
-//        MinimalPSADetails(
-//          psaId = psaId,
-//          psaName = None,
-//          isPsaSuspended = None,
-//          status = e.responseCode
-//        )
-//      )
-//    case Failure(t) =>
-//      Logger.error("Error in AssociationConnector connector", t)
-//  }
-  
-  
-  
+    case Success(Right(psaSchemeDetails)) =>
+      auditService.sendEvent(
+        SchemeDetailsAuditEvent(
+          psaId = psaId,
+          status = OK,
+          payload = Some(Json.toJson(psaSchemeDetails))
+        )
+      )
+    case Success(Left(e)) =>
+      auditService.sendEvent(
+        SchemeDetailsAuditEvent(
+          psaId = psaId,
+          status = e.responseCode,
+          payload = None
+        )
+      )
+    case Failure(t) =>
+      Logger.error("Error in AssociationConnector connector", t)
+  }
 
   override def listOfSchemes(psaId: String)(implicit
                                             headerCarrier: HeaderCarrier,
                                             ec: ExecutionContext,
                                             request: RequestHeader): Future[HttpResponse] = {
-
     val listOfSchemesUrl = config.listOfSchemesUrl.format(psaId)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
@@ -186,5 +163,4 @@ class SchemeConnectorImpl @Inject()(
       implicitly[ExecutionContext])
 
   }
-
 }

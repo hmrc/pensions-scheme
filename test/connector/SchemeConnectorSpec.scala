@@ -16,7 +16,7 @@
 
 package connector
 
-import audit.AuditService
+import audit.{AuditService, SchemeDetailsAuditEvent}
 import audit.testdoubles.StubSuccessfulAuditService
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
@@ -46,6 +46,10 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
   import SchemeConnectorSpec._
 
+  override def beforeEach(): Unit = {
+    auditService.reset()
+    super.beforeEach()
+  }
   override protected def portConfigKey: String = "microservice.services.des-hod.port"
 
   override protected def bindings: Seq[GuiceableModule] =
@@ -351,6 +355,56 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         ex.reportAs shouldBe BAD_GATEWAY
     }
   }
+
+  it should "send audit event for successful response" in {
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(psaSchemeDetails.toString())
+        )
+    )
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { _ =>
+      auditService.verifySent(
+        SchemeDetailsAuditEvent(psaId, 200, Some(Json.toJson(psaSchemeDetailsSample)))
+      ) shouldBe true
+    }
+  }
+
+  it should "send audit event for error response" in {
+
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          notFound
+            .withBody(errorResponse("NOT_FOUND"))
+        )
+    )
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+      auditService.verifySent(
+        SchemeDetailsAuditEvent(psaId, 404, None)
+      ) shouldBe true
+    }
+  }
+
+  it should "not send a audit event for exception" in {
+
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          serverError
+            .withBody(errorResponse("SERVER_ERROR"))
+        )
+    )
+
+    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map { _=>
+      auditService.verifyNothingSent() shouldBe true
+    }
+  }
+
+
+
 
 
   "SchemeConnector getCorrelationId" should "return the correct CorrelationId when the request Id is more than 32 characters" in {
