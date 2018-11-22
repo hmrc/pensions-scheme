@@ -216,7 +216,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(psaSchemeDetails.toString())
         )
     )
-    connector.getSchemeDetails(schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       response.right.value shouldBe psaSchemeDetailsSample
     }
   }
@@ -230,7 +230,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("INVALID_IDTYPE"))
         )
     )
-    connector.getSchemeDetails(schemeIdType, idNumber).map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_IDTYPE")
@@ -247,7 +247,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_SRN")
@@ -264,7 +264,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_PSTR")
@@ -281,7 +281,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_CORRELATIONID")
@@ -298,7 +298,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe BAD_REQUEST
         ex.message should include ("not valid")
@@ -313,7 +313,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("NOT_FOUND"))
         )
     )
-    connector.getSchemeDetails(schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       response.left.value shouldBe a[NotFoundException]
       response.left.value.message should include("NOT_FOUND")
     }
@@ -327,7 +327,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("FORBIDDEN"))
         )
     )
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe FORBIDDEN
         ex.message should include ("FORBIDDEN")
@@ -344,7 +344,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe INTERNAL_SERVER_ERROR
         ex.message should include("SERVER_ERROR")
