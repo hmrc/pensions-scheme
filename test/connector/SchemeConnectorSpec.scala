@@ -394,25 +394,6 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     }
   }
 
-//  it should "not send a audit event for exception" in {
-//
-//    server.stubFor(
-//      get(urlEqualTo(schemeDetailsUrl))
-//        .willReturn(
-//          serverError
-//            .withBody(errorResponse("SERVER_ERROR"))
-//        )
-//    )
-//
-//    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map { _=>
-//      auditService.verifyNothingSent() shouldBe true
-//    }
-//  }
-
-
-
-
-
   "SchemeConnector getCorrelationId" should "return the correct CorrelationId when the request Id is more than 32 characters" in {
     val requestId = Some("govuk-tax-4725c811-9251-4c06-9b8f-f1d84659b2dfe")
     val result = connector.getCorrelationId(requestId)
