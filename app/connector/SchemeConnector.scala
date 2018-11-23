@@ -18,7 +18,6 @@ package connector
 
 import java.util.UUID.randomUUID
 
-import akka.actor.Status
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
@@ -49,8 +48,8 @@ trait SchemeConnector {
   def getCorrelationId(requestId: Option[String]): String
 
   def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
-                                                               ec: ExecutionContext,
-                                                               request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]]
+                                                                              ec: ExecutionContext,
+                                                                              request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]]
 
 }
 
@@ -76,7 +75,16 @@ class SchemeConnectorImpl @Inject()(
   }
 
   //scalastyle:off cyclomatic.complexity
-  private def handleResponse(response: HttpResponse): Either[HttpException, PsaSchemeDetails] = {
+  private def handleResponse(psaId: String, response: HttpResponse)(
+    implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
+    auditService.sendEvent(
+      SchemeDetailsAuditEvent(
+        psaId = psaId,
+        status = response.status,
+        payload = if (response.body.isEmpty) None else Some(response.json)
+      )
+    )
+
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
       case OK => response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
@@ -114,9 +122,9 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit
-                                                                        headerCarrier: HeaderCarrier,
-                                                                        ec: ExecutionContext,
-                                                                        request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]] = {
+                                                                                       headerCarrier: HeaderCarrier,
+                                                                                       ec: ExecutionContext,
+                                                                                       request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]] = {
 
     implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
       override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
@@ -125,31 +133,8 @@ class SchemeConnectorImpl @Inject()(
     val schemeDetailsUrl = config.schemeDetailsUrl.format(schemeIdType, idNumber)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly) map { handleResponse } andThen sendSchemeDetailsAuditEvent(psaId)
-  }
-
-  private def sendSchemeDetailsAuditEvent(psaId: String)
-                                   (implicit rh: RequestHeader, ec: ExecutionContext):
-  PartialFunction[Try[Either[HttpException, PsaSchemeDetails]], Unit] = {
-
-    case Success(Right(psaSchemeDetails)) =>
-      auditService.sendEvent(
-        SchemeDetailsAuditEvent(
-          psaId = psaId,
-          status = OK,
-          payload = Some(Json.toJson(psaSchemeDetails))
-        )
-      )
-    case Success(Left(e)) =>
-      auditService.sendEvent(
-        SchemeDetailsAuditEvent(
-          psaId = psaId,
-          status = e.responseCode,
-          payload = None
-        )
-      )
-    case Failure(t) =>
-      Logger.error("Error in AssociationConnector connector", t)
+    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly)
+      .map (response => handleResponse(psaId, response))
   }
 
   override def listOfSchemes(psaId: String)(implicit
