@@ -183,7 +183,7 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
         val result = controller(repo, authConnector, encrypted).lastUpdated("foo")(FakeRequest())
 
         status(result) mustEqual OK
-        contentAsJson(result) mustEqual Json.toJson(date)
+        contentAsJson(result) mustEqual Json.toJson(date.getMillis)
       }
 
       "return 404 when the data doesn't exist" in {
