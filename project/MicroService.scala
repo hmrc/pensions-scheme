@@ -33,6 +33,7 @@ trait MicroService {
     .settings(defaultSettings(): _*)
     .settings(
       libraryDependencies ++= appDependencies,
+      dependencyOverrides ++= MicroServiceBuild.overrides,
       retrieveManaged := true,
       evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
       PlayKeys.devSettings += "play.server.http.port" -> "8203"

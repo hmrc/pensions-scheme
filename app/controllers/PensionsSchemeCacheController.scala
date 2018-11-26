@@ -16,21 +16,23 @@
 
 package controllers
 
+import play.api.libs.json.JodaWrites._
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, RawBuffer}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import play.api.{Configuration, Logger}
 import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 abstract class PensionsSchemeCacheController(
                                               config: Configuration,
                                               repository: PensionsSchemeCacheRepository,
-                                              val authConnector: AuthConnector
-                                            ) extends BaseController with AuthorisedFunctions {
+                                              val authConnector: AuthConnector,
+                                              cc: ControllerComponents
+                                            ) extends BackendController(cc) with AuthorisedFunctions {
 
   private val maxSize: Int = config.underlying.getInt("mongodb.pensions-scheme-cache.maxSize")
 

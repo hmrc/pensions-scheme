@@ -18,11 +18,13 @@ package controllers
 
 import com.google.inject.Inject
 import play.api.Configuration
+import play.api.mvc.ControllerComponents
 import repositories.PSAJourneyCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 
 class PSAJourneyCacheController @Inject()(
                                            config: Configuration,
                                            repository: PSAJourneyCacheRepository,
-                                           authConnector: AuthConnector
-                                         ) extends PensionsSchemeCacheController(config, repository, authConnector)
+                                           authConnector: AuthConnector,
+                                           cc: ControllerComponents
+                                         ) extends PensionsSchemeCacheController(config, repository, authConnector, cc)

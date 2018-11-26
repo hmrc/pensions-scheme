@@ -45,8 +45,9 @@ abstract class PensionsSchemeCacheRepository(
   implicitly
 ) {
 
+  private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
 
-  private val encrypted: Boolean = config.getBoolean("encrypted").getOrElse(true)
+  private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
   private case class DataEntry(
                                 id: String,
@@ -134,9 +135,6 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
-
-    val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
-
     val document: JsValue = {
       if (encrypted) {
         val unencrypted = PlainText(Json.stringify(data))
@@ -154,7 +152,6 @@ abstract class PensionsSchemeCacheRepository(
 
   def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
     if (encrypted) {
-      val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
       collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
         _.map {
           dataEntry =>
@@ -194,7 +191,7 @@ abstract class PensionsSchemeCacheRepository(
   def remove(id: String)(implicit ec: ExecutionContext): Future[Boolean] = {
     Logger.warn(s"Removing row from collection ${collection.name} externalId:$id")
     val selector = BSONDocument("id" -> id)
-    collection.remove(selector).map(_.ok)
+    collection.delete().one(selector).map(_.ok)
   }
 
   def dropCollection()(implicit ec: ExecutionContext): Future[Unit] = {
