@@ -36,7 +36,7 @@ import scala.concurrent.Future
 class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubData {
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector)
+  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
   private val schemeReferenceNumber = "S999999999"
   private val psaIdNumber = "A1234567"
   val srnRequest = "srn"

@@ -35,7 +35,7 @@ import scala.concurrent.Future
 
 class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubData {
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector)
+  val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, stubControllerComponents())
   private val schemeIdType = "pstr"
   private val idNumber = "00000000AA"
 
