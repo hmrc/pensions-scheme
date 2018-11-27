@@ -31,7 +31,6 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class PensionsSchemeCacheRepository(
                                               index: String,
@@ -39,7 +38,7 @@ abstract class PensionsSchemeCacheRepository(
                                               component: ReactiveMongoComponent,
                                               encryptionKey: String,
                                               config: Configuration
-                                            ) extends ReactiveRepository[JsValue, BSONObjectID](
+                                            )(implicit val ec: ExecutionContext) extends ReactiveRepository[JsValue, BSONObjectID](
   index,
   component.mongoConnector.db,
   implicitly
@@ -109,9 +108,6 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   private def ensureIndex(field: String, indexName: String, ttl: Option[Int]): Future[Boolean] = {
-
-    import scala.concurrent.ExecutionContext.Implicits.global
-
     val defaultIndex: Index = Index(Seq((field, IndexType.Ascending)), Some(indexName))
 
     val index: Index = ttl.fold(defaultIndex) { ttl =>

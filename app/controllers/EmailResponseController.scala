@@ -25,15 +25,14 @@ import play.api.mvc._
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted}
 import uk.gov.hmrc.domain.PsaId
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class EmailResponseController @Inject()(
                                          auditService: AuditService,
                                          crypto: ApplicationCrypto,
                                          cc: ControllerComponents,
                                          parsers: PlayBodyParsers
-                                       ) extends BackendController(cc) {
+                                       )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def retrieveStatus(id: String): Action[JsValue] = Action(parsers.tolerantJson) {
     implicit request =>

@@ -31,6 +31,7 @@ import play.api.test.Helpers._
 import service.SchemeService
 import uk.gov.hmrc.http._
 import play.api.libs.json.JodaWrites._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
