@@ -24,7 +24,8 @@ class Bindings extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
 
     Seq(
-      bind[LoggerLike].toInstance(Logger)
+      bind[LoggerLike].toInstance(Logger),
+      bind[ApplicationCrypto].toInstance(ApplicationCrypto)
     )
 
   }

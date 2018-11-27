@@ -23,13 +23,14 @@ import play.api.libs.json._
 import play.api.mvc._
 import service.SchemeService
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
 import utils.validationUtils._
-import scala.concurrent.{Future, ExecutionContext}
 
-class SchemeController @Inject()(schemeService: SchemeService,
-                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+class SchemeController @Inject()(schemeService: SchemeService) extends BaseController with ErrorHandler {
 
   def registerScheme: Action[AnyContent] = Action.async {
     implicit request => {
