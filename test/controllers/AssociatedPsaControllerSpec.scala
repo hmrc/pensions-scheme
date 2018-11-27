@@ -32,11 +32,12 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.BadRequestException
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubData {
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector)
+  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
   private val schemeReferenceNumber = "S999999999"
   private val psaIdNumber = "A1234567"
   val srnRequest = "srn"
