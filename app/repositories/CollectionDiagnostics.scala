@@ -18,7 +18,6 @@ package repositories
 
 import play.api.Logger
 import reactivemongo.play.json.collection.JSONCollection
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -27,7 +26,6 @@ case class IndexDef(name: String, fields: Seq[String], unique: Boolean, ttl: Opt
 object CollectionDiagnostics {
 
   def logCollectionInfo(collection: JSONCollection): Unit = {
-
     indexInfo(collection) map {
       indexes =>
         Logger.warn(
