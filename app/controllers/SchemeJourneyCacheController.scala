@@ -18,14 +18,11 @@ package controllers
 
 import com.google.inject.Inject
 import play.api.Configuration
-import play.api.mvc.ControllerComponents
 import repositories.SchemeJourneyCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
-import scala.concurrent.ExecutionContext
 
 class SchemeJourneyCacheController @Inject()(
                                               config: Configuration,
                                               repository: SchemeJourneyCacheRepository,
-                                              authConnector: AuthConnector,
-                                              cc: ControllerComponents
-                                            )(implicit val ec: ExecutionContext) extends PensionsSchemeCacheController(config, repository, authConnector, cc)
+                                              authConnector: AuthConnector
+                                            ) extends PensionsSchemeCacheController(config, repository, authConnector)
