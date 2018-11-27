@@ -24,21 +24,19 @@ import org.mockito.Matchers.{eq => eqTo, _}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.scalatestplus.play.OneAppPerSuite
 import play.api.Configuration
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json.Json
-import play.api.mvc.ControllerComponents
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.UnauthorizedException
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
-class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with GuiceOneAppPerSuite {
+class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with OneAppPerSuite {
 
   implicit lazy val mat: Materializer = app.materializer
 
@@ -49,13 +47,12 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
 
   val repo = mock[PensionsSchemeCacheRepository]
   val authConnector = mock[AuthConnector]
-  val cc = app.injector.instanceOf[ControllerComponents]
 
   private class PensionsSchemeCacheControllerImpl(
                                                    repo: PensionsSchemeCacheRepository,
                                                    authConnector: AuthConnector,
                                                    encrypted: Boolean
-                                                 ) extends PensionsSchemeCacheController(configuration(encrypted), repo, authConnector, cc)
+                                                 ) extends PensionsSchemeCacheController(configuration(encrypted), repo, authConnector)
 
   def controller(repo: PensionsSchemeCacheRepository, authConnector: AuthConnector, encrypted: Boolean): PensionsSchemeCacheController = {
     new PensionsSchemeCacheControllerImpl(repo, authConnector, encrypted)

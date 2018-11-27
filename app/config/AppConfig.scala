@@ -17,17 +17,21 @@
 package config
 
 import com.google.inject.Inject
+import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.play.config.ServicesConfig
 
-class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Environment, servicesConfig: ServicesConfig) {
-  lazy val baseURL: String = servicesConfig.baseUrl("des-hod")
-  lazy val barsBaseUrl: String = servicesConfig.baseUrl("bank-account-reputation")
+class AppConfig @Inject()(override val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
+  override protected def mode: Mode = environment.mode
+
+  lazy val baseURL: String = baseUrl("des-hod")
+  lazy val barsBaseUrl: String = baseUrl("bank-account-reputation")
   lazy val appName: String = runModeConfiguration.underlying.getString("appName")
 
   lazy val schemeRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.register")}"
   lazy val listOfSchemesUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.list.of.schemes")}"
   lazy val schemeDetailsUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.details")}"
-  lazy val desEnvironment: String = runModeConfiguration.getOptional[String]("microservice.services.des-hod.env").getOrElse("local")
-  lazy val authorization: String = "Bearer " + runModeConfiguration.getOptional[String]("microservice.services.des-hod.authorizationToken").getOrElse("local")
+  lazy val desEnvironment: String = runModeConfiguration.getString("microservice.services.des-hod.env").getOrElse("local")
+  lazy val authorization: String = "Bearer " + runModeConfiguration.getString("microservice.services.des-hod.authorizationToken").getOrElse("local")
+
 }

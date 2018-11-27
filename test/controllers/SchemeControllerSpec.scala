@@ -30,14 +30,12 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import service.SchemeService
 import uk.gov.hmrc.http._
-import play.api.libs.json.JodaWrites._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
   val mockSchemeService: SchemeService = mock[SchemeService]
-  val schemeController = new SchemeController(mockSchemeService, stubControllerComponents())
+  val schemeController = new SchemeController(mockSchemeService)
 
   before {
     reset(mockSchemeService)

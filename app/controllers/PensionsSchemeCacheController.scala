@@ -16,23 +16,21 @@
 
 package controllers
 
-import org.joda.time.DateTime
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent, RawBuffer}
 import play.api.{Configuration, Logger}
 import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.Future
 
 abstract class PensionsSchemeCacheController(
                                               config: Configuration,
                                               repository: PensionsSchemeCacheRepository,
-                                              val authConnector: AuthConnector,
-                                              cc: ControllerComponents
-                                            )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
+                                              val authConnector: AuthConnector
+                                            ) extends BaseController with AuthorisedFunctions {
 
   private val maxSize: Int = config.underlying.getInt("mongodb.pensions-scheme-cache.maxSize")
 
@@ -63,13 +61,11 @@ abstract class PensionsSchemeCacheController(
 
   def lastUpdated(id: String): Action[AnyContent] = Action.async {
     implicit request =>
-      //This should be removed when manage-pensions-frontend is upgraded to Play 2.6
-      val jodaTimeNumberWrites: Writes[DateTime] = Writes(JodaDateTimeNumberWrites.writes(_))
       authorised() {
         Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
         repository.getLastUpdated(id).map { response =>
           Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
-          response.map { date => Ok(Json.toJson(date)(jodaTimeNumberWrites)) }
+          response.map { date => Ok(Json.toJson(date)) }
             .getOrElse(NotFound)
         }
       }
