@@ -38,7 +38,7 @@ class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector) extend
 
       (srn,psaId) match {
         case (Some(schemeReferenceNumber),Some(id)) =>
-          schemeConnector.getSchemeDetails(srnRequest, schemeReferenceNumber).map {
+          schemeConnector.getSchemeDetails(id, srnRequest, schemeReferenceNumber).map {
             case Right(schemeDetails) =>
               val isAssociated = schemeDetails.psaDetails.exists(psa => psa.id == id)
               Ok(Json.toJson(isAssociated))
