@@ -181,12 +181,15 @@ trait PSASchemeDetailsGenerator {
     firstName <- mustStringForOption(enforceProperty)
     middleName <- mustStringForOption(enforceProperty)
     lastName <- mustStringForOption(enforceProperty)
+    relationshipDate <- dateGenerator
   } yield {
     Json.obj("psaid" -> psaid,
       "organizationOrPartnershipName" -> organizationOrPartnershipName,
       "firstName" -> firstName,
       "middleName" -> middleName,
-      "lastName" -> lastName)
+      "lastName" -> lastName,
+      "relationshipDate" -> relationshipDate
+    )
   }
 
 

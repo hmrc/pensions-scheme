@@ -43,8 +43,8 @@ trait SchemeDetailsStubData {
 
   val trusteeDetails = TrusteeInfo(Seq(individuals), Seq(companyDetails), Seq(trusteePartnershipDetails))
 
-  val psaDetails1 = PsaDetails("A0000001",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
-  val psaDetails2 = PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))))
+  val psaDetails1 = PsaDetails("A0000001",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))), None)
+  val psaDetails2 = PsaDetails("1234444444",Some("org name test"),Some(Name(Some("Mickey"),Some("m"),Some("Mouse"))), None)
 
   val psaSchemeDetailsSample = PsaSchemeDetails(
     SchemeDetails(

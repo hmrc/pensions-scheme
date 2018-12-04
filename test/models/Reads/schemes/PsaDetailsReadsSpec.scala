@@ -94,6 +94,20 @@ class PsaDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues w
           inputWithoutLastName.as(PsaDetails.apiReads).individual mustBe None
         }
       }
+
+      "we have a relationship date" in {
+        forAll(psaDetailsGenerator(enforceProperty = true)) { actualOutput =>
+          actualOutput.as(PsaDetails.apiReads).relationshipDate mustBe (actualOutput \ "relationshipDate").asOpt[String]
+        }
+      }
+
+      "we don't have a relationship date" in {
+        forAll(psaDetailsGenerator(enforceProperty = true)) { actualOutput =>
+          val inputWithoutLastName = actualOutput - "relationshipDate"
+
+          inputWithoutLastName.as(PsaDetails.apiReads).relationshipDate mustBe None
+        }
+      }
     }
   }
 }
