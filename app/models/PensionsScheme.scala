@@ -153,6 +153,7 @@ object PensionSchemeDeclaration {
 
   implicit val formats: Format[PensionSchemeDeclaration] = Json.format[PensionSchemeDeclaration]
 
+  //TODO: When hub is enabled this can be deleted
   val apiReadsHubDisabled: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
