@@ -26,7 +26,7 @@ import models._
 import models.enumeration.SchemeType
 import play.api.Logger
 import play.api.http.Status
-import play.api.libs.json.{JsResultException, JsValue, Json}
+import play.api.libs.json.{JsResult, JsResultException, JsValue, Json}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
 
@@ -80,7 +80,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-      declaration <- json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+      declaration <- declarationReads(json)
       establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
     } yield {
@@ -95,7 +95,14 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
       },
       scheme => Right(scheme)
     )
+  }
 
+  private def declarationReads(json: JsValue): JsResult[PensionSchemeDeclaration] = {
+    if(appConfig.isHubEnabled){
+      json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+    } else {
+      json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReadsHubDisabled)
+    }
   }
 
   private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {
