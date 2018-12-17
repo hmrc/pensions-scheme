@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package bindings
+package bindings.provider
 
-import bindings.provider.ApplicationCryptoProvider
-import play.api.inject.{Binding, Module}
-import play.api.{Configuration, Environment, Logger, LoggerLike}
+import javax.inject.{Inject, Provider}
+import play.api.Configuration
 import uk.gov.hmrc.crypto.ApplicationCrypto
 
-class Bindings extends Module {
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
-    Seq(
-      bind[LoggerLike].toInstance(Logger),
-      bind[ApplicationCrypto].toProvider[ApplicationCryptoProvider]
-    )
-
-  }
-
+class ApplicationCryptoProvider @Inject()(configuration: Configuration) extends Provider[ApplicationCrypto] {
+  def get(): ApplicationCrypto = new ApplicationCrypto(configuration.underlying)
 }
