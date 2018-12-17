@@ -24,10 +24,10 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.ErrorHandler
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector) extends BaseController with ErrorHandler {
+class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector)
+                                       (implicit val ec: ExecutionContext) extends BaseController with ErrorHandler {
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {

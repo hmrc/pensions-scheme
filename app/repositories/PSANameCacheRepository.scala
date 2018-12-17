@@ -20,10 +20,12 @@ import com.google.inject.Inject
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
 
+import scala.concurrent.ExecutionContext
+
 class PSANameCacheRepository @Inject()(
                                         config: Configuration,
                                         component: ReactiveMongoComponent
-                                      ) extends PensionsSchemeCacheRepository(
+                                      )(implicit val ec: ExecutionContext) extends PensionsSchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.psa-name.name"),
   None,
   component,
