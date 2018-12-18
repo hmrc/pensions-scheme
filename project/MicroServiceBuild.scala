@@ -22,7 +22,7 @@ object MicroServiceBuild extends Build with MicroService {
 
   val appName = "pensions-scheme"
 
-  private val domainVersion = "5.2.0"
+  private val domainVersion = "5.3.0"
   private val reactiveMongoVersion = "6.2.0"
   private val bootstrapVersion = "4.4.0"
   private val schemaValidatorVersion = "0.1.19"
