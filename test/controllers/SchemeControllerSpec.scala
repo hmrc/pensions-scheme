@@ -32,6 +32,7 @@ import service.SchemeService
 import uk.gov.hmrc.http._
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
   val mockSchemeService: SchemeService = mock[SchemeService]

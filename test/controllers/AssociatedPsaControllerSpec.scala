@@ -30,7 +30,7 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.BadRequestException
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubData {

@@ -26,14 +26,14 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.Configuration
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.AnyContentAsJson
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.PensionsSchemeCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.UnauthorizedException
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with OneAppPerSuite {

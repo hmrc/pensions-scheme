@@ -31,7 +31,6 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class PensionsSchemeCacheRepository(
                                               index: String,
@@ -39,12 +38,13 @@ abstract class PensionsSchemeCacheRepository(
                                               component: ReactiveMongoComponent,
                                               encryptionKey: String,
                                               config: Configuration
-                                            ) extends ReactiveRepository[JsValue, BSONObjectID](
+                                            )(implicit ec: ExecutionContext) extends ReactiveRepository[JsValue, BSONObjectID](
   index,
   component.mongoConnector.db,
   implicitly
 ) {
 
+  private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
 
   private val encrypted: Boolean = config.getBoolean("encrypted").getOrElse(true)
 
@@ -109,8 +109,6 @@ abstract class PensionsSchemeCacheRepository(
 
   private def ensureIndex(field: String, indexName: String, ttl: Option[Int]): Future[Boolean] = {
 
-    import scala.concurrent.ExecutionContext.Implicits.global
-
     val defaultIndex: Index = Index(Seq((field, IndexType.Ascending)), Some(indexName))
 
     val index: Index = ttl.fold(defaultIndex) { ttl =>
@@ -135,8 +133,6 @@ abstract class PensionsSchemeCacheRepository(
 
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
 
-    val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
-
     val document: JsValue = {
       if (encrypted) {
         val unencrypted = PlainText(Json.stringify(data))
@@ -154,7 +150,6 @@ abstract class PensionsSchemeCacheRepository(
 
   def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
     if (encrypted) {
-      val jsonCrypto: CryptoWithKeysFromConfig = CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config)
       collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
         _.map {
           dataEntry =>

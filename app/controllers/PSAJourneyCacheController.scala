@@ -20,9 +20,10 @@ import com.google.inject.Inject
 import play.api.Configuration
 import repositories.PSAJourneyCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
+import scala.concurrent.ExecutionContext
 
 class PSAJourneyCacheController @Inject()(
                                            config: Configuration,
                                            repository: PSAJourneyCacheRepository,
                                            authConnector: AuthConnector
-                                         ) extends PensionsSchemeCacheController(config, repository, authConnector)
+                                         )(implicit ec: ExecutionContext) extends PensionsSchemeCacheController(config, repository, authConnector)

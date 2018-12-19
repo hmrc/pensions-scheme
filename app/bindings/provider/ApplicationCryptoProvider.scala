@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package repositories
+package bindings.provider
 
-import com.google.inject.Inject
+import javax.inject.{Inject, Provider}
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
+import uk.gov.hmrc.crypto.ApplicationCrypto
 
-import scala.concurrent.ExecutionContext
-
-class PSANameCacheRepository @Inject()(
-                                        config: Configuration,
-                                        component: ReactiveMongoComponent
-                                      )(implicit val ec: ExecutionContext) extends PensionsSchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.psa-name.name"),
-  None,
-  component,
-  "psa.json.encryption",
-  config
-)
-
+class ApplicationCryptoProvider @Inject()(configuration: Configuration) extends Provider[ApplicationCrypto] {
+  def get(): ApplicationCrypto = new ApplicationCrypto(configuration.underlying)
+}
