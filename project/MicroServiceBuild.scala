@@ -24,7 +24,7 @@ object MicroServiceBuild extends Build with MicroService {
 
   private val domainVersion = "5.3.0"
   private val reactiveMongoVersion = "6.2.0"
-  private val bootstrapVersion = "4.4.0"
+  private val bootstrapVersion = "4.6.0"
   private val schemaValidatorVersion = "0.1.19"
   private val jsonPathVersion = "2.5.0"
 
