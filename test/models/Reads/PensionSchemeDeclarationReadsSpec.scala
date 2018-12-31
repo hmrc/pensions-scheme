@@ -81,51 +81,7 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      "if we have a duties field when hub is disabled" when {
-        "It is true, then box10 will be true and box11 is None, addressAndContactDetails is None" in {
-          val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReadsHubDisabled)
-          result.box10.value mustBe true
-          result.box11 mustBe None
-          result.addressAndContactDetails mustBe None
-        }
-
-        "It is false and containing 'adviser' details box11 is true, box10 is None and details populated" in {
-
-          val adviserDetails = "adviserDetails" -> Json.obj("adviserName" -> JsString("John"), "phoneNumber" -> "07592113",
-            "emailAddress" -> "test@test.com")
-          val adviserAddress = "adviserAddress" -> Json.obj("addressLine1" -> JsString("line1"), "addressLine2" -> JsString("line2"),
-            "addressLine3" -> JsString("line3"), "addressLine4" -> JsString("line4"),
-            "postcode" -> JsString("NE1"), "country" -> JsString("GB"))
-
-          val name = "John"
-          val address = UkAddress("line1", Some("line2"), Some("line3"), Some("line4"), "GB", "NE1")
-          val contact = ContactDetails("07592113", None, None, "test@test.com")
-          val declaration = Json.obj("declaration" -> JsBoolean(true),
-            "declarationDormant" -> JsString("no"),
-            "declarationDuties" -> JsBoolean(false),
-            "schemeDetails" -> Json.obj(
-              "schemeType" -> Json.obj(
-                "name" -> "trust"
-              )))
-          val result = (declaration + adviserDetails + adviserAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReadsHubDisabled)
-
-          result.box10 mustBe None
-          result.box11.value mustBe true
-          result.pensionAdviserName mustBe Some(name)
-          result.addressAndContactDetails mustBe Some(AddressAndContactDetails(address, contact))
-        }
-
-        "if we have a duties field and is false but no contact or name details then addressAndContactDetails be None" in {
-          val result = (declaration + ("declarationDuties" -> JsBoolean(false))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReadsHubDisabled)
-          result.box11.value mustBe true
-          result.box10 mustBe None
-          result.addressAndContactDetails mustBe None
-          result.pensionAdviserName mustBe None
-
-        }
-      }
-
-      "if we have a duties field when hub is enabled" when {
+      "if we have a duties field" when {
         "It is true, then box10 will be true and box11 is None, addressAndContactDetails is None" in {
           val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
           result.box10.value mustBe true

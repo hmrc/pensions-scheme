@@ -153,73 +153,6 @@ object PensionSchemeDeclaration {
 
   implicit val formats: Format[PensionSchemeDeclaration] = Json.format[PensionSchemeDeclaration]
 
-  //TODO: When hub is enabled this can be deleted
-  val apiReadsHubDisabled: Reads[PensionSchemeDeclaration] = (
-    (JsPath \ "declaration").read[Boolean] and
-      (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
-      (JsPath \ "declarationDormant").readNullable[String] and
-      (JsPath \ "declarationDuties").read[Boolean] and
-      (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
-      (JsPath \ "adviserAddress").readNullable[Address]
-    ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
-
-
-    val basicDeclaration = PensionSchemeDeclaration(
-      declaration,
-      declaration,
-      None, None, None,
-      declaration,
-      declaration,
-      declaration,
-      declaration,
-      None, None,
-      None)
-
-    val dormant = (dec: PensionSchemeDeclaration) => {
-      declarationDormant.fold(dec)(value => {
-        if (value == "no") {
-          dec.copy(box4 = Some(true))
-        } else {
-          dec.copy(box5 = Some(true))
-        }
-      }
-      )
-    }
-
-    val isMasterTrust = (dec: PensionSchemeDeclaration) => {
-      if (schemeTypeName == "master")
-        dec.copy(box3 = Some(true))
-      else
-        dec
-    }
-    val decDuties = (dec: PensionSchemeDeclaration) => {
-
-      if (declarationDuties) {
-        dec.copy(box10 = Some(true))
-      }
-      else {
-        dec.copy(
-          box11 = Some(true),
-          pensionAdviserName = adviserDetails.map(_.adviserName),
-          addressAndContactDetails = {
-            (adviserDetails, adviserAddress) match {
-              case (Some(contact), Some(address)) =>
-                Some(AddressAndContactDetails(
-                  address,
-                  ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)
-                ))
-              case _ => None
-            }
-          }
-        )
-      }
-
-    }
-
-    val completedDeclaration = dormant andThen isMasterTrust andThen decDuties
-    completedDeclaration(basicDeclaration)
-  })
-
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
@@ -230,7 +163,6 @@ object PensionSchemeDeclaration {
       (JsPath \ "adviserPhone").readNullable[String] and
       (JsPath \ "adviserAddress").readNullable[Address]
     ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserName, adviserEmail, adviserPhone, adviserAddress) => {
-
 
     val basicDeclaration = PensionSchemeDeclaration(
       declaration,

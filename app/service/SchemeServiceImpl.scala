@@ -80,7 +80,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-      declaration <- declarationReads(json)
+      declaration <- json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
       establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
     } yield {
@@ -95,14 +95,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
       },
       scheme => Right(scheme)
     )
-  }
-
-  private def declarationReads(json: JsValue): JsResult[PensionSchemeDeclaration] = {
-    if(appConfig.isHubEnabled){
-      json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
-    } else {
-      json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReadsHubDisabled)
-    }
   }
 
   private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {
