@@ -15,3 +15,7 @@
 DELETE      /test-only/psa-name                                   controllers.PSANameController.dropCollection
 
 GET         /test-only/mongo-diagnostics                          controllers.MongoDiagnosticsController.mongoDiagnostics()
+
+GET        /pensions-scheme/test-only/toggle-on/:featureSwitch     controllers.testonly.TestFeatureSwitchManagerController.toggleOn(featureSwitch: String)
+GET        /pensions-scheme/test-only/toggle-off/:featureSwitch    controllers.testonly.TestFeatureSwitchManagerController.toggleOff(featureSwitch: String)
+GET        /pensions-scheme/test-only/reset/:featureSwitch         controllers.testonly.TestFeatureSwitchManagerController.reset(featureSwitch: String)
