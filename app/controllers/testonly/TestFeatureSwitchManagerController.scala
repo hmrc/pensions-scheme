@@ -18,6 +18,7 @@ package controllers.testonly
 
 import com.google.inject.Inject
 import config.FeatureSwitchManagementService
+import play.api.Logger
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 
@@ -29,18 +30,21 @@ class TestFeatureSwitchManagerController @Inject()(
   def toggleOn(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       val result = fs.change(featureSwitch, newValue = true)
+      Logger.debug(s"[Pensions-Scheme][ToggleOnSuccess] - ${featureSwitch}")
       if (result) NoContent else ExpectationFailed
   }
 
   def toggleOff(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       val result = fs.change(featureSwitch, newValue = false)
-      if (result) ExpectationFailed else NoContent
+      Logger.debug(s"[Pensions-Scheme][ToggleOffSuccess] - ${featureSwitch}")
+      if (result) NoContent else ExpectationFailed
   }
 
   def reset(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       fs.reset(featureSwitch)
+      Logger.debug(s"[Pensions-Scheme][ToggleResetSuccess] - ${featureSwitch}")
       NoContent
   }
 }
