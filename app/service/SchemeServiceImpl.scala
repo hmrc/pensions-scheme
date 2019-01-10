@@ -67,13 +67,13 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
           error => Future.failed(error),
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
-                          Future.successful(HttpResponse(200))
-//              schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
-//                case Success(httpResponse) =>
-//                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
-//                case Failure(error: HttpException) =>
-//                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
-//              }
+//                          Future.successful(HttpResponse(200))
+              schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
+                case Success(httpResponse) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
+                case Failure(error: HttpException) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
+              }
           }
         )
     )
@@ -82,18 +82,26 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
   private[service] def transformJsonToModel(json: JsValue): Either[BadRequestException, PensionsScheme] = {
 
-    println( "\n\nJSON:-\n" + json)
+    //println( "\n\nJSON:-\n" + json)
 
     val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] =
       if (featureSwitchManagementService.get(Toggles.enableHubV2)) {
-        CustomerAndSchemeDetails.apiReads
+        println( "\nV2:" + json)
+        CustomerAndSchemeDetails.apiReadsHub
       } else {
         CustomerAndSchemeDetails.apiReads
       }
 
+    val readsDeclaration =
+      if (featureSwitchManagementService.get(Toggles.enableHubV2)) {
+        PensionSchemeDeclaration.apiReadsHub
+      } else {
+        PensionSchemeDeclaration.apiReads
+      }
+
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
-      declaration <- json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+      declaration <- json.validate[PensionSchemeDeclaration](readsDeclaration)
       establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
     } yield {

@@ -24,7 +24,129 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
   import CustomerAndSchemeDetailsReadsSpec._
 
+  //scalastyle:off method.length
+  def readsInvolvingSchemeNameOrTypeHubDisabled(): Unit = {
+    s"correctly parse to the corresponding CustomerAndSchemeDetailsReads involving scheme name or type with hub enabled set to false" when {
+      "is Group Life/Death" in {
+
+        val result = (dataJson + ("schemeDetails" -> Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "group"
+          )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+        result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A group life/death in service scheme")).schemeStructure
+      }
+
+      "is Body Corporate" in {
+        val result = (dataJson + ("schemeDetails" -> Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "corp"
+          )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+        result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A body corporate")).schemeStructure
+      }
+
+      "is Other with other Scheme structure" in {
+        val result = (dataJson + ("schemeDetails" -> Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "other",
+            "schemeTypeDetails" -> "other details"
+          )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+        result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("Other")).schemeStructure
+      }
+
+      "is Master trust" in {
+        val result = (dataJson + ("schemeDetails" -> Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "master"
+          )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+        result.isSchemeMasterTrust mustBe true
+      }
+
+      "we have Master Trust" when {
+        "scheme structure is None" in {
+          val result = (dataJson + ("schemeDetails" -> Json.obj(
+            "schemeName" -> "test scheme name",
+            "schemeType" -> Json.obj(
+              "name" -> "master"
+            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+          result.schemeStructure mustBe None
+        }
+      }
+    }
+  }
+
+  def readsInvolvingSchemeNameOrTypeHubEnabled(): Unit = {
+    "correctly parse to the corresponding CustomerAndSchemeDetailsReads involving scheme name or type with hub enabled set to true" when {
+      "is Group Life/Death" in {
+
+        val result = (dataJsonHub ++ Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "group"
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReadsHub)
+
+        result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A group life/death in service scheme")).schemeStructure
+      }
+
+      "is Body Corporate" in {
+        val result = (dataJsonHub ++ Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "corp"
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReadsHub)
+
+        result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A body corporate")).schemeStructure
+      }
+
+      "is Other with other Scheme structure" in {
+        val result = (dataJsonHub ++ Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "other",
+            "schemeTypeDetails" -> "other details"
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReadsHub)
+
+        result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("Other")).schemeStructure
+      }
+
+      "is Master trust" in {
+        val result = (dataJsonHub ++ Json.obj(
+          "schemeName" -> "test scheme name",
+          "schemeType" -> Json.obj(
+            "name" -> "master"
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReadsHub)
+
+        result.isSchemeMasterTrust mustBe true
+      }
+
+      "we have Master Trust" when {
+        "scheme structure is None" in {
+          val result = (dataJsonHub ++ Json.obj(
+            "schemeName" -> "test scheme name",
+            "schemeType" -> Json.obj(
+              "name" -> "master"
+            ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReadsHub)
+
+          result.schemeStructure mustBe None
+        }
+      }
+    }
+  }
+
+
   "Json Payload containing Customer and scheme details" must {
+
+    behave like readsInvolvingSchemeNameOrTypeHubDisabled
+
+    behave like readsInvolvingSchemeNameOrTypeHubEnabled
 
     "correctly parse to the corresponding CustomerAndSchemeDetailsReads" when {
 
@@ -45,63 +167,10 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
           result.otherSchemeStructure mustBe None
         }
 
-        "is Group Life/Death" in {
-          val result = (dataJson + ("schemeDetails" -> Json.obj(
-            "schemeName" -> "test scheme name",
-            "schemeType" -> Json.obj(
-              "name" -> "group"
-            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A group life/death in service scheme")).schemeStructure
-        }
-
-        "is Body Corporate" in {
-          val result = (dataJson + ("schemeDetails" -> Json.obj(
-            "schemeName" -> "test scheme name",
-            "schemeType" -> Json.obj(
-              "name" -> "corp"
-            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A body corporate")).schemeStructure
-        }
-
-        "is Other with other Scheme structure" in {
-          val result = (dataJson + ("schemeDetails" -> Json.obj(
-            "schemeName" -> "test scheme name",
-            "schemeType" -> Json.obj(
-              "name" -> "other",
-              "schemeTypeDetails" -> "other details"
-            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-
-          result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("Other")).schemeStructure
-        }
-
-        "is Master trust" in {
-          val result = (dataJson + ("schemeDetails" -> Json.obj(
-            "schemeName" -> "test scheme name",
-            "schemeType" -> Json.obj(
-              "name" -> "master"
-            )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-
-          result.isSchemeMasterTrust mustBe true
-        }
-
         "it is not a Master trust" in {
           val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
           result.isSchemeMasterTrust mustBe false
-        }
-
-        "we have Master Trust" when {
-          "scheme structure is None" in {
-            val result = (dataJson + ("schemeDetails" -> Json.obj(
-              "schemeName" -> "test scheme name",
-              "schemeType" -> Json.obj(
-                "name" -> "master"
-              )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-
-            result.schemeStructure mustBe None
-          }
         }
       }
 
@@ -230,6 +299,23 @@ object CustomerAndSchemeDetailsReadsSpec {
     Some(true), "2 to 11", "0", true, true, true, "Defined Benefits only", "GB", false,
     Some("my insurance company"), Some("111"), Some(UkAddress("ADDRESS LINE 1", Some("ADDRESS LINE 2"),
       Some("ADDRESS LINE 3"), Some("ADDRESS LINE 4"), "GB", "ZZ1 1ZZ")))
+
+
+  val dataJsonHub: JsObject =
+    Json.obj(
+      "schemeName" -> "test scheme name",
+      "schemeType" -> Json.obj(
+        "name" -> "single"
+      ),
+      "membership" -> "opt3",
+      "membershipFuture" -> "opt1",
+      "investmentRegulated" -> true,
+      "occupationalPensionScheme" -> true,
+      "securedBenefits" -> true,
+      "benefits" -> "opt2",
+      "schemeEstablishedCountry" -> "GB",
+      "uKBankAccount" -> true
+    )
 
 }
 

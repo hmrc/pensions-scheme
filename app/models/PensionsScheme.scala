@@ -130,8 +130,8 @@ object CustomerAndSchemeDetails {
   )
 
   def apiReadsHub: Reads[CustomerAndSchemeDetails] = (
-    (JsPath \ "schemeDetails" \ "schemeName").read[String] and
-      (JsPath \ "schemeDetails" \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
+    (JsPath \ "schemeName").read[String] and
+      (JsPath \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
       (JsPath \ "membership").read[String] and
       (JsPath \ "membershipFuture").read[String] and
@@ -197,6 +197,73 @@ object PensionSchemeDeclaration {
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
+      (JsPath \ "declarationDormant").readNullable[String] and
+      (JsPath \ "declarationDuties").read[Boolean] and
+      (JsPath \ "adviserName").readNullable[String] and
+      (JsPath \ "adviserEmail").readNullable[String] and
+      (JsPath \ "adviserPhone").readNullable[String] and
+      (JsPath \ "adviserAddress").readNullable[Address]
+    ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserName, adviserEmail, adviserPhone, adviserAddress) => {
+
+    val basicDeclaration = PensionSchemeDeclaration(
+      declaration,
+      declaration,
+      None, None, None,
+      declaration,
+      declaration,
+      declaration,
+      declaration,
+      None, None,
+      None)
+
+    val dormant = (dec: PensionSchemeDeclaration) => {
+      declarationDormant.fold(dec)(value => {
+        if (value == "no") {
+          dec.copy(box4 = Some(true))
+        } else {
+          dec.copy(box5 = Some(true))
+        }
+      }
+      )
+    }
+
+    val isMasterTrust = (dec: PensionSchemeDeclaration) => {
+      if (schemeTypeName == "master")
+        dec.copy(box3 = Some(true))
+      else
+        dec
+    }
+    val decDuties = (dec: PensionSchemeDeclaration) => {
+
+      if (declarationDuties) {
+        dec.copy(box10 = Some(true))
+      }
+      else {
+        dec.copy(
+          box11 = Some(true),
+          pensionAdviserName = adviserName,
+          addressAndContactDetails = {
+            (adviserEmail, adviserPhone, adviserAddress) match {
+              case (Some(contactEmail), Some(contactPhone), Some(address)) =>
+                Some(AddressAndContactDetails(
+                  address,
+                  ContactDetails(contactPhone, None, None, contactEmail)
+                ))
+              case _ => None
+            }
+          }
+        )
+      }
+
+    }
+
+    val completedDeclaration = dormant andThen isMasterTrust andThen decDuties
+    completedDeclaration(basicDeclaration)
+  })
+
+  val apiReadsHub: Reads[PensionSchemeDeclaration] = (
+    (JsPath \ "declaration").read[Boolean] and
+      (JsPath \ "schemeType" \ "name").read[String] and
       (JsPath \ "declarationDormant").readNullable[String] and
       (JsPath \ "declarationDuties").read[Boolean] and
       (JsPath \ "adviserName").readNullable[String] and
