@@ -25,7 +25,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
   import CustomerAndSchemeDetailsReadsSpec._
 
   //scalastyle:off method.length
-  def readsInvolvingSchemeNameOrTypeHubDisabled(): Unit = {
+  def readsTestsDynamicJsonHubDisabled(): Unit = {
     "correctly parse to the corresponding CustomerAndSchemeDetailsReads involving scheme name or type with hub enabled set to false" when {
       "is Group Life/Death" in {
 
@@ -84,7 +84,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
   }
 
   //scalastyle:off method.length
-  def readsInvolvingSchemeNameOrTypeHubEnabled(): Unit = {
+  def readsTestsDynamicJsonHubEnabled(): Unit = {
     "correctly parse to the corresponding CustomerAndSchemeDetailsReads involving scheme name or type with hub enabled set to true" when {
       "is Group Life/Death" in {
 
@@ -143,7 +143,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
   }
 
   //scalastyle:off method.length
-  def readsNotInvolvingSchemeNameOrType(jsObject: JsObject, readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails]): Unit = {
+  def readsTestsStaticJson(jsObject: JsObject, readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails]): Unit = {
     "correctly parse to the corresponding CustomerAndSchemeDetailsReads" when {
 
       "we have a valid scheme name" in {
@@ -272,13 +272,13 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
 
   "Json Payload in hub disabled format containing Customer and scheme details" must {
-    behave like readsInvolvingSchemeNameOrTypeHubDisabled
-    behave like readsNotInvolvingSchemeNameOrType(dataJson, CustomerAndSchemeDetails.apiReads)
+    behave like readsTestsDynamicJsonHubDisabled
+    behave like readsTestsStaticJson(dataJson, CustomerAndSchemeDetails.apiReads)
   }
 
   "Json Payload in hub enabled format containing Customer and scheme details" must {
-    behave like readsInvolvingSchemeNameOrTypeHubEnabled
-    behave like readsNotInvolvingSchemeNameOrType(dataJsonHub, CustomerAndSchemeDetails.apiReadsHub)
+    behave like readsTestsDynamicJsonHubEnabled
+    behave like readsTestsStaticJson(dataJsonHub, CustomerAndSchemeDetails.apiReadsHub)
   }
 
 }
