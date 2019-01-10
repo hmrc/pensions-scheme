@@ -28,7 +28,6 @@ import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
 import utils.Toggles
 
@@ -67,7 +66,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
           error => Future.failed(error),
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
-//                          Future.successful(HttpResponse(200))
               schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
                 case Success(httpResponse) =>
                   sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
