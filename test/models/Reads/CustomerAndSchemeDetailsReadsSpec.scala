@@ -26,7 +26,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
   //scalastyle:off method.length
   def readsInvolvingSchemeNameOrTypeHubDisabled(): Unit = {
-    s"correctly parse to the corresponding CustomerAndSchemeDetailsReads involving scheme name or type with hub enabled set to false" when {
+    "correctly parse to the corresponding CustomerAndSchemeDetailsReads involving scheme name or type with hub enabled set to false" when {
       "is Group Life/Death" in {
 
         val result = (dataJson + ("schemeDetails" -> Json.obj(
@@ -83,6 +83,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
     }
   }
 
+  //scalastyle:off method.length
   def readsInvolvingSchemeNameOrTypeHubEnabled(): Unit = {
     "correctly parse to the corresponding CustomerAndSchemeDetailsReads involving scheme name or type with hub enabled set to true" when {
       "is Group Life/Death" in {
@@ -141,138 +142,145 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
     }
   }
 
-
-  "Json Payload containing Customer and scheme details" must {
-
-    behave like readsInvolvingSchemeNameOrTypeHubDisabled
-
-    behave like readsInvolvingSchemeNameOrTypeHubEnabled
-
+  //scalastyle:off method.length
+  def readsNotInvolvingSchemeNameOrType(jsObject: JsObject, readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails]): Unit = {
     "correctly parse to the corresponding CustomerAndSchemeDetailsReads" when {
 
       "we have a valid scheme name" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.schemeName mustBe customerDetails.schemeName
       }
 
       "we have a scheme type which is not master trust" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.isSchemeMasterTrust mustBe customerDetails.isSchemeMasterTrust
       }
 
       "we have scheme structure" that {
         "is Single Trust with no other scheme structure" in {
-          val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
           result.schemeStructure mustBe customerDetails.schemeStructure
           result.otherSchemeStructure mustBe None
         }
 
         "it is not a Master trust" in {
-          val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
 
           result.isSchemeMasterTrust mustBe false
         }
       }
 
       "we have a valid more than ten trustees flag" in {
-        val result = (dataJson + ("moreThanTenTrustees" -> JsBoolean(true))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = (jsObject + ("moreThanTenTrustees" -> JsBoolean(true))).as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.haveMoreThanTenTrustee mustBe customerDetails.haveMoreThanTenTrustee
       }
 
       "we don't have more than ten trustees flag" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.haveMoreThanTenTrustee mustBe None
       }
 
       "we have a valid membership" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.currentSchemeMembers mustBe customerDetails.currentSchemeMembers
       }
 
       "we have a valid future membership" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.futureSchemeMembers mustBe customerDetails.futureSchemeMembers
       }
 
       "we have a valid investment regulated flag" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.isReguledSchemeInvestment mustBe customerDetails.isReguledSchemeInvestment
       }
 
       "we have a valid occupational pension scheme flag" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.isOccupationalPensionScheme mustBe customerDetails.isOccupationalPensionScheme
       }
 
       "we have a valid secured benefits flag" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.areBenefitsSecuredContractInsuranceCompany mustBe customerDetails.areBenefitsSecuredContractInsuranceCompany
       }
 
       "we have a valid scheme benefits" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.doesSchemeProvideBenefits mustBe customerDetails.doesSchemeProvideBenefits
       }
 
       "we have a valid scheme established country" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.schemeEstablishedCountry mustBe customerDetails.schemeEstablishedCountry
       }
 
       "we have a invalid bank account as false" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.haveInvalidBank mustBe customerDetails.haveInvalidBank
       }
 
       "we have benefits insurer" that {
         "is with valid insurance company name but no policy number" in {
-          val json = dataJson + ("benefitsInsurer" -> Json.obj(
+          val json = jsObject + ("benefitsInsurer" -> Json.obj(
             "companyName" -> "my insurance company"))
-          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          val result = json.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
           result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
           result.policyNumber mustBe None
         }
 
         "is with valid policy number but no company name" in {
-          val json = dataJson + ("benefitsInsurer" -> Json.obj(
+          val json = jsObject + ("benefitsInsurer" -> Json.obj(
             "policyNumber" -> "111"))
-          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          val result = json.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
           result.policyNumber mustBe customerDetails.policyNumber
           result.insuranceCompanyName mustBe None
         }
 
         "is with valid policy number and insurance company name" in {
-          val json = dataJson + ("benefitsInsurer" -> Json.obj(
+          val json = jsObject + ("benefitsInsurer" -> Json.obj(
             "companyName" -> "my insurance company",
             "policyNumber" -> "111"))
-          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          val result = json.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
           result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
           result.policyNumber mustBe customerDetails.policyNumber
         }
       }
 
       "we don't have benefits insurer" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.insuranceCompanyName mustBe customerDetails.copy(insuranceCompanyName = None, policyNumber = None).insuranceCompanyName
       }
 
       "we have benefits insurer address" in {
-        val result = (dataJson + ("insurerAddress" -> Json.obj(
+        val result = (jsObject + ("insurerAddress" -> Json.obj(
           "addressLine1" -> "ADDRESS LINE 1",
           "addressLine2" -> "ADDRESS LINE 2",
           "addressLine3" -> "ADDRESS LINE 3",
           "addressLine4" -> "ADDRESS LINE 4",
           "postcode" -> "ZZ1 1ZZ",
-          "country" -> "GB"))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+          "country" -> "GB"))).as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.insuranceCompanyAddress mustBe customerDetails.insuranceCompanyAddress
       }
 
       "we don't have benefits insurer address" in {
-        val result = dataJson.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+        val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.insuranceCompanyAddress mustBe None
       }
     }
   }
+
+
+  "Json Payload in hub disabled format containing Customer and scheme details" must {
+    behave like readsInvolvingSchemeNameOrTypeHubDisabled
+    behave like readsNotInvolvingSchemeNameOrType(dataJson, CustomerAndSchemeDetails.apiReads)
+  }
+
+  "Json Payload in hub enabled format containing Customer and scheme details" must {
+    behave like readsInvolvingSchemeNameOrTypeHubEnabled
+    behave like readsNotInvolvingSchemeNameOrType(dataJsonHub, CustomerAndSchemeDetails.apiReadsHub)
+  }
+
 }
 
 object CustomerAndSchemeDetailsReadsSpec {
