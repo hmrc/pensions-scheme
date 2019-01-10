@@ -81,9 +81,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   }
 
   private[service] def transformJsonToModel(json: JsValue): Either[BadRequestException, PensionsScheme] = {
-
-    println( "\n\nJSON:-\n" + json)
-
     val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] =
       if (featureSwitchManagementService.get(Toggles.enableHubV2)) {
         CustomerAndSchemeDetails.apiReadsHub
