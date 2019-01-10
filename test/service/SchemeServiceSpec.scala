@@ -19,6 +19,7 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import base.SpecBase
+import config.FeatureSwitchManagementService
 import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
 import models.{EstablisherDetails, PensionsScheme, _}
@@ -317,12 +318,17 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 }
 
 object SchemeServiceSpec extends SpecBase {
-
+  def featureSwitchManagementService(isHubEnabled:Boolean):FeatureSwitchManagementService = new FeatureSwitchManagementService {
+    override def change(name: String, newValue: Boolean): Boolean = false
+    override def get(name: String): Boolean = isHubEnabled
+    override def reset(name: String): Unit = ()
+  }
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(schemeConnector, barsConnector, auditService, appConfig)
+    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
+      schemeConnector, barsConnector, auditService, appConfig, featureSwitchManagementService(isHubEnabled = false))
   }
 
   def testFixture(): TestFixture = new TestFixture() {}

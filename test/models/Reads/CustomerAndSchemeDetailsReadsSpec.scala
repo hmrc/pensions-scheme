@@ -48,8 +48,6 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Group Life/Death" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
-            "isSchemeMasterTrust" -> false,
-            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "group"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
@@ -60,7 +58,6 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Body Corporate" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
-            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "corp"
             )))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
@@ -71,7 +68,6 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is Other with other Scheme structure" in {
           val result = (dataJson + ("schemeDetails" -> Json.obj(
             "schemeName" -> "test scheme name",
-            "isSchemeMasterTrust" -> false,
             "schemeType" -> Json.obj(
               "name" -> "other",
               "schemeTypeDetails" -> "other details"
@@ -215,7 +211,6 @@ object CustomerAndSchemeDetailsReadsSpec {
   val dataJson: JsObject = Json.obj(
     "schemeDetails" -> Json.obj(
       "schemeName" -> "test scheme name",
-      "isSchemeMasterTrust" -> false,
       "schemeType" -> Json.obj(
         "name" -> "single"
       )
@@ -237,3 +232,5 @@ object CustomerAndSchemeDetailsReadsSpec {
       Some("ADDRESS LINE 3"), Some("ADDRESS LINE 4"), "GB", "ZZ1 1ZZ")))
 
 }
+
+
