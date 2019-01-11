@@ -92,9 +92,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     }
 
   "transformJsonToModel" should "return a pensions scheme object given valid JSON when hub enabled" in {
-
     testFixtureHubEnabled().schemeService.transformJsonToModel(pensionsSchemeJsonHubEnabled) shouldBe a[Right[_, PensionsScheme]]
-
   }
 
     it should "return a BadRequestException if the JSON is invalid" in {
@@ -463,6 +461,8 @@ object SchemeServiceSpec extends SpecBase {
     "uKBankAccount" -> false,
     "declaration" -> false,
     "declarationDuties" -> true,
+    "insuranceCompanyName" -> "Test insurance company name",
+    "insurancePolicyNumber" -> "Test insurance policy number",
     "establishers" -> Json.arr(
       Json.obj(
         "establisherDetails" -> Json.obj(
