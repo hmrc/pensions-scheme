@@ -140,11 +140,12 @@ object CustomerAndSchemeDetails {
       (JsPath \ "securedBenefits").read[Boolean] and
       (JsPath \ "benefits").read[String] and
       (JsPath \ "schemeEstablishedCountry").read[String] and
-      (JsPath \ "benefitsInsurer").readNullable(insurerReads) and
+      (JsPath \ "insuranceCompanyName").readNullable[String] and
+      (JsPath \ "insurancePolicyNumber").readNullable[String] and
       (JsPath \ "insurerAddress").readNullable[Address]
     ) (
     (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
-     occupationalPension, securedBenefits, benefits, country, benefitsInsurer, insurerAddress) => {
+     occupationalPension, securedBenefits, benefits, country, insuranceCompanyName, insurancePolicyNumber, insurerAddress) => {
 
       val isMasterTrust = schemeType._1 == "master"
 
@@ -164,8 +165,8 @@ object CustomerAndSchemeDetails {
         doesSchemeProvideBenefits = Benefits.valueWithName(benefits),
         schemeEstablishedCountry = country,
         haveInvalidBank = false,
-        insuranceCompanyName = benefitsInsurer.flatMap(_._1),
-        policyNumber = benefitsInsurer.flatMap(_._2),
+        insuranceCompanyName = insuranceCompanyName,
+        policyNumber = insurancePolicyNumber,
         insuranceCompanyAddress = insurerAddress)
     }
   )
