@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,6 +92,20 @@ class PsaDetailsReadsSpec extends WordSpec with MustMatchers with OptionValues w
           val inputWithoutLastName = actualOutput - "firstName" - "middleName" - "lastName"
 
           inputWithoutLastName.as(PsaDetails.apiReads).individual mustBe None
+        }
+      }
+
+      "we have a relationship date" in {
+        forAll(psaDetailsGenerator(enforceProperty = true)) { actualOutput =>
+          actualOutput.as(PsaDetails.apiReads).relationshipDate mustBe (actualOutput \ "relationshipDate").asOpt[String]
+        }
+      }
+
+      "we don't have a relationship date" in {
+        forAll(psaDetailsGenerator(enforceProperty = true)) { actualOutput =>
+          val inputWithoutLastName = actualOutput - "relationshipDate"
+
+          inputWithoutLastName.as(PsaDetails.apiReads).relationshipDate mustBe None
         }
       }
     }

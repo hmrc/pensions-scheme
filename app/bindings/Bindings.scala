@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package bindings
 
 import play.api.inject.{Binding, Module}
+import bindings.provider.ApplicationCryptoProvider
 import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.crypto.ApplicationCrypto
 
@@ -24,7 +25,8 @@ class Bindings extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
 
     Seq(
-      bind[LoggerLike].toInstance(Logger)
+      bind[LoggerLike].toInstance(Logger),
+      bind[ApplicationCrypto].toProvider[ApplicationCryptoProvider]
     )
 
   }

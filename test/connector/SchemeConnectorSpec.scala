@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package connector
 
-import audit.AuditService
+import audit.{AuditService, SchemeDetailsAuditEvent}
 import audit.testdoubles.StubSuccessfulAuditService
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
@@ -47,6 +47,10 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
   import SchemeConnectorSpec._
 
+  override def beforeEach(): Unit = {
+    auditService.reset()
+    super.beforeEach()
+  }
   override protected def portConfigKey: String = "microservice.services.des-hod.port"
 
   override protected def bindings: Seq[GuiceableModule] =
@@ -217,7 +221,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(psaSchemeDetails.toString())
         )
     )
-    connector.getSchemeDetails(schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       response.right.value shouldBe psaSchemeDetailsSample
     }
   }
@@ -231,7 +235,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("INVALID_IDTYPE"))
         )
     )
-    connector.getSchemeDetails(schemeIdType, idNumber).map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_IDTYPE")
@@ -248,7 +252,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_SRN")
@@ -265,7 +269,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_PSTR")
@@ -282,7 +286,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_CORRELATIONID")
@@ -299,7 +303,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe BAD_REQUEST
         ex.message should include ("not valid")
@@ -314,7 +318,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("NOT_FOUND"))
         )
     )
-    connector.getSchemeDetails(schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       response.left.value shouldBe a[NotFoundException]
       response.left.value.message should include("NOT_FOUND")
     }
@@ -328,7 +332,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("FORBIDDEN"))
         )
     )
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe FORBIDDEN
         ex.message should include ("FORBIDDEN")
@@ -345,7 +349,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe INTERNAL_SERVER_ERROR
         ex.message should include("SERVER_ERROR")
@@ -353,6 +357,43 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     }
   }
 
+  it should "send audit event for successful response" in {
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(psaSchemeDetails.toString())
+        )
+    )
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { _ =>
+      auditService.verifySent(
+        SchemeDetailsAuditEvent(psaId, 200, Some(Json.toJson(psaSchemeDetails)))
+      ) shouldBe true
+    }
+  }
+
+  it should "send audit event for error response" in {
+
+    val expectedResponse = errorResponse("NOT_FOUND")
+
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          notFound
+            .withBody(expectedResponse)
+        )
+    )
+
+
+    //SchemeDetailsAuditEvent(test,404,Some({"code":"NOT_FOUND","reason":"Reason for NOT_FOUND"}))
+
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+      auditService.verifySent(
+        SchemeDetailsAuditEvent(psaId, 404, Some(Json.parse(expectedResponse)))
+      ) shouldBe true
+    }
+  }
 
   "SchemeConnector getCorrelationId" should "return the correct CorrelationId when the request Id is more than 32 characters" in {
     val requestId = Some("govuk-tax-4725c811-9251-4c06-9b8f-f1d84659b2dfe")

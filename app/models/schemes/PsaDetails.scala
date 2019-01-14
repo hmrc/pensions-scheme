@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import models.Name
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-
-case class PsaDetails(id: String, organisationOrPartnershipName: Option[String], individual: Option[Name])
+case class PsaDetails(id: String, organisationOrPartnershipName: Option[String], individual: Option[Name], relationshipDate: Option[String])
 
 object PsaDetails {
 
@@ -30,12 +29,14 @@ object PsaDetails {
       (JsPath \ "organizationOrPartnershipName").readNullable[String] and
       (JsPath \ "firstName").readNullable[String] and
       (JsPath \ "middleName").readNullable[String] and
-      (JsPath \ "lastName").readNullable[String]
+      (JsPath \ "lastName").readNullable[String] and
+      (JsPath \ "relationshipDate").readNullable[String]
     )((psaId,
        organizationOrPartnershipName,
        firstName,
        middleName,
-       lastName) => PsaDetails(psaId, organizationOrPartnershipName, getPsaIndividual(firstName, middleName, lastName)))
+       lastName,
+       relationshipDate) => PsaDetails(psaId, organizationOrPartnershipName, getPsaIndividual(firstName, middleName, lastName), relationshipDate))
 
   implicit val formats: OFormat[PsaDetails] = Json.format[PsaDetails]
 

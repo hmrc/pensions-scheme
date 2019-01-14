@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.BadRequestException
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -53,7 +53,8 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
 
     "return OK" when {
       "we retrieve whether if the psa is associated or not" in {
-        when(mockSchemeConnector.getSchemeDetails(Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+        when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
+          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
           Future.successful(Right(psaSchemeDetailsSample)))
 
         val result = associatedPsaController.isPsaAssociated()(fakeRequest)
@@ -62,7 +63,8 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       }
 
       "the psa we retrieve does not exist within the list of PSAs we receive from getSchemeDetails" in {
-        when(mockSchemeConnector.getSchemeDetails(Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+        when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
+          Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
           Future.successful(Right(psaSchemeDetailsSample)))
 
         val result = associatedPsaController.isPsaAssociated()(fakeRequest)
@@ -74,7 +76,8 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails" in {
         val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
 
-        when(mockSchemeConnector.getSchemeDetails(Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+        when(mockSchemeConnector.getSchemeDetails(Matchers.any(),
+          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
           Future.successful(Right(psaSchemeDetailsSample)))
 
         val result = associatedPsaController.isPsaAssociated()(request)
@@ -92,7 +95,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
-        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(),
+        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
           Matchers.any())(any(), any(), any())
       }
     }
@@ -104,7 +107,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
-        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(),
+        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
           Matchers.any())(any(), any(), any())
       }
     }
@@ -115,16 +118,18 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
-        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(),
+        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
           Matchers.any())(any(), any(), any())
       }
     }
 
     "we receive INVALID_IDTYPE returned from Des" in {
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
+        Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
-      val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(("psaId", psaIdNumber), ("schemeReferenceNumber", schemeReferenceNumber)))
+      val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/")
+        .withHeaders(("psaId", psaIdNumber), ("schemeReferenceNumber", schemeReferenceNumber)))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe errorResponse("INVALID_IDTYPE")

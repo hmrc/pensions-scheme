@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import reactivemongo.bson.{BSONDocument, BSONString}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 class MongoDiagnosticsController @Inject()(config: Configuration,
@@ -55,7 +56,7 @@ class MongoDiagnosticsController @Inject()(config: Configuration,
 
     val db = component.mongoConnector.db()
 
-    db.collectionNames flatMap {
+    db.collectionNames flatMap  {
       names =>
         Future.traverse(names) {
           name =>

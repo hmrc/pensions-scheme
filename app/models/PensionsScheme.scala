@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -158,10 +158,11 @@ object PensionSchemeDeclaration {
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
       (JsPath \ "declarationDormant").readNullable[String] and
       (JsPath \ "declarationDuties").read[Boolean] and
-      (JsPath \ "adviserDetails").readNullable[AdviserDetails] and
+      (JsPath \ "adviserName").readNullable[String] and
+      (JsPath \ "adviserEmail").readNullable[String] and
+      (JsPath \ "adviserPhone").readNullable[String] and
       (JsPath \ "adviserAddress").readNullable[Address]
-    ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserDetails, adviserAddress) => {
-
+    ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserName, adviserEmail, adviserPhone, adviserAddress) => {
 
     val basicDeclaration = PensionSchemeDeclaration(
       declaration,
@@ -199,13 +200,13 @@ object PensionSchemeDeclaration {
       else {
         dec.copy(
           box11 = Some(true),
-          pensionAdviserName = adviserDetails.map(_.adviserName),
+          pensionAdviserName = adviserName,
           addressAndContactDetails = {
-            (adviserDetails, adviserAddress) match {
-              case (Some(contact), Some(address)) =>
+            (adviserEmail, adviserPhone, adviserAddress) match {
+              case (Some(contactEmail), Some(contactPhone), Some(address)) =>
                 Some(AddressAndContactDetails(
                   address,
-                  ContactDetails(contact.phoneNumber, None, None, contact.emailAddress)
+                  ContactDetails(contactPhone, None, None, contactEmail)
                 ))
               case _ => None
             }

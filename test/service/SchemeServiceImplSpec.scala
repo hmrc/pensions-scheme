@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,7 +119,8 @@ class FakeSchemeConnector extends SchemeConnector {
                                             ec: ExecutionContext,
                                             request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
-  override def getSchemeDetails(schemeIdType: String,
+  override def getSchemeDetails(psaId: String,
+                                schemeIdType: String,
                                 idNumber: String
                                )(implicit headerCarrier: HeaderCarrier,
                                  ec: ExecutionContext,

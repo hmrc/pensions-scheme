@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector,
                                         cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
@@ -33,14 +33,15 @@ class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector,
     implicit request => {
       val idType = request.headers.get("schemeIdType")
       val id = request.headers.get("idNumber")
+      val idPsa = request.headers.get("PSAId")
 
-      (idType,id) match {
-        case (Some(schemeIdType),Some(idNumber)) =>
-          schemeConnector.getSchemeDetails(schemeIdType, idNumber).map {
+      (idType,id, idPsa) match {
+        case (Some(schemeIdType),Some(idNumber), Some(psaId)) =>
+          schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
             case Right(psaSchemeDetails) => Ok(Json.toJson(psaSchemeDetails))
             case Left(e) => result(e)
           }
-        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType or idNumber"))
+        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }
