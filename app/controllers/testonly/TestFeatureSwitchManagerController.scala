@@ -30,21 +30,21 @@ class TestFeatureSwitchManagerController @Inject()( fs: FeatureSwitchManagementS
   def toggleOn(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       val result = fs.change(featureSwitch, newValue = true)
-      Logger.debug(s"[Pensions-Scheme][ToggleOnSuccess] - ${featureSwitch}")
+      Logger.debug(s"[Pensions-Scheme][ToggleOnSuccess] - $featureSwitch")
       if (result) NoContent else ExpectationFailed
   }
 
   def toggleOff(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       val result = fs.change(featureSwitch, newValue = false)
-      Logger.debug(s"[Pensions-Scheme][ToggleOffSuccess] - ${featureSwitch}")
+      Logger.debug(s"[Pensions-Scheme][ToggleOffSuccess] - $featureSwitch")
       if (result) NoContent else ExpectationFailed
   }
 
   def reset(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       fs.reset(featureSwitch)
-      Logger.debug(s"[Pensions-Scheme][ToggleResetSuccess] - ${featureSwitch}")
+      Logger.debug(s"[Pensions-Scheme][ToggleResetSuccess] - $featureSwitch")
       NoContent
   }
 }
