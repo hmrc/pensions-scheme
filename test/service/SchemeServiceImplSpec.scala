@@ -19,6 +19,7 @@ package service
 import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
+import config.FeatureSwitchManagementService
 import connector.{BarsConnector, SchemeConnector}
 import models.Reads.schemes.SchemeDetailsStubData
 import models._
@@ -81,7 +82,17 @@ object SchemeServiceImplSpec extends SpecBase {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(schemeConnector, barsConnector, auditService, appConfig) {
+    def featureSwitchManagementService(isHubEnabled:Boolean):FeatureSwitchManagementService = new FeatureSwitchManagementService {
+      override def change(name: String, newValue: Boolean): Boolean = false
+      override def get(name: String): Boolean = isHubEnabled
+      override def reset(name: String): Unit = ()
+    }
+    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
+      schemeConnector,
+      barsConnector,
+      auditService,
+      appConfig,
+      featureSwitchManagementService(isHubEnabled = false)) {
       override def registerScheme(psaId: String, json: JsValue)
                                  (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
         throw new NotImplementedError()

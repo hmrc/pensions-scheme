@@ -18,7 +18,7 @@ package service
 
 import audit.{AuditService, SchemeList, SchemeSubscription, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
-import config.AppConfig
+import config.{AppConfig, FeatureSwitchManagementService}
 import connector.{BarsConnector, SchemeConnector}
 import models.PensionsScheme.pensionSchemeHaveInvalidBank
 import models.ReadsEstablisherDetails._
@@ -26,15 +26,17 @@ import models._
 import models.enumeration.SchemeType
 import play.api.Logger
 import play.api.http.Status
-import play.api.libs.json.{JsResult, JsResultException, JsValue, Json}
+import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
+import utils.Toggles
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector,
-                                  auditService: AuditService, appConfig: AppConfig) extends SchemeService {
+                                  auditService: AuditService, appConfig: AppConfig,
+                                  featureSwitchManagementService: FeatureSwitchManagementService) extends SchemeService {
 
   override def listOfSchemes(psaId: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
@@ -77,10 +79,23 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   }
 
   private[service] def transformJsonToModel(json: JsValue): Either[BadRequestException, PensionsScheme] = {
+    val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] =
+      if (featureSwitchManagementService.get(Toggles.enableHubV2)) {
+        CustomerAndSchemeDetails.apiReadsHub
+      } else {
+        CustomerAndSchemeDetails.apiReads
+      }
+
+    val readsDeclaration =
+      if (featureSwitchManagementService.get(Toggles.enableHubV2)) {
+        PensionSchemeDeclaration.apiReadsHub
+      } else {
+        PensionSchemeDeclaration.apiReads
+      }
 
     val result = for {
-      customerAndScheme <- json.validate[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
-      declaration <- json.validate[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+      customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
+      declaration <- json.validate[PensionSchemeDeclaration](readsDeclaration)
       establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
     } yield {

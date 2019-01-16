@@ -128,6 +128,48 @@ object CustomerAndSchemeDetails {
         insuranceCompanyAddress = insurerAddress)
     }
   )
+
+  def apiReadsHub: Reads[CustomerAndSchemeDetails] = (
+    (JsPath \ "schemeName").read[String] and
+      (JsPath \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
+      (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
+      (JsPath \ "membership").read[String] and
+      (JsPath \ "membershipFuture").read[String] and
+      (JsPath \ "investmentRegulated").read[Boolean] and
+      (JsPath \ "occupationalPensionScheme").read[Boolean] and
+      (JsPath \ "securedBenefits").read[Boolean] and
+      (JsPath \ "benefits").read[String] and
+      (JsPath \ "schemeEstablishedCountry").read[String] and
+      (JsPath \ "insuranceCompanyName").readNullable[String] and
+      (JsPath \ "insurancePolicyNumber").readNullable[String] and
+      (JsPath \ "insurerAddress").readNullable[Address]
+    ) (
+    (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
+     occupationalPension, securedBenefits, benefits, country, insuranceCompanyName, insurancePolicyNumber, insurerAddress) => {
+
+      val isMasterTrust = schemeType._1 == "master"
+
+      val schemeTypeName = if (isMasterTrust) None else Some(SchemeType.valueWithName(schemeType._1))
+
+      CustomerAndSchemeDetails(
+        schemeName = name,
+        isSchemeMasterTrust = isMasterTrust,
+        schemeStructure = schemeTypeName,
+        otherSchemeStructure = schemeType._2,
+        haveMoreThanTenTrustee = moreThanTenTrustees,
+        currentSchemeMembers = SchemeMembers.valueWithName(membership),
+        futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),
+        isReguledSchemeInvestment = investmentRegulated,
+        isOccupationalPensionScheme = occupationalPension,
+        areBenefitsSecuredContractInsuranceCompany = securedBenefits,
+        doesSchemeProvideBenefits = Benefits.valueWithName(benefits),
+        schemeEstablishedCountry = country,
+        haveInvalidBank = false,
+        insuranceCompanyName = insuranceCompanyName,
+        policyNumber = insurancePolicyNumber,
+        insuranceCompanyAddress = insurerAddress)
+    }
+  )
 }
 
 case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber: String)
@@ -156,6 +198,73 @@ object PensionSchemeDeclaration {
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
       (JsPath \ "schemeDetails" \ "schemeType" \ "name").read[String] and
+      (JsPath \ "declarationDormant").readNullable[String] and
+      (JsPath \ "declarationDuties").read[Boolean] and
+      (JsPath \ "adviserName").readNullable[String] and
+      (JsPath \ "adviserEmail").readNullable[String] and
+      (JsPath \ "adviserPhone").readNullable[String] and
+      (JsPath \ "adviserAddress").readNullable[Address]
+    ) ((declaration, schemeTypeName, declarationDormant, declarationDuties, adviserName, adviserEmail, adviserPhone, adviserAddress) => {
+
+    val basicDeclaration = PensionSchemeDeclaration(
+      declaration,
+      declaration,
+      None, None, None,
+      declaration,
+      declaration,
+      declaration,
+      declaration,
+      None, None,
+      None)
+
+    val dormant = (dec: PensionSchemeDeclaration) => {
+      declarationDormant.fold(dec)(value => {
+        if (value == "no") {
+          dec.copy(box4 = Some(true))
+        } else {
+          dec.copy(box5 = Some(true))
+        }
+      }
+      )
+    }
+
+    val isMasterTrust = (dec: PensionSchemeDeclaration) => {
+      if (schemeTypeName == "master")
+        dec.copy(box3 = Some(true))
+      else
+        dec
+    }
+    val decDuties = (dec: PensionSchemeDeclaration) => {
+
+      if (declarationDuties) {
+        dec.copy(box10 = Some(true))
+      }
+      else {
+        dec.copy(
+          box11 = Some(true),
+          pensionAdviserName = adviserName,
+          addressAndContactDetails = {
+            (adviserEmail, adviserPhone, adviserAddress) match {
+              case (Some(contactEmail), Some(contactPhone), Some(address)) =>
+                Some(AddressAndContactDetails(
+                  address,
+                  ContactDetails(contactPhone, None, None, contactEmail)
+                ))
+              case _ => None
+            }
+          }
+        )
+      }
+
+    }
+
+    val completedDeclaration = dormant andThen isMasterTrust andThen decDuties
+    completedDeclaration(basicDeclaration)
+  })
+
+  val apiReadsHub: Reads[PensionSchemeDeclaration] = (
+    (JsPath \ "declaration").read[Boolean] and
+      (JsPath \ "schemeType" \ "name").read[String] and
       (JsPath \ "declarationDormant").readNullable[String] and
       (JsPath \ "declarationDuties").read[Boolean] and
       (JsPath \ "adviserName").readNullable[String] and

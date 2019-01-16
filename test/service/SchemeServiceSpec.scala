@@ -19,6 +19,7 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import base.SpecBase
+import config.FeatureSwitchManagementService
 import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
 import models.{EstablisherDetails, PensionsScheme, _}
@@ -48,284 +49,302 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   }
 
-  it should "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
+    it should "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
 
-    val account = bankAccount(notInvalidAccountNumber)
+      val account = bankAccount(notInvalidAccountNumber)
 
-    testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
-      scheme =>
-        scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
+      testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
+        scheme =>
+          scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
+      }
+
     }
 
-  }
+    it should "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
 
-  it should "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
+      testFixture().schemeService.haveInvalidBank(None, pensionsScheme, psaId).map {
+        scheme =>
+          scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
+      }
 
-    testFixture().schemeService.haveInvalidBank(None, pensionsScheme, psaId).map {
-      scheme =>
-        scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
     }
 
-  }
+    "readBankAccount" should "return a bank account where it exists in json" in {
 
-  "readBankAccount" should "return a bank account where it exists in json" in {
+      val json = bankDetailsJson(notInvalidAccountNumber)
 
-    val json = bankDetailsJson(notInvalidAccountNumber)
+      val actual = testFixture().schemeService.readBankAccount(json)
+      actual shouldBe Right(Some(bankAccount(notInvalidAccountNumber)))
 
-    val actual = testFixture().schemeService.readBankAccount(json)
-    actual shouldBe Right(Some(bankAccount(notInvalidAccountNumber)))
-
-  }
-
-  it should "return None where no account exists in json" in {
-
-    val actual = testFixture().schemeService.readBankAccount(Json.obj())
-    actual shouldBe Right(None)
-
-  }
-
-  "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
-
-    testFixture().schemeService.transformJsonToModel(pensionsSchemeJson) shouldBe a[Right[_, PensionsScheme]]
-
-  }
-
-  it should "return a BadRequestException if the JSON is invalid" in {
-
-    testFixture().schemeService.transformJsonToModel(Json.obj()) shouldBe a[Left[BadRequestException, _]]
-
-  }
-
-  "registerScheme" should "return the result of submitting the pensions scheme" in {
-
-    testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
-      response =>
-        response.status shouldBe Status.OK
-        val json = Json.parse(response.body)
-        json.validate[SchemeRegistrationResponse] shouldBe JsSuccess(schemeRegistrationResponse)
     }
 
-  }
+    it should "return None where no account exists in json" in {
 
-  it should "send a SchemeSubscription audit event following a successful submission" in {
+      val actual = testFixture().schemeService.readBankAccount(Json.obj())
+      actual shouldBe Right(None)
 
-    val fixture = testFixture()
-
-    fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
-      httpResponse =>
-        val expected = schemeSubscription.copy(
-          hasIndividualEstablisher = true,
-          status = Status.OK,
-          request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
-          response = Some(httpResponse.json)
-        )
-
-        fixture.auditService.lastEvent shouldBe Some(expected)
     }
 
+    "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
+
+      testFixture().schemeService.transformJsonToModel(pensionsSchemeJson) shouldBe a[Right[_, PensionsScheme]]
+
+    }
+
+  "transformJsonToModel" should "return a pensions scheme object given valid JSON when hub enabled" in {
+    testFixtureHubEnabled().schemeService.transformJsonToModel(pensionsSchemeJsonHubEnabled) shouldBe a[Right[_, PensionsScheme]]
   }
 
-  it should "not send a SchemeSubscription audit event following an unsuccessful submission" in {
+    it should "return a BadRequestException if the JSON is invalid" in {
 
-    val fixture = testFixture()
+      testFixture().schemeService.transformJsonToModel(Json.obj()) shouldBe a[Left[BadRequestException, _]]
 
-    fixture.schemeConnector.setRegisterSchemeResponse(Future.failed(new BadRequestException("bad request")))
+    }
 
-    fixture.schemeService.registerScheme(psaId, pensionsSchemeJson)
-      .map(_ => fail("Expected failure"))
-      .recover {
-        case _: BadRequestException =>
+    "registerScheme" should "return the result of submitting the pensions scheme" in {
+
+      testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+        response =>
+          response.status shouldBe Status.OK
+          val json = Json.parse(response.body)
+          json.validate[SchemeRegistrationResponse] shouldBe JsSuccess(schemeRegistrationResponse)
+      }
+
+    }
+
+    it should "send a SchemeSubscription audit event following a successful submission" in {
+
+      val fixture = testFixture()
+
+      fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+        httpResponse =>
           val expected = schemeSubscription.copy(
             hasIndividualEstablisher = true,
-            status = Status.BAD_REQUEST,
+            status = Status.OK,
             request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
-            response = None
+            response = Some(httpResponse.json)
           )
 
           fixture.auditService.lastEvent shouldBe Some(expected)
       }
 
-  }
+    }
 
-  "translateSchemeSubscriptionEvent" should "translate a master trust scheme" in {
+    it should "not send a SchemeSubscription audit event following an unsuccessful submission" in {
 
-    val scheme = PensionsSchemeIsSchemeMasterTrust.set(pensionsScheme, true)
+      val fixture = testFixture()
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      fixture.schemeConnector.setRegisterSchemeResponse(Future.failed(new BadRequestException("bad request")))
 
-    val expected = schemeSubscription.copy(
-      schemeType = Some(AuditSchemeType.masterTrust),
-      request = Json.toJson(scheme)
-    )
+      fixture.schemeService.registerScheme(psaId, pensionsSchemeJson)
+        .map(_ => fail("Expected failure"))
+        .recover {
+          case _: BadRequestException =>
+            val expected = schemeSubscription.copy(
+              hasIndividualEstablisher = true,
+              status = Status.BAD_REQUEST,
+              request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
+              response = None
+            )
 
-    actual shouldBe expected
+            fixture.auditService.lastEvent shouldBe Some(expected)
+        }
 
-  }
+    }
 
-  it should "translate a single trust scheme" in {
+    "translateSchemeSubscriptionEvent" should "translate a master trust scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.single.value))
+      val scheme = PensionsSchemeIsSchemeMasterTrust.set(pensionsScheme, true)
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        schemeType = Some(AuditSchemeType.masterTrust),
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
-  it should "translate a group Life/Death scheme" in {
+    it should "translate a single trust scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.group.value))
+      val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.single.value))
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      schemeType = Some(AuditSchemeType.groupLifeDeath),
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
-  it should "translate a body corporate scheme" in {
+    it should "translate a group Life/Death scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.corp.value))
+      val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.group.value))
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      schemeType = Some(AuditSchemeType.bodyCorporate),
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        schemeType = Some(AuditSchemeType.groupLifeDeath),
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
-  it should "translate an 'other' scheme" in {
+    it should "translate a body corporate scheme" in {
 
-    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.other.value))
+      val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.corp.value))
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      schemeType = Some(AuditSchemeType.other),
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        schemeType = Some(AuditSchemeType.bodyCorporate),
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
-  it should "translate a scheme with individual establishers" in {
+    it should "translate an 'other' scheme" in {
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Nil,
-            individual = Seq(IndividualBuilder().build()),
-            partnership = Nil
+      val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.other.value))
+
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+      val expected = schemeSubscription.copy(
+        schemeType = Some(AuditSchemeType.other),
+        request = Json.toJson(scheme)
+      )
+
+      actual shouldBe expected
+
+    }
+
+    it should "translate a scheme with individual establishers" in {
+
+      val scheme =
+        PensionsSchemeSchemeStructure
+          .set(pensionsScheme, Some(SchemeType.single.value))
+          .copy(establisherDetails =
+            EstablisherDetails(
+              companyOrOrganization = Nil,
+              individual = Seq(IndividualBuilder().build()),
+              partnership = Nil
+            )
           )
-        )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      hasIndividualEstablisher = true,
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        hasIndividualEstablisher = true,
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
-  it should "translate a scheme with company establishers" in {
+    it should "translate a scheme with company establishers" in {
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Seq(CompanyEstablisherBuilder().build()),
-            individual = Nil,
-            partnership = Nil
+      val scheme =
+        PensionsSchemeSchemeStructure
+          .set(pensionsScheme, Some(SchemeType.single.value))
+          .copy(establisherDetails =
+            EstablisherDetails(
+              companyOrOrganization = Seq(CompanyEstablisherBuilder().build()),
+              individual = Nil,
+              partnership = Nil
+            )
           )
-        )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      hasCompanyEstablisher = true,
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        hasCompanyEstablisher = true,
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
-  it should "translate a scheme with partnership establishers" in {
+    it should "translate a scheme with partnership establishers" in {
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Nil,
-            individual = Nil,
-            partnership = Seq(PartnershipBuilder().build())
+      val scheme =
+        PensionsSchemeSchemeStructure
+          .set(pensionsScheme, Some(SchemeType.single.value))
+          .copy(establisherDetails =
+            EstablisherDetails(
+              companyOrOrganization = Nil,
+              individual = Nil,
+              partnership = Seq(PartnershipBuilder().build())
+            )
           )
-        )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      hasPartnershipEstablisher = true,
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        hasPartnershipEstablisher = true,
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
-  it should "translate a scheme with dormant company, bank details, and invalid bank details" in {
+    it should "translate a scheme with dormant company, bank details, and invalid bank details" in {
 
-    val scheme = pensionsScheme.copy(
-      customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = true),
-      pensionSchemeDeclaration = pensionsScheme.pensionSchemeDeclaration.copy(box5 = Some(true))
-    )
+      val scheme = pensionsScheme.copy(
+        customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = true),
+        pensionSchemeDeclaration = pensionsScheme.pensionSchemeDeclaration.copy(box5 = Some(true))
+      )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, true, Status.OK, None)
+      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, true, Status.OK, None)
 
-    val expected = schemeSubscription.copy(
-      schemeType = Some(AuditSchemeType.singleTrust),
-      hasDormantCompany = true,
-      hasBankDetails = true,
-      hasValidBankDetails = false,
-      request = Json.toJson(scheme)
-    )
+      val expected = schemeSubscription.copy(
+        schemeType = Some(AuditSchemeType.singleTrust),
+        hasDormantCompany = true,
+        hasBankDetails = true,
+        hasValidBankDetails = false,
+        request = Json.toJson(scheme)
+      )
 
-    actual shouldBe expected
+      actual shouldBe expected
 
-  }
+    }
 
 }
 
 object SchemeServiceSpec extends SpecBase {
+  def featureSwitchManagementService(isHubEnabled: Boolean): FeatureSwitchManagementService = new FeatureSwitchManagementService {
+    override def change(name: String, newValue: Boolean): Boolean = false
+
+    override def get(name: String): Boolean = isHubEnabled
+
+    override def reset(name: String): Unit = ()
+  }
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(schemeConnector, barsConnector, auditService, appConfig)
+    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
+      schemeConnector, barsConnector, auditService, appConfig, featureSwitchManagementService(isHubEnabled = false))
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
+
+  def testFixtureHubEnabled(): TestFixture = new TestFixture() {
+    override val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
+      schemeConnector, barsConnector, auditService, appConfig, featureSwitchManagementService(isHubEnabled = true))
+
+  }
 
   val psaId: String = "test-psa-id"
   val invalidAccountNumber: String = "111"
@@ -404,6 +423,46 @@ object SchemeServiceSpec extends SpecBase {
     "uKBankAccount" -> false,
     "declaration" -> false,
     "declarationDuties" -> true,
+    "establishers" -> Json.arr(
+      Json.obj(
+        "establisherDetails" -> Json.obj(
+          "firstName" -> "test-first-name",
+          "lastName" -> "test-last-name",
+          "date" -> "1969-07-20"
+        ),
+        "contactDetails" -> Json.obj(
+          "emailAddress" -> "test-email-address",
+          "phoneNumber" -> "test-phone-number"
+        ),
+        "uniqueTaxReference" -> Json.obj(),
+        "address" -> Json.obj(
+          "addressLine1" -> "test-address-line-1",
+          "country" -> "test-country"
+        ),
+        "addressYears" -> "test-address-years",
+        "establisherNino" -> Json.obj()
+      )
+    )
+  )
+
+  val pensionsSchemeJsonHubEnabled: JsValue = Json.obj(
+    "schemeName" -> "test-scheme-name",
+    "isSchemeMasterTrust" -> false,
+    "schemeType" -> Json.obj(
+      "name" -> SchemeType.single.name
+    ),
+    "membership" -> "opt1",
+    "membershipFuture" -> "opt1",
+    "investmentRegulated" -> false,
+    "occupationalPensionScheme" -> false,
+    "securedBenefits" -> false,
+    "benefits" -> "opt1",
+    "schemeEstablishedCountry" -> "test-scheme-established-country",
+    "uKBankAccount" -> false,
+    "declaration" -> false,
+    "declarationDuties" -> true,
+    "insuranceCompanyName" -> "Test insurance company name",
+    "insurancePolicyNumber" -> "Test insurance policy number",
     "establishers" -> Json.arr(
       Json.obj(
         "establisherDetails" -> Json.obj(
