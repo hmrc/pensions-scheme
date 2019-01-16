@@ -25,7 +25,7 @@ import scala.concurrent.ExecutionContext
 class SchemeJourneyCacheRepository @Inject()(
                                               config: Configuration,
                                               component: ReactiveMongoComponent
-                                            )(implicit val ec: ExecutionContext) extends PensionsSchemeCacheRepository(
+                                            )(implicit val executionContext: ExecutionContext) extends PensionsSchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.scheme-journey.name"),
   Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-journey.timeToLiveInSeconds")),
   component,

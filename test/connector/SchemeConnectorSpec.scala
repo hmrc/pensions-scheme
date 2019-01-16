@@ -34,6 +34,7 @@ import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http._
 import utils.{StubLogger, WireMockHelper}
+import play.api.libs.json.JodaWrites._
 
 class SchemeConnectorSpec extends AsyncFlatSpec
   with Matchers

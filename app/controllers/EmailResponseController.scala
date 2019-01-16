@@ -21,19 +21,20 @@ import com.google.inject.Inject
 import models.{EmailEvents, Opened}
 import play.api.Logger
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, BodyParsers, Result}
+import play.api.mvc._
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted}
 import uk.gov.hmrc.domain.PsaId
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import scala.concurrent.ExecutionContext
 
 class EmailResponseController @Inject()(
                                          auditService: AuditService,
-                                         crypto: ApplicationCrypto
-                                       )(implicit val ec: ExecutionContext) extends BaseController {
+                                         crypto: ApplicationCrypto,
+                                         cc: ControllerComponents,
+                                         parsers: PlayBodyParsers
+                                       )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def retrieveStatus(id: String): Action[JsValue] = Action(BodyParsers.parse.tolerantJson) {
+  def retrieveStatus(id: String): Action[JsValue] = Action(parsers.tolerantJson) {
     implicit request =>
       validatePsaId(id) match {
         case Right(psaId) =>

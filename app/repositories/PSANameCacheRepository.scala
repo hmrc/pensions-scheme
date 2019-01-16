@@ -25,7 +25,7 @@ import scala.concurrent.ExecutionContext
 class PSANameCacheRepository @Inject()(
                                         config: Configuration,
                                         component: ReactiveMongoComponent
-                                      )(implicit val ec: ExecutionContext) extends PensionsSchemeCacheRepository(
+                                      )(implicit val executionContext: ExecutionContext) extends PensionsSchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.psa-name.name"),
   None,
   component,

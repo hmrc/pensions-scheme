@@ -20,6 +20,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class FeatureSwitchManagementServiceSpec extends PlaySpec {
 
@@ -32,13 +33,14 @@ class FeatureSwitchManagementServiceSpec extends PlaySpec {
 
   private val config = injectorWithToggleOn.instanceOf[Configuration]
   private val environment = injectorWithToggleOn.instanceOf[Environment]
+  private val servicesConfig = injectorWithToggleOn.instanceOf[ServicesConfig]
 
   "Feature Switch Management Service " when {
     "dynamic switch is disabled" must {
 
       "get the feature toggle value from the config" in {
         val fs = new FeatureSwitchManagementServiceProductionImpl(
-          config, environment
+          config, environment, servicesConfig
         )
         fs.get("is-hub-enabled") mustEqual true
       }
@@ -46,7 +48,8 @@ class FeatureSwitchManagementServiceSpec extends PlaySpec {
       "change will get the changed feature toggle value from the config" in {
         val fs = new FeatureSwitchManagementServiceProductionImpl(
           injector(false).instanceOf[Configuration],
-          injector(false).instanceOf[Environment]
+          injector(false).instanceOf[Environment],
+          injector(isHubEnabled = false).instanceOf[ServicesConfig]
         )
 
         fs.change("is-hub-enabled", newValue = false) mustEqual false

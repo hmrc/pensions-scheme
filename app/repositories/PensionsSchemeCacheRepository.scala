@@ -38,7 +38,7 @@ abstract class PensionsSchemeCacheRepository(
                                               component: ReactiveMongoComponent,
                                               encryptionKey: String,
                                               config: Configuration
-                                            )(implicit ec: ExecutionContext) extends ReactiveRepository[JsValue, BSONObjectID](
+                                            )(implicit val ec: ExecutionContext) extends ReactiveRepository[JsValue, BSONObjectID](
   index,
   component.mongoConnector.db,
   implicitly
@@ -46,7 +46,7 @@ abstract class PensionsSchemeCacheRepository(
 
   private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
 
-  private val encrypted: Boolean = config.getBoolean("encrypted").getOrElse(true)
+  private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
   private case class DataEntry(
                                 id: String,
@@ -108,7 +108,6 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   private def ensureIndex(field: String, indexName: String, ttl: Option[Int]): Future[Boolean] = {
-
     val defaultIndex: Index = Index(Seq((field, IndexType.Ascending)), Some(indexName))
 
     val index: Index = ttl.fold(defaultIndex) { ttl =>
@@ -132,7 +131,6 @@ abstract class PensionsSchemeCacheRepository(
   }
 
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
-
     val document: JsValue = {
       if (encrypted) {
         val unencrypted = PlainText(Json.stringify(data))
@@ -189,7 +187,7 @@ abstract class PensionsSchemeCacheRepository(
   def remove(id: String)(implicit ec: ExecutionContext): Future[Boolean] = {
     Logger.warn(s"Removing row from collection ${collection.name} externalId:$id")
     val selector = BSONDocument("id" -> id)
-    collection.remove(selector).map(_.ok)
+    collection.delete().one(selector).map(_.ok)
   }
 
   def dropCollection()(implicit ec: ExecutionContext): Future[Unit] = {

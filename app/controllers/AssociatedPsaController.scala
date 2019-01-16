@@ -22,13 +22,14 @@ import connector.SchemeConnector
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
-class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector)(implicit val ec: ExecutionContext)
-  extends BaseController with ErrorHandler {
+class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
+                                        cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
   def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
       val psaId = request.headers.get("psaId")

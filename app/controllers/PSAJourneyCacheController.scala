@@ -18,6 +18,7 @@ package controllers
 
 import com.google.inject.Inject
 import play.api.Configuration
+import play.api.mvc.ControllerComponents
 import repositories.PSAJourneyCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 import scala.concurrent.ExecutionContext
@@ -25,5 +26,6 @@ import scala.concurrent.ExecutionContext
 class PSAJourneyCacheController @Inject()(
                                            config: Configuration,
                                            repository: PSAJourneyCacheRepository,
-                                           authConnector: AuthConnector
-                                         )(implicit ec: ExecutionContext) extends PensionsSchemeCacheController(config, repository, authConnector)
+                                           authConnector: AuthConnector,
+                                           cc: ControllerComponents
+                                         )(implicit ec: ExecutionContext) extends PensionsSchemeCacheController(config, repository, authConnector, cc)

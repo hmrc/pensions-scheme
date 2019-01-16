@@ -21,6 +21,7 @@ import config.FeatureSwitchManagementService
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import play.api.test.Helpers._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TestFeatureSwitchManagerControllerSpec extends SpecBase with MockitoSugar {
@@ -29,7 +30,7 @@ class TestFeatureSwitchManagerControllerSpec extends SpecBase with MockitoSugar 
 
   def controller: TestFeatureSwitchManagerController =
     new TestFeatureSwitchManagerController(
-      fakeFeatureSwitchManagerService
+      fakeFeatureSwitchManagerService,stubControllerComponents()
     )
 
   "TestFeatureSwitchManager Controller" when {

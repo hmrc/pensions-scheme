@@ -19,32 +19,32 @@ package controllers.testonly
 import com.google.inject.Inject
 import config.FeatureSwitchManagementService
 import play.api.Logger
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.play.bootstrap.controller.FrontendController
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
-class TestFeatureSwitchManagerController @Inject()(
-                                                    fs: FeatureSwitchManagementService)(implicit val ec: ExecutionContext) extends FrontendController {
+class TestFeatureSwitchManagerController @Inject()( fs: FeatureSwitchManagementService,
+                                                    cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {
 
   def toggleOn(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       val result = fs.change(featureSwitch, newValue = true)
-      Logger.debug(s"[Pensions-Scheme][ToggleOnSuccess] - ${featureSwitch}")
+      Logger.debug(s"[Pensions-Scheme][ToggleOnSuccess] - $featureSwitch")
       if (result) NoContent else ExpectationFailed
   }
 
   def toggleOff(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       val result = fs.change(featureSwitch, newValue = false)
-      Logger.debug(s"[Pensions-Scheme][ToggleOffSuccess] - ${featureSwitch}")
+      Logger.debug(s"[Pensions-Scheme][ToggleOffSuccess] - $featureSwitch")
       if (result) NoContent else ExpectationFailed
   }
 
   def reset(featureSwitch: String): Action[AnyContent] = Action {
     implicit request =>
       fs.reset(featureSwitch)
-      Logger.debug(s"[Pensions-Scheme][ToggleResetSuccess] - ${featureSwitch}")
+      Logger.debug(s"[Pensions-Scheme][ToggleResetSuccess] - $featureSwitch")
       NoContent
   }
 }

@@ -16,13 +16,14 @@
 
 package bindings
 
-import bindings.provider.ApplicationCryptoProvider
 import play.api.inject.{Binding, Module}
+import bindings.provider.ApplicationCryptoProvider
 import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.crypto.ApplicationCrypto
 
 class Bindings extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
+
     Seq(
       bind[LoggerLike].toInstance(Logger),
       bind[ApplicationCrypto].toProvider[ApplicationCryptoProvider]
