@@ -19,7 +19,6 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
 import base.SpecBase
-import config.FeatureSwitchManagementService
 import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
 import models.{EstablisherDetails, PensionsScheme, _}
@@ -90,10 +89,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
       testFixture().schemeService.transformJsonToModel(pensionsSchemeJson) shouldBe a[Right[_, PensionsScheme]]
 
     }
-
-  "transformJsonToModel" should "return a pensions scheme object given valid JSON when hub enabled" in {
-    testFixtureHubEnabled().schemeService.transformJsonToModel(pensionsSchemeJsonHubEnabled) shouldBe a[Right[_, PensionsScheme]]
-  }
 
     it should "return a BadRequestException if the JSON is invalid" in {
 
@@ -322,27 +317,20 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 }
 
 object SchemeServiceSpec extends SpecBase {
-  def featureSwitchManagementService(isHubEnabled: Boolean): FeatureSwitchManagementService = new FeatureSwitchManagementService {
-    override def change(name: String, newValue: Boolean): Boolean = false
-
-    override def get(name: String): Boolean = isHubEnabled
-
-    override def reset(name: String): Unit = ()
-  }
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, featureSwitchManagementService(isHubEnabled = false))
+      schemeConnector, barsConnector, auditService, appConfig)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
 
   def testFixtureHubEnabled(): TestFixture = new TestFixture() {
     override val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, featureSwitchManagementService(isHubEnabled = true))
+      schemeConnector, barsConnector, auditService, appConfig)
 
   }
 
@@ -406,46 +394,6 @@ object SchemeServiceSpec extends SpecBase {
   )
 
   val pensionsSchemeJson: JsValue = Json.obj(
-    "schemeDetails" -> Json.obj(
-      "schemeName" -> "test-scheme-name",
-      "isSchemeMasterTrust" -> false,
-      "schemeType" -> Json.obj(
-        "name" -> SchemeType.single.name
-      )
-    ),
-    "membership" -> "opt1",
-    "membershipFuture" -> "opt1",
-    "investmentRegulated" -> false,
-    "occupationalPensionScheme" -> false,
-    "securedBenefits" -> false,
-    "benefits" -> "opt1",
-    "schemeEstablishedCountry" -> "test-scheme-established-country",
-    "uKBankAccount" -> false,
-    "declaration" -> false,
-    "declarationDuties" -> true,
-    "establishers" -> Json.arr(
-      Json.obj(
-        "establisherDetails" -> Json.obj(
-          "firstName" -> "test-first-name",
-          "lastName" -> "test-last-name",
-          "date" -> "1969-07-20"
-        ),
-        "contactDetails" -> Json.obj(
-          "emailAddress" -> "test-email-address",
-          "phoneNumber" -> "test-phone-number"
-        ),
-        "uniqueTaxReference" -> Json.obj(),
-        "address" -> Json.obj(
-          "addressLine1" -> "test-address-line-1",
-          "country" -> "test-country"
-        ),
-        "addressYears" -> "test-address-years",
-        "establisherNino" -> Json.obj()
-      )
-    )
-  )
-
-  val pensionsSchemeJsonHubEnabled: JsValue = Json.obj(
     "schemeName" -> "test-scheme-name",
     "isSchemeMasterTrust" -> false,
     "schemeType" -> Json.obj(
