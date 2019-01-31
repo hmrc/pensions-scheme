@@ -328,12 +328,6 @@ object SchemeServiceSpec extends SpecBase {
 
   def testFixture(): TestFixture = new TestFixture() {}
 
-  def testFixtureHubEnabled(): TestFixture = new TestFixture() {
-    override val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig)
-
-  }
-
   val psaId: String = "test-psa-id"
   val invalidAccountNumber: String = "111"
   val notInvalidAccountNumber: String = "112"

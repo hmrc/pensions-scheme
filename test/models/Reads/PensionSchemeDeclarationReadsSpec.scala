@@ -18,7 +18,7 @@ package models.Reads
 
 import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsBoolean, JsString, Json}
+import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
 
 class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
   "A json payload containing declarations" should {
@@ -27,10 +27,8 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
       val declaration = Json.obj("declaration" -> JsBoolean(true),
         "declarationDormant" -> JsString("no"),
         "declarationDuties" -> JsBoolean(true),
-        "schemeDetails" -> Json.obj(
-          "schemeType" -> Json.obj(
-            "name" -> "trust"
-          )))
+        "schemeType" -> Json.obj("name" -> "trust")
+      )
 
       "We have a declaration field" when {
         "It is true then boxes 1,2,6 7,8 and 9 are true" in {
@@ -71,10 +69,8 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
         "box 4 and box 5 should be None" in {
           val result = Json.obj("declaration" -> JsBoolean(true),
             "declarationDuties" -> JsBoolean(true),
-            "schemeDetails" -> Json.obj(
-              "schemeType" -> Json.obj(
-                "name" -> "trust"
-              ))).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
+            "schemeType" -> Json.obj("name" -> "trust")
+          ).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
 
           result.box4 mustBe None
           result.box5 mustBe None
@@ -103,10 +99,8 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
             "adviserName" -> JsString("John"),
             "adviserEmail" -> "test@test.com",
             "adviserPhone" -> "07592113",
-            "schemeDetails" -> Json.obj(
-              "schemeType" -> Json.obj(
-                "name" -> "trust"
-              )))
+            "schemeType" -> Json.obj("name" -> "trust")
+          )
           val result = (declaration + adviserAddress).as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
 
           result.box10 mustBe None
@@ -128,11 +122,11 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
 
       "we have a isSchemeMasterTrust field" when {
         "set as true" in {
-          val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"),
-            "declarationDuties" -> JsBoolean(true), "schemeDetails" -> Json.obj(
-            "schemeType" -> Json.obj(
-              "name" -> "master"
-            )))
+          val declaration = Json.obj("declaration" -> JsBoolean(true),
+            "declarationDormant" -> JsString("no"),
+            "declarationDuties" -> JsBoolean(true),
+            "schemeType" -> Json.obj("name" -> "master")
+          )
 
           val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
           result.box3.value mustBe true
@@ -140,10 +134,9 @@ class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with 
 
         "set as None" in {
           val declaration = Json.obj("declaration" -> JsBoolean(true), "declarationDormant" -> JsString("no"),
-            "declarationDuties" -> JsBoolean(true), "schemeDetails" -> Json.obj(
-            "schemeType" -> Json.obj(
-              "name" -> "single"
-            )))
+            "declarationDuties" -> JsBoolean(true),
+            "schemeType" -> Json.obj("name" -> "trust")
+          )
           val result = declaration.as[PensionSchemeDeclaration](PensionSchemeDeclaration.apiReads)
           result.box3 mustBe None
         }
