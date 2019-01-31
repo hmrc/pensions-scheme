@@ -19,7 +19,6 @@ package service
 import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
 import base.SpecBase
-import config.FeatureSwitchManagementService
 import connector.{BarsConnector, SchemeConnector}
 import models.Reads.schemes.SchemeDetailsStubData
 import models._
@@ -29,21 +28,28 @@ import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
+import uk.gov.hmrc.http.{
+  BadRequestException,
+  HeaderCarrier,
+  HttpException,
+  HttpResponse
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers with EitherValues {
+class SchemeServiceImplSpec
+    extends AsyncFlatSpec
+    with Matchers
+    with EitherValues {
 
   import FakeSchemeConnector._
   import SchemeServiceImplSpec._
 
   "listOfSchemes" should "return the list of schemes from the connector" in {
 
-    testFixture().schemeService.listOfSchemes(psaId).map {
-      httpResponse =>
-        httpResponse.status shouldBe Status.OK
-        httpResponse.json shouldBe listOfSchemesJson
+    testFixture().schemeService.listOfSchemes(psaId).map { httpResponse =>
+      httpResponse.status shouldBe Status.OK
+      httpResponse.json shouldBe listOfSchemesJson
     }
 
   }
@@ -52,9 +58,9 @@ class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers with EitherValue
 
     val fixture = testFixture()
 
-    fixture.schemeService.listOfSchemes(psaId).map {
-      httpResponse =>
-        fixture.auditService.verifySent(SchemeList(psaId, Status.OK, Some(httpResponse.json))) shouldBe true
+    fixture.schemeService.listOfSchemes(psaId).map { httpResponse =>
+      fixture.auditService.verifySent(
+        SchemeList(psaId, Status.OK, Some(httpResponse.json))) shouldBe true
     }
 
   }
@@ -63,13 +69,16 @@ class SchemeServiceImplSpec extends AsyncFlatSpec with Matchers with EitherValue
 
     val fixture = testFixture()
 
-    fixture.schemeConnector.setListOfSchemesResponse(Future.failed(new BadRequestException("bad request")))
+    fixture.schemeConnector.setListOfSchemesResponse(
+      Future.failed(new BadRequestException("bad request")))
 
-    fixture.schemeService.listOfSchemes(psaId)
+    fixture.schemeService
+      .listOfSchemes(psaId)
       .map(_ => fail("Expected failure"))
       .recover {
         case _: BadRequestException =>
-          fixture.auditService.verifySent(SchemeList(psaId, Status.BAD_REQUEST, None)) shouldBe true
+          fixture.auditService.verifySent(
+            SchemeList(psaId, Status.BAD_REQUEST, None)) shouldBe true
       }
 
   }
@@ -82,19 +91,16 @@ object SchemeServiceImplSpec extends SpecBase {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-    def featureSwitchManagementService(isHubEnabled:Boolean):FeatureSwitchManagementService = new FeatureSwitchManagementService {
-      override def change(name: String, newValue: Boolean): Boolean = false
-      override def get(name: String): Boolean = isHubEnabled
-      override def reset(name: String): Unit = ()
-    }
+
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
       schemeConnector,
       barsConnector,
       auditService,
-      appConfig,
-      featureSwitchManagementService(isHubEnabled = false)) {
-      override def registerScheme(psaId: String, json: JsValue)
-                                 (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+      appConfig) {
+      override def registerScheme(psaId: String, json: JsValue)(
+          implicit headerCarrier: HeaderCarrier,
+          ec: ExecutionContext,
+          request: RequestHeader): Future[HttpResponse] = {
         throw new NotImplementedError()
       }
     }
@@ -103,7 +109,8 @@ object SchemeServiceImplSpec extends SpecBase {
   def testFixture(): TestFixture = new TestFixture {}
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("", "")
+  implicit val request: FakeRequest[AnyContentAsEmpty.type] =
+    FakeRequest("", "")
 
   val psaId: String = "test-psa-id"
 
@@ -113,37 +120,48 @@ class FakeSchemeConnector extends SchemeConnector {
 
   import FakeSchemeConnector._
 
-  private var registerSchemeResponse = Future.successful(HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
-  private var listOfSchemesResponse = Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))
+  private var registerSchemeResponse = Future.successful(
+    HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
+  private var listOfSchemesResponse =
+    Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))
 
-  def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit = this.registerSchemeResponse = response
+  def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit =
+    this.registerSchemeResponse = response
 
-  def setListOfSchemesResponse(response: Future[HttpResponse]): Unit = this.listOfSchemesResponse = response
+  def setListOfSchemesResponse(response: Future[HttpResponse]): Unit =
+    this.listOfSchemesResponse = response
 
-  override def registerScheme(psaId: String, registerData: JsValue)(implicit
-                                                                    headerCarrier: HeaderCarrier,
-                                                                    ec: ExecutionContext,
-                                                                    request: RequestHeader): Future[HttpResponse] = registerSchemeResponse
+  override def registerScheme(psaId: String, registerData: JsValue)(
+      implicit
+      headerCarrier: HeaderCarrier,
+      ec: ExecutionContext,
+      request: RequestHeader): Future[HttpResponse] = registerSchemeResponse
 
-  override def listOfSchemes(psaId: String)(implicit
-                                            headerCarrier: HeaderCarrier,
-                                            ec: ExecutionContext,
-                                            request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
+  override def listOfSchemes(psaId: String)(
+      implicit
+      headerCarrier: HeaderCarrier,
+      ec: ExecutionContext,
+      request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
   override def getSchemeDetails(psaId: String,
                                 schemeIdType: String,
-                                idNumber: String
-                               )(implicit headerCarrier: HeaderCarrier,
-                                 ec: ExecutionContext,
-                                 request: RequestHeader): Future[Either[HttpException,PsaSchemeDetails]] = validSchemeDetailsResponse
+                                idNumber: String)(
+      implicit headerCarrier: HeaderCarrier,
+      ec: ExecutionContext,
+      request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]] =
+    validSchemeDetailsResponse
 
-  override def getCorrelationId(requestId: Option[String]): String = "4725c81192514c069b8ff1d84659b2df"
+  override def getCorrelationId(requestId: Option[String]): String =
+    "4725c81192514c069b8ff1d84659b2df"
 }
 
 object FakeSchemeConnector extends SchemeDetailsStubData {
 
-  val schemeRegistrationResponse = SchemeRegistrationResponse("test-processing-date", "test-scheme-reference-number")
-  val schemeRegistrationResponseJson: JsValue = Json.toJson(schemeRegistrationResponse)
+  val schemeRegistrationResponse = SchemeRegistrationResponse(
+    "test-processing-date",
+    "test-scheme-reference-number")
+  val schemeRegistrationResponseJson: JsValue =
+    Json.toJson(schemeRegistrationResponse)
 
   val listOfSchemes: ListOfSchemes =
     ListOfSchemes(
@@ -154,19 +172,28 @@ object FakeSchemeConnector extends SchemeDetailsStubData {
 
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
 
-  private val validSchemeDetailsResponse = Future.successful(Right(psaSchemeDetailsSample))
+  private val validSchemeDetailsResponse =
+    Future.successful(Right(psaSchemeDetailsSample))
 }
 
 class FakeBarsConnector extends BarsConnector {
 
   import SchemeServiceSpec._
 
-  override def invalidBankAccount(bankAccount: BankAccount, psaId: String)
-                                 (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean] = {
+  override def invalidBankAccount(bankAccount: BankAccount, psaId: String)(
+      implicit ec: ExecutionContext,
+      hc: HeaderCarrier,
+      rh: RequestHeader): Future[Boolean] = {
     bankAccount match {
-      case BankAccount(_, accountNumber) if accountNumber == invalidAccountNumber => Future.successful(true)
-      case BankAccount(_, accountNumber) if accountNumber == notInvalidAccountNumber => Future.successful(false)
-      case _ => throw new IllegalArgumentException(s"No stub behaviour for bank account: $bankAccount")
+      case BankAccount(_, accountNumber)
+          if accountNumber == invalidAccountNumber =>
+        Future.successful(true)
+      case BankAccount(_, accountNumber)
+          if accountNumber == notInvalidAccountNumber =>
+        Future.successful(false)
+      case _ =>
+        throw new IllegalArgumentException(
+          s"No stub behaviour for bank account: $bankAccount")
     }
   }
 
