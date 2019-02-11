@@ -24,7 +24,7 @@ import models.enumeration.SchemeType
 import models.{EstablisherDetails, PensionsScheme, _}
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import play.api.http.Status
-import play.api.libs.json.{Format, JsSuccess, JsValue, Json}
+import play.api.libs.json._
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
@@ -91,7 +91,9 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     }
 
     it should "return a flag that says whether there has been any changes on establishers or trustee details" in {
-      val result = testFixture().schemeService.transformJsonToModel(pensionsSchemeJson)
+      val inputWithUpdatedTrusteesOrEstablishers = pensionsSchemeJson.as[JsObject] ++ Json.obj("isEstablisherOrTrusteeDetailsChanged" -> true)
+
+      val result = testFixture().schemeService.transformJsonToModel(inputWithUpdatedTrusteesOrEstablishers)
 
       result.right.get.isEstablisherOrTrusteeDetailsChanged mustBe Some(true)
     }
@@ -430,8 +432,7 @@ object SchemeServiceSpec extends SpecBase {
         "addressYears" -> "test-address-years",
         "establisherNino" -> Json.obj()
       )
-    ),
-    "isEstablisherOrTrusteeDetailsChanged" -> true
+    )
   )
 
   def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
