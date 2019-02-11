@@ -17,10 +17,41 @@
 package models.Writes
 
 import models.{Address, InternationalAddress, UkAddress}
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import utils.PensionSchemeGenerators
 
-class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues {
+class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+
+  "An updated address" should {
+    "parse correctly to a valid DES format" when {
+      "we have a UK address" in {
+        forAll(ukAddressGen) {
+          address => {
+            val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
+
+            val validationErrors = schemaValidator.validateJson(mappedAddress,"address.json")
+
+            validationErrors mustBe None
+          }
+        }
+      }
+
+      "we have an international address" in {
+        forAll(internationalAddressGen) {
+          address => {
+            val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
+
+            val validationErrors = schemaValidator.validateJson(mappedAddress,"address.json")
+
+            validationErrors mustBe None
+          }
+        }
+      }
+    }
+  }
+
 
   "An address" should {
     "parse correctly to a valid DES format" when {
