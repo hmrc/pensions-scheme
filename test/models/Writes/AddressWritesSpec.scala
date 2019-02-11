@@ -16,56 +16,13 @@
 
 package models.Writes
 
-import java.util
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.networknt.schema.{JsonSchemaFactory, ValidationMessage}
 import models.{Address, InternationalAddress, UkAddress}
-import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
+import utils.PensionSchemeGenerators
 
-
-
-class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues {
-
-  val addressLineGen : Gen[String] = Gen.listOfN[Char] (35, Gen.alphaChar).map (_.mkString)
-  val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
-  val postalCodeGem: Gen[String] = Gen.listOfN[Char] (10, Gen.alphaChar).map (_.mkString)
-  val countryCode: Gen[String] = Gen.oneOf(Seq("ES","IT"))
-
-  val ukAddressGen: Gen[Address] = for {
-    line1 <- addressLineGen
-    line2 <- addressLineGen
-    line3 <- addressLineOptional
-    line4 <- addressLineOptional
-    postalCode <- postalCodeGem
-  } yield UkAddress(line1,Some(line2),line3,line4,"GB",postalCode)
-
-  val internationalAddressGen: Gen[Address] = for {
-    line1 <- addressLineGen
-    line2 <- addressLineGen
-    line3 <- addressLineOptional
-    line4 <- addressLineOptional
-    countryCode <- countryCode
-  } yield InternationalAddress(line1,Some(line2),line3,line4,countryCode)
-
-
-  case class SchemaValidatorForTests() {
-    def validateJson(elementToValidate: JsValue, schemaFileName: String): Array[AnyRef] = {
-      val schemaUrl = getClass.getResource(s"/resources/schemas/$schemaFileName")
-      val factory = JsonSchemaFactory.getInstance()
-      val schema = factory.getSchema(schemaUrl)
-
-
-      val mapper = new ObjectMapper()
-      val jsonToValidate  = mapper.readTree(elementToValidate.toString())
-
-      schema.validate(jsonToValidate).toArray()
-    }
-  }
-
+class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
 
   "An updated address" should {
     "parse correctly to a valid DES format" when {
@@ -74,7 +31,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues {
           address => {
             val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
 
-            val validationErrors = SchemaValidatorForTests().validateJson(mappedAddress,"address.json")
+            val validationErrors = schemaValidator.validateJson(mappedAddress,"address.json")
 
             validationErrors mustBe Array.empty
           }
@@ -86,7 +43,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues {
           address => {
             val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
 
-            val validationErrors = SchemaValidatorForTests().validateJson(mappedAddress,"address.json")
+            val validationErrors = schemaValidator.validateJson(mappedAddress,"address.json")
 
             validationErrors mustBe Array.empty
           }
