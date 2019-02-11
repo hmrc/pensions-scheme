@@ -72,7 +72,7 @@ case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boo
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
                                     doesSchemeProvideBenefits: String, schemeEstablishedCountry: String, haveInvalidBank: Boolean,
                                     insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
-                                    insuranceCompanyAddress: Option[Address] = None)
+                                    insuranceCompanyAddress: Option[Address] = None, isInsuranceDetailsChanged: Option[Boolean] = None)
 
 object CustomerAndSchemeDetails {
   implicit val formats: Format[CustomerAndSchemeDetails] = Json.format[CustomerAndSchemeDetails]
@@ -101,10 +101,11 @@ object CustomerAndSchemeDetails {
       (JsPath \ "schemeEstablishedCountry").read[String] and
       (JsPath \ "insuranceCompanyName").readNullable[String] and
       (JsPath \ "insurancePolicyNumber").readNullable[String] and
-      (JsPath \ "insurerAddress").readNullable[Address]
+      (JsPath \ "insurerAddress").readNullable[Address] and
+      (JsPath \ "isInsuranceDetailsChanged").readNullable[Boolean]
     ) (
     (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
-     occupationalPension, securedBenefits, benefits, country, insuranceCompanyName, insurancePolicyNumber, insurerAddress) => {
+     occupationalPension, securedBenefits, benefits, country, insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged) => {
 
       val isMasterTrust = schemeType._1 == "master"
 
@@ -126,7 +127,8 @@ object CustomerAndSchemeDetails {
         haveInvalidBank = false,
         insuranceCompanyName = insuranceCompanyName,
         policyNumber = insurancePolicyNumber,
-        insuranceCompanyAddress = insurerAddress)
+        insuranceCompanyAddress = insurerAddress,
+        isInsuranceDetailsChanged = isInsuranceDetailsChanged)
     }
   )
 }
@@ -298,7 +300,7 @@ case class EstablisherDetails(
                              )
 
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
-                          establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails)
+                          establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails, isEstablisherOrTrusteeDetailsChanged: Option[Boolean] = None)
 
 object PensionsScheme {
 
