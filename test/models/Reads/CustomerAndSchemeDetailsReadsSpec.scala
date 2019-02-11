@@ -207,6 +207,13 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
         result.insuranceCompanyAddress mustBe None
       }
+
+      "we have updated insurance details" in {
+        val result = (dataJson ++ Json.obj(
+          "isInsuranceDetailsChanged" -> JsBoolean(true))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
+
+        result.isInsuranceDetailsChanged mustBe Some(true)
+      }
     }
   }
 
