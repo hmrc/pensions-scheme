@@ -33,7 +33,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
 
             val validationErrors = schemaValidator.validateJson(mappedAddress,"address.json")
 
-            validationErrors mustBe Array.empty
+            validationErrors mustBe None
           }
         }
       }
@@ -45,7 +45,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
 
             val validationErrors = schemaValidator.validateJson(mappedAddress,"address.json")
 
-            validationErrors mustBe Array.empty
+            validationErrors mustBe None
           }
         }
       }

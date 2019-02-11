@@ -21,13 +21,15 @@ import com.networknt.schema.JsonSchemaFactory
 import play.api.libs.json.JsValue
 
 case class SchemaValidatorForTests() {
-  def validateJson(elementToValidate: JsValue, schemaFileName: String): Array[AnyRef] = {
+  def validateJson(elementToValidate: JsValue, schemaFileName: String): Option[Array[AnyRef]] = {
     val schemaUrl = getClass.getResource(s"/resources/schemas/$schemaFileName")
     val jsonSchemaFactory = JsonSchemaFactory.getInstance()
     val schema = jsonSchemaFactory.getSchema(schemaUrl)
 
     val jsonToValidate  = new ObjectMapper().readTree(elementToValidate.toString())
 
-    schema.validate(jsonToValidate).toArray()
+    val result = schema.validate(jsonToValidate).toArray()
+
+    if (result.nonEmpty) Some(result) else None
   }
 }
