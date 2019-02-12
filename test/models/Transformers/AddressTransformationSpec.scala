@@ -76,7 +76,7 @@ class AddressTransformationSpec extends WordSpec with MustMatchers with OptionVa
     "transformed using getPreviousAddress" must {
       "map correctly to user answers previous address" in {
         lazy val transformedJson = desPayload().transform(addressTransformer.
-          getPreviousAddress(__ \ 'previousAddress)).asOpt.value
+          getPreviousAddress(__, __ \ 'previousAddress)).asOpt.value
 
         (transformedJson \ "previousAddress" \ "addressLine1").as[String] mustBe "a1"
         (transformedJson \ "previousAddress" \ "addressLine2").as[String] mustBe "a2"

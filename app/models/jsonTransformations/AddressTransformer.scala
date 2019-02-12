@@ -57,9 +57,9 @@ class AddressTransformer @Inject()() extends JsonTransformer {
     }
   }
 
-  def getPreviousAddress(path: JsPath): Reads[JsObject] = {
-    (__ \ 'previousAddressDetails \ 'previousAddress).read[JsObject].flatMap { _ =>
-      getDifferentAddress(path, __ \ 'previousAddressDetails \ 'previousAddress)
+  def getPreviousAddress(desPath: JsPath, userAnswersPath: JsPath): Reads[JsObject] = {
+    (desPath \ 'previousAddressDetails \ 'previousAddress).read[JsObject].flatMap { _ =>
+      getDifferentAddress(userAnswersPath, __ \ 'previousAddressDetails \ 'previousAddress)
     } orElse doNothing
   }
 }
