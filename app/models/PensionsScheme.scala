@@ -235,6 +235,28 @@ case class Individual(
                        previousAddressDetails: Option[PreviousAddressDetails] = None
                      )
 
+object Individual {
+  implicit val formats: Format[Individual] = Json.format[Individual]
+
+  val updateWrites : Writes[Individual] = (
+    (JsPath \ "personDetails").write[PersonalDetails] and
+      (JsPath \ "nino").writeNullable[String] and
+      (JsPath \ "noNinoReason").writeNullable[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails] and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails]
+  )(details => (details.personalDetails,
+    details.referenceOrNino,
+    details.noNinoReason,
+    details.utr,
+    details.noUtrReason,
+    details.correspondenceAddressDetails,
+    details.correspondenceContactDetails,
+    details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c)) )
+}
+
 case class CompanyEstablisher(
                                organizationName: String,
                                utr: Option[String] = None,
