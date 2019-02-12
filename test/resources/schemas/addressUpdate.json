@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "properties": {
+    "nonUKAddress": {
+      "type": "boolean"
+    },
+    "line1": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 &!'‘’\"“”(),./\u2014\u2013\u2010\u002d]{1,35}$"
+    },
+    "line2": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 &!'‘’\"“”(),./\u2014\u2013\u2010\u002d]{1,35}$"
+    },
+    "line3": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 &!'‘’\"“”(),./\u2014\u2013\u2010\u002d]{1,35}$"
+    },
+    "line4": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 &!'‘’\"“”(),./\u2014\u2013\u2010\u002d]{1,35}$"
+    },
+    "postalCode": {
+      "description": "This is populated if the address supplied is a UK address.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10
+    },
+    "countryCode": {
+      "type": "string",
+      "description": "Country code iso 3166-1 alpha-2",
+      "enum": [
+        "IT","ES","GB"
+      ]
+    }
+  },
+  "required": [
+    "nonUKAddress",
+    "line1",
+    "line2",
+    "countryCode"
+  ],
+  "additionalProperties": false
+}
