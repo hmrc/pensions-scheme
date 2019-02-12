@@ -16,11 +16,9 @@
 
 package utils
 
-import akka.http.scaladsl.model.DateTime
 import models._
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
-import wolfendale.scalacheck.regexp.RegexpGen
 
 trait PensionSchemeGenerators {
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
