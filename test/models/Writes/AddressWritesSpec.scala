@@ -20,9 +20,11 @@ import models.{Address, InternationalAddress, UkAddress}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.PensionSchemeGenerators
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+
+  val schemaValidator = SchemaValidatorForTests()
 
   "An updated address" should {
     "parse correctly to a valid DES format" when {

@@ -45,6 +45,11 @@ object PreviousAddressDetails {
       (JsPath \ "previousAddressDetail").writeNullable[Address]
     ) (previousAddress => (previousAddress.isPreviousAddressLast12Month, previousAddress.previousAddressDetails))
 
+  val psaUpdateWrites: Writes[PreviousAddressDetails] = (
+    (JsPath \ "isPreviousAddressLast12Month").write[Boolean] and
+      (JsPath \ "previousAddressDetails").writeNullable[Address](Address.updateWrites)
+    ) (previousAddress => (previousAddress.isPreviousAddressLast12Month, previousAddress.previousAddressDetails))
+
   def apiReads(typeOfAddressDetail: String): Reads[PreviousAddressDetails] = (
     (JsPath \ s"${typeOfAddressDetail}AddressYears").read[String] and
       (JsPath \ s"${typeOfAddressDetail}PreviousAddress").readNullable[Address]
@@ -58,6 +63,8 @@ case class CorrespondenceAddressDetails(addressDetails: Address)
 
 object CorrespondenceAddressDetails {
   implicit val formats: Format[CorrespondenceAddressDetails] = Json.format[CorrespondenceAddressDetails]
+
+  val updateWrites : Writes[CorrespondenceAddressDetails] = (JsPath \ "addressDetails").write[Address](Address.updateWrites).contramap(c=>c.addressDetails)
 }
 
 case class CorrespondenceContactDetails(contactDetails: ContactDetails)
@@ -234,6 +241,28 @@ case class Individual(
                        correspondenceContactDetails: CorrespondenceContactDetails,
                        previousAddressDetails: Option[PreviousAddressDetails] = None
                      )
+
+object Individual {
+  implicit val formats: Format[Individual] = Json.format[Individual]
+
+  val updateWrites : Writes[Individual] = (
+    (JsPath \ "personDetails").write[PersonalDetails] and
+      (JsPath \ "nino").writeNullable[String] and
+      (JsPath \ "noNinoReason").writeNullable[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
+  )(details => (details.personalDetails,
+    details.referenceOrNino,
+    details.noNinoReason,
+    details.utr,
+    details.noUtrReason,
+    details.correspondenceAddressDetails,
+    details.correspondenceContactDetails,
+    details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c)) )
+}
 
 case class CompanyEstablisher(
                                organizationName: String,
