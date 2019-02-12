@@ -18,7 +18,7 @@ package models
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, JsPath, Json, Reads, Writes}
+import play.api.libs.json._
 import utils.Lens
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
@@ -278,6 +278,37 @@ case class CompanyEstablisher(
                                previousAddressDetails: Option[PreviousAddressDetails] = None,
                                directorDetails: Seq[Individual]
                              )
+
+object CompanyEstablisher {
+  implicit val formats: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
+
+  val updateWrites : Writes[CompanyEstablisher] = (
+    (JsPath \ "organisationName").write[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "crnNumber").writeNullable[String] and
+      (JsPath \ "noCrnReason").writeNullable[String] and
+      (JsPath \ "vatRegistrationNumber").writeNullable[String] and
+      (JsPath \ "payeReference").writeNullable[String] and
+      (JsPath \ "haveMoreThanTenDirectors").writeNullable[Boolean] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites) and
+      (JsPath \ "directorsDetails").write[JsArray]
+    )(company => (company.organizationName,
+    company.utr,
+    company.noUtrReason,
+    company.crnNumber,
+    company.noCrnReason,
+    company.vatRegistrationNumber,
+    company.payeReference,
+    Some(company.haveMoreThanTenDirectorOrPartner),
+    company.correspondenceAddressDetails,
+    company.correspondenceContactDetails,
+    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
+    JsArray(company.directorDetails.map(c=>Json.toJson(c)(Individual.updateWrites))))
+  )
+}
 
 case class Partnership(
                         organizationName: String,
