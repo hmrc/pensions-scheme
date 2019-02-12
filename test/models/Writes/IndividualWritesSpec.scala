@@ -31,7 +31,7 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
 
   "An Individual object" should {
     "map correctly to an update payload for API 1468" when {
-      "we have a list of individuals" in {
+      "we have an individual" in {
         forAll(individualGen) {
           director => {
             val mappedDirectors: JsValue = Json.toJson(director)(Individual.updateWrites)
