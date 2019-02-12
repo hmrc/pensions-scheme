@@ -93,7 +93,8 @@
               "description": "Country code iso 3166-1 alpha-2",
               "enum": [
                 "IT",
-                "ES"
+                "ES",
+                "GB"
               ]
             }
           },
@@ -187,7 +188,8 @@
               "description": "Country code iso 3166-1 alpha-2",
               "enum": [
                 "IT",
-                "ES"
+                "ES",
+                "GB"
               ]
             }
           },

@@ -53,13 +53,10 @@ trait PensionSchemeGenerators {
     month <- Gen.choose(1, 12)
     year <- Gen.choose(1990, 2000)
   } yield new LocalDate(year, month, day)
-  val ninoGen: Gen[String] = RegexpGen.from(""""^(?!BG)(?!GB)(?!NK)(?!KN)(?!TN)(?!NT)(?!ZZ)(?:[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z])(?:\\d){6}([A-D]|\\s)?$"""")
-  val utrGen: Gen[String] = RegexpGen.from(""""^[0-9]{10}"""")
   val reasonGen: Gen[String] = Gen.listOfN[Char](randomNumberFromRange(1, 160), Gen.alphaChar).map(_.mkString)
   val contactDetailsGen: Gen[ContactDetails] = for {
-    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.alphaNumChar).map(_.mkString)
-    email <- Gen.listOfN[Char](randomNumberFromRange(1, 132), Gen.alphaChar).map(_.mkString)
-  } yield ContactDetails(telephone = phone, email = email)
+    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
+  } yield ContactDetails(telephone = phone, email = "test.email@email.com")
 
   val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
 
@@ -78,9 +75,9 @@ trait PensionSchemeGenerators {
 
   val individualGen: Gen[Individual] = for {
     personalDetails <- personalDetailsGen
-    referenceOrNino <- Gen.option(ninoGen)
+    referenceOrNino <- Gen.option("SL221122D")
     noNinoReason <- Gen.option(reasonGen)
-    utr <- Gen.option(utrGen)
+    utr <- Gen.option("1111111111")
     noUtrReason <- Gen.option(reasonGen)
     address <- ukAddressGen
     contact <- contactDetailsGen
