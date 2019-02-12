@@ -19,11 +19,13 @@ package utils
 import models._
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
+import play.api.libs.json.{JsValue, Json}
 
 trait PensionSchemeGenerators {
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
   val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
   val postalCodeGem: Gen[String] = Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString)
+  val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
 
   val ukAddressGen: Gen[Address] = for {
@@ -83,4 +85,39 @@ trait PensionSchemeGenerators {
   } yield Individual(personalDetails, referenceOrNino, noNinoReason, utr,
     noUtrReason, CorrespondenceAddressDetails(address),
     CorrespondenceContactDetails(contact), previousAddress)
+
+  def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
+    line1 <- addressLineGen
+    line2 <- addressLineGen
+    line3 <- addressLineOptional
+    line4 <- addressLineOptional
+    postalCode <- optionalPostalCodeGen
+    countryCode <- countryCode
+  } yield {
+    (
+      Json.obj(
+        "desAddress" -> (Json.obj("nonUKAddress" -> true) ++
+          Json.obj("line1" -> line1) ++
+          Json.obj("line2" -> line2) ++
+          optional("line3", line3) ++
+          optional("line4", line4) ++
+          optional("postalCode", postalCode) ++
+          Json.obj("countryCode" -> countryCode))
+      ),
+      Json.obj(
+        "userAnswersAddress" -> (Json.obj("addressLine1" -> line1) ++
+          Json.obj("addressLine2" -> line2) ++
+          optional("addressLine3", line3) ++
+          optional("addressLine4", line4) ++
+          optional(if (isDifferent) "postcode" else "postalCode", postalCode) ++
+          Json.obj((if (isDifferent) "country" else "countryCode") -> countryCode))
+      )
+    )
+  }
+
+  private def optional(key: String, element: Option[String]) = {
+    element.map { value =>
+      Json.obj(key -> value)
+    }.getOrElse(Json.obj())
+  }
 }
