@@ -323,6 +323,33 @@ case class Partnership(
                         partnerDetails: Seq[Individual]
                       )
 
+object Partnership {
+  implicit val formats: Format[Partnership] = Json.format[Partnership]
+
+  val updateWrites : Writes[Partnership] = (
+    (JsPath \ "partnershipName").write[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "vatRegistrationNumber").writeNullable[String] and
+      (JsPath \ "payeReference").writeNullable[String] and
+      (JsPath \ "hasMoreThanTenPartners").writeNullable[Boolean] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites) and
+      (JsPath \ "partnerDetails").write[JsArray]
+    )(partnership => (partnership.organizationName,
+    partnership.utr,
+    partnership.noUtrReason,
+    partnership.vatRegistrationNumber,
+    partnership.payeReference,
+    Some(partnership.haveMoreThanTenDirectorOrPartner),
+    partnership.correspondenceAddressDetails,
+    partnership.correspondenceContactDetails,
+    partnership.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
+    JsArray(partnership.partnerDetails.map(c=>Json.toJson(c)(Individual.updateWrites))))
+  )
+}
+
 case class CompanyTrustee(
                            organizationName: String,
                            utr: Option[String] = None,
