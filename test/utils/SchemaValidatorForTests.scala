@@ -22,7 +22,7 @@ import play.api.libs.json.JsValue
 
 case class SchemaValidatorForTests() {
   def validateJson(elementToValidate: JsValue, schemaFileName: String): Option[Array[AnyRef]] = {
-    val schemaUrl = getClass.getResource(s"/resources/schemas/$schemaFileName")
+    val schemaUrl = getClass.getResource(s"/schemas/$schemaFileName")
     val jsonSchemaFactory = JsonSchemaFactory.getInstance()
     val schema = jsonSchemaFactory.getSchema(schemaUrl)
 
