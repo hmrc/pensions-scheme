@@ -18,7 +18,7 @@ package models
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, JsPath, Json, Reads, Writes}
+import play.api.libs.json._
 import utils.Lens
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
@@ -279,6 +279,37 @@ case class CompanyEstablisher(
                                directorDetails: Seq[Individual]
                              )
 
+object CompanyEstablisher {
+  implicit val formats: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
+
+  val updateWrites : Writes[CompanyEstablisher] = (
+    (JsPath \ "organisationName").write[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "crnNumber").writeNullable[String] and
+      (JsPath \ "noCrnReason").writeNullable[String] and
+      (JsPath \ "vatRegistrationNumber").writeNullable[String] and
+      (JsPath \ "payeReference").writeNullable[String] and
+      (JsPath \ "haveMoreThanTenDirectors").writeNullable[Boolean] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites) and
+      (JsPath \ "directorsDetails").write[JsArray]
+    )(company => (company.organizationName,
+    company.utr,
+    company.noUtrReason,
+    company.crnNumber,
+    company.noCrnReason,
+    company.vatRegistrationNumber,
+    company.payeReference,
+    Some(company.haveMoreThanTenDirectorOrPartner),
+    company.correspondenceAddressDetails,
+    company.correspondenceContactDetails,
+    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
+    JsArray(company.directorDetails.map(c=>Json.toJson(c)(Individual.updateWrites))))
+  )
+}
+
 case class Partnership(
                         organizationName: String,
                         utr: Option[String] = None,
@@ -291,6 +322,33 @@ case class Partnership(
                         previousAddressDetails: Option[PreviousAddressDetails] = None,
                         partnerDetails: Seq[Individual]
                       )
+
+object Partnership {
+  implicit val formats: Format[Partnership] = Json.format[Partnership]
+
+  val updateWrites : Writes[Partnership] = (
+    (JsPath \ "partnershipName").write[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "vatRegistrationNumber").writeNullable[String] and
+      (JsPath \ "payeReference").writeNullable[String] and
+      (JsPath \ "hasMoreThanTenPartners").writeNullable[Boolean] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites) and
+      (JsPath \ "partnerDetails").write[JsArray]
+    )(partnership => (partnership.organizationName,
+    partnership.utr,
+    partnership.noUtrReason,
+    partnership.vatRegistrationNumber,
+    partnership.payeReference,
+    Some(partnership.haveMoreThanTenDirectorOrPartner),
+    partnership.correspondenceAddressDetails,
+    partnership.correspondenceContactDetails,
+    partnership.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
+    JsArray(partnership.partnerDetails.map(c=>Json.toJson(c)(Individual.updateWrites))))
+  )
+}
 
 case class CompanyTrustee(
                            organizationName: String,
@@ -327,6 +385,20 @@ case class EstablisherDetails(
                                companyOrOrganization: Seq[CompanyEstablisher],
                                partnership: Seq[Partnership]
                              )
+
+object EstablisherDetails {
+  implicit val formats : Format[EstablisherDetails] = Json.format[EstablisherDetails]
+
+  val updateWrites : Writes[EstablisherDetails] = (
+    (JsPath \ "individualDetails").write[JsArray] and
+      (JsPath \ "companyOrOrganisationDetails").write[JsArray] and
+      (JsPath \ "partnershipDetails").write[JsArray]
+  )(establishers => (
+    JsArray(establishers.individual.map(i=>Json.toJson(i)(Individual.updateWrites))),
+    JsArray(establishers.companyOrOrganization.map(c=>Json.toJson(c)(CompanyEstablisher.updateWrites))),
+    JsArray(establishers.partnership.map(p=>Json.toJson(p)(Partnership.updateWrites)))
+  ))
+}
 
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
                           establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails, isEstablisherOrTrusteeDetailsChanged: Option[Boolean] = None)

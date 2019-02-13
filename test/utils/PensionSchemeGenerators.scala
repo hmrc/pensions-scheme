@@ -86,6 +86,40 @@ trait PensionSchemeGenerators {
     noUtrReason, CorrespondenceAddressDetails(address),
     CorrespondenceContactDetails(contact), previousAddress)
 
+  val companyGen: Gen[CompanyEstablisher] = for {
+    orgName <- nameGenerator
+    utr <- Gen.option("1111111111")
+    noUtrReason <- Gen.option(reasonGen)
+    crn <- Gen.option("11111111")
+    noCrnReason <- Gen.option(reasonGen)
+    vat <- Gen.option("123456789")
+    paye <- Gen.option("1111111111111")
+    haveMoreThan10Directors <- Gen.oneOf(Seq(true,false))
+    address <- ukAddressGen
+    contact <- contactDetailsGen
+    previous <- Gen.option(previousAddressDetailsGen)
+    directors <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
+  } yield CompanyEstablisher(orgName,utr,noUtrReason,crn,noCrnReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,directors)
+
+  val partnershipGen: Gen[Partnership] = for {
+    name <- nameGenerator
+    utr <- Gen.option("1111111111")
+    noUtrReason <- Gen.option(reasonGen)
+    vat <- Gen.option("123456789")
+    paye <- Gen.option("1111111111111")
+    haveMoreThan10Directors <- Gen.oneOf(Seq(true,false))
+    address <- ukAddressGen
+    contact <- contactDetailsGen
+    previous <- Gen.option(previousAddressDetailsGen)
+    partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
+  } yield Partnership(name,utr,noUtrReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,partners)
+
+  val establisherDetailsGen: Gen[EstablisherDetails] = for {
+    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipGen)
+  } yield EstablisherDetails(individuals,companies,partnerships)
+
   def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
