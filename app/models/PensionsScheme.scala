@@ -386,6 +386,20 @@ case class EstablisherDetails(
                                partnership: Seq[Partnership]
                              )
 
+object EstablisherDetails {
+  implicit val formats : Format[EstablisherDetails] = Json.format[EstablisherDetails]
+
+  val updateWrites : Writes[EstablisherDetails] = (
+    (JsPath \ "individualDetails").write[JsArray] and
+      (JsPath \ "companyOrOrganisationDetails").write[JsArray] and
+      (JsPath \ "partnershipDetails").write[JsArray]
+  )(establishers => (
+    JsArray(establishers.individual.map(i=>Json.toJson(i)(Individual.updateWrites))),
+    JsArray(establishers.companyOrOrganization.map(c=>Json.toJson(c)(CompanyEstablisher.updateWrites))),
+    JsArray(establishers.partnership.map(p=>Json.toJson(p)(Partnership.updateWrites)))
+  ))
+}
+
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
                           establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails, isEstablisherOrTrusteeDetailsChanged: Option[Boolean] = None)
 

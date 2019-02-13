@@ -114,6 +114,12 @@ trait PensionSchemeGenerators {
     partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
   } yield Partnership(name,utr,noUtrReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,partners)
 
+  val establisherDetailsGen: Gen[EstablisherDetails] = for {
+    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipGen)
+  } yield EstablisherDetails(individuals,companies,partnerships)
+
   def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
