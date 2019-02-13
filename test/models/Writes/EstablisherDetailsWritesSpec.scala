@@ -15,7 +15,7 @@ class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with Optio
         forAll(establisherDetailsGen) {
           establishers => {
             val mappedEstablishers: JsValue = Json.toJson(establishers)(EstablisherDetails.updateWrites)
-            println(mappedEstablishers)
+
             val validationErrors = schemaValidator.validateJson(mappedEstablishers,"establisherDetailsUpdate.json")
 
             validationErrors mustBe None
