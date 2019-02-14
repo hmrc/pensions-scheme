@@ -20,11 +20,15 @@ import com.google.inject.Inject
 import models.jsonTransformations.{AddressTransformer, JsonTransformer}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsBoolean, JsObject, Reads, __}
+import play.api.libs.json._
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def transformIndividualEstablisherToUserAnswersReads: Reads[JsObject] = {
+  def establisherToUserAnswersReads: Reads[JsObject] = ???
+
+
+  def transformIndividualEstablisherToUserAnswersReads: Reads[JsObject] =
+    (__ \ 'establisherKind).json.put(JsString("individual")) and
     transformPersonDetailsToUserAnswersReads and
       transformNinoDetailsToUserAnswersReads and
       transformUtrDetailsToUserAnswersReads("uniqueTaxReference") and
@@ -32,16 +36,27 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getAddressYears(__, __ \ 'addressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'previousAddress) and
       transformContactDetailsToUserAnswersReads("contactDetails") reduce
-  }
 
   def transformOrganisationEstablisherToUserAnswersReads: Reads[JsObject] =
+    (__ \ 'establisherKind).json.put(JsString("company")) and
     transformCompanyDetailsToUserAnswersReads and
       transformCRNDetailsToUserAnswersReads and
       transformUtrDetailsToUserAnswersReads("companyUniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'companyAddressYears) and
-//      addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
+      addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
       transformContactDetailsToUserAnswersReads("companyContactDetails") reduce
+
+  def transformPartnershipEstablisherToUserAnswersReads: Reads[JsObject] =
+    (__ \ 'establisherKind).json.put(JsString("partnership")) and
+    transformPartnershipDetailsToUserAnswersReads and
+      transformVatToUserAnswersReads and
+      transformPayeDetailsToUserAnswersReads and
+      transformUtrDetailsToUserAnswersReads("partnershipUniqueTaxReference") and
+      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(__, __ \ 'partnershipAddressYears) and
+      addressTransformer.getPreviousAddress(__, __ \ 'partnershipPreviousAddress) and
+      transformContactDetailsToUserAnswersReads("partnershipContactDetails") reduce
 
   def transformPersonDetailsToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
