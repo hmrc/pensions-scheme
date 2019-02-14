@@ -363,6 +363,33 @@ case class CompanyTrustee(
                            previousAddressDetails: Option[PreviousAddressDetails] = None
                          )
 
+object CompanyTrustee {
+  implicit val formats: Format[CompanyTrustee] = Json.format[CompanyTrustee]
+
+  val updateWrites : Writes[CompanyTrustee] = (
+    (JsPath \ "organisationName").write[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "crnNumber").writeNullable[String] and
+      (JsPath \ "noCrnReason").writeNullable[String] and
+      (JsPath \ "vatRegistrationNumber").writeNullable[String] and
+      (JsPath \ "payeReference").writeNullable[String] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
+    )(company => (company.organizationName,
+    company.utr,
+    company.noUtrReason,
+    company.crnNumber,
+    company.noCrnReason,
+    company.vatRegistrationNumber,
+    company.payeReference,
+    company.correspondenceAddressDetails,
+    company.correspondenceContactDetails,
+    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c))
+  )
+}
+
 case class PartnershipTrustee(
                                organizationName: String,
                                utr: Option[String] = None,

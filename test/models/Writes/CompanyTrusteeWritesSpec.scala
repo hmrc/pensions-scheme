@@ -16,23 +16,23 @@
 
 package models.Writes
 
-import models.CompanyEstablisher
+import models.{CompanyEstablisher, CompanyTrustee}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class CompanyEstablisherWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+class CompanyTrusteeWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
   val schemaValidator = SchemaValidatorForTests()
 
   "A company object" should {
     "map correctly to an update payload for API 1468" when {
       "we have an company" in {
-        forAll(companyEstablisherGen) {
+        forAll(companyTrusteeGen) {
           company => {
-            val mappedCompany: JsValue = Json.toJson(company)(CompanyEstablisher.updateWrites)
+            val mappedCompany: JsValue = Json.toJson(company)(CompanyTrustee.updateWrites)
 
-            val validationErrors = schemaValidator.validateJson(mappedCompany,"companyEstablisherUpdate.json")
+            val validationErrors = schemaValidator.validateJson(mappedCompany,"api1468_schema.json", "#/definitions/companyTrusteeDetailsType")
 
             validationErrors mustBe None
           }

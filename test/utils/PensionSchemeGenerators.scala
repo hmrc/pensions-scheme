@@ -86,7 +86,7 @@ trait PensionSchemeGenerators {
     noUtrReason, CorrespondenceAddressDetails(address),
     CorrespondenceContactDetails(contact), previousAddress)
 
-  val companyGen: Gen[CompanyEstablisher] = for {
+  val companyEstablisherGen: Gen[CompanyEstablisher] = for {
     orgName <- nameGenerator
     utr <- Gen.option("1111111111")
     noUtrReason <- Gen.option(reasonGen)
@@ -100,6 +100,20 @@ trait PensionSchemeGenerators {
     previous <- Gen.option(previousAddressDetailsGen)
     directors <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
   } yield CompanyEstablisher(orgName,utr,noUtrReason,crn,noCrnReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,directors)
+
+
+  val companyTrusteeGen: Gen[CompanyTrustee] = for {
+    orgName <- nameGenerator
+    utr <- Gen.option("1111111111")
+    noUtrReason <- Gen.option(reasonGen)
+    crn <- Gen.option("11111111")
+    noCrnReason <- Gen.option(reasonGen)
+    vat <- Gen.option("123456789")
+    paye <- Gen.option("1111111111111")
+    address <- ukAddressGen
+    contact <- contactDetailsGen
+    previous <- Gen.option(previousAddressDetailsGen)
+  } yield CompanyTrustee(orgName,utr,noUtrReason,crn,noCrnReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
 
   val partnershipGen: Gen[Partnership] = for {
     name <- nameGenerator
@@ -116,7 +130,7 @@ trait PensionSchemeGenerators {
 
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
     individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
-    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyEstablisherGen)
     partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipGen)
   } yield EstablisherDetails(individuals,companies,partnerships)
 

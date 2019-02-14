@@ -32,4 +32,18 @@ case class SchemaValidatorForTests() {
 
     if (result.nonEmpty) Some(result) else None
   }
+
+  def validateJson(elementToValidate: JsValue, schemaFileName: String, nodeName: String): Option[Array[AnyRef]] = {
+    val schemaUrl = getClass.getResource(s"/schemas/$schemaFileName")
+    val jsonSchemaFactory = JsonSchemaFactory.getInstance()
+    val schemaNode = jsonSchemaFactory.getSchema(schemaUrl).getRefSchemaNode(nodeName)
+    val schema = jsonSchemaFactory.getSchema(schemaNode)
+    val schemaRoot = jsonSchemaFactory.getSchema(schemaUrl).getSchemaNode
+
+    val jsonToValidate  = new ObjectMapper().readTree(elementToValidate.toString())
+
+    val result = schema.validate(schemaNode, schemaRoot, nodeName).toArray()
+
+    if (result.nonEmpty) Some(result) else None
+  }
 }
