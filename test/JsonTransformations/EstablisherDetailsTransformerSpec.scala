@@ -23,28 +23,32 @@ import utils.JsonTransformations.EstablisherDetailsTransformer
 
 
 class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader {
+  private val desSchemeDetailsJsValue: JsValue = readJsonFromFile("/data/validGetSchemeDetails.json")
 
   private val desPersonDetailsArrayElementReads: Reads[JsArray] = (__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]
   private val desPersonDetailsElementReads: Reads[JsValue] = (__ \ 'personDetails).json.pick
-  private val desPersonDetailsTitleReads: JsPath = __ \ 'title
 
-  val transformer = new EstablisherDetailsTransformer()
+  private val transformer = new EstablisherDetailsTransformer()
+
+  private val desIndividualDetailsSeqJsValue = desSchemeDetailsJsValue.transform(desPersonDetailsArrayElementReads).asOpt.get.value
 
   "A DES payload containing establisher details" must {
     "Map correctly to valid establisher details in user answers" when {
       "We have individual person details title" in {
-        desSchemeDetails.transform(desPersonDetailsArrayElementReads).asOpt.get.value
-          .foreach { desPersonDetails =>
-            val pd = desPersonDetails.transform(desPersonDetailsElementReads).asOpt.get
-            println(">>>> Person details:" + pd)
-            val expected = pd.transform(desPersonDetailsTitleReads.json.pick).asOpt.map( _.validate[String].asOpt.get)
-            desPersonDetails.transform(transformer.transformToUserAnswersReads).asOpt mustBe expected
-          }
+        desIndividualDetailsSeqJsValue.map {
+          desIndividualDetailsJsValue =>
+            val desPersonDetailsElementJsValue = desIndividualDetailsJsValue.transform(desPersonDetailsElementReads).asOpt.get
 
-        true mustBe true
+            val actual = desPersonDetailsElementJsValue
+              .transform(transformer.transformPersonDetailsToUserAnswersReads).asOpt.get
+
+
+            (actual \ "establisherDetails" \ "firstName").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "firstName").as[String]
+            (actual \ "establisherDetails" \ "middleName").asOpt[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "middleName").asOpt[String]
+            (actual \ "establisherDetails" \ "lastName").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "lastName").as[String]
+            (actual \ "establisherDetails" \ "date").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "dateOfBirth").as[String]
+        }
       }
     }
   }
-
-  private val desSchemeDetails: JsValue = readJsonFromFile("/data/validGetSchemeDetails.json")
 }

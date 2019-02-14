@@ -18,13 +18,17 @@ package utils.JsonTransformations
 
 import com.google.inject.Inject
 import models.jsonTransformations.JsonTransformer
-import play.api.libs.json.{JsObject, Reads}
-import play.api.libs.json._
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{JsObject, Reads, __}
 
 class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
 
-  def transformToUserAnswersReads: Reads[JsObject] = (__ \ 'key25 \ 'key251).json.copyFrom( (__ \ 'key2 \ 'key21).json.pick )
-
+  def transformPersonDetailsToUserAnswersReads: Reads[JsObject] =
+    (__ \ 'establisherDetails \ 'firstName).json.copyFrom( (__ \ 'firstName).json.pick ) and
+      ( (__ \ 'establisherDetails \ 'middleName).json.copyFrom( (__ \ 'middleName).json.pick ) orElse doNothing) and
+      (__ \ 'establisherDetails \ 'lastName).json.copyFrom( (__ \ 'lastName).json.pick ) and
+      (__ \ 'establisherDetails \ 'date).json.copyFrom( (__ \ 'dateOfBirth).json.pick ) reduce
 
 
 }
