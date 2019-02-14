@@ -29,10 +29,19 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       transformNinoDetailsToUserAnswersReads and
       transformUtrDetailsToUserAnswersReads("uniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__ , __ \ 'addressYears) and
-      addressTransformer.getPreviousAddress(__ , __ \ 'previousAddress) and
+      addressTransformer.getAddressYears(__, __ \ 'addressYears) and
+      addressTransformer.getPreviousAddress(__, __ \ 'previousAddress) and
       transformContactDetailsToUserAnswersReads("contactDetails") reduce
   }
+
+  def transformOrganisationEstablisherToUserAnswersReads: Reads[JsObject] =
+    transformCompanyDetailsToUserAnswersReads and
+      transformCRNDetailsToUserAnswersReads and
+      transformUtrDetailsToUserAnswersReads("companyUniqueTaxReference") and
+      addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(__, __ \ 'companyAddressYears) and
+//      addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
+      transformContactDetailsToUserAnswersReads("companyContactDetails") reduce
 
   def transformPersonDetailsToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and

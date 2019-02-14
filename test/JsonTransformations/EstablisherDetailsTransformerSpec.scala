@@ -214,5 +214,25 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
       }
     }
+
+    "have an organisation establisher transformed" that {
+      desCompanyOrOrganisationDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
+        case (desOrganisationDetailsJsValue, index) =>
+          val desOrganisationDetailsElementJsValue = desOrganisationDetailsJsValue.transform(__.json.pick).asOpt.get
+          s"has establisher details for element $index in establishers array" in {
+            val actual = desOrganisationDetailsElementJsValue
+              .transform(transformer.transformOrganisationEstablisherToUserAnswersReads).asOpt.get
+
+            (actual \ "companyDetails").isDefined mustBe true
+            (actual \ "companyRegistrationNumber").isDefined mustBe true
+            (actual \ "companyUniqueTaxReference").isDefined mustBe true
+            (actual \ "companyAddress").isDefined mustBe true
+            (actual \ "companyAddressYears").isDefined mustBe true
+            (actual \ "previousAddress").isDefined mustBe false
+            (actual \ "companyContactDetails").isDefined mustBe true
+          }
+
+      }
+    }
   }
 }
