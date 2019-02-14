@@ -42,19 +42,18 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
     }
   }
 
-  def transformUtrDetailsToUserAnswersReads: Reads[JsObject] = {
+  def transformUtrDetailsToUserAnswersReads(userAnswersBase: String): Reads[JsObject] = {
     (__ \ "utr").read[String].flatMap { _ =>
-      (__ \ 'uniqueTaxReference \ 'hasUtr).json.put(JsBoolean(true)) and
-        (__ \ 'uniqueTaxReference \ 'utr).json.copyFrom((__ \ 'utr).json.pick) reduce
+      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
+        (__ \ userAnswersBase \ 'utr).json.copyFrom((__ \ 'utr).json.pick) reduce
 
     } orElse {
-      (__ \ 'uniqueTaxReference \ 'hasUtr).json.put(JsBoolean(false)) and
-        (__ \ 'uniqueTaxReference \ 'reason ).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
+      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
+        (__ \ userAnswersBase \ 'reason ).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
 
     }
   }
 
-  def transformUtrDetailsToUserAnswersReads: Reads[JsObject]  = ???
 
   def transformCompanyDetailsToUserAnswersReads: Reads[JsObject] =
     (__ \ 'companyDetails \ 'companyName).json.copyFrom((__ \ 'organisationName).json.pick) and
@@ -62,4 +61,21 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
       (__ \ 'companyDetails \ 'payeNumber).json.copyFrom((__ \ 'payeReference).json.pick) reduce
 
 
+  def transformContactDetailsToUserAnswersReads(userAnswersBase: String, desBase: String): Reads[JsObject] =
+    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ desBase \ 'email).json.pick) and
+      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ desBase \ 'telephone).json.pick) reduce
+
+  def transformKindToUserAnswersReads: Reads[JsObject] = ???
+
+  def transformCRNDetailsToUserAnswersReads: Reads[JsObject] = {
+    (__ \ "crnNumber").read[String].flatMap { _ =>
+      (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(true)) and
+        (__ \ 'companyRegistrationNumber \ 'crn).json.copyFrom((__ \ 'crnNumber).json.pick) reduce
+
+    } orElse {
+      (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
+        (__ \ 'companyRegistrationNumber \ 'reason ).json.copyFrom((__ \ 'noCrnReason).json.pick) reduce
+
+    }
+  }
 }

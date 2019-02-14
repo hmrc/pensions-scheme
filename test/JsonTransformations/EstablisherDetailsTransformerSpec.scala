@@ -60,16 +60,32 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
           s"has utr details for element $index in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
-              .transform(transformer.transformUtrDetailsToUserAnswersReads).asOpt.get
+              .transform(transformer.transformUtrDetailsToUserAnswersReads("uniqueTaxReference")).asOpt.get
 
             (actual \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
             (actual \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (desIndividualDetailsJsValue \ "utr").asOpt[String]
 
           }
 
-          s"has address details for element $index in establishers array" in {
+          /*    s"has address details for element $index in establishers array" in {
+                val actual = desIndividualDetailsElementJsValue
+                  .transform(addressTransformer.getDifferentAddress(__ \ "address", (desIndividualDetailsElementJsValue \ "address").asOpt.get)).asOpt.get
+              }*/
+
+          s"has contact details for element $index in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
-              .transform(addressTransformer.getDifferentAddress(__ \ "address", (desIndividualDetailsElementJsValue \ "address").asOpt.get))
+              .transform(transformer.transformContactDetailsToUserAnswersReads("contactDetails", "correspondenceContactDetails")).asOpt.get
+
+            (actual \ "contactDetails" \ "emailAddress").as[String] mustBe (desIndividualDetailsJsValue \ "correspondenceContactDetails" \ "email").as[String]
+            (actual \ "contactDetails" \ "phoneNumber").as[String] mustBe (desIndividualDetailsJsValue \ "correspondenceContactDetails" \ "telephone").as[String]
+          }
+
+          pending
+          s"has kind for element $index in establishers array" in {
+            val actual = desIndividualDetailsElementJsValue
+              .transform(transformer.transformKindToUserAnswersReads).asOpt.get
+
+            (actual \ "establisherKind").as[String] mustBe "individual"
           }
       }
     }
@@ -89,7 +105,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
           s"has no utr details for element $index in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
-              .transform(transformer.transformUtrDetailsToUserAnswersReads).asOpt.get
+              .transform(transformer.transformUtrDetailsToUserAnswersReads("uniqueTaxReference")).asOpt.get
 
             (actual \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe false
             (actual \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (desIndividualDetailsJsValue \ "noUtrReason").asOpt[String]
@@ -108,6 +124,32 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             (actual \ "companyDetails" \ "companyName").as[String] mustBe (descompanyOrOrganisationDetailsJsValue \ "organisationName").as[String]
             (actual \ "companyDetails" \ "vatNumber").asOpt[String] mustBe (descompanyOrOrganisationDetailsJsValue \ "vatRegistrationNumber").asOpt[String]
             (actual \ "companyDetails" \ "payeNumber").asOpt[String] mustBe (descompanyOrOrganisationDetailsJsValue \ "payeReference").asOpt[String]
+          }
+
+          s"has no crn details for element $index in establishers array" in {
+            val actual = descompanyOrOrganisationDetailsElementJsValue
+              .transform(transformer.transformCRNDetailsToUserAnswersReads).asOpt.get
+
+            (actual \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe true
+            (actual \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (descompanyOrOrganisationDetailsElementJsValue \ "crnNumber").asOpt[String]
+
+          }
+
+          s"has utr details for element $index in establishers array" in {
+            val actual = descompanyOrOrganisationDetailsElementJsValue
+              .transform(transformer.transformUtrDetailsToUserAnswersReads("companyUniqueTaxReference")).asOpt.get
+
+            (actual \ "companyUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+            (actual \ "companyUniqueTaxReference" \ "utr").asOpt[String] mustBe (descompanyOrOrganisationDetailsElementJsValue \ "utr").asOpt[String]
+
+          }
+
+          s"has contact details for element $index in establishers array" in {
+            val actual = descompanyOrOrganisationDetailsElementJsValue
+              .transform(transformer.transformContactDetailsToUserAnswersReads("companyContactDetails", "correspondenceContactDetails")).asOpt.get
+
+            (actual \ "companyContactDetails" \ "emailAddress").as[String] mustBe (descompanyOrOrganisationDetailsElementJsValue \ "correspondenceContactDetails" \ "email").as[String]
+            (actual \ "companyContactDetails" \ "phoneNumber").as[String] mustBe (descompanyOrOrganisationDetailsElementJsValue \ "correspondenceContactDetails" \ "telephone").as[String]
           }
       }
     }
