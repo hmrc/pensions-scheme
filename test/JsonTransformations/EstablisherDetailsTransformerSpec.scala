@@ -17,6 +17,7 @@
 package JsonTransformations
 
 import base.JsonFileReader
+import models.jsonTransformations.AddressTransformer
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import utils.JsonTransformations.EstablisherDetailsTransformer
@@ -27,6 +28,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private val desSchemeDetailsJsValue2: JsValue = readJsonFromFile("/data/validGetSchemeDetails2.json")
 
   private val transformer = new EstablisherDetailsTransformer()
+  private val addressTransformer = new AddressTransformer()
 
   private def desIndividualDetailsSeqJsValue(jsValue: JsValue) = jsValue
     .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]).asOpt.get.value
@@ -63,6 +65,11 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             (actual \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
             (actual \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (desIndividualDetailsJsValue \ "utr").asOpt[String]
 
+          }
+
+          s"has address details for element $index in establishers array" in {
+            val actual = desIndividualDetailsElementJsValue
+              .transform(addressTransformer.getDifferentAddress(__ \ "address", (desIndividualDetailsElementJsValue \ "address").asOpt.get))
           }
       }
     }
