@@ -26,19 +26,16 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private val desSchemeDetailsJsValue1: JsValue = readJsonFromFile("/data/validGetSchemeDetails1.json")
   private val desSchemeDetailsJsValue2: JsValue = readJsonFromFile("/data/validGetSchemeDetails2.json")
 
-  private val desPersonDetailsArrayElementReads: Reads[JsArray] = (__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]
-  // private val desPersonDetailsElementReads: Reads[JsValue] = (__ \ 'personDetails).json.pick
-  private val desIndividualDetailsElementReads: Reads[JsValue] = __.json.pick
-
   private val transformer = new EstablisherDetailsTransformer()
 
-  private def desIndividualDetailsSeqJsValue(jsValue: JsValue) = jsValue.transform(desPersonDetailsArrayElementReads).asOpt.get.value
+  private def desIndividualDetailsSeqJsValue(jsValue: JsValue) = jsValue
+    .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]).asOpt.get.value
 
   "A DES payload containing establisher details" must {
-    "be transformed correctly to valid establisher details in user answers for first json file" that {
+    "have the individual details transformed correctly to valid user answers format for first json file" that {
       desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
         case (desIndividualDetailsJsValue, index) =>
-          val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(desIndividualDetailsElementReads).asOpt.get
+          val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(__.json.pick).asOpt.get
           s"has establisher details for element $index in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
               .transform(transformer.transformPersonDetailsToUserAnswersReads).asOpt.get
@@ -67,10 +64,10 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
     }
 
-    "be transformed correctly to valid establisher details in user answers for second json file" that {
+    "have the individual details  transformed correctly to valid user answers format for second json file" that {
       desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue2).zipWithIndex.foreach {
         case (desIndividualDetailsJsValue, index) =>
-          val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(desIndividualDetailsElementReads).asOpt.get
+          val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(__.json.pick).asOpt.get
 
           s"has no nino details for element $index in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
