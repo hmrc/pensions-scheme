@@ -37,7 +37,7 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
 
     } orElse {
       (__ \ 'establisherNino \ 'hasNino).json.put(JsBoolean(false)) and
-        (__ \ 'establisherNino \ 'reason ).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
+        (__ \ 'establisherNino \ 'reason).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
 
     }
   }
@@ -49,7 +49,7 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
 
     } orElse {
       (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
-        (__ \ userAnswersBase \ 'reason ).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
+        (__ \ userAnswersBase \ 'reason).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
 
     }
   }
@@ -74,8 +74,31 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
 
     } orElse {
       (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
-        (__ \ 'companyRegistrationNumber \ 'reason ).json.copyFrom((__ \ 'noCrnReason).json.pick) reduce
+        (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((__ \ 'noCrnReason).json.pick) reduce
 
     }
   }
+
+
+  def transformPartnershipDetailsToUserAnswersReads: Reads[JsObject] =
+    (__ \ 'partnershipDetails \ 'name).json.copyFrom((__ \ 'partnershipName).json.pick)
+
+  def transformVatToUserAnswersReads: Reads[JsObject] = (__ \ "vatRegistrationNumber").read[String].flatMap { _ =>
+    (__ \ 'partnershipVat \ 'hasVat).json.put(JsBoolean(true)) and
+      (__ \ 'partnershipVat \ 'vat).json.copyFrom((__ \ 'vatRegistrationNumber).json.pick) reduce
+
+  } orElse {
+    (__ \ 'partnershipVat \ 'hasVat).json.put(JsBoolean(false))
+
+  }
+
+  def transformPayeDetailsToUserAnswersReads: Reads[JsObject] = (__ \ "payeReference").read[String].flatMap { _ =>
+    (__ \ 'partnershipPaye \ 'hasPaye).json.put(JsBoolean(true)) and
+      (__ \ 'partnershipPaye \ 'paye).json.copyFrom((__ \ 'payeReference).json.pick) reduce
+
+  } orElse {
+    (__ \ 'partnershipPaye \ 'hasPaye).json.put(JsBoolean(false))
+
+  }
+
 }

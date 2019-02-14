@@ -157,6 +157,115 @@
             }
           ]
         }
+      ],
+      "partnershipTrusteeDetail": [
+        {
+          "partnershipName": "ABC Partnerships",
+          "utr": "0123456789",
+          "payeReference": "123987654",
+          "areMorethanTenPartners": false,
+          "correspondenceAddressDetails": {
+            "nonUKAddress": false,
+            "line1": "Belford House",
+            "line2": "Seaham",
+            "line3": "Sunderland",
+            "line4": "Tyne and Wear",
+            "postalCode": "SR7 5TR",
+            "countryCode": "GB"
+          },
+          "correspondenceContactDetails": {
+            "telephone": "0044-09876542312",
+            "mobileNumber": "0044-09876542312",
+            "fax": "0044-09876542312",
+            "email": "admin@abc-partnership.com"
+          },
+          "previousAddressDetails": {
+            "isPreviousAddressLast12Month": false
+          },
+          "partnerDetails": [
+            {
+              "personDetails": {
+                "firstName": "Jeremy",
+                "lastName": "Howard",
+                "dateOfBirth": "1990-01-01"
+              },
+              "noNinoReason": "No nino",
+              "noUtrReason": "No utr",
+              "correspondenceAddressDetails": {
+                "nonUKAddress": false,
+                "line1": "1 Partner Road",
+                "line2": "Longbenton",
+                "line3": "Newcastle",
+                "line4": "Tyne and Wear",
+                "postalCode": "NE3 5TR",
+                "countryCode": "GB"
+              },
+              "correspondenceContactDetails": {
+                "telephone": "0044-09876542312",
+                "mobileNumber": "0044-09876542312",
+                "fax": "0044-09876542312",
+                "email": "jeremy@abc-partnership.com"
+              },
+              "previousAddressDetails": {
+                "isPreviousAddressLast12Month": false
+              }
+            },
+            {
+              "personDetails": {
+                "firstName": "Stephanie",
+                "lastName": "Ross",
+                "dateOfBirth": "1990-01-01"
+              },
+              "noNinoReason": "No nino",
+              "noUtrReason": "No utr",
+              "correspondenceAddressDetails": {
+                "nonUKAddress": false,
+                "line1": "2 Partner Road",
+                "line2": "Perterlee",
+                "line3": "Sunderland",
+                "line4": "Tyne and Wear",
+                "postalCode": "SR8 5TR",
+                "countryCode": "GB"
+              },
+              "correspondenceContactDetails": {
+                "telephone": "0044-09876542312",
+                "mobileNumber": "0044-09876542312",
+                "fax": "0044-09876542312",
+                "email": "stephanie@abc-partnership.com"
+              },
+              "previousAddressDetails": {
+                "isPreviousAddressLast12Month": false
+              }
+            },
+            {
+              "personDetails": {
+                "firstName": "Anne",
+                "lastName": "Cook",
+                "dateOfBirth": "1990-01-01"
+              },
+              "noNinoReason": "No nino",
+              "noUtrReason": "No utr",
+              "correspondenceAddressDetails": {
+                "nonUKAddress": false,
+                "line1": "3 Partner Road",
+                "line2": "Hendon",
+                "line3": "Sunderland",
+                "line4": "Tyne and Wear",
+                "postalCode": "SR1 5TR",
+                "countryCode": "GB"
+              },
+              "correspondenceContactDetails": {
+                "telephone": "0044-09876542312",
+                "mobileNumber": "0044-09876542312",
+                "fax": "0044-09876542312",
+                "email": "anne@abc-partnership.com"
+              },
+              "previousAddressDetails": {
+                "isPreviousAddressLast12Month": false
+              }
+            }
+          ]
+        }
       ]
     },
     "psaDetails": [
