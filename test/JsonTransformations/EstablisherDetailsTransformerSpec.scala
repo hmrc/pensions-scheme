@@ -27,8 +27,8 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private val desSchemeDetailsJsValue1: JsValue = readJsonFromFile("/data/validGetSchemeDetails1.json")
   private val desSchemeDetailsJsValue2: JsValue = readJsonFromFile("/data/validGetSchemeDetails2.json")
 
-  private val transformer = new EstablisherDetailsTransformer()
   private val addressTransformer = new AddressTransformer()
+  private val transformer = new EstablisherDetailsTransformer(addressTransformer)
 
   private def desIndividualDetailsSeqJsValue(jsValue: JsValue) = jsValue
     .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]).asOpt.get.value
@@ -72,7 +72,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
           s"has contact details for element $index in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
-              .transform(transformer.transformContactDetailsToUserAnswersReads("contactDetails", "correspondenceContactDetails")).asOpt.get
+              .transform(transformer.transformContactDetailsToUserAnswersReads("contactDetails")).asOpt.get
 
             (actual \ "contactDetails" \ "emailAddress").as[String] mustBe (desIndividualDetailsJsValue \ "correspondenceContactDetails" \ "email").as[String]
             (actual \ "contactDetails" \ "phoneNumber").as[String] mustBe
@@ -137,7 +137,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
           s"has contact details for element $index in establishers array" in {
             val actual = desCompanyOrOrganisationDetailsElementJsValue
-              .transform(transformer.transformContactDetailsToUserAnswersReads("companyContactDetails", "correspondenceContactDetails")).asOpt.get
+              .transform(transformer.transformContactDetailsToUserAnswersReads("companyContactDetails")).asOpt.get
 
             (actual \ "companyContactDetails" \ "emailAddress").as[String] mustBe
               (desCompanyOrOrganisationDetailsElementJsValue \ "correspondenceContactDetails" \ "email").as[String]
@@ -185,7 +185,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
           s"has contact details for element $index in establishers array" in {
             val actual = desPartnershipDetailsElementJsValue
-              .transform(transformer.transformContactDetailsToUserAnswersReads("companyContactDetails", "correspondenceContactDetails")).asOpt.get
+              .transform(transformer.transformContactDetailsToUserAnswersReads("companyContactDetails")).asOpt.get
 
             (actual \ "companyContactDetails" \ "emailAddress").as[String] mustBe
               (desPartnershipDetailsElementJsValue \ "correspondenceContactDetails" \ "email").as[String]
@@ -195,5 +195,23 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
     }
 
+    "have an individual establisher transformed" that {
+      desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
+        case (desIndividualDetailsJsValue, index) =>
+          val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(__.json.pick).asOpt.get
+          s"has establisher details for element $index in establishers array" in {
+            val actual = desIndividualDetailsElementJsValue
+              .transform(transformer.transformIndividualEstablisherToUserAnswersReads).asOpt.get
+
+            (actual \ "establisherDetails").isDefined mustBe true
+            (actual \ "establisherNino").isDefined mustBe true
+            (actual \ "uniqueTaxReference").isDefined mustBe true
+            (actual \ "address").isDefined mustBe true
+            (actual \ "addressYears").isDefined mustBe true
+            (actual \ "contactDetails").isDefined mustBe true
+          }
+
+      }
+    }
   }
 }

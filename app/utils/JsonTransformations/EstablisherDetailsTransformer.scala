@@ -17,12 +17,21 @@
 package utils.JsonTransformations
 
 import com.google.inject.Inject
-import models.jsonTransformations.JsonTransformer
+import models.jsonTransformations.{AddressTransformer, JsonTransformer}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsBoolean, JsObject, Reads, __}
 
-class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
+class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
+
+  def transformIndividualEstablisherToUserAnswersReads: Reads[JsObject] = {
+    transformPersonDetailsToUserAnswersReads and
+      transformNinoDetailsToUserAnswersReads and
+      transformUtrDetailsToUserAnswersReads("uniqueTaxReference") and
+      addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(__ , __ \ 'addressYears) and
+      transformContactDetailsToUserAnswersReads("contactDetails") reduce
+  }
 
   def transformPersonDetailsToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
@@ -61,9 +70,9 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
       (__ \ 'companyDetails \ 'payeNumber).json.copyFrom((__ \ 'payeReference).json.pick) reduce
 
 
-  def transformContactDetailsToUserAnswersReads(userAnswersBase: String, desBase: String): Reads[JsObject] =
-    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ desBase \ 'email).json.pick) and
-      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ desBase \ 'telephone).json.pick) reduce
+  def transformContactDetailsToUserAnswersReads(userAnswersBase: String): Reads[JsObject] =
+    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ 'correspondenceContactDetails \ 'email).json.pick) and
+      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
 
   def transformKindToUserAnswersReads: Reads[JsObject] = ???
 
