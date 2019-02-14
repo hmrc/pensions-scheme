@@ -208,6 +208,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             (actual \ "uniqueTaxReference").isDefined mustBe true
             (actual \ "address").isDefined mustBe true
             (actual \ "addressYears").isDefined mustBe true
+            (actual \ "previousAddress").isDefined mustBe true
             (actual \ "contactDetails").isDefined mustBe true
           }
 

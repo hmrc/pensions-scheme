@@ -30,6 +30,7 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       transformUtrDetailsToUserAnswersReads("uniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__ , __ \ 'addressYears) and
+      addressTransformer.getPreviousAddress(__ , __ \ 'previousAddress) and
       transformContactDetailsToUserAnswersReads("contactDetails") reduce
   }
 
