@@ -54,4 +54,10 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
     }
   }
 
+  def transformCompanyDetailsToUserAnswersReads: Reads[JsObject] =
+    (__ \ 'companyDetails \ 'companyName).json.copyFrom((__ \ 'organisationName).json.pick) and
+      (__ \ 'companyDetails \ 'vatNumber).json.copyFrom((__ \ 'vatRegistrationNumber).json.pick) and
+      (__ \ 'companyDetails \ 'payeNumber).json.copyFrom((__ \ 'payeReference).json.pick) reduce
+
+
 }

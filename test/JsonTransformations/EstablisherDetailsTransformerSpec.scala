@@ -31,6 +31,9 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private def desIndividualDetailsSeqJsValue(jsValue: JsValue) = jsValue
     .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]).asOpt.get.value
 
+  private def desCompanyOrOrganisationDetailsSeqJsValue(jsValue: JsValue) = jsValue
+    .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'companyOrOrganisationDetails).json.pick[JsArray]).asOpt.get.value
+
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format for first json file" that {
       desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
@@ -86,5 +89,21 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
           }
       }
     }
+
+
+    "have the companyOrOrganisationDetails details transformed correctly to valid user answers format for first json file" that {
+      desCompanyOrOrganisationDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
+        case (descompanyOrOrganisationDetailsJsValue, index) =>
+          val descompanyOrOrganisationDetailsElementJsValue = descompanyOrOrganisationDetailsJsValue.transform(__.json.pick).asOpt.get
+          s"has establisher details for element $index in establishers array" in {
+            val actual = descompanyOrOrganisationDetailsElementJsValue
+              .transform(transformer.transformCompanyDetailsToUserAnswersReads).asOpt.get
+            (actual \ "companyDetails" \ "companyName").as[String] mustBe (descompanyOrOrganisationDetailsJsValue \ "organisationName").as[String]
+            (actual \ "companyDetails" \ "vatNumber").asOpt[String] mustBe (descompanyOrOrganisationDetailsJsValue \ "vatRegistrationNumber").asOpt[String]
+            (actual \ "companyDetails" \ "payeNumber").asOpt[String] mustBe (descompanyOrOrganisationDetailsJsValue \ "payeReference").asOpt[String]
+          }
+      }
+    }
+
   }
 }
