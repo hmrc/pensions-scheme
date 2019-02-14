@@ -24,8 +24,19 @@ import play.api.libs.json._
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def establisherToUserAnswersReads: Reads[JsObject] = ???
+  def establisherToUserAnswersReads: Reads[JsObject] = {
+    val i = (__ \ 'individualDetails).read(__.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_)))
+    val c = (__ \ 'companyDetails).read(__.read(Reads.seq(transformOrganisationEstablisherToUserAnswersReads)).map(JsArray(_)))
+    val p = (__ \ 'partnershipDetails).read(__.read(Reads.seq(transformPartnershipEstablisherToUserAnswersReads)).map(JsArray(_)))
+   //    (__ \ 'establishers).json.copyFrom(i )
 
+    (__ \ 'establishers).json.copyFrom(i and c and p reduce)
+
+      //.copyFrom((__ \ 'personDetails \ 'lastName).json.pick)
+
+  }
+
+  def individuals: Reads[JsArray] = __.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_))
 
   def transformIndividualEstablisherToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("individual")) and
@@ -35,7 +46,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'addressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'previousAddress) and
-      transformContactDetailsToUserAnswersReads("contactDetails") reduce
+      transformContactDetailsToUserAnswersReads("contactDetails") and
+      (__  \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
 
   def transformOrganisationEstablisherToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("company")) and
@@ -45,7 +57,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'companyAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
-      transformContactDetailsToUserAnswersReads("companyContactDetails") reduce
+      transformContactDetailsToUserAnswersReads("companyContactDetails") and
+  (__  \ 'isCompanyComplete).json.put(JsBoolean(true)) reduce
 
   def transformPartnershipEstablisherToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("partnership")) and
@@ -56,7 +69,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'partnershipPreviousAddress) and
-      transformContactDetailsToUserAnswersReads("partnershipContactDetails") reduce
+      transformContactDetailsToUserAnswersReads("partnershipContactDetails") and
+      (__  \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
 
   def transformPersonDetailsToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
@@ -98,8 +112,6 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
   def transformContactDetailsToUserAnswersReads(userAnswersBase: String): Reads[JsObject] =
     (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ 'correspondenceContactDetails \ 'email).json.pick) and
       (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
-
-  def transformKindToUserAnswersReads: Reads[JsObject] = ???
 
   def transformCRNDetailsToUserAnswersReads: Reads[JsObject] = {
     (__ \ "crnNumber").read[String].flatMap { _ =>

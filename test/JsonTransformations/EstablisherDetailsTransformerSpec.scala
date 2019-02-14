@@ -39,6 +39,9 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private def desPartnershipDetailsSeqJsValue(jsValue: JsValue) = jsValue
     .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'partnershipTrusteeDetail).json.pick[JsArray]).asOpt.get.value
 
+  private def desEstablisherDetailsSeqJsValue(jsValue: JsValue) = jsValue
+    .transform((__ \ 'psaSchemeDetails \ 'establisherDetails).json.pick).asOpt.get
+
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format for first json file" that {
       desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
@@ -199,17 +202,18 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
         case (desIndividualDetailsJsValue, index) =>
           val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(__.json.pick).asOpt.get
-            val actual = desIndividualDetailsElementJsValue
-              .transform(transformer.transformIndividualEstablisherToUserAnswersReads).asOpt.get
+          val actual = desIndividualDetailsElementJsValue
+            .transform(transformer.transformIndividualEstablisherToUserAnswersReads).asOpt.get
 
           (actual \ "establisherKind").as[String] mustBe "individual"
-            (actual \ "establisherDetails").isDefined mustBe true
-            (actual \ "establisherNino").isDefined mustBe true
-            (actual \ "uniqueTaxReference").isDefined mustBe true
-            (actual \ "address").isDefined mustBe true
-            (actual \ "addressYears").isDefined mustBe true
-            (actual \ "previousAddress").isDefined mustBe true
-            (actual \ "contactDetails").isDefined mustBe true
+          (actual \ "establisherDetails").isDefined mustBe true
+          (actual \ "establisherNino").isDefined mustBe true
+          (actual \ "uniqueTaxReference").isDefined mustBe true
+          (actual \ "address").isDefined mustBe true
+          (actual \ "addressYears").isDefined mustBe true
+          (actual \ "previousAddress").isDefined mustBe true
+          (actual \ "contactDetails").isDefined mustBe true
+          (actual \ "isEstablisherComplete").as[Boolean] mustBe true
 
 
       }
@@ -219,19 +223,18 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       desCompanyOrOrganisationDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
         case (desOrganisationDetailsJsValue, index) =>
           val desOrganisationDetailsElementJsValue = desOrganisationDetailsJsValue.transform(__.json.pick).asOpt.get
-            val actual = desOrganisationDetailsElementJsValue
-              .transform(transformer.transformOrganisationEstablisherToUserAnswersReads).asOpt.get
+          val actual = desOrganisationDetailsElementJsValue
+            .transform(transformer.transformOrganisationEstablisherToUserAnswersReads).asOpt.get
 
           (actual \ "establisherKind").as[String] mustBe "company"
-            (actual \ "companyDetails").isDefined mustBe true
-            (actual \ "companyRegistrationNumber").isDefined mustBe true
-            (actual \ "companyUniqueTaxReference").isDefined mustBe true
-            (actual \ "companyAddress").isDefined mustBe true
-            (actual \ "companyAddressYears").isDefined mustBe true
-            (actual \ "previousAddress").isDefined mustBe false
-            (actual \ "companyContactDetails").isDefined mustBe true
-
-
+          (actual \ "companyDetails").isDefined mustBe true
+          (actual \ "companyRegistrationNumber").isDefined mustBe true
+          (actual \ "companyUniqueTaxReference").isDefined mustBe true
+          (actual \ "companyAddress").isDefined mustBe true
+          (actual \ "companyAddressYears").isDefined mustBe true
+          (actual \ "previousAddress").isDefined mustBe false
+          (actual \ "companyContactDetails").isDefined mustBe true
+          (actual \ "isCompanyComplete").as[Boolean] mustBe true
       }
     }
 
@@ -239,21 +242,34 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       desPartnershipDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
         case (desPartnershipDetailsJsValue, index) =>
           val desPartnershipDetailsElementJsValue = desPartnershipDetailsJsValue.transform(__.json.pick).asOpt.get
-            val actual = desPartnershipDetailsElementJsValue
-              .transform(transformer.transformPartnershipEstablisherToUserAnswersReads).asOpt.get
+          val actual = desPartnershipDetailsElementJsValue
+            .transform(transformer.transformPartnershipEstablisherToUserAnswersReads).asOpt.get
 
           (actual \ "establisherKind").as[String] mustBe "partnership"
-            (actual \ "partnershipDetails").isDefined mustBe true
-            (actual \ "partnershipVat").isDefined mustBe true
-            (actual \ "partnershipPaye").isDefined mustBe true
-            (actual \ "partnershipUniqueTaxReference").isDefined mustBe true
-            (actual \ "partnershipAddress").isDefined mustBe true
-            (actual \ "partnershipAddressYears").isDefined mustBe true
-            (actual \ "partnershipPreviousAddress").isDefined mustBe false
-            (actual \ "partnershipContactDetails").isDefined mustBe true
-
-
+          (actual \ "partnershipDetails").isDefined mustBe true
+          (actual \ "partnershipVat").isDefined mustBe true
+          (actual \ "partnershipPaye").isDefined mustBe true
+          (actual \ "partnershipUniqueTaxReference").isDefined mustBe true
+          (actual \ "partnershipAddress").isDefined mustBe true
+          (actual \ "partnershipAddressYears").isDefined mustBe true
+          (actual \ "partnershipPreviousAddress").isDefined mustBe false
+          (actual \ "partnershipContactDetails").isDefined mustBe true
+          (actual \ "isPartnershipCompleteId").as[Boolean] mustBe true
       }
     }
-  }
+
+    "have all establisher transformed" in {
+
+      println(desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1))
+          val actual = desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1)
+            .transform(transformer.establisherToUserAnswersReads)
+
+      println(">>>>" + actual)
+
+//          (actual \ 0 \ "establisherKind").as[String] mustBe "individual"
+//          (actual \ 1 \ "establisherKind").as[String] mustBe "company"
+//          (actual \ 2 \ "establisherKind").as[String] mustBe "partnership"
+      }
+    }
+
 }
