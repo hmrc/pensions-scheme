@@ -26,8 +26,8 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private val desSchemeDetailsJsValue: JsValue = readJsonFromFile("/data/validGetSchemeDetails.json")
 
   private val desPersonDetailsArrayElementReads: Reads[JsArray] = (__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]
-  private val desPersonDetailsElementReads: Reads[JsValue] = (__ \ 'personDetails).json.pick
-  private val desNinoDetailsElementReads: Reads[JsValue] = (__).json.pick
+ // private val desPersonDetailsElementReads: Reads[JsValue] = (__ \ 'personDetails).json.pick
+  private val IndividualDetailsElementReads: Reads[JsValue] = (__).json.pick
 
   private val transformer = new EstablisherDetailsTransformer()
 
@@ -35,11 +35,12 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
   "A DES payload containing establisher details" must {
     "Map correctly to valid establisher details in user answers" when {
-      desIndividualDetailsSeqJsValue.foreach { desIndividualDetailsJsValue =>
-        val desPersonDetailsElementJsValue = desIndividualDetailsJsValue.transform(desPersonDetailsElementReads).asOpt.get
-        "we have establisher details for " + desIndividualDetailsJsValue.toString in {
+      desIndividualDetailsSeqJsValue.zipWithIndex.foreach {
+        case (desIndividualDetailsJsValue, index) =>
+        val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(IndividualDetailsElementReads).asOpt.get
+        s"we have establisher details for element $index in establishers array" in {
 
-          val actual = desPersonDetailsElementJsValue
+          val actual = desIndividualDetailsElementJsValue
             .transform(transformer.transformPersonDetailsToUserAnswersReads).asOpt.get
 
 
@@ -49,10 +50,9 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
           (actual \ "establisherDetails" \ "date").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "dateOfBirth").as[String]
         }
 
-        "we have nino details" + desIndividualDetailsJsValue.toString  in {
+        s"we have nino details for element $index in establishers array" in {
 
-          val desNinoDetailsElementJsValue = desIndividualDetailsJsValue.transform(desNinoDetailsElementReads).asOpt.get
-          val actual = desNinoDetailsElementJsValue
+          val actual = desIndividualDetailsElementJsValue
             .transform(transformer.transformNinoDetailsToUserAnswersReads).asOpt.get
 
           if ((desIndividualDetailsJsValue \ "nino").isDefined) {
@@ -65,6 +65,22 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             (actual \ "establisherNino" \ "reason").asOpt[String] mustBe (desIndividualDetailsJsValue \ "noNinoReason").asOpt[String]
           }
         }
+
+          s"we have utr details for element $index in establishers array" in {
+
+            val actual = desIndividualDetailsElementJsValue
+              .transform(transformer.transformUtrDetailsToUserAnswersReads).asOpt.get
+
+            if ((desIndividualDetailsJsValue \ "utr").isDefined) {
+
+              (actual \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+              (actual \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (desIndividualDetailsJsValue \ "utr").asOpt[String]
+
+            } else {
+              (actual \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe false
+              (actual \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (desIndividualDetailsJsValue \ "noUtrReason").asOpt[String]
+            }
+          }
 
       }
 

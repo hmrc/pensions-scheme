@@ -25,10 +25,10 @@ import play.api.libs.json.{JsBoolean, JsObject, Reads, __}
 class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
 
   def transformPersonDetailsToUserAnswersReads: Reads[JsObject] =
-    (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'firstName).json.pick) and
-      ((__ \ 'establisherDetails \ 'middleName).json.copyFrom((__ \ 'middleName).json.pick) orElse doNothing) and
-      (__ \ 'establisherDetails \ 'lastName).json.copyFrom((__ \ 'lastName).json.pick) and
-      (__ \ 'establisherDetails \ 'date).json.copyFrom((__ \ 'dateOfBirth).json.pick) reduce
+    (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
+      ((__ \ 'establisherDetails \ 'middleName).json.copyFrom((__ \ 'personDetails \ 'middleName).json.pick) orElse doNothing) and
+      (__ \ 'establisherDetails \ 'lastName).json.copyFrom((__ \ 'personDetails \ 'lastName).json.pick) and
+      (__ \ 'establisherDetails \ 'date).json.copyFrom((__ \ 'personDetails \ 'dateOfBirth).json.pick) reduce
 
   def transformNinoDetailsToUserAnswersReads: Reads[JsObject] = {
     (__ \ "nino").read[String].flatMap { _ =>
@@ -38,6 +38,18 @@ class EstablisherDetailsTransformer @Inject()() extends JsonTransformer {
     } orElse {
       (__ \ 'establisherNino \ 'hasNino).json.put(JsBoolean(false)) and
         (__ \ 'establisherNino \ 'reason ).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
+
+    }
+  }
+
+  def transformUtrDetailsToUserAnswersReads: Reads[JsObject] = {
+    (__ \ "utr").read[String].flatMap { _ =>
+      (__ \ 'uniqueTaxReference \ 'hasUtr).json.put(JsBoolean(true)) and
+        (__ \ 'uniqueTaxReference \ 'utr).json.copyFrom((__ \ 'utr).json.pick) reduce
+
+    } orElse {
+      (__ \ 'uniqueTaxReference \ 'hasUtr).json.put(JsBoolean(false)) and
+        (__ \ 'uniqueTaxReference \ 'reason ).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
 
     }
   }
