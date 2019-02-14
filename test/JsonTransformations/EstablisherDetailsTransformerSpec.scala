@@ -27,6 +27,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
   private val desPersonDetailsArrayElementReads: Reads[JsArray] = (__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]
   private val desPersonDetailsElementReads: Reads[JsValue] = (__ \ 'personDetails).json.pick
+  private val desNinoDetailsElementReads: Reads[JsValue] = (__).json.pick
 
   private val transformer = new EstablisherDetailsTransformer()
 
@@ -34,21 +35,39 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
   "A DES payload containing establisher details" must {
     "Map correctly to valid establisher details in user answers" when {
-      "We have individual person details title" in {
-        desIndividualDetailsSeqJsValue.map {
-          desIndividualDetailsJsValue =>
-            val desPersonDetailsElementJsValue = desIndividualDetailsJsValue.transform(desPersonDetailsElementReads).asOpt.get
+      desIndividualDetailsSeqJsValue.foreach { desIndividualDetailsJsValue =>
+        val desPersonDetailsElementJsValue = desIndividualDetailsJsValue.transform(desPersonDetailsElementReads).asOpt.get
+        "we have establisher details for " + desIndividualDetailsJsValue.toString in {
 
-            val actual = desPersonDetailsElementJsValue
-              .transform(transformer.transformPersonDetailsToUserAnswersReads).asOpt.get
+          val actual = desPersonDetailsElementJsValue
+            .transform(transformer.transformPersonDetailsToUserAnswersReads).asOpt.get
 
 
-            (actual \ "establisherDetails" \ "firstName").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "firstName").as[String]
-            (actual \ "establisherDetails" \ "middleName").asOpt[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "middleName").asOpt[String]
-            (actual \ "establisherDetails" \ "lastName").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "lastName").as[String]
-            (actual \ "establisherDetails" \ "date").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "dateOfBirth").as[String]
+          (actual \ "establisherDetails" \ "firstName").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "firstName").as[String]
+          (actual \ "establisherDetails" \ "middleName").asOpt[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "middleName").asOpt[String]
+          (actual \ "establisherDetails" \ "lastName").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "lastName").as[String]
+          (actual \ "establisherDetails" \ "date").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "dateOfBirth").as[String]
         }
+
+        "we have nino details" + desIndividualDetailsJsValue.toString  in {
+
+          val desNinoDetailsElementJsValue = desIndividualDetailsJsValue.transform(desNinoDetailsElementReads).asOpt.get
+          val actual = desNinoDetailsElementJsValue
+            .transform(transformer.transformNinoDetailsToUserAnswersReads).asOpt.get
+
+          if ((desIndividualDetailsJsValue \ "nino").isDefined) {
+
+            (actual \ "establisherNino" \ "hasNino").as[Boolean] mustBe true
+            (actual \ "establisherNino" \ "nino").asOpt[String] mustBe (desIndividualDetailsJsValue \ "nino").asOpt[String]
+
+          } else {
+            (actual \ "establisherNino" \ "hasNino").as[Boolean] mustBe false
+            (actual \ "establisherNino" \ "reason").asOpt[String] mustBe (desIndividualDetailsJsValue \ "noNinoReason").asOpt[String]
+          }
+        }
+
       }
+
     }
   }
 }
