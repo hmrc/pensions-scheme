@@ -34,8 +34,6 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
     Json.obj("establishers" -> (individuals ++ companies ++ partnerships))
   }
 
-  def individuals: Reads[JsArray] = __.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_))
-
   def transformIndividualEstablisherToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("individual")) and
       transformPersonDetailsToUserAnswersReads and
