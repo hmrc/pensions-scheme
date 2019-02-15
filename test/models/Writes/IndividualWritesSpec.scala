@@ -63,7 +63,7 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
 
             val invalidCompany = individual.copy(utr = Some("adsasdasd"))
 
-            val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualTrusteeDetailsUpdateWrites)
+            val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualUpdateWrites)
 
             val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
 
@@ -97,7 +97,7 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
                 |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails" }
                 |}""".stripMargin).get
 
-            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.individualTrusteeDetailsUpdateWrites)
+            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.individualUpdateWrites)
 
             val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
@@ -113,7 +113,7 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
 
             val invalidCompany = individual.copy(utr = Some("adsasdasd"))
 
-            val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualTrusteeDetailsUpdateWrites)
+            val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualUpdateWrites)
 
             val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
 

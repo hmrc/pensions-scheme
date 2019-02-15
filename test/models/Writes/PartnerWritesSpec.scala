@@ -31,7 +31,7 @@ class PartnerWritesSpec extends WordSpec with MustMatchers with OptionValues wit
       "we have a partner" in {
         forAll(individualGen) {
           partner => {
-            val mappedPartner: JsValue = Json.toJson(partner)(Individual.individualTrusteeDetailsUpdateWrites)
+            val mappedPartner: JsValue = Json.toJson(partner)(Individual.individualUpdateWrites)
 
             val validationErrors = schemaValidator.validateJson(mappedPartner,"partnerUpdate.json")
 

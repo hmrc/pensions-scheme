@@ -245,41 +245,40 @@ case class Individual(
 object Individual {
   implicit val formats: Format[Individual] = Json.format[Individual]
 
-  val individualTrusteeDetailsUpdateWrites : Writes[Individual] = (
-    (JsPath \ "personDetails").write[PersonalDetails] and
-      (JsPath \ "nino").writeNullable[String] and
+  private val commonIndividualWrites: Writes[(Option[String], Option[String], Option[String],
+    Option[String], CorrespondenceAddressDetails, CorrespondenceContactDetails, PreviousAddressDetails)] = (
+    (JsPath \ "nino").writeNullable[String] and
       (JsPath \ "noNinoReason").writeNullable[String] and
       (JsPath \ "utr").writeNullable[String] and
       (JsPath \ "noUtrReason").writeNullable[String] and
       (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
       (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
-      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)) (
+    elements => elements)
+
+  val individualUpdateWrites : Writes[Individual] = (
+    (JsPath \ "personDetails").write[PersonalDetails] and
+      JsPath.write(commonIndividualWrites)
   )(details => (details.personalDetails,
-    details.referenceOrNino,
+    (details.referenceOrNino,
     details.noNinoReason,
     details.utr,
     details.noUtrReason,
     details.correspondenceAddressDetails,
     details.correspondenceContactDetails,
-    details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c)) )
+    details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c))))
 
   val establisherIndividualDetailsUpdateWrites : Writes[Individual] = (
     (JsPath \ "personalDetails").write[PersonalDetails] and
-      (JsPath \ "nino").writeNullable[String] and
-      (JsPath \ "noNinoReason").writeNullable[String] and
-      (JsPath \ "utr").writeNullable[String] and
-      (JsPath \ "noUtrReason").writeNullable[String] and
-      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
-      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
-      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
-  )(details => (details.personalDetails,
-    details.referenceOrNino,
-    details.noNinoReason,
-    details.utr,
-    details.noUtrReason,
-    details.correspondenceAddressDetails,
-    details.correspondenceContactDetails,
-    details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c)) )
+      JsPath.write(commonIndividualWrites)
+    )(details => (details.personalDetails,
+    (details.referenceOrNino,
+      details.noNinoReason,
+      details.utr,
+      details.noUtrReason,
+      details.correspondenceAddressDetails,
+      details.correspondenceContactDetails,
+      details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c))))
 }
 
 case class CompanyEstablisher(
@@ -324,7 +323,7 @@ object CompanyEstablisher {
     company.correspondenceAddressDetails,
     company.correspondenceContactDetails,
     company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
-    JsArray(company.directorDetails.map(c=>Json.toJson(c)(Individual.individualTrusteeDetailsUpdateWrites))))
+    JsArray(company.directorDetails.map(c=>Json.toJson(c)(Individual.individualUpdateWrites))))
   )
 }
 
@@ -364,7 +363,7 @@ object Partnership {
     partnership.correspondenceAddressDetails,
     partnership.correspondenceContactDetails,
     partnership.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
-    JsArray(partnership.partnerDetails.map(c=>Json.toJson(c)(Individual.individualTrusteeDetailsUpdateWrites))))
+    JsArray(partnership.partnerDetails.map(c=>Json.toJson(c)(Individual.individualUpdateWrites))))
   )
 }
 
