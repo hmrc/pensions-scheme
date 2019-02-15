@@ -261,15 +261,18 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     "have all establisher transformed" in {
       val desEstablisherDetailsSection = desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1)
       val userAnswersEstablishers: JsValue = transformer.transformDesToUserAnswersEstablishers(desEstablisherDetailsSection)
-      val actualUserAnswersJsArray = (userAnswersEstablishers.as[JsObject] \ "establishers").asOpt[JsArray].get
+      val optUserAnswersEstablishersJsArray = (userAnswersEstablishers.as[JsObject] \ "establishers").asOpt[JsArray]
 
-      actualUserAnswersJsArray.value.size mustBe 3
-      (actualUserAnswersJsArray(0) \ "establisherDetails" \ "firstName").as[String] mustBe
-        (desEstablisherDetailsSection \ "individualDetails" \ 0 \ "personDetails" \ "firstName").as[String]
-      (actualUserAnswersJsArray(1) \ "companyDetails" \ "companyName").as[String] mustBe
-        (desEstablisherDetailsSection \ "companyOrOrganisationDetails" \ 0 \ "organisationName").as[String]
-      (actualUserAnswersJsArray(2) \ "partnershipDetails" \ "name").as[String] mustBe
-        (desEstablisherDetailsSection \ "partnershipTrusteeDetail" \ 0 \ "partnershipName").as[String]
+      optUserAnswersEstablishersJsArray.map(_.value.size) mustBe Some(3)
+
+      optUserAnswersEstablishersJsArray.map(_(0) \ "establisherDetails" \ "firstName")
+        .map(_.as[String]) mustBe Some((desEstablisherDetailsSection \ "individualDetails" \ 0 \ "personDetails" \ "firstName").as[String])
+
+      optUserAnswersEstablishersJsArray.map(_(1) \ "companyDetails" \ "companyName")
+        .map(_.as[String]) mustBe Some((desEstablisherDetailsSection \ "companyOrOrganisationDetails" \ 0 \ "organisationName").as[String])
+
+      optUserAnswersEstablishersJsArray.map(_(2) \ "partnershipDetails" \ "name")
+        .map(_.as[String]) mustBe Some((desEstablisherDetailsSection \ "partnershipTrusteeDetail" \ 0 \ "partnershipName").as[String])
     }
   }
 }
