@@ -455,7 +455,7 @@ object TrusteeDetails {
     )(trustee => (
     if(trustee.individualTrusteeDetail.nonEmpty) Some(JsArray(trustee.individualTrusteeDetail.map(i=>Json.toJson(i)(Individual.establisherIndividualDetailsUpdateWrites)))) else None,
     if(trustee.companyTrusteeDetail.nonEmpty) Some(JsArray(trustee.companyTrusteeDetail.map(c=>Json.toJson(c)(CompanyTrustee.updateWrites)))) else None,
-    if(trustee.partnershipTrusteeDetail.nonEmpty) Some(JsArray(trustee.partnershipTrusteeDetail.map(p=>Json.toJson(p)(Partnership.updateWrites)))) else None
+    if(trustee.partnershipTrusteeDetail.nonEmpty) Some(JsArray(trustee.partnershipTrusteeDetail.map(p=>Json.toJson(p)(PartnershipTrustee.updateWrites)))) else None
   ))
 }
 

@@ -149,7 +149,7 @@ trait PensionSchemeGenerators {
   val trusteeDetailsGen: Gen[TrusteeDetails] = for {
     individuals <- Gen.listOfN(randomNumberFromRange(0,0),individualGen)
     companies <- Gen.listOfN(randomNumberFromRange(0,0),companyTrusteeGen)
-    partnerships <- Gen.listOfN(randomNumberFromRange(0,0),partnershipGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,0),partnershipTrusteeGen)
   } yield TrusteeDetails(individuals,companies,partnerships)
 
   def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
