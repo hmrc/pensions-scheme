@@ -245,8 +245,26 @@ case class Individual(
 object Individual {
   implicit val formats: Format[Individual] = Json.format[Individual]
 
-  val updateWrites : Writes[Individual] = (
+  val individualTrusteeDetailsUpdateWrites : Writes[Individual] = (
     (JsPath \ "personDetails").write[PersonalDetails] and
+      (JsPath \ "nino").writeNullable[String] and
+      (JsPath \ "noNinoReason").writeNullable[String] and
+      (JsPath \ "utr").writeNullable[String] and
+      (JsPath \ "noUtrReason").writeNullable[String] and
+      (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
+      (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
+  )(details => (details.personalDetails,
+    details.referenceOrNino,
+    details.noNinoReason,
+    details.utr,
+    details.noUtrReason,
+    details.correspondenceAddressDetails,
+    details.correspondenceContactDetails,
+    details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c)) )
+
+  val establisherIndividualDetailsUpdateWrites : Writes[Individual] = (
+    (JsPath \ "personalDetails").write[PersonalDetails] and
       (JsPath \ "nino").writeNullable[String] and
       (JsPath \ "noNinoReason").writeNullable[String] and
       (JsPath \ "utr").writeNullable[String] and
@@ -306,7 +324,7 @@ object CompanyEstablisher {
     company.correspondenceAddressDetails,
     company.correspondenceContactDetails,
     company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
-    JsArray(company.directorDetails.map(c=>Json.toJson(c)(Individual.updateWrites))))
+    JsArray(company.directorDetails.map(c=>Json.toJson(c)(Individual.individualTrusteeDetailsUpdateWrites))))
   )
 }
 
@@ -346,7 +364,7 @@ object Partnership {
     partnership.correspondenceAddressDetails,
     partnership.correspondenceContactDetails,
     partnership.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
-    JsArray(partnership.partnerDetails.map(c=>Json.toJson(c)(Individual.updateWrites))))
+    JsArray(partnership.partnerDetails.map(c=>Json.toJson(c)(Individual.individualTrusteeDetailsUpdateWrites))))
   )
 }
 
@@ -417,13 +435,13 @@ object EstablisherDetails {
   implicit val formats : Format[EstablisherDetails] = Json.format[EstablisherDetails]
 
   val updateWrites : Writes[EstablisherDetails] = (
-    (JsPath \ "individualDetails").write[JsArray] and
-      (JsPath \ "companyOrOrganisationDetails").write[JsArray] and
-      (JsPath \ "partnershipDetails").write[JsArray]
+    (JsPath \ "individualDetails").writeNullable[JsArray] and
+      (JsPath \ "companyOrOrganisationDetails").writeNullable[JsArray] and
+      (JsPath \ "partnershipDetails").writeNullable[JsArray]
   )(establishers => (
-    JsArray(establishers.individual.map(i=>Json.toJson(i)(Individual.updateWrites))),
-    JsArray(establishers.companyOrOrganization.map(c=>Json.toJson(c)(CompanyEstablisher.updateWrites))),
-    JsArray(establishers.partnership.map(p=>Json.toJson(p)(Partnership.updateWrites)))
+    if(establishers.individual.nonEmpty) Some(JsArray(establishers.individual.map(i=>Json.toJson(i)(Individual.establisherIndividualDetailsUpdateWrites)))) else None,
+    if(establishers.companyOrOrganization.nonEmpty) Some(JsArray(establishers.companyOrOrganization.map(c=>Json.toJson(c)(CompanyEstablisher.updateWrites)))) else None,
+    if(establishers.partnership.nonEmpty) Some(JsArray(establishers.partnership.map(p=>Json.toJson(p)(Partnership.updateWrites)))) else None
   ))
 }
 

@@ -129,9 +129,9 @@ trait PensionSchemeGenerators {
   } yield Partnership(name,utr,noUtrReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,partners)
 
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
-    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
-    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyEstablisherGen)
-    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipGen)
+    individuals <- Gen.listOfN(randomNumberFromRange(0,0),individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,0),companyEstablisherGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,0),partnershipGen)
   } yield EstablisherDetails(individuals,companies,partnerships)
 
   def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {

@@ -57,9 +57,15 @@ class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with Optio
         forAll(establisherDetailsGen) {
           establisher => {
 
-            val invalidCompany = establisher.copy(individual = Seq(establisher.individual(0).copy(utr = Some("12313123213123123123"))))
+            val localEstablisher = if(establisher.individual.nonEmpty) {
+              establisher.copy(individual = Seq(establisher.individual(0).copy(utr = Some("12313123213123123123"))))
+            } else if (establisher.companyOrOrganization.nonEmpty) {
+              establisher.copy(companyOrOrganization = Seq(establisher.companyOrOrganization(0).copy(utr = Some("12313123213123123123"))))
+            } else if (establisher.partnership.nonEmpty) {
+              establisher.copy(partnership = Seq(establisher.partnership(0).copy(utr = Some("12313123213123123123"))))
+            } else establisher.copy(individual = Seq(individualGen.sample.get.copy(utr = Some("12313123213123123123"))))
 
-            val mappedEstablisher: JsValue = Json.toJson(establisher)(EstablisherDetails.updateWrites)
+            val mappedEstablisher: JsValue = Json.toJson(localEstablisher)(EstablisherDetails.updateWrites)
 
             val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
 
