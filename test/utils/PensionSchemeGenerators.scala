@@ -28,7 +28,7 @@ trait PensionSchemeGenerators {
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
 
-  val ukAddressGen: Gen[Address] = for {
+  val ukAddressGen: Gen[UkAddress] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
     line3 <- addressLineOptional
@@ -36,7 +36,7 @@ trait PensionSchemeGenerators {
     postalCode <- postalCodeGem
   } yield UkAddress(line1, Some(line2), line3, line4, "GB", postalCode)
 
-  val internationalAddressGen: Gen[Address] = for {
+  val internationalAddressGen: Gen[InternationalAddress] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
     line3 <- addressLineOptional
@@ -127,6 +127,18 @@ trait PensionSchemeGenerators {
     previous <- Gen.option(previousAddressDetailsGen)
     partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
   } yield Partnership(name,utr,noUtrReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,partners)
+
+  val partnershipTrusteeGen: Gen[PartnershipTrustee] = for {
+    name <- nameGenerator
+    utr <- Gen.option("1111111111")
+    noUtrReason <- Gen.option(reasonGen)
+    vat <- Gen.option("123456789")
+    paye <- Gen.option("1111111111111")
+    address <- ukAddressGen
+    contact <- contactDetailsGen
+    previous <- Gen.option(previousAddressDetailsGen)
+    partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
+  } yield PartnershipTrustee(name,utr,noUtrReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
 
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
     individuals <- Gen.listOfN(randomNumberFromRange(0,0),individualGen)
