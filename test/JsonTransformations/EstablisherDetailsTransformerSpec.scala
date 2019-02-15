@@ -31,7 +31,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private val transformer = new EstablisherDetailsTransformer(addressTransformer)
 
   private def desIndividualDetailsSeqJsValue(jsValue: JsValue) = jsValue
-    .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails).json.pick[JsArray]).asOpt.get.value
+    .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails ).json.pick[JsArray]).asOpt.get.value
 
   private def desCompanyOrOrganisationDetailsSeqJsValue(jsValue: JsValue) = jsValue
     .transform((__ \ 'psaSchemeDetails \ 'establisherDetails \ 'companyOrOrganisationDetails).json.pick[JsArray]).asOpt.get.value
@@ -44,10 +44,10 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format for first json file" that {
-      desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1).zipWithIndex.foreach {
-        case (desIndividualDetailsJsValue, index) =>
-          val desIndividualDetailsElementJsValue = desIndividualDetailsJsValue.transform(__.json.pick).asOpt.get
-          s"has establisher details for element $index in establishers array" in {
+
+      val desIndividualDetailsJsValue = desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1)(0)
+          val desIndividualDetailsElementJsValue = desIndividualDetailsSeqJsValue(desSchemeDetailsJsValue1)(0).transform(__.json.pick).asOpt.get
+          s"has establisher details in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
               .transform(transformer.transformPersonDetailsToUserAnswersReads).asOpt.get
             (actual \ "establisherDetails" \ "firstName").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "firstName").as[String]
@@ -56,7 +56,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             (actual \ "establisherDetails" \ "date").as[String] mustBe (desIndividualDetailsJsValue \ "personDetails" \ "dateOfBirth").as[String]
           }
 
-          s"has nino details for element $index in establishers array" in {
+          s"has nino details in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
               .transform(transformer.transformNinoDetailsToUserAnswersReads).asOpt.get
 
@@ -64,7 +64,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             (actual \ "establisherNino" \ "nino").asOpt[String] mustBe (desIndividualDetailsJsValue \ "nino").asOpt[String]
           }
 
-          s"has utr details for element $index in establishers array" in {
+          s"has utr details in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
               .transform(transformer.transformUtrDetailsToUserAnswersReads("uniqueTaxReference")).asOpt.get
 
@@ -73,7 +73,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
           }
 
-          s"has contact details for element $index in establishers array" in {
+          s"has contact details in establishers array" in {
             val actual = desIndividualDetailsElementJsValue
               .transform(transformer.transformContactDetailsToUserAnswersReads("contactDetails")).asOpt.get
 
@@ -81,7 +81,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             (actual \ "contactDetails" \ "phoneNumber").as[String] mustBe
               (desIndividualDetailsJsValue \ "correspondenceContactDetails" \ "telephone").as[String]
           }
-      }
+
     }
 
     "have the individual details  transformed correctly to valid user answers format for second json file" that {
@@ -261,18 +261,24 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     "have all establisher transformed" in {
       val desEstablisherDetailsSection = desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1)
       val userAnswersEstablishers: JsValue = transformer.transformDesToUserAnswersEstablishers(desEstablisherDetailsSection)
-      val optUserAnswersEstablishersJsArray = (userAnswersEstablishers.as[JsObject] \ "establishers").asOpt[JsArray]
+      val userAnswersEstablishersJsArray = (userAnswersEstablishers \ "establishers").as[JsArray]
 
-      optUserAnswersEstablishersJsArray.map(_.value.size) mustBe Some(3)
+      userAnswersEstablishersJsArray.value.size mustBe 3
+      (userAnswersEstablishersJsArray(0) \ "establisherDetails" \ "firstName").as[String] mustBe
+        (desEstablisherDetailsSection \ "individualDetails" \ 0 \ "personDetails" \ "firstName").as[String]
+      (userAnswersEstablishersJsArray(1) \ "companyDetails" \ "companyName").as[String] mustBe
+        (desEstablisherDetailsSection \ "companyOrOrganisationDetails" \ 0 \ "organisationName").as[String]
+      (userAnswersEstablishersJsArray(2) \ "partnershipDetails" \ "name").as[String] mustBe
+        (desEstablisherDetailsSection \ "partnershipTrusteeDetail" \ 0 \ "partnershipName").as[String]
 
-      optUserAnswersEstablishersJsArray.map(_(0) \ "establisherDetails" \ "firstName")
-        .map(_.as[String]) mustBe Some((desEstablisherDetailsSection \ "individualDetails" \ 0 \ "personDetails" \ "firstName").as[String])
+    }
 
-      optUserAnswersEstablishersJsArray.map(_(1) \ "companyDetails" \ "companyName")
-        .map(_.as[String]) mustBe Some((desEstablisherDetailsSection \ "companyOrOrganisationDetails" \ 0 \ "organisationName").as[String])
+    "if only inidividual and company establishers are present" in {
+      val desEstablisherDetailsSection = desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue2)
+      val userAnswersEstablishers: JsValue = transformer.transformDesToUserAnswersEstablishers(desEstablisherDetailsSection)
+      val userAnswersEstablishersJsArray = (userAnswersEstablishers \ "establishers").as[JsArray]
 
-      optUserAnswersEstablishersJsArray.map(_(2) \ "partnershipDetails" \ "name")
-        .map(_.as[String]) mustBe Some((desEstablisherDetailsSection \ "partnershipTrusteeDetail" \ 0 \ "partnershipName").as[String])
+      userAnswersEstablishersJsArray.value.size mustBe 2
     }
   }
 }

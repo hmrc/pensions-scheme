@@ -26,11 +26,11 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
 
   def transformDesToUserAnswersEstablishers(desJsValue: JsValue): JsValue = {
     val individuals = desJsValue.transform((__ \ 'individualDetails)
-      .read(__.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+      .read(__.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_)))).getOrElse(JsArray())
     val companies = desJsValue.transform((__ \ 'companyOrOrganisationDetails)
-      .read(__.read(Reads.seq(transformOrganisationEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+      .read(__.read(Reads.seq(transformOrganisationEstablisherToUserAnswersReads)).map(JsArray(_)))).getOrElse(JsArray())
     val partnerships = desJsValue.transform((__ \ 'partnershipTrusteeDetail)
-      .read(__.read(Reads.seq(transformPartnershipEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+      .read(__.read(Reads.seq(transformPartnershipEstablisherToUserAnswersReads)).map(JsArray(_)))).getOrElse(JsArray())
     Json.obj("establishers" -> (individuals ++ companies ++ partnerships))
   }
 
