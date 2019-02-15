@@ -263,8 +263,6 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       val userAnswersEstablishers: JsValue = transformer.transformDesToUserAnswersEstablishers(desEstablisherDetailsSection)
       val actualUserAnswersJsArray = (userAnswersEstablishers.as[JsObject] \ "establishers").asOpt[JsArray].get
 
-      println(">>>>" + userAnswersEstablishers)
-
       actualUserAnswersJsArray.value.size mustBe 3
       (actualUserAnswersJsArray(0) \ "establisherDetails" \ "firstName").as[String] mustBe
         (desEstablisherDetailsSection \ "individualDetails" \ 0 \ "personDetails" \ "firstName").as[String]
