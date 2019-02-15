@@ -128,6 +128,18 @@ trait PensionSchemeGenerators {
     partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
   } yield Partnership(name,utr,noUtrReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,partners)
 
+  val partnershipTrusteeGen: Gen[PartnershipTrustee] = for {
+    name <- nameGenerator
+    utr <- Gen.option("1111111111")
+    noUtrReason <- Gen.option(reasonGen)
+    vat <- Gen.option("123456789")
+    paye <- Gen.option("1111111111111")
+    address <- ukAddressGen
+    contact <- contactDetailsGen
+    previous <- Gen.option(previousAddressDetailsGen)
+    partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
+  } yield PartnershipTrustee(name,utr,noUtrReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
+
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
     individuals <- Gen.listOfN(randomNumberFromRange(0,0),individualGen)
     companies <- Gen.listOfN(randomNumberFromRange(0,0),companyEstablisherGen)

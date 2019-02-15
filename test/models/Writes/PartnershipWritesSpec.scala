@@ -17,7 +17,7 @@
 package models.Writes
 
 import com.eclipsesource.schema.{JsonSource, SchemaValidator}
-import models.Partnership
+import models.{Partnership, PartnershipTrustee}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
@@ -29,7 +29,7 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
 
   val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
 
-  "A partnership object" should {
+  "An establisher partnership object" should {
     "parse correctly to a valid DES format for variations api - API 1468" when {
       "we have a valid partnership" in {
         forAll(partnershipGen) {
@@ -63,6 +63,48 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
 
             val mappedPartner: JsValue = Json.toJson(invalidPartnership)(Partnership.updateWrites)
             val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
+
+            validator.validate(schema, testJsValue).isError mustBe true
+          }
+        }
+      }
+    }
+  }
+
+  "A trustee partnership object" should {
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid trustee partnership" in {
+        forAll(partnershipTrusteeGen) {
+          partnership => {
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails" }
+                |}""".stripMargin).get
+
+
+            val mappedPartner: JsValue = Json.toJson(partnership)(PartnershipTrustee.updateWrites)
+            val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
+
+            validator.validate(schema, testJsValue).isSuccess mustBe true
+          }
+        }
+      }
+    }
+
+    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+      "we have an invalid trustee partnership" in {
+        forAll(partnershipTrusteeGen) {
+          partnership => {
+            val invalidPartnership = partnership.copy(utr = Some("invalid utr"))
+
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails" }
+                |}""".stripMargin).get
+
+
+            val mappedPartner: JsValue = Json.toJson(invalidPartnership)(PartnershipTrustee.updateWrites)
+            val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
 
             validator.validate(schema, testJsValue).isError mustBe true
           }
