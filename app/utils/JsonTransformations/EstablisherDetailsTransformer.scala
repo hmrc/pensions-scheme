@@ -24,15 +24,14 @@ import play.api.libs.json._
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def establisherToUserAnswersReads: Reads[JsObject] = {
-    val i = (__ \ 'individualDetails).read(__.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_)))
-    val c = (__ \ 'companyDetails).read(__.read(Reads.seq(transformOrganisationEstablisherToUserAnswersReads)).map(JsArray(_)))
-    val p = (__ \ 'partnershipDetails).read(__.read(Reads.seq(transformPartnershipEstablisherToUserAnswersReads)).map(JsArray(_)))
-   //    (__ \ 'establishers).json.copyFrom(i )
+  def establisherToUserAnswersReads(desJsValue:JsValue): JsValue = {
 
-    (__ \ 'establishers).json.copyFrom(i and c and p reduce)
 
-      //.copyFrom((__ \ 'personDetails \ 'lastName).json.pick)
+    val i = desJsValue.transform((__ \ 'individualDetails).read(__.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+    val c = desJsValue.transform((__ \ 'companyOrOrganisationDetails).read(__.read(Reads.seq(transformOrganisationEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+    val p = desJsValue.transform((__ \ 'partnershipTrusteeDetail).read(__.read(Reads.seq(transformPartnershipEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+
+    Json.obj("establishers" -> (i ++ c ++ p))
 
   }
 

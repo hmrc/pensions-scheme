@@ -260,16 +260,25 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
     "have all establisher transformed" in {
 
-      println(desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1))
-          val actual = desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1)
-            .transform(transformer.establisherToUserAnswersReads)
+      val actual:JsValue = transformer.establisherToUserAnswersReads(desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1))
+
+      val gg = actual.as[JsObject]
+
+      val actualUserAnswersJsArray = gg \ "establishers"
+
+      val tt = actualUserAnswersJsArray.asOpt[JsArray].get
 
       println(">>>>" + actual)
+      tt.value.size mustBe 3
+      (tt(0) \ "establisherDetails" \ "firstName").as[String] mustBe "abcdef"
+      (tt(1) \ "companyDetails" \ "companyName").as[String] mustBe "ABC Hotels Ltd"
+      (tt(2) \ "partnershipDetails" \ "name").as[String] mustBe "ABC Partnerships"
 
-//          (actual \ 0 \ "establisherKind").as[String] mustBe "individual"
-//          (actual \ 1 \ "establisherKind").as[String] mustBe "company"
-//          (actual \ 2 \ "establisherKind").as[String] mustBe "partnership"
-      }
+
+      //          (actual \ 0 \ "establisherKind").as[String] mustBe "individual"
+      //          (actual \ 1 \ "establisherKind").as[String] mustBe "company"
+      //          (actual \ 2 \ "establisherKind").as[String] mustBe "partnership"
     }
+  }
 
 }
