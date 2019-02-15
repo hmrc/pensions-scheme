@@ -28,7 +28,7 @@ trait PensionSchemeGenerators {
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
 
-  val ukAddressGen: Gen[Address] = for {
+  val ukAddressGen: Gen[UkAddress] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
     line3 <- addressLineOptional
@@ -36,7 +36,7 @@ trait PensionSchemeGenerators {
     postalCode <- postalCodeGem
   } yield UkAddress(line1, Some(line2), line3, line4, "GB", postalCode)
 
-  val internationalAddressGen: Gen[Address] = for {
+  val internationalAddressGen: Gen[InternationalAddress] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
     line3 <- addressLineOptional

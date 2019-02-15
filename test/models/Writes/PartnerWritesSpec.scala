@@ -16,27 +16,55 @@
 
 package models.Writes
 
+import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import models.Individual
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
+import utils.PensionSchemeGenerators
 
 class PartnerWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
 
-  val schemaValidator = SchemaValidatorForTests()
+  val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
 
-  "A Partner object" should {
-    "map correctly to an update payload for API 1468" when {
-      "we have a partner" in {
+  val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+
+  "A partner" should {
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid partner" in {
         forAll(individualGen) {
           partner => {
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails/items/partnerDetails" }
+                |}""".stripMargin).get
+
+
             val mappedPartner: JsValue = Json.toJson(partner)(Individual.individualUpdateWrites)
+            val testJsValue = Json.obj("partnerDetails" -> Json.arr(mappedPartner))
 
-            val validationErrors = schemaValidator.validateJson(mappedPartner,"partnerUpdate.json")
-
-            validationErrors mustBe None
+            validator.validate(schema, testJsValue).isSuccess mustBe true
           }
+        }
+      }
+    }
+  }
+
+  "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+    "we have an invalid partner" in {
+      forAll(individualGen) {
+        partner => {
+          val invalidPartner = partner.copy(utr = Some("invalid utr"))
+          val schema = JsonSource.schemaFromString(
+            """{
+              |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails/items/partnerDetails" }
+              |}""".stripMargin).get
+
+
+          val mappedPartner: JsValue = Json.toJson(invalidPartner)(Individual.individualUpdateWrites)
+          val testJsValue = Json.obj("partnerDetails" -> Json.arr(mappedPartner))
+
+          validator.validate(schema, testJsValue).isError mustBe true
         }
       }
     }

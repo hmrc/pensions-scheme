@@ -16,25 +16,55 @@
 
 package models.Writes
 
-import models.{CompanyEstablisher, Partnership}
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import com.eclipsesource.schema.{JsonSource, SchemaValidator}
+import models.Partnership
 import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
+import utils.PensionSchemeGenerators
 
 class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-  val schemaValidator = SchemaValidatorForTests()
+
+  val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
+
+  val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
 
   "A partnership object" should {
-    "map correctly to an update payload for API 1468" when {
-      "we have a full partnership" in {
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid partnership" in {
         forAll(partnershipGen) {
-          company => {
-            val mappedPartnership: JsValue = Json.toJson(company)(Partnership.updateWrites)
+          partnership => {
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails" }
+                |}""".stripMargin).get
 
-            val validationErrors = schemaValidator.validateJson(mappedPartnership,"establisherPartnershipUpdate.json")
 
-            validationErrors mustBe None
+            val mappedPartner: JsValue = Json.toJson(partnership)(Partnership.updateWrites)
+            val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
+
+            validator.validate(schema, testJsValue).isSuccess mustBe true
+          }
+        }
+      }
+    }
+
+    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+      "we have an invalid partnership" in {
+        forAll(partnershipGen) {
+          partnership => {
+            val invalidPartnership = partnership.copy(partnerDetails = Nil)
+
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails" }
+                |}""".stripMargin).get
+
+
+            val mappedPartner: JsValue = Json.toJson(invalidPartnership)(Partnership.updateWrites)
+            val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
+
+            validator.validate(schema, testJsValue).isError mustBe true
           }
         }
       }
