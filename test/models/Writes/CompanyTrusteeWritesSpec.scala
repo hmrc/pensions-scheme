@@ -16,25 +16,108 @@
 
 package models.Writes
 
-import models.{CompanyEstablisher, CompanyTrustee}
+import com.eclipsesource.schema.{JsonSource, SchemaValidator}
+import models.CompanyTrustee
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
+import utils.PensionSchemeGenerators
 
 class CompanyTrusteeWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-  val schemaValidator = SchemaValidatorForTests()
 
   "A company object" should {
-    "map correctly to an update payload for API 1468" when {
-      "we have an company" in {
+
+    "validate additionalProperties schema constraint via" in {
+
+      val talkSchema = JsonSource.schemaFromUrl(getClass.getResource("/talk.json")).get
+
+      val validator = SchemaValidator().addSchema("/talk.json", talkSchema)
+
+      val schema = JsonSource.schemaFromString(
+        """{
+          |  "additionalProperties": { "$ref": "/talk.json#/properties/date/month" }
+          |}""".stripMargin).get
+
+      // min length 10, max length 20
+//      val valid = Json.obj("title" -> "This is valid")
+//      val invalid = Json.obj("title" -> "Too short")
+//      val valid = Json.obj("date" -> Json.obj("year" -> "1111", "month" -> 11, "day" -> 2))
+//      val invalid = Json.obj("date" -> Json.obj("year" -> 999, "month" -> 13, "day" -> 2))
+      val valid = Json.obj("month" -> 11)
+      val invalid = Json.obj("month" -> "13")
+
+      println("############# v.validate(schema, valid) : " + validator.validate(schema, valid).asEither)
+      println("############# v.validate(schema, invalid) : " + validator.validate(schema, invalid).asEither)
+
+      validator.validate(schema, valid).isSuccess mustBe true
+      validator.validate(schema, invalid).isError mustBe true
+    }
+
+
+   "map correctly to an update payload for API 1468" when {
+
+      "validate company write converted json with schema" in {
         forAll(companyTrusteeGen) {
           company => {
+
+            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
+
+            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": {
+                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/companyTrusteeDetailsType" }
+                |}""".stripMargin).get
+
             val mappedCompany: JsValue = Json.toJson(company)(CompanyTrustee.updateWrites)
 
-            val validationErrors = schemaValidator.validateJson(mappedCompany,"api1468_schema.json", "#/definitions/companyTrusteeDetailsType")
+            validator.validate(schema, mappedCompany).isSuccess mustBe true
+          }
+        }
+      }
 
-            validationErrors mustBe None
+      "invalidate company write converted json with schema" in {
+
+        forAll(companyTrusteeGen) {
+          company => {
+
+            val invalidCompany = company.copy(utr = Some("adsasdasd"))
+
+            val mappedCompany: JsValue = Json.toJson(invalidCompany)(CompanyTrustee.updateWrites)
+
+            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
+
+            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": {
+                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/companyTrusteeDetailsType" }
+                |}""".stripMargin).get
+
+            validator.validate(schema, mappedCompany).isError mustBe true
+          }
+        }
+      }
+
+      "validate company write with schema" in {
+        forAll(companyTrusteeGen) {
+          company => {
+
+            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
+
+            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": {
+                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/companyTrusteeDetailsType" }
+                |}""".stripMargin).get
+
+            val result = validator.validate(schema, company, CompanyTrustee.updateWrites)
+
+            result.isSuccess mustBe true
           }
         }
       }

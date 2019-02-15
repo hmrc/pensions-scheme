@@ -45,6 +45,7 @@ object AppDependencies {
     "com.typesafe.play"       %% "play-json-joda"         % playJsonVersion,
     "uk.gov.hmrc"             %% "bootstrap-play-26"      % bootstrapVersion,
     "com.networknt"           %  "json-schema-validator"  % jsonSchemeValidatorVersion,
+    "com.eclipsesource"       %% "play-json-schema-validator" % "0.9.4",
     "com.josephpconley"       %% "play-jsonpath"          % jsonPathVersion,
     "uk.gov.hmrc"             %% "domain"                 % domainVersion
   )
