@@ -27,36 +27,9 @@ class CompanyTrusteeWritesSpec extends WordSpec with MustMatchers with OptionVal
 
   "A company object" should {
 
-    "validate additionalProperties schema constraint via" in {
+   "map correctly to an update payload for company TrusteeDetails API 1468" when {
 
-      val talkSchema = JsonSource.schemaFromUrl(getClass.getResource("/talk.json")).get
-
-      val validator = SchemaValidator().addSchema("/talk.json", talkSchema)
-
-      val schema = JsonSource.schemaFromString(
-        """{
-          |  "additionalProperties": { "$ref": "/talk.json#/properties/date/month" }
-          |}""".stripMargin).get
-
-      // min length 10, max length 20
-//      val valid = Json.obj("title" -> "This is valid")
-//      val invalid = Json.obj("title" -> "Too short")
-//      val valid = Json.obj("date" -> Json.obj("year" -> "1111", "month" -> 11, "day" -> 2))
-//      val invalid = Json.obj("date" -> Json.obj("year" -> 999, "month" -> 13, "day" -> 2))
-      val valid = Json.obj("month" -> 11)
-      val invalid = Json.obj("month" -> "13")
-
-      println("############# v.validate(schema, valid) : " + validator.validate(schema, valid).asEither)
-      println("############# v.validate(schema, invalid) : " + validator.validate(schema, invalid).asEither)
-
-      validator.validate(schema, valid).isSuccess mustBe true
-      validator.validate(schema, invalid).isError mustBe true
-    }
-
-
-   "map correctly to an update payload for API 1468" when {
-
-      "validate company write converted json with schema" in {
+      "validate companyTrusteeDetails write with schema" in {
         forAll(companyTrusteeGen) {
           company => {
 
@@ -72,12 +45,14 @@ class CompanyTrusteeWritesSpec extends WordSpec with MustMatchers with OptionVal
 
             val mappedCompany: JsValue = Json.toJson(company)(CompanyTrustee.updateWrites)
 
-            validator.validate(schema, mappedCompany).isSuccess mustBe true
+            val valid = Json.obj("companyTrusteeDetailsType" -> Json.arr(mappedCompany))
+
+            validator.validate(schema, valid).isSuccess mustBe true
           }
         }
       }
 
-      "invalidate company write converted json with schema" in {
+      "invalidate companyTrusteeDetails write with schema when json is invalid" in {
 
         forAll(companyTrusteeGen) {
           company => {
@@ -96,28 +71,9 @@ class CompanyTrusteeWritesSpec extends WordSpec with MustMatchers with OptionVal
                 |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/companyTrusteeDetailsType" }
                 |}""".stripMargin).get
 
-            validator.validate(schema, mappedCompany).isError mustBe true
-          }
-        }
-      }
+            val inValid = Json.obj("companyTrusteeDetailsType" -> Json.arr(mappedCompany))
 
-      "validate company write with schema" in {
-        forAll(companyTrusteeGen) {
-          company => {
-
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/companyTrusteeDetailsType" }
-                |}""".stripMargin).get
-
-            val result = validator.validate(schema, company, CompanyTrustee.updateWrites)
-
-            result.isSuccess mustBe true
+            validator.validate(schema, inValid).isError mustBe true
           }
         }
       }

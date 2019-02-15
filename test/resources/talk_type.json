@@ -1,8 +1,0 @@
-{
-  "enum": [
-    null,
-    "KEYNOTE",
-    "TALK",
-    "LIGHTNING_TALK"
-  ]
-}

@@ -16,25 +16,64 @@
 
 package models.Writes
 
+import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import models.EstablisherDetails
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
+import utils.PensionSchemeGenerators
 
 class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-  val schemaValidator = SchemaValidatorForTests()
 
   "An establisher details object" should {
-    "map correctly to an update payload for API 1468" when {
-      "we have directors, companies and partnerhips" in {
+
+    "map correctly to an update payload for for establisherDetails API 1468" when {
+
+      "validate establisherDetails write with schema" in {
         forAll(establisherDetailsGen) {
-          establishers => {
-            val mappedEstablishers: JsValue = Json.toJson(establishers)(EstablisherDetails.updateWrites)
+          establisher => {
 
-            val validationErrors = schemaValidator.validateJson(mappedEstablishers,"establisherDetailsUpdate.json")
+            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
 
-            validationErrors mustBe None
+            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": {
+                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails" }
+                |}""".stripMargin).get
+
+            val mappedEstablisher: JsValue = Json.toJson(establisher)(EstablisherDetails.updateWrites)
+
+            val valid = Json.obj("establisherDetails" -> mappedEstablisher)
+
+            validator.validate(schema, valid).isSuccess mustBe true
+          }
+        }
+      }
+
+      "invalidate companyTrusteeDetails write with schema when" in {
+
+        forAll(establisherDetailsGen) {
+          establisher => {
+
+            val invalidCompany = establisher.copy(individual = Seq(establisher.individual(0).copy(utr = Some("12313123213123123123"))))
+
+            val mappedEstablisher: JsValue = Json.toJson(establisher)(EstablisherDetails.updateWrites)
+
+            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
+
+            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+
+            val schema = JsonSource.schemaFromString(
+              """{
+                |  "additionalProperties": {
+                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails" }
+                |}""".stripMargin).get
+
+            val inValid = Json.obj("establisherDetails" -> mappedEstablisher)
+
+            validator.validate(schema, inValid).isError mustBe true
           }
         }
       }
