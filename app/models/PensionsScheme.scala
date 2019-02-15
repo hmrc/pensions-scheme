@@ -423,6 +423,19 @@ case class TrusteeDetails(
                            companyTrusteeDetail: Seq[CompanyTrustee],
                            partnershipTrusteeDetail: Seq[PartnershipTrustee]
                          )
+object TrusteeDetails {
+  implicit val formats : Format[TrusteeDetails] = Json.format[TrusteeDetails]
+
+  val updateWrites : Writes[TrusteeDetails] = (
+    (JsPath \ "individualDetails").writeNullable[JsArray] and
+      (JsPath \ "companyOrOrganisationDetails").writeNullable[JsArray] and
+      (JsPath \ "partnershipDetails").writeNullable[JsArray]
+    )(trustee => (
+    if(trustee.individualTrusteeDetail.nonEmpty) Some(JsArray(trustee.individualTrusteeDetail.map(i=>Json.toJson(i)(Individual.establisherIndividualDetailsUpdateWrites)))) else None,
+    if(trustee.companyTrusteeDetail.nonEmpty) Some(JsArray(trustee.companyTrusteeDetail.map(c=>Json.toJson(c)(CompanyTrustee.updateWrites)))) else None,
+    if(trustee.partnershipTrusteeDetail.nonEmpty) Some(JsArray(trustee.partnershipTrusteeDetail.map(p=>Json.toJson(p)(Partnership.updateWrites)))) else None
+  ))
+}
 
 case class EstablisherDetails(
                                individual: Seq[Individual],
