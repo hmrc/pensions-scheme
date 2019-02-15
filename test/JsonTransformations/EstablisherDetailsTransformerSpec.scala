@@ -259,26 +259,19 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     }
 
     "have all establisher transformed" in {
+      val desEstablisherDetailsSection = desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1)
+      val userAnswersEstablishers: JsValue = transformer.transformDesToUserAnswersEstablishers(desEstablisherDetailsSection)
+      val actualUserAnswersJsArray = (userAnswersEstablishers.as[JsObject] \ "establishers").asOpt[JsArray].get
 
-      val actual:JsValue = transformer.establisherToUserAnswersReads(desEstablisherDetailsSeqJsValue(desSchemeDetailsJsValue1))
+      println(">>>>" + userAnswersEstablishers)
 
-      val gg = actual.as[JsObject]
-
-      val actualUserAnswersJsArray = gg \ "establishers"
-
-      val tt = actualUserAnswersJsArray.asOpt[JsArray].get
-
-      println(">>>>" + actual)
-      tt.value.size mustBe 3
-      (tt(0) \ "establisherDetails" \ "firstName").as[String] mustBe "abcdef"
-      (tt(1) \ "companyDetails" \ "companyName").as[String] mustBe "ABC Hotels Ltd"
-      (tt(2) \ "partnershipDetails" \ "name").as[String] mustBe "ABC Partnerships"
-
-
-      //          (actual \ 0 \ "establisherKind").as[String] mustBe "individual"
-      //          (actual \ 1 \ "establisherKind").as[String] mustBe "company"
-      //          (actual \ 2 \ "establisherKind").as[String] mustBe "partnership"
+      actualUserAnswersJsArray.value.size mustBe 3
+      (actualUserAnswersJsArray(0) \ "establisherDetails" \ "firstName").as[String] mustBe
+        (desEstablisherDetailsSection \ "individualDetails" \ 0 \ "personDetails" \ "firstName").as[String]
+      (actualUserAnswersJsArray(1) \ "companyDetails" \ "companyName").as[String] mustBe
+        (desEstablisherDetailsSection \ "companyOrOrganisationDetails" \ 0 \ "organisationName").as[String]
+      (actualUserAnswersJsArray(2) \ "partnershipDetails" \ "name").as[String] mustBe
+        (desEstablisherDetailsSection \ "partnershipTrusteeDetail" \ 0 \ "partnershipName").as[String]
     }
   }
-
 }

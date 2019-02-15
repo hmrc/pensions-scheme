@@ -24,44 +24,43 @@ import play.api.libs.json._
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def establisherToUserAnswersReads(desJsValue:JsValue): JsValue = {
-
-
-    val i = desJsValue.transform((__ \ 'individualDetails).read(__.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_)))).get
-    val c = desJsValue.transform((__ \ 'companyOrOrganisationDetails).read(__.read(Reads.seq(transformOrganisationEstablisherToUserAnswersReads)).map(JsArray(_)))).get
-    val p = desJsValue.transform((__ \ 'partnershipTrusteeDetail).read(__.read(Reads.seq(transformPartnershipEstablisherToUserAnswersReads)).map(JsArray(_)))).get
-
-    Json.obj("establishers" -> (i ++ c ++ p))
-
+  def transformDesToUserAnswersEstablishers(desJsValue: JsValue): JsValue = {
+    val individuals = desJsValue.transform((__ \ 'individualDetails)
+      .read(__.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+    val companies = desJsValue.transform((__ \ 'companyOrOrganisationDetails)
+      .read(__.read(Reads.seq(transformOrganisationEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+    val partnerships = desJsValue.transform((__ \ 'partnershipTrusteeDetail)
+      .read(__.read(Reads.seq(transformPartnershipEstablisherToUserAnswersReads)).map(JsArray(_)))).get
+    Json.obj("establishers" -> (individuals ++ companies ++ partnerships))
   }
 
   def individuals: Reads[JsArray] = __.read(Reads.seq(transformIndividualEstablisherToUserAnswersReads)).map(JsArray(_))
 
   def transformIndividualEstablisherToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("individual")) and
-    transformPersonDetailsToUserAnswersReads and
+      transformPersonDetailsToUserAnswersReads and
       transformNinoDetailsToUserAnswersReads and
       transformUtrDetailsToUserAnswersReads("uniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'addressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'previousAddress) and
       transformContactDetailsToUserAnswersReads("contactDetails") and
-      (__  \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
+      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
 
   def transformOrganisationEstablisherToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("company")) and
-    transformCompanyDetailsToUserAnswersReads and
+      transformCompanyDetailsToUserAnswersReads and
       transformCRNDetailsToUserAnswersReads and
       transformUtrDetailsToUserAnswersReads("companyUniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'companyAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
       transformContactDetailsToUserAnswersReads("companyContactDetails") and
-  (__  \ 'isCompanyComplete).json.put(JsBoolean(true)) reduce
+      (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) reduce
 
   def transformPartnershipEstablisherToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("partnership")) and
-    transformPartnershipDetailsToUserAnswersReads and
+      transformPartnershipDetailsToUserAnswersReads and
       transformVatToUserAnswersReads and
       transformPayeDetailsToUserAnswersReads and
       transformUtrDetailsToUserAnswersReads("partnershipUniqueTaxReference") and
@@ -69,7 +68,7 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getAddressYears(__, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'partnershipPreviousAddress) and
       transformContactDetailsToUserAnswersReads("partnershipContactDetails") and
-      (__  \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
+      (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
 
   def transformPersonDetailsToUserAnswersReads: Reads[JsObject] =
     (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
