@@ -46,7 +46,6 @@ class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionVal
             val mappedTrustee: JsValue = Json.toJson(trustee)(TrusteeDetails.updateWrites)
 
             val valid = Json.obj("trusteeDetailsType" -> mappedTrustee)
-
             validator.validate(schema, valid).isSuccess mustBe true
           }
         }
@@ -57,7 +56,7 @@ class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionVal
         forAll(trusteeDetailsGen) {
           trustee => {
 
-            val localEstablisher = if(trustee.individualTrusteeDetail.nonEmpty) {
+            val localTrustee = if (trustee.individualTrusteeDetail.nonEmpty) {
               trustee.copy(individualTrusteeDetail = Seq(trustee.individualTrusteeDetail(0).copy(utr = Some("12313123213123123123"))))
             } else if (trustee.companyTrusteeDetail.nonEmpty) {
               trustee.copy(companyTrusteeDetail = Seq(trustee.companyTrusteeDetail(0).copy(utr = Some("12313123213123123123"))))
@@ -65,7 +64,7 @@ class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionVal
               trustee.copy(partnershipTrusteeDetail = Seq(trustee.partnershipTrusteeDetail(0).copy(utr = Some("12313123213123123123"))))
             } else trustee.copy(individualTrusteeDetail = Seq(individualGen.sample.get.copy(utr = Some("12313123213123123123"))))
 
-            val mappedTrustee: JsValue = Json.toJson(localEstablisher)(TrusteeDetails.updateWrites)
+            val mappedTrustee: JsValue = Json.toJson(localTrustee)(TrusteeDetails.updateWrites)
 
             val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
 

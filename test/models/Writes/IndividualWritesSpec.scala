@@ -47,7 +47,7 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
                 |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails" }
                 |}""".stripMargin).get
 
-            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.establisherIndividualDetailsUpdateWrites)
+            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.establisherIndividualUpdateWrites)
 
             val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
