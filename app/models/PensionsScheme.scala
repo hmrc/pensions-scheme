@@ -19,7 +19,7 @@ package models
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
-import play.api.libs.json._
+import play.api.libs.json.{Format, _}
 import utils.Lens
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
@@ -187,7 +187,7 @@ case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber
 
 object AdviserDetails {
 
-  implicit val formats: Format[PensionSchemeDeclaration] = Json.format[PensionSchemeDeclaration]
+  implicit val formats: Format[AdviserDetails] = Json.format[AdviserDetails]
 
   implicit val readsAdviserDetails: Reads[AdviserDetails] = (
     (JsPath \ "adviserName").read[String] and
@@ -197,14 +197,45 @@ object AdviserDetails {
 }
 
 
+sealed trait Declaration{
+  def box5: Option[Boolean] = this match {
+    case declaration: PensionSchemeDeclaration => declaration.box5
+    case declaration: PensionSchemeUpdateDeclaration => None
+  }
+}
+
+object Declaration {
+
+  implicit val reads: Reads[Declaration] = Reads {
+    case declaration: PensionSchemeDeclaration =>
+      PensionSchemeDeclaration.apiReads.reads(declaration)
+    case declaration =>
+      PensionSchemeUpdateDeclaration.reads.reads(declaration)
+  }
+
+  implicit val writes:Writes[Declaration] = Writes {
+    case declaration: PensionSchemeUpdateDeclaration =>
+      PensionSchemeUpdateDeclaration.writes.writes(declaration)
+    case declaration: PensionSchemeDeclaration =>
+      PensionSchemeDeclaration.writes.writes(declaration)
+  }
+}
+
+case class PensionSchemeUpdateDeclaration(declaration1: Boolean) extends Declaration
+object PensionSchemeUpdateDeclaration{
+  implicit val reads = Json.reads[PensionSchemeUpdateDeclaration]
+  implicit val writes = Json.writes[PensionSchemeUpdateDeclaration]
+}
+
 case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,
-                                    box5: Option[Boolean] = None, box6: Boolean, box7: Boolean, box8: Boolean, box9: Boolean,
+                                    override val box5: Option[Boolean] = None, box6: Boolean, box7: Boolean, box8: Boolean, box9: Boolean,
                                     box10: Option[Boolean] = None, box11: Option[Boolean] = None, pensionAdviserName: Option[String] = None,
-                                    addressAndContactDetails: Option[AddressAndContactDetails] = None)
+                                    addressAndContactDetails: Option[AddressAndContactDetails] = None) extends Declaration
 
 object PensionSchemeDeclaration {
 
   implicit val formats: Format[PensionSchemeDeclaration] = Json.format[PensionSchemeDeclaration]
+  implicit val writes: OWrites[PensionSchemeDeclaration] = Json.writes[PensionSchemeDeclaration]
 
   val apiReads: Reads[PensionSchemeDeclaration] = (
     (JsPath \ "declaration").read[Boolean] and
@@ -520,7 +551,7 @@ object EstablisherDetails {
   )
 }
 
-case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,
+case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: Declaration,
                           establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails, isEstablisherOrTrusteeDetailsChanged: Option[Boolean] = None)
 
 object PensionsScheme {

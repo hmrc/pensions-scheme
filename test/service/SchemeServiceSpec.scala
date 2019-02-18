@@ -303,9 +303,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     it should "translate a scheme with dormant company, bank details, and invalid bank details" in {
 
+      val declaration = pensionsScheme.pensionSchemeDeclaration.asInstanceOf[PensionSchemeDeclaration]
+
       val scheme = pensionsScheme.copy(
         customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = true),
-        pensionSchemeDeclaration = pensionsScheme.pensionSchemeDeclaration.copy(box5 = Some(true))
+        pensionSchemeDeclaration = declaration.copy(box5 = Some(true))
       )
 
       val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, true, Status.OK, None)
