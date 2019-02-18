@@ -176,7 +176,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has vat details for partnership in establishers array" in {
         forAll(partnershipJsValueGen) {
           partnershipDetails => {
-            val details = partnershipDetails._1
+            val details = partnershipDetails._1 - "vatRegistrationNumber"
             val result = details.transform(transformer.transformVatToUserAnswersReads).get
             (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe false
           }
@@ -284,22 +284,16 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         val result = transformer.userAnswersEstablishersReads(establishers._1)
 
         result mustBe establishers._2
-
-        /*result.value.size mustBe 3
-        (result(0) \ "establisherDetails" \ "firstName").as[String] mustBe
-          (establishers \ "individualDetails" \ 0 \ "personDetails" \ "firstName").as[String]
-        (result(1) \ "companyDetails" \ "companyName").as[String] mustBe
-          (establishers \ "companyOrOrganisationDetails" \ 0 \ "organisationName").as[String]
-        (result(2) \ "partnershipDetails" \ "name").as[String] mustBe
-          (establishers \ "partnershipTrusteeDetail" \ 0 \ "partnershipName").as[String]*/
       }
-
     }
 
-    "if only inidividual and company establishers are present" in {
-      val result = (transformer.userAnswersEstablishersReads(establishers2) \ "establishers").as[JsArray]
+    "if no establishers are present" in {
 
-      result.value.size mustBe 2
+      val result = transformer.userAnswersEstablishersReads(Json.obj())
+
+      result mustBe Json.obj(
+        "establishers" -> JsArray()
+      )
     }
 
   }
