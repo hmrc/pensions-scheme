@@ -16,47 +16,47 @@
 
 package models.Writes
 
-import models.CompanyEstablisher
+import models.CompanyTrustee
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class CompanyEstablisherWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+class CompanyTrusteeWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "A company object" should {
 
-    "map correctly to an update payload for company establisherDetails API 1468" when {
+   "map correctly to an update payload for company TrusteeDetails API 1468" when {
 
-      "validate establisherDetails write with schema" in {
-        forAll(companyEstablisherGen) {
+      "validate companyTrusteeDetails write with schema" in {
+        forAll(companyTrusteeGen) {
           company => {
 
-            val mappedCompany: JsValue = Json.toJson(company)(CompanyEstablisher.updateWrites)
+            val mappedCompany: JsValue = Json.toJson(company)(CompanyTrustee.updateWrites)
 
-            val valid = Json.obj("companyOrOrganisationDetails" -> Json.arr(mappedCompany))
+            val valid = Json.obj("companyTrusteeDetailsType" -> Json.arr(mappedCompany))
 
             validateJson(elementToValidate = valid,
               schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/companyOrOrganisationDetails").isSuccess mustBe true
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/companyTrusteeDetailsType").isSuccess mustBe true
           }
         }
       }
 
-      "invalidate companyTrusteeDetails write with schema when" in {
+      "invalidate companyTrusteeDetails write with schema when json is invalid" in {
 
-        forAll(companyEstablisherGen) {
+        forAll(companyTrusteeGen) {
           company => {
 
             val invalidCompany = company.copy(utr = Some("adsasdasd"))
 
-            val mappedCompany: JsValue = Json.toJson(invalidCompany)(CompanyEstablisher.updateWrites)
+            val mappedCompany: JsValue = Json.toJson(invalidCompany)(CompanyTrustee.updateWrites)
 
-            val inValid = Json.obj("companyOrOrganisationDetails" -> Json.arr(mappedCompany))
+            val inValid = Json.obj("companyTrusteeDetailsType" -> Json.arr(mappedCompany))
 
             validateJson(elementToValidate = inValid,
               schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/companyOrOrganisationDetails").isError mustBe true
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/companyTrusteeDetailsType").isError mustBe true
           }
         }
       }

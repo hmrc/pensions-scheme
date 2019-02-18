@@ -18,17 +18,48 @@ package models.Writes
 
 import models.{PreviousAddressDetails, Samples}
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import utils.SchemaValidatorForTests
 
-class PreviousAddressDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with Samples {
+import scala.util.Random
+
+class PreviousAddressDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemaValidatorForTests {
 
   "A previous address details object" should {
-    "Map previosaddressdetails inner object as `previousaddresdetail`" when {
+    "Map previous address details inner object as `previousaddresdetail`" when {
       "required" in {
         val previousAddress = PreviousAddressDetails(true, Some(ukAddressSample))
         val result = Json.toJson(previousAddress)(PreviousAddressDetails.psaSubmissionWrites)
 
         result.toString() must include("\"previousAddressDetail\":")
+      }
+    }
+  }
+
+  "A partnership object" should {
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid partnership" in {
+        val previousAddress = PreviousAddressDetails(true, Some(ukAddressSample))
+
+        val mappedPreviousAddress: JsValue = Json.toJson(previousAddress)(PreviousAddressDetails.psaUpdateWrites)
+        val testJsValue = Json.obj("previousAddressDetails" -> mappedPreviousAddress)
+
+        validateJson(elementToValidate = testJsValue,
+          schemaFileName = "api1468_schema.json",
+          schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails/items/previousAddressDetails").isSuccess mustBe true
+      }
+    }
+
+    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+      "we have an invalid partnership" in {
+        val invalidPreviousAddress = PreviousAddressDetails(true, Some(ukAddressSample.copy(addressLine1 = Random.alphanumeric.take(40).mkString)))
+
+        val mappedPreviousAddress: JsValue = Json.toJson(invalidPreviousAddress)(PreviousAddressDetails.psaUpdateWrites)
+        val testJsValue = Json.obj("previousAddressDetails" -> mappedPreviousAddress)
+
+        validateJson(elementToValidate = testJsValue,
+          schemaFileName = "api1468_schema.json",
+          schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails/items/previousAddressDetails").isError mustBe true
       }
     }
   }

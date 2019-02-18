@@ -22,19 +22,47 @@ import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-  val schemaValidator = SchemaValidatorForTests()
+class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests{
 
   "An establisher details object" should {
-    "map correctly to an update payload for API 1468" when {
-      "we have directors, companies and partnerhips" in {
+
+    "map correctly to an update payload for for establisherDetails API 1468" when {
+
+      "validate establisherDetails write with schema" in {
         forAll(establisherDetailsGen) {
-          establishers => {
-            val mappedEstablishers: JsValue = Json.toJson(establishers)(EstablisherDetails.updateWrites)
+          establisher => {
 
-            val validationErrors = schemaValidator.validateJson(mappedEstablishers,"establisherDetailsUpdate.json")
+            val mappedEstablisher: JsValue = Json.toJson(establisher)(EstablisherDetails.updateWrites)
 
-            validationErrors mustBe None
+            val valid = Json.obj("establisherDetails" -> mappedEstablisher)
+
+            validateJson(elementToValidate = valid,
+                         schemaFileName = "api1468_schema.json",
+                         schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails").isSuccess mustBe true
+          }
+        }
+      }
+
+      "invalidate companyTrusteeDetails write with schema when" in {
+
+        forAll(establisherDetailsGen) {
+          establisher => {
+
+            val localEstablisher = if(establisher.individual.nonEmpty) {
+              establisher.copy(individual = Seq(establisher.individual(0).copy(utr = Some("12313123213123123123"))))
+            } else if (establisher.companyOrOrganization.nonEmpty) {
+              establisher.copy(companyOrOrganization = Seq(establisher.companyOrOrganization(0).copy(utr = Some("12313123213123123123"))))
+            } else if (establisher.partnership.nonEmpty) {
+              establisher.copy(partnership = Seq(establisher.partnership(0).copy(utr = Some("12313123213123123123"))))
+            } else establisher.copy(individual = Seq(individualGen.sample.get.copy(utr = Some("12313123213123123123"))))
+
+            val mappedEstablisher: JsValue = Json.toJson(localEstablisher)(EstablisherDetails.updateWrites)
+
+            val inValid = Json.obj("establisherDetails" -> mappedEstablisher)
+
+            validateJson(elementToValidate = inValid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails").isError mustBe true
           }
         }
       }

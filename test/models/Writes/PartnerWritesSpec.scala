@@ -17,26 +17,44 @@
 package models.Writes
 
 import models.Individual
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class PartnerWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+class PartnerWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
-  val schemaValidator = SchemaValidatorForTests()
+  "A partner" should {
 
-  "A Partner object" should {
-    "map correctly to an update payload for API 1468" when {
-      "we have a partner" in {
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid partner" in {
         forAll(individualGen) {
           partner => {
-            val mappedPartner: JsValue = Json.toJson(partner)(Individual.updateWrites)
 
-            val validationErrors = schemaValidator.validateJson(mappedPartner,"partnerUpdate.json")
+            val mappedPartner: JsValue = Json.toJson(partner)(Individual.individualUpdateWrites)
+            val testJsValue = Json.obj("partnerDetails" -> Json.arr(mappedPartner))
 
-            validationErrors mustBe None
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails/items/partnerDetails").isSuccess mustBe true
           }
+        }
+      }
+    }
+  }
+
+  "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+    "we have an invalid partner" in {
+      forAll(individualGen) {
+        partner => {
+          val invalidPartner = partner.copy(utr = Some("invalid utr"))
+
+          val mappedPartner: JsValue = Json.toJson(invalidPartner)(Individual.individualUpdateWrites)
+          val testJsValue = Json.obj("partnerDetails" -> Json.arr(mappedPartner))
+
+          validateJson(elementToValidate = testJsValue,
+            schemaFileName = "api1468_schema.json",
+            schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails/items/partnerDetails").isError mustBe true
         }
       }
     }

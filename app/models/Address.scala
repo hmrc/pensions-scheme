@@ -106,7 +106,7 @@ object UkAddress {
       (JsPath \ "nonUKAddress").write[Boolean]
     ) (ukAddress => ((ukAddress.addressLine1, ukAddress.addressLine2, ukAddress.addressLine3, ukAddress.addressLine4),
     ukAddress.countryCode,
-    ukAddress.postalCode,false))
+    ukAddress.postalCode, false))
 
   val defaultWrites: Writes[UkAddress] = Json.writes[UkAddress]
 

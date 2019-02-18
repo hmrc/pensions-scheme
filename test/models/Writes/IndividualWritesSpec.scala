@@ -16,29 +16,83 @@
 
 package models.Writes
 
-import models.{Address, Individual}
+import models.Individual
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsArray, JsPath, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
-import wolfendale.scalacheck.regexp.RegexpGen
 
 
 
-class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-
-  val schemaValidator = SchemaValidatorForTests()
+class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An Individual object" should {
+
     "map correctly to an update payload for API 1468" when {
-      "we have an individual" in {
+
+      "validate individualDetails for establisherDetails write with schema" in {
         forAll(individualGen) {
-          director => {
-            val mappedDirectors: JsValue = Json.toJson(director)(Individual.updateWrites)
+          individual => {
 
-            val validationErrors = schemaValidator.validateJson(mappedDirectors,"individualUpdate.json")
+            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.establisherIndividualUpdateWrites)
 
-            validationErrors mustBe None
+            val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
+
+            validateJson(elementToValidate = valid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails").isSuccess mustBe true
+          }
+        }
+      }
+
+      "invalidate individualDetails for establisherDetails write with schema when json is invalid" in {
+
+        forAll(individualGen) {
+          individual => {
+
+            val invalidCompany = individual.copy(utr = Some("adsasdasd"))
+
+            val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualUpdateWrites)
+
+            val inValid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
+
+            validateJson(elementToValidate = inValid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails").isError mustBe true
+          }
+        }
+      }
+
+
+      "validate individualDetails for trusteeDetailsType write with schema" in {
+        forAll(individualGen) {
+          individual => {
+
+            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.individualUpdateWrites)
+
+            val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
+
+            validateJson(elementToValidate = valid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails").isSuccess mustBe true
+          }
+        }
+      }
+
+      "invalidate individualDetails for trusteeDetailsType write with schema when json is invalid" in {
+
+        forAll(individualGen) {
+          individual => {
+
+            val invalidCompany = individual.copy(utr = Some("adsasdasd"))
+
+            val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualUpdateWrites)
+
+            val inValid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
+
+            validateJson(elementToValidate = inValid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails").isError mustBe true
           }
         }
       }

@@ -16,25 +16,79 @@
 
 package models.Writes
 
-import models.{CompanyEstablisher, Partnership}
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import models.{Partnership, PartnershipTrustee}
 import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-  val schemaValidator = SchemaValidatorForTests()
+class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
-  "A partnership object" should {
-    "map correctly to an update payload for API 1468" when {
-      "we have a full partnership" in {
+  "An establisher partnership object" should {
+
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid partnership" in {
         forAll(partnershipGen) {
-          company => {
-            val mappedPartnership: JsValue = Json.toJson(company)(Partnership.updateWrites)
+          partnership => {
 
-            val validationErrors = schemaValidator.validateJson(mappedPartnership,"establisherPartnershipUpdate.json")
+            val mappedPartner: JsValue = Json.toJson(partnership)(Partnership.updateWrites)
+            val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
 
-            validationErrors mustBe None
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isSuccess mustBe true
+          }
+        }
+      }
+    }
+
+    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+      "we have an invalid partnership" in {
+        forAll(partnershipGen) {
+          partnership => {
+            val invalidPartnership = partnership.copy(partnerDetails = Nil)
+
+            val mappedPartner: JsValue = Json.toJson(invalidPartnership)(Partnership.updateWrites)
+            val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
+
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isError mustBe true
+          }
+        }
+      }
+    }
+  }
+
+  "A trustee partnership object" should {
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid trustee partnership" in {
+        forAll(partnershipTrusteeGen) {
+          partnership => {
+
+            val mappedPartner: JsValue = Json.toJson(partnership)(PartnershipTrustee.updateWrites)
+            val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
+
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails").isSuccess mustBe true
+          }
+        }
+      }
+    }
+
+    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+      "we have an invalid trustee partnership" in {
+        forAll(partnershipTrusteeGen) {
+          partnership => {
+            val invalidPartnership = partnership.copy(utr = Some("invalid utr"))
+
+            val mappedPartner: JsValue = Json.toJson(invalidPartnership)(PartnershipTrustee.updateWrites)
+            val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
+
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails").isError mustBe true
           }
         }
       }
