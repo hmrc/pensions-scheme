@@ -16,112 +16,77 @@
 
 package models.Writes
 
-import models.{Address, InternationalAddress, UkAddress}
+import models.Address
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+import scala.util.Random
 
-  val schemaValidator = SchemaValidatorForTests()
+class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An updated address" should {
-    "parse correctly to a valid DES format" when {
-      "we have a UK address" in {
+    "parse correctly to a valid DES format for variations api - API 1468" when {
+      "we have a valid UK address" in {
         forAll(ukAddressGen) {
           address => {
             val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
+            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
-            val validationErrors = schemaValidator.validateJson(mappedAddress,"addressUpdate.json")
-
-            validationErrors mustBe None
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isSuccess mustBe true
           }
         }
       }
 
-      "we have an international address" in {
+      "we have a valid international address" in {
         forAll(internationalAddressGen) {
           address => {
+
             val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
+            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
-            val validationErrors = schemaValidator.validateJson(mappedAddress,"addressUpdate.json")
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isSuccess mustBe true
+          }
+        }
+      }
+    }
 
-            validationErrors mustBe None
+    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+      "we have an invalid UK address" in {
+        forAll(ukAddressGen) {
+          address => {
+            val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
+
+            val mappedAddress: JsValue = Json.toJson(invalidAddress)(Address.updateWrites)
+            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
+
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isError mustBe true
+          }
+        }
+      }
+
+      "we have an invalid international address" in {
+        forAll(internationalAddressGen) {
+          address => {
+            val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
+
+            val mappedAddress: JsValue = Json.toJson(invalidAddress)(Address.updateWrites)
+            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
+
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isError mustBe true
           }
         }
       }
     }
   }
 
-
-  "An address" should {
-    "parse correctly to a valid DES format" when {
-      "we have a UK address" when {
-        val address = UkAddress("line1", Some("line2"), Some("line3"), Some("line4"), "GB", "Test")
-        val result = Json.toJson(address.asInstanceOf[Address])
-
-        "with address line 1" in {
-          result.toString() must include("line1")
-        }
-
-        "with address line 2" in {
-          result.toString() must include("line2")
-        }
-
-        "with address line 3" in {
-          result.toString() must include("line3")
-        }
-
-        "with address line 4" in {
-          result.toString() must include("line4")
-        }
-
-        "with countrycode" in {
-          result.toString() must include("countryCode")
-        }
-
-        "with postalcode" in {
-          result.toString() must include("postalCode")
-        }
-
-        "with an address type of UK" in {
-          result.toString() must include("\"addressType\":\"UK\"")
-        }
-      }
-
-      "we have an International address" when {
-        val address = InternationalAddress("line1", Some("line2"), Some("line3"), Some("line4"), "IT", Some("test"))
-        val result = Json.toJson(address.asInstanceOf[Address])
-
-        "with address line 1" in {
-          result.toString() must include("line1")
-        }
-
-        "with address line 2" in {
-          result.toString() must include("line2")
-        }
-
-        "with address line 3" in {
-          result.toString() must include("line3")
-        }
-
-        "with address line 4" in {
-          result.toString() must include("line4")
-        }
-
-        "with countrycode" in {
-          result.toString() must include("countryCode")
-        }
-
-        "with postalcode" in {
-          result.toString() must include("postalCode")
-        }
-
-        "with an address type of Non-UK" in {
-          result.toString() must include("\"addressType\":\"NON-UK\"")
-        }
-      }
-    }
-  }
 }

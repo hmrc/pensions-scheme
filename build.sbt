@@ -21,7 +21,8 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     dependencyOverrides ++= overrides,
     retrieveManaged := true,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    PlayKeys.devSettings += "play.server.http.port" -> "8203"
+    PlayKeys.devSettings += "play.server.http.port" -> "8203",
+    scalacOptions += "-Xlint:-missing-interpolator,_"
   )
   .settings(
     ScoverageKeys.coverageExcludedFiles := "<empty>;Reverse.*;.*filters.*;.*handlers.*;.*components.*;.*models.*;.*repositories.*;" +
@@ -39,6 +40,7 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
   )
   .settings(resolvers ++= Seq(
     Resolver.bintrayRepo("hmrc", "releases"),
+    Resolver.bintrayRepo("emueller", "maven"),
     Resolver.jcenterRepo
   ))
   .settings(majorVersion := 0)
