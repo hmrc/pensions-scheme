@@ -18,9 +18,9 @@ package models
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Writes.seq
 import play.api.libs.json._
 import utils.Lens
-import play.api.libs.json.Writes.seq
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
 
@@ -139,6 +139,48 @@ object CustomerAndSchemeDetails {
         isInsuranceDetailsChanged = isInsuranceDetailsChanged)
     }
   )
+
+  private val insuranceCompanyWrite: Writes[(Boolean, Boolean, Option[String], Option[String], Option[Address])] ={
+    ((JsPath \ "isInsuranceDetailsChanged").write[Boolean] and
+      (JsPath \ "isSchemeBenefitsInsuranceCompany").write[Boolean] and
+      (JsPath \ "insuranceCompanyName").writeNullable[String] and
+      (JsPath \ "policyNumber").writeNullable[String] and
+      (JsPath \ "insuranceCompanyAddressDetails").writeNullable[Address](Address.updateWrites)
+      )(element => element)
+  }
+
+  def updateWrites(psaid: String): Writes[CustomerAndSchemeDetails] = (
+    (JsPath \ "psaid").write[String] and
+      (JsPath \ "schemeName").write[String] and
+      (JsPath \ "schemeStatus").write[String] and
+      (JsPath \ "isSchemeMasterTrust").write[Boolean] and
+      (JsPath \ "pensionSchemeStructure").writeNullable[String] and
+      (JsPath \ "otherPensionSchemeStructure").writeNullable[String] and
+      (JsPath \ "currentSchemeMembers").write[String] and
+      (JsPath \ "futureSchemeMembers").write[String] and
+      (JsPath \ "isReguledSchemeInvestment").write[Boolean] and
+      (JsPath \ "isOccupationalPensionScheme").write[Boolean] and
+      (JsPath \ "schemeProvideBenefits").write[String] and
+      (JsPath \ "schemeEstablishedCountry").write[String] and
+      (JsPath \ "insuranceCompanyDetails").write(insuranceCompanyWrite)
+    ) (scheme => (psaid,
+      scheme.schemeName,
+      "Open",
+      scheme.isSchemeMasterTrust,
+      scheme.schemeStructure,
+      scheme.otherSchemeStructure,
+      scheme.currentSchemeMembers,
+      scheme.futureSchemeMembers,
+      scheme.isReguledSchemeInvestment,
+      scheme.isOccupationalPensionScheme,
+      scheme.doesSchemeProvideBenefits,
+      scheme.schemeEstablishedCountry,
+      (scheme.isInsuranceDetailsChanged.getOrElse(false),
+        scheme.areBenefitsSecuredContractInsuranceCompany,
+        scheme.insuranceCompanyName,
+        scheme.policyNumber,
+        scheme.insuranceCompanyAddress)
+  ))
 }
 
 case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber: String)
