@@ -19,7 +19,7 @@ package utils
 import models._
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
 trait PensionSchemeGenerators {
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
@@ -122,7 +122,7 @@ trait PensionSchemeGenerators {
     partnerships <- Gen.listOfN(randomNumberFromRange(0, 10), partnershipGen)
   } yield EstablisherDetails(individuals, companies, partnerships)
 
-  def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
+  def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress", isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
     line3 <- addressLineOptional
@@ -132,7 +132,7 @@ trait PensionSchemeGenerators {
   } yield {
     (
       Json.obj(
-        "desAddress" -> (Json.obj("nonUKAddress" -> true) ++
+        desKey -> (Json.obj("nonUKAddress" -> true) ++
           Json.obj("line1" -> line1) ++
           Json.obj("line2" -> line2) ++
           optional("line3", line3) ++
@@ -141,7 +141,7 @@ trait PensionSchemeGenerators {
           Json.obj("countryCode" -> countryCode))
       ),
       Json.obj(
-        "userAnswersAddress" -> (Json.obj("addressLine1" -> line1) ++
+        uaKey -> (Json.obj("addressLine1" -> line1) ++
           Json.obj("addressLine2" -> line2) ++
           optional("addressLine3", line3) ++
           optional("addressLine4", line4) ++
@@ -151,49 +151,34 @@ trait PensionSchemeGenerators {
     )
   }
 
-  val addressJsValueGen = for {
-    nonUkFlag <- Gen.oneOf(true, false)
-    line1 <- addressLineGen
-    line2 <- addressLineGen
-    line3 <- addressLineOptional
-    line4 <- addressLineOptional
-    postalCode <- optionalPostalCodeGen
-    countryCode <- countryCode
-  } yield {
-    Json.obj(
-      "nonUKAddress" -> nonUkFlag,
-      "line1" -> line1,
-      "line2" -> line2,
-      "line3" -> line3,
-      "line4" -> line4,
-      "postalCode" -> postalCode,
-      "countryCode" -> countryCode
-    )
-  }
-
   val contactDetailsJsValueGen = for {
+    email <- Gen.const("aaa@gmail.com")
     phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
   } yield {
-    Json.obj(
+    (Json.obj(
       "telephone" -> phone,
       "mobileNumber" -> phone,
       "fax" -> "0044-09876542312",
-      "email" -> "aaa@gmail.com"
-    )
+      "email" -> email
+    ), Json.obj(
+      "emailAddress" -> email,
+      "phoneNumber" -> phone
+    ))
   }
 
-  val individualJsValueGen: Gen[JsValue] = for {
+  val individualJsValueGen: Gen[(JsValue, JsValue)] = for {
     title <- Gen.option(titleGenerator)
     firstName <- nameGenerator
     middleName <- Gen.option(nameGenerator)
     lastName <- nameGenerator
     referenceOrNino <- Gen.const("SL221122D")
-    utr <- Gen.const("1111111111")
-    address <- addressJsValueGen
-    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
     contactDetails <- contactDetailsJsValueGen
+    utr <- Gen.const("1111111111")
+    address <- addressJsValueGen("correspondenceAddressDetails", "address", true)
+    previousAddress <- addressJsValueGen("previousAddress", "previousAddress", true)
   } yield {
-    Json.obj(
+    val pa = Json.obj("isPreviousAddressLast12Month" -> true) ++ previousAddress._1.as[JsObject]
+    (Json.obj(
       "personDetails" -> Json.obj(
         "title" -> title,
         "firstName" -> firstName,
@@ -203,12 +188,30 @@ trait PensionSchemeGenerators {
       ),
       "nino" -> referenceOrNino,
       "utr" -> utr,
-      "correspondenceAddressDetails" -> address,
-      "correspondenceContactDetails" -> contactDetails,
-      "previousAddressDetails" -> Json.obj(
-        "isPreviousAddressLast12Month" -> true,
-        "previousAddress" -> address
-      )
+      "correspondenceContactDetails" -> contactDetails._1,
+      "previousAddressDetails" -> pa
+    ) ++ (address._1).as[JsObject],
+      Json.obj(
+        "establisherKind" -> "individual",
+        "establisherDetails" -> Json.obj(
+          "firstName" -> firstName,
+          "middleName" -> middleName,
+          "lastName" -> lastName,
+          "date" -> dateGenerator.sample.get.toString
+        ),
+        "establisherNino" -> Json.obj(
+          "hasNino" -> true,
+          "nino" -> referenceOrNino
+        ),
+        "uniqueTaxReference" -> Json.obj(
+          "hasUtr" -> true,
+          "utr" -> utr
+        ),
+        "addressYears" -> "under_a_year",
+        "contactDetails" -> contactDetails._2,
+        "isEstablisherComplete" -> true
+      ) ++ (address._2).as[JsObject]
+        ++ (previousAddress._2).as[JsObject]
     )
   }
 
@@ -218,55 +221,102 @@ trait PensionSchemeGenerators {
     crn <- Gen.const("11111111")
     vat <- Gen.const("123456789")
     paye <- Gen.const("1111111111111")
-    address <- addressJsValueGen
-    contact <- contactDetailsGen
-    previous <- Gen.option(previousAddressDetailsGen)
+    address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", true)
+    previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", true)
+    contactDetails <- contactDetailsJsValueGen
   } yield {
-    Json.obj(
-      "organisationName" -> orgName,
-      "utr" -> utr,
-      "crnNumber" -> crn,
-      "vatRegistrationNumber" -> vat,
-      "payeReference" -> paye,
-      "correspondenceAddressDetails" -> address,
-      "correspondenceContactDetails" -> contact,
-      "previousAddressDetails" -> Json.obj(
-        "isPreviousAddressLast12Month" -> true,
-        "previousAddress" -> address
-      )
+    val pa = Json.obj("isPreviousAddressLast12Month" -> true) ++ previousAddress._1.as[JsObject]
+    (
+      Json.obj(
+        "organisationName" -> orgName,
+        "utr" -> utr,
+        "crnNumber" -> crn,
+        "vatRegistrationNumber" -> vat,
+        "payeReference" -> paye,
+        "correspondenceContactDetails" -> contactDetails._1,
+        "previousAddressDetails" -> pa
+      ) ++ (address._1).as[JsObject],
+      Json.obj(
+        "establisherKind" -> "company",
+        "companyDetails" -> Json.obj(
+          "companyName" -> orgName,
+          "vatNumber" -> vat,
+          "payeNumber" -> paye
+        ),
+        "companyRegistrationNumber" -> Json.obj(
+          "hasCrn" -> true,
+          "crn" -> crn
+        ),
+        "companyUniqueTaxReference" -> Json.obj(
+          "hasUtr" -> true,
+          "utr" -> utr
+        ),
+        "addressYears" -> "under_a_year",
+        "contactDetails" -> contactDetails._2,
+        "isCompanyComplete" -> true
+      ) ++ (address._2).as[JsObject]
+        ++ (previousAddress._2).as[JsObject]
     )
   }
 
   val partnershipJsValueGen = for {
     orgName <- nameGenerator
+    vat <- Gen.const("123456789")
     utr <- Gen.const("1111111111")
     paye <- Gen.const("1111111111111")
-    address <- addressJsValueGen
-    contact <- contactDetailsGen
+    address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", true)
+    previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", true)
+    contactDetails <- contactDetailsJsValueGen
   } yield {
-    Json.obj(
+    val pa = Json.obj("isPreviousAddressLast12Month" -> true) ++ previousAddress._1.as[JsObject]
+    (Json.obj(
       "partnershipName" -> orgName,
       "utr" -> utr,
       "payeReference" -> paye,
-      "correspondenceAddressDetails" -> address,
-      "correspondenceContactDetails" -> contact,
-      "previousAddressDetails" -> Json.obj(
-        "isPreviousAddressLast12Month" -> true,
-        "previousAddress" -> address
-      )
+      "correspondenceContactDetails" -> contactDetails._1,
+      "previousAddressDetails" -> pa
+    ) ++ (address._1).as[JsObject],
+      Json.obj(
+        "establisherKind" -> "partnership",
+        "partnershipDetails" -> Json.obj(
+          "name" -> orgName
+        ),
+        "partnershipVat" -> Json.obj(
+          "hasVat" -> true,
+          "vat" -> vat
+        ),
+        "partnershipPaye" -> Json.obj(
+          "hasPaye" -> true,
+          "paye" -> paye
+        ),
+        "partnershipUniqueTaxReference" -> Json.obj(
+          "hasUtr" -> true,
+          "utr" -> utr
+        ),
+        "partnershipAddressYears" -> "under_a_year",
+        "partnershipContactDetails" -> contactDetails._2,
+        "isPartnershipCompleteId" -> true
+      ) ++ (address._2).as[JsObject]
+        ++ (previousAddress._2).as[JsObject]
     )
   }
 
-  val noNinoReasonJsValue: Gen[JsValue] = for {
-    noNinoReason <- reasonGen
+  val establisherJsValueGen = for {
+    individual <- Gen.listOfN(1, individualJsValueGen)
+    company <- Gen.listOfN(1, companyJsValueGen)
+    partnership <- Gen.listOfN(1, partnershipJsValueGen)
   } yield {
-    Json.obj("noNinoReason" -> noNinoReason)
-  }
+    val listOfEst = individual.map(_._2) ++ company.map(_._2) ++ partnership.map(_._2)
+    (Json.obj(
+        "individualDetails" -> individual.map(_._1),
+        "companyOrOrganisationDetails" -> company.map(_._1),
+        "partnershipTrusteeDetail" -> partnership.map(_._1)
 
-  val noUtrReasonJsValue: Gen[JsValue] = for {
-    noUtrReason <- reasonGen
-  } yield {
-    Json.obj("noUtrReason" -> noUtrReason)
+    ),
+      Json.obj(
+        "establishers" -> listOfEst
+      )
+    )
   }
 
   private def optional(key: String, element: Option[String]) = {
