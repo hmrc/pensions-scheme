@@ -18,6 +18,7 @@ package utils.JsonTransformations
 
 import base.JsonFileReader
 import models.jsonTransformations.AddressTransformer
+import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
@@ -119,68 +120,99 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
     "have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
       s"has establisher details in establishers array" in {
-        val result = company.transform(transformer.userAnswersCompanyDetailsReads).get
-        (result \ "companyDetails" \ "companyName").as[String] mustBe (company \ "organisationName").as[String]
-        (result \ "companyDetails" \ "vatNumber").asOpt[String] mustBe (company \ "vatRegistrationNumber").asOpt[String]
-        (result \ "companyDetails" \ "payeNumber").asOpt[String] mustBe (company \ "payeReference").asOpt[String]
+        forAll(companyJsValueGen) {
+          companyDetails => {
+            val result = companyDetails.transform(transformer.userAnswersCompanyDetailsReads).get
+            (result \ "companyDetails" \ "companyName").as[String] mustBe (companyDetails \ "organisationName").as[String]
+            (result \ "companyDetails" \ "vatNumber").asOpt[String] mustBe (companyDetails \ "vatRegistrationNumber").asOpt[String]
+            (result \ "companyDetails" \ "payeNumber").asOpt[String] mustBe (companyDetails \ "payeReference").asOpt[String]
+          }
+        }
       }
 
       s"has crn details in establishers array" in {
-        val result = company.transform(transformer.userAnswersCrnReads).get
-        (result \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe true
-        (result \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (company \ "crnNumber").asOpt[String]
-
+        forAll(companyJsValueGen) {
+          companyDetails => {
+            val result = companyDetails.transform(transformer.userAnswersCrnReads).get
+            (result \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe true
+            (result \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (companyDetails \ "crnNumber").asOpt[String]
+          }
+        }
       }
 
       s"has utr details in establishers array" in {
-        val result = company.transform(transformer.userAnswersUtrReads("companyUniqueTaxReference")).get
-        (result \ "companyUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
-        (result \ "companyUniqueTaxReference" \ "utr").asOpt[String] mustBe (company \ "utr").asOpt[String]
-
+        forAll(companyJsValueGen) {
+          companyDetails => {
+            val result = companyDetails.transform(transformer.userAnswersUtrReads("companyUniqueTaxReference")).get
+            (result \ "companyUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+            (result \ "companyUniqueTaxReference" \ "utr").asOpt[String] mustBe (companyDetails \ "utr").asOpt[String]
+          }
+        }
       }
 
       s"has contact details in establishers array" in {
-        val result = company.transform(transformer.userAnswersContactDetailsReads("companyContactDetails")).get
-        (result \ "companyContactDetails" \ "emailAddress").as[String] mustBe
-          (company \ "correspondenceContactDetails" \ "email").as[String]
-        (result \ "companyContactDetails" \ "phoneNumber").as[String] mustBe
-          (company \ "correspondenceContactDetails" \ "telephone").as[String]
+        forAll(companyJsValueGen) {
+          companyDetails => {
+            val result = companyDetails.transform(transformer.userAnswersContactDetailsReads("companyContactDetails")).get
+            (result \ "companyContactDetails" \ "emailAddress").as[String] mustBe
+              (companyDetails \ "correspondenceContactDetails" \ "email").as[String]
+            (result \ "companyContactDetails" \ "phoneNumber").as[String] mustBe
+              (companyDetails \ "correspondenceContactDetails" \ "telephone").as[String]
+          }
+        }
       }
     }
 
     "have the establisherPartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
       s"has establisher details in establishers array" in {
-        val result = partnership.transform(transformer.userAnswersPartnershipDetailsReads).get
-        (result \ "partnershipDetails" \ "name").as[String] mustBe (partnership \ "partnershipName").as[String]
+        forAll(partnershipJsValueGen) {
+          partnershipDetails => {
+            val result = partnershipDetails.transform(transformer.userAnswersPartnershipDetailsReads).get
+            (result \ "partnershipDetails" \ "name").as[String] mustBe (partnershipDetails \ "partnershipName").as[String]
+          }
+        }
       }
 
       s"has vat details for partnership in establishers array" in {
-        val result = partnership.transform(transformer.transformVatToUserAnswersReads).get
-        (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe false
-
+        forAll(partnershipJsValueGen) {
+          partnershipDetails => {
+            val result = partnershipDetails.transform(transformer.transformVatToUserAnswersReads).get
+            (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe false
+          }
+        }
       }
 
       s"has paye details for partnership in establishers array" in {
-        val result = partnership.transform(transformer.userAnswersPayeReads).get
-        (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe true
-        (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (partnership \ "payeReference").asOpt[String]
-
+        forAll(partnershipJsValueGen) {
+          partnershipDetails => {
+            val result = partnershipDetails.transform(transformer.userAnswersPayeReads).get
+            (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe true
+            (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (partnershipDetails \ "payeReference").asOpt[String]
+          }
+        }
       }
 
       s"has utr details in establishers array" in {
-        val result = partnership.transform(transformer.userAnswersUtrReads("partnershipUniqueTaxReference")).get
-        (result \ "partnershipUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
-        (result \ "partnershipUniqueTaxReference" \ "utr").asOpt[String] mustBe (partnership \ "utr").asOpt[String]
-
+        forAll(partnershipJsValueGen) {
+          partnershipDetails => {
+            val result = partnershipDetails.transform(transformer.userAnswersUtrReads("partnershipUniqueTaxReference")).get
+            (result \ "partnershipUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+            (result \ "partnershipUniqueTaxReference" \ "utr").asOpt[String] mustBe (partnershipDetails \ "utr").asOpt[String]
+          }
+        }
       }
 
       s"has contact details in establishers array" in {
-        val result = partnership.transform(transformer.userAnswersContactDetailsReads("partnershipContactDetails")).get
-        (result \ "partnershipContactDetails" \ "emailAddress").as[String] mustBe
-          (partnership \ "correspondenceContactDetails" \ "email").as[String]
-        (result \ "partnershipContactDetails" \ "phoneNumber").as[String] mustBe
-          (partnership \ "correspondenceContactDetails" \ "telephone").as[String]
+        forAll(partnershipJsValueGen) {
+          partnershipDetails => {
+            val result = partnershipDetails.transform(transformer.userAnswersContactDetailsReads("partnershipContactDetails")).get
+            (result \ "partnershipContactDetails" \ "emailAddress").as[String] mustBe
+              (partnershipDetails \ "correspondenceContactDetails" \ "email").as[String]
+            (result \ "partnershipContactDetails" \ "phoneNumber").as[String] mustBe
+              (partnershipDetails \ "correspondenceContactDetails" \ "telephone").as[String]
+          }
+        }
       }
     }
 
