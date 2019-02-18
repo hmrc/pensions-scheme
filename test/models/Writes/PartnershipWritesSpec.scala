@@ -71,7 +71,7 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
 
             validateJson(elementToValidate = testJsValue,
               schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isSuccess mustBe true
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails").isSuccess mustBe true
           }
         }
       }
@@ -88,7 +88,7 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
 
             validateJson(elementToValidate = testJsValue,
               schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isError mustBe true
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails").isError mustBe true
           }
         }
       }
