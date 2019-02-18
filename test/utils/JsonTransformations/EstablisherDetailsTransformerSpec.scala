@@ -18,11 +18,13 @@ package utils.JsonTransformations
 
 import base.JsonFileReader
 import models.jsonTransformations.AddressTransformer
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
+import utils.PensionSchemeGenerators
 
 
-class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader {
+class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeGenerators {
   private val desResponse1: JsValue = readJsonFromFile("/data/validGetSchemeDetails1.json")
   private val desResponse2: JsValue = readJsonFromFile("/data/validGetSchemeDetails2.json")
 
@@ -40,35 +42,51 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format for first json file" that {
 
-      s"has establisher details in establishers array" in {
-        val result = individual.transform(transformer.userAnswersIndividualDetailsReads).get
-        (result \ "establisherDetails" \ "firstName").as[String] mustBe (individual \ "personDetails" \ "firstName").as[String]
-        (result \ "establisherDetails" \ "middleName").asOpt[String] mustBe (individual \ "personDetails" \ "middleName").asOpt[String]
-        (result \ "establisherDetails" \ "lastName").as[String] mustBe (individual \ "personDetails" \ "lastName").as[String]
-        (result \ "establisherDetails" \ "date").as[String] mustBe (individual \ "personDetails" \ "dateOfBirth").as[String]
+      s"has person details in establishers array" in {
+        forAll(individualJsValueGen) {
+          individualDetails => {
+            val result = individualDetails.transform(transformer.userAnswersIndividualDetailsReads).get
+            (result \ "establisherDetails" \ "firstName").as[String] mustBe (individualDetails \ "personDetails" \ "firstName").as[String]
+            (result \ "establisherDetails" \ "middleName").asOpt[String] mustBe (individualDetails \ "personDetails" \ "middleName").asOpt[String]
+            (result \ "establisherDetails" \ "lastName").as[String] mustBe (individualDetails \ "personDetails" \ "lastName").as[String]
+            (result \ "establisherDetails" \ "date").as[String] mustBe (individualDetails \ "personDetails" \ "dateOfBirth").as[String]
+          }
+        }
       }
 
       s"has nino details in establishers array" in {
-        val result = individual.transform(transformer.userAnswersNinoReads).get
+        forAll(individualJsValueGen) {
+          individualDetails => {
+            val result = individualDetails.transform(transformer.userAnswersNinoReads).get
 
-        (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe true
-        (result \ "establisherNino" \ "nino").asOpt[String] mustBe (individual \ "nino").asOpt[String]
+            (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe true
+            (result \ "establisherNino" \ "nino").asOpt[String] mustBe (individualDetails \ "nino").asOpt[String]
+          }
+        }
       }
 
       s"has utr details in establishers array" in {
-        val result = individual.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
+        forAll(individualJsValueGen) {
+          individualDetails => {
+            val result = individualDetails.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
 
-        (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
-        (result \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (individual \ "utr").asOpt[String]
+            (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+            (result \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (individualDetails \ "utr").asOpt[String]
 
+          }
+        }
       }
 
       s"has contact details in establishers array" in {
-        val result = individual.transform(transformer.userAnswersContactDetailsReads("contactDetails")).get
+        forAll(individualJsValueGen) {
+          individualDetails => {
+            val result = individualDetails.transform(transformer.userAnswersContactDetailsReads("contactDetails")).get
 
-        (result \ "contactDetails" \ "emailAddress").as[String] mustBe (individual \ "correspondenceContactDetails" \ "email").as[String]
-        (result \ "contactDetails" \ "phoneNumber").as[String] mustBe
-          (individual \ "correspondenceContactDetails" \ "telephone").as[String]
+            (result \ "contactDetails" \ "emailAddress").as[String] mustBe (individualDetails \ "correspondenceContactDetails" \ "email").as[String]
+            (result \ "contactDetails" \ "phoneNumber").as[String] mustBe
+              (individualDetails \ "correspondenceContactDetails" \ "telephone").as[String]
+          }
+        }
       }
 
     }
@@ -76,17 +94,25 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     "have the individual details  transformed correctly to valid user answers format for second json file" that {
 
       s"has no nino details in establishers array" in {
-        val result = individual2.transform(transformer.userAnswersNinoReads).get
+        forAll(noNinoReasonJsValue) {
+          ninoJsValue => {
+            val result = ninoJsValue.transform(transformer.userAnswersNinoReads).get
 
-        (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe false
-        (result \ "establisherNino" \ "reason").asOpt[String] mustBe (individual2 \ "noNinoReason").asOpt[String]
+            (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe false
+            (result \ "establisherNino" \ "reason").asOpt[String] mustBe (ninoJsValue \ "noNinoReason").asOpt[String]
+          }
+        }
       }
 
       s"has no utr details in establishers array" in {
-        val result = individual2.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
+        forAll(noUtrReasonJsValue) {
+          utrJsValue => {
+            val result = utrJsValue.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
 
-        (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe false
-        (result \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (individual2 \ "noUtrReason").asOpt[String]
+            (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe false
+            (result \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (utrJsValue \ "noUtrReason").asOpt[String]
+          }
+        }
       }
     }
 

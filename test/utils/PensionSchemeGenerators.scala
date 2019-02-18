@@ -19,12 +19,15 @@ package utils
 import models._
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json.{JsString, JsValue, Json}
 
 trait PensionSchemeGenerators {
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
   val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
   val postalCodeGem: Gen[String] = Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString)
+  val ninoGenerator = Gen.option("SL221122D")
+
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
 
@@ -75,7 +78,7 @@ trait PensionSchemeGenerators {
 
   val individualGen: Gen[Individual] = for {
     personalDetails <- personalDetailsGen
-    referenceOrNino <- Gen.option("SL221122D")
+    referenceOrNino <- ninoGenerator
     noNinoReason <- Gen.option(reasonGen)
     utr <- Gen.option("1111111111")
     noUtrReason <- Gen.option(reasonGen)
@@ -147,6 +150,75 @@ trait PensionSchemeGenerators {
           Json.obj((if (isDifferent) "country" else "countryCode") -> countryCode))
       )
     )
+  }
+
+  val individualJsValueGen: Gen[JsValue] = for {
+    title <- Gen.option(titleGenerator)
+    firstName <- nameGenerator
+    middleName <- Gen.option(nameGenerator)
+    lastName <- nameGenerator
+    referenceOrNino <- Gen.const("SL221122D")
+    utr <- Gen.const("1111111111")
+    reason <- reasonGen
+    line1 <- addressLineGen
+    line2 <- addressLineGen
+    line3 <- addressLineOptional
+    line4 <- addressLineOptional
+    postalCode <- optionalPostalCodeGen
+    countryCode <- countryCode
+    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
+    nonUkFlag <- Gen.oneOf(true, false)
+  } yield {
+    Json.obj(
+      "personDetails" -> Json.obj(
+        "title" -> title,
+        "firstName" -> firstName,
+        "middleName" -> middleName,
+        "lastName" -> lastName,
+        "dateOfBirth" -> dateGenerator.sample.get.toString
+      ),
+      "nino" -> referenceOrNino,
+      "utr" -> utr,
+      "correspondenceAddressDetails" -> Json.obj(
+        "nonUKAddress" -> false,
+        "line1" -> line1,
+        "line2" -> line2,
+        "line3" -> line3,
+        "line4" -> line4,
+        "postalCode" -> postalCode,
+        "countryCode" -> countryCode
+      ),
+      "correspondenceContactDetails" -> Json.obj(
+        "telephone" -> phone,
+        "mobileNumber" -> phone,
+        "fax" -> "0044-09876542312",
+        "email" -> "aaa@gmail.com"
+      ),
+      "previousAddressDetails" -> Json.obj(
+        "isPreviousAddressLast12Month" -> true,
+        "previousAddress" -> Json.obj(
+          "nonUKAddress" -> nonUkFlag,
+          "line1" -> line1,
+          "line2" -> line2,
+          "line3" -> line3,
+          "line4" -> line4,
+          "postalCode" -> postalCode,
+          "countryCode" -> countryCode
+        )
+      )
+    )
+  }
+
+  val noNinoReasonJsValue: Gen[JsValue] = for {
+    noNinoReason <- reasonGen
+  } yield {
+    Json.obj("noNinoReason" -> noNinoReason)
+  }
+
+  val noUtrReasonJsValue: Gen[JsValue] = for {
+    noUtrReason <- reasonGen
+  } yield {
+    Json.obj("noUtrReason" -> noUtrReason)
   }
 
   private def optional(key: String, element: Option[String]) = {
