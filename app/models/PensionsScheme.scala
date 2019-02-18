@@ -20,6 +20,7 @@ import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import utils.Lens
+import play.api.libs.json.Writes.seq
 
 case class AddressAndContactDetails(addressDetails: Address, contactDetails: ContactDetails)
 
@@ -64,7 +65,7 @@ case class CorrespondenceAddressDetails(addressDetails: Address)
 object CorrespondenceAddressDetails {
   implicit val formats: Format[CorrespondenceAddressDetails] = Json.format[CorrespondenceAddressDetails]
 
-  val updateWrites : Writes[CorrespondenceAddressDetails] = (JsPath \ "addressDetails").write[Address](Address.updateWrites).contramap(c=>c.addressDetails)
+  val updateWrites: Writes[CorrespondenceAddressDetails] = (JsPath \ "addressDetails").write[Address](Address.updateWrites).contramap(c => c.addressDetails)
 }
 
 case class CorrespondenceContactDetails(contactDetails: ContactDetails)
@@ -253,32 +254,29 @@ object Individual {
       (JsPath \ "noUtrReason").writeNullable[String] and
       (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
       (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
-      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)) (
-    elements => elements)
+      (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
+    ) (elements => elements)
 
-  val individualUpdateWrites : Writes[Individual] = (
+  private def getIndividual(details: Individual) = {
+    (details.personalDetails,
+      (details.referenceOrNino,
+        details.noNinoReason,
+        details.utr,
+        details.noUtrReason,
+        details.correspondenceAddressDetails,
+        details.correspondenceContactDetails,
+        details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c => c)))
+  }
+
+  val individualUpdateWrites: Writes[Individual] = (
     (JsPath \ "personDetails").write[PersonalDetails] and
       JsPath.write(commonIndividualWrites)
-  )(details => (details.personalDetails,
-    (details.referenceOrNino,
-    details.noNinoReason,
-    details.utr,
-    details.noUtrReason,
-    details.correspondenceAddressDetails,
-    details.correspondenceContactDetails,
-    details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c))))
+    ) (getIndividual(_))
 
-  val establisherIndividualDetailsUpdateWrites : Writes[Individual] = (
+  val establisherIndividualUpdateWrites: Writes[Individual] = (
     (JsPath \ "personalDetails").write[PersonalDetails] and
       JsPath.write(commonIndividualWrites)
-    )(details => (details.personalDetails,
-    (details.referenceOrNino,
-      details.noNinoReason,
-      details.utr,
-      details.noUtrReason,
-      details.correspondenceAddressDetails,
-      details.correspondenceContactDetails,
-      details.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c))))
+    ) (getIndividual(_))
 }
 
 case class CompanyEstablisher(
@@ -299,7 +297,7 @@ case class CompanyEstablisher(
 object CompanyEstablisher {
   implicit val formats: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
 
-  val updateWrites : Writes[CompanyEstablisher] = (
+  val updateWrites: Writes[CompanyEstablisher] = (
     (JsPath \ "organisationName").write[String] and
       (JsPath \ "utr").writeNullable[String] and
       (JsPath \ "noUtrReason").writeNullable[String] and
@@ -311,8 +309,8 @@ object CompanyEstablisher {
       (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
       (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
       (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites) and
-      (JsPath \ "directorsDetails").write[JsArray]
-    )(company => (company.organizationName,
+      (JsPath \ "directorsDetails").write(seq(Individual.individualUpdateWrites))
+    ) (company => (company.organizationName,
     company.utr,
     company.noUtrReason,
     company.crnNumber,
@@ -322,9 +320,9 @@ object CompanyEstablisher {
     Some(company.haveMoreThanTenDirectorOrPartner),
     company.correspondenceAddressDetails,
     company.correspondenceContactDetails,
-    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
-    JsArray(company.directorDetails.map(c=>Json.toJson(c)(Individual.individualUpdateWrites))))
-  )
+    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c => c),
+    company.directorDetails
+  ))
 }
 
 case class Partnership(
@@ -343,7 +341,7 @@ case class Partnership(
 object Partnership {
   implicit val formats: Format[Partnership] = Json.format[Partnership]
 
-  val updateWrites : Writes[Partnership] = (
+  val updateWrites: Writes[Partnership] = (
     (JsPath \ "partnershipName").write[String] and
       (JsPath \ "utr").writeNullable[String] and
       (JsPath \ "noUtrReason").writeNullable[String] and
@@ -353,8 +351,8 @@ object Partnership {
       (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
       (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
       (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites) and
-      (JsPath \ "partnerDetails").write[JsArray]
-    )(partnership => (partnership.organizationName,
+      (JsPath \ "partnerDetails").write(seq(Individual.individualUpdateWrites))
+    ) (partnership => (partnership.organizationName,
     partnership.utr,
     partnership.noUtrReason,
     partnership.vatRegistrationNumber,
@@ -362,9 +360,9 @@ object Partnership {
     Some(partnership.haveMoreThanTenDirectorOrPartner),
     partnership.correspondenceAddressDetails,
     partnership.correspondenceContactDetails,
-    partnership.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c),
-    JsArray(partnership.partnerDetails.map(c=>Json.toJson(c)(Individual.individualUpdateWrites))))
-  )
+    partnership.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c => c),
+    partnership.partnerDetails
+  ))
 }
 
 case class CompanyTrustee(
@@ -383,7 +381,7 @@ case class CompanyTrustee(
 object CompanyTrustee {
   implicit val formats: Format[CompanyTrustee] = Json.format[CompanyTrustee]
 
-  val updateWrites : Writes[CompanyTrustee] = (
+  val updateWrites: Writes[CompanyTrustee] = (
     (JsPath \ "organisationName").write[String] and
       (JsPath \ "utr").writeNullable[String] and
       (JsPath \ "noUtrReason").writeNullable[String] and
@@ -394,7 +392,7 @@ object CompanyTrustee {
       (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
       (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
       (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
-    )(company => (company.organizationName,
+    ) (company => (company.organizationName,
     company.utr,
     company.noUtrReason,
     company.crnNumber,
@@ -403,7 +401,7 @@ object CompanyTrustee {
     company.payeReference,
     company.correspondenceAddressDetails,
     company.correspondenceContactDetails,
-    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c))
+    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c => c))
   )
 }
 
@@ -417,10 +415,11 @@ case class PartnershipTrustee(
                                correspondenceContactDetails: CorrespondenceContactDetails,
                                previousAddressDetails: Option[PreviousAddressDetails] = None
                              )
+
 object PartnershipTrustee {
   implicit val formats: Format[PartnershipTrustee] = Json.format[PartnershipTrustee]
 
-  val updateWrites : Writes[PartnershipTrustee] = (
+  val updateWrites: Writes[PartnershipTrustee] = (
     (JsPath \ "partnershipName").write[String] and
       (JsPath \ "utr").writeNullable[String] and
       (JsPath \ "noUtrReason").writeNullable[String] and
@@ -429,14 +428,14 @@ object PartnershipTrustee {
       (JsPath \ "correspondenceAddressDetails").write[CorrespondenceAddressDetails](CorrespondenceAddressDetails.updateWrites) and
       (JsPath \ "correspondenceContactDetails").write[CorrespondenceContactDetails] and
       (JsPath \ "previousAddressDetails").write[PreviousAddressDetails](PreviousAddressDetails.psaUpdateWrites)
-    )(company => (company.organizationName,
+    ) (company => (company.organizationName,
     company.utr,
     company.noUtrReason,
     company.vatRegistrationNumber,
     company.payeReference,
     company.correspondenceAddressDetails,
     company.correspondenceContactDetails,
-    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c=>c))
+    company.previousAddressDetails.fold(PreviousAddressDetails(isPreviousAddressLast12Month = false))(c => c))
   )
 }
 
@@ -449,14 +448,14 @@ object TrusteeDetails {
   implicit val formats : Format[TrusteeDetails] = Json.format[TrusteeDetails]
 
   val updateWrites : Writes[TrusteeDetails] = (
-    (JsPath \ "individualDetails").writeNullable[JsArray] and
-      (JsPath \ "companyOrOrganisationDetails").writeNullable[JsArray] and
-      (JsPath \ "partnershipDetails").writeNullable[JsArray]
+    (JsPath \ "individualDetails").writeNullable(seq(Individual.individualUpdateWrites)) and
+      (JsPath \ "companyTrusteeDetailsType").writeNullable(seq(CompanyTrustee.updateWrites)) and
+      (JsPath \ "partnershipTrusteeDetails").writeNullable(seq(PartnershipTrustee.updateWrites))
     )(trustee => (
-    if(trustee.individualTrusteeDetail.nonEmpty) Some(JsArray(trustee.individualTrusteeDetail.map(i=>Json.toJson(i)(Individual.establisherIndividualDetailsUpdateWrites)))) else None,
-    if(trustee.companyTrusteeDetail.nonEmpty) Some(JsArray(trustee.companyTrusteeDetail.map(c=>Json.toJson(c)(CompanyTrustee.updateWrites)))) else None,
-    if(trustee.partnershipTrusteeDetail.nonEmpty) Some(JsArray(trustee.partnershipTrusteeDetail.map(p=>Json.toJson(p)(PartnershipTrustee.updateWrites)))) else None
-  ))
+    if (trustee.individualTrusteeDetail.nonEmpty) Some(trustee.individualTrusteeDetail) else None,
+    if (trustee.companyTrusteeDetail.nonEmpty) Some(trustee.companyTrusteeDetail) else None,
+    if (trustee.partnershipTrusteeDetail.nonEmpty) Some(trustee.partnershipTrusteeDetail) else None)
+  )
 }
 
 case class EstablisherDetails(
@@ -466,17 +465,17 @@ case class EstablisherDetails(
                              )
 
 object EstablisherDetails {
-  implicit val formats : Format[EstablisherDetails] = Json.format[EstablisherDetails]
+  implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
 
-  val updateWrites : Writes[EstablisherDetails] = (
-    (JsPath \ "individualDetails").writeNullable[JsArray] and
-      (JsPath \ "companyOrOrganisationDetails").writeNullable[JsArray] and
-      (JsPath \ "partnershipDetails").writeNullable[JsArray]
-  )(establishers => (
-    if(establishers.individual.nonEmpty) Some(JsArray(establishers.individual.map(i=>Json.toJson(i)(Individual.establisherIndividualDetailsUpdateWrites)))) else None,
-    if(establishers.companyOrOrganization.nonEmpty) Some(JsArray(establishers.companyOrOrganization.map(c=>Json.toJson(c)(CompanyEstablisher.updateWrites)))) else None,
-    if(establishers.partnership.nonEmpty) Some(JsArray(establishers.partnership.map(p=>Json.toJson(p)(Partnership.updateWrites)))) else None
-  ))
+  val updateWrites: Writes[EstablisherDetails] = (
+    (JsPath \ "individualDetails").writeNullable(seq(Individual.establisherIndividualUpdateWrites)) and
+      (JsPath \ "companyOrOrganisationDetails").writeNullable(seq(CompanyEstablisher.updateWrites)) and
+      (JsPath \ "partnershipDetails").writeNullable(seq(Partnership.updateWrites))
+    ) (establishers => (
+    if (establishers.individual.nonEmpty) Some(establishers.individual) else None,
+    if (establishers.companyOrOrganization.nonEmpty) Some(establishers.companyOrOrganization) else None,
+    if (establishers.partnership.nonEmpty) Some(establishers.partnership) else None)
+  )
 }
 
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: PensionSchemeDeclaration,

@@ -34,7 +34,7 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
         forAll(individualGen) {
           individual => {
 
-            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.establisherIndividualDetailsUpdateWrites)
+            val mappedIndividual: JsValue = Json.toJson(individual)(Individual.establisherIndividualUpdateWrites)
 
             val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
