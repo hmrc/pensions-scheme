@@ -16,20 +16,22 @@
 
 package utils
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.networknt.schema.JsonSchemaFactory
-import play.api.libs.json.JsValue
+import com.eclipsesource.schema.{JsonSource, SchemaValidator}
+import play.api.libs.json.{JsResult, JsValue}
 
-case class SchemaValidatorForTests() {
-  def validateJson(elementToValidate: JsValue, schemaFileName: String): Option[Array[AnyRef]] = {
-    val schemaUrl = getClass.getResource(s"/schemas/$schemaFileName")
-    val jsonSchemaFactory = JsonSchemaFactory.getInstance()
-    val schema = jsonSchemaFactory.getSchema(schemaUrl)
+trait SchemaValidatorForTests {
 
-    val jsonToValidate  = new ObjectMapper().readTree(elementToValidate.toString())
+  def validateJson(elementToValidate: JsValue, schemaFileName: String, schemaNodePath: String): JsResult[JsValue]  = {
+    val rootSchema = JsonSource.schemaFromUrl(getClass.getResource(s"/schemas/$schemaFileName")).get
 
-    val result = schema.validate(jsonToValidate).toArray()
+    val validator = SchemaValidator().addSchema(s"/schemas/$schemaFileName", rootSchema)
 
-    if (result.nonEmpty) Some(result) else None
+    val schema = JsonSource.schemaFromString(
+      s"""{
+        |  "additionalProperties": {
+        |  "$$ref": "/schemas/$schemaFileName$schemaNodePath" }
+        |}""".stripMargin).get
+
+    validator.validate(schema, elementToValidate)
   }
 }

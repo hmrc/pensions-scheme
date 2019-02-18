@@ -30,7 +30,7 @@ trait PensionSchemeGenerators {
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
 
-  val ukAddressGen: Gen[Address] = for {
+  val ukAddressGen: Gen[UkAddress] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
     line3 <- addressLineOptional
@@ -38,7 +38,7 @@ trait PensionSchemeGenerators {
     postalCode <- postalCodeGem
   } yield UkAddress(line1, Some(line2), line3, line4, "GB", postalCode)
 
-  val internationalAddressGen: Gen[Address] = for {
+  val internationalAddressGen: Gen[InternationalAddress] = for {
     line1 <- addressLineGen
     line2 <- addressLineGen
     line3 <- addressLineOptional
@@ -88,7 +88,7 @@ trait PensionSchemeGenerators {
     noUtrReason, CorrespondenceAddressDetails(address),
     CorrespondenceContactDetails(contact), previousAddress)
 
-  val companyGen: Gen[CompanyEstablisher] = for {
+  val companyEstablisherGen: Gen[CompanyEstablisher] = for {
     orgName <- nameGenerator
     utr <- Gen.option("1111111111")
     noUtrReason <- Gen.option(reasonGen)
@@ -103,6 +103,20 @@ trait PensionSchemeGenerators {
     directors <- Gen.listOfN(randomNumberFromRange(1, 10), individualGen)
   } yield CompanyEstablisher(orgName, utr, noUtrReason, crn, noCrnReason, vat, paye, haveMoreThan10Directors, CorrespondenceAddressDetails(address), CorrespondenceContactDetails(contact), previous, directors)
 
+
+  val companyTrusteeGen: Gen[CompanyTrustee] = for {
+    orgName <- nameGenerator
+    utr <- Gen.option("1111111111")
+    noUtrReason <- Gen.option(reasonGen)
+    crn <- Gen.option("11111111")
+    noCrnReason <- Gen.option(reasonGen)
+    vat <- Gen.option("123456789")
+    paye <- Gen.option("1111111111111")
+    address <- ukAddressGen
+    contact <- contactDetailsGen
+    previous <- Gen.option(previousAddressDetailsGen)
+  } yield CompanyTrustee(orgName,utr,noUtrReason,crn,noCrnReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
+
   val partnershipGen: Gen[Partnership] = for {
     name <- nameGenerator
     utr <- Gen.option("1111111111")
@@ -116,11 +130,29 @@ trait PensionSchemeGenerators {
     partners <- Gen.listOfN(randomNumberFromRange(1, 10), individualGen)
   } yield Partnership(name, utr, noUtrReason, vat, paye, haveMoreThan10Directors, CorrespondenceAddressDetails(address), CorrespondenceContactDetails(contact), previous, partners)
 
+  val partnershipTrusteeGen: Gen[PartnershipTrustee] = for {
+    name <- nameGenerator
+    utr <- Gen.option("1111111111")
+    noUtrReason <- Gen.option(reasonGen)
+    vat <- Gen.option("123456789")
+    paye <- Gen.option("1111111111111")
+    address <- ukAddressGen
+    contact <- contactDetailsGen
+    previous <- Gen.option(previousAddressDetailsGen)
+    partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
+  } yield PartnershipTrustee(name,utr,noUtrReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
+
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
-    individuals <- Gen.listOfN(randomNumberFromRange(0, 10), individualGen)
-    companies <- Gen.listOfN(randomNumberFromRange(0, 10), companyGen)
-    partnerships <- Gen.listOfN(randomNumberFromRange(0, 10), partnershipGen)
-  } yield EstablisherDetails(individuals, companies, partnerships)
+    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyEstablisherGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipGen)
+  } yield EstablisherDetails(individuals,companies,partnerships)
+
+  val trusteeDetailsGen: Gen[TrusteeDetails] = for {
+    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyTrusteeGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipTrusteeGen)
+  } yield TrusteeDetails(individuals,companies,partnerships)
 
   def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
     line1 <- addressLineGen
