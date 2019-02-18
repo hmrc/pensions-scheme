@@ -16,36 +16,27 @@
 
 package models.Writes
 
-import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import models.Address
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.PensionSchemeGenerators
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 import scala.util.Random
 
-class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-
-  val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-  val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An updated address" should {
     "parse correctly to a valid DES format for variations api - API 1468" when {
       "we have a valid UK address" in {
         forAll(ukAddressGen) {
           address => {
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails" }
-                |}""".stripMargin).get
-
-
             val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
-            validator.validate(schema, testJsValue).isSuccess mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isSuccess mustBe true
           }
         }
       }
@@ -53,16 +44,13 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
       "we have a valid international address" in {
         forAll(internationalAddressGen) {
           address => {
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails" }
-                |}""".stripMargin).get
-
 
             val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
-            validator.validate(schema, testJsValue).isSuccess mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isSuccess mustBe true
           }
         }
       }
@@ -73,16 +61,13 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
         forAll(ukAddressGen) {
           address => {
             val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails" }
-                |}""".stripMargin).get
-
 
             val mappedAddress: JsValue = Json.toJson(invalidAddress)(Address.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
-            validator.validate(schema, testJsValue).isError mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isError mustBe true
           }
         }
       }
@@ -91,16 +76,13 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
         forAll(internationalAddressGen) {
           address => {
             val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails" }
-                |}""".stripMargin).get
-
 
             val mappedAddress: JsValue = Json.toJson(invalidAddress)(Address.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
-            validator.validate(schema, testJsValue).isError mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isError mustBe true
           }
         }
       }

@@ -16,14 +16,13 @@
 
 package models.Writes
 
-import com.eclipsesource.schema.{JsonSource, SchemaValidator}
-import models.{EstablisherDetails, TrusteeDetails}
+import models.TrusteeDetails
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.PensionSchemeGenerators
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An trustee details object" should {
 
@@ -33,21 +32,13 @@ class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionVal
         forAll(trusteeDetailsGen) {
           trustee => {
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType" }
-                |}""".stripMargin).get
-
             val mappedTrustee: JsValue = Json.toJson(trustee)(TrusteeDetails.updateWrites)
 
             val valid = Json.obj("trusteeDetailsType" -> mappedTrustee)
 
-            validator.validate(schema, valid).isSuccess mustBe true
+            validateJson(elementToValidate = valid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType").isSuccess mustBe true
           }
         }
       }
@@ -67,19 +58,11 @@ class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionVal
 
             val mappedTrustee: JsValue = Json.toJson(localEstablisher)(TrusteeDetails.updateWrites)
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType" }
-                |}""".stripMargin).get
-
             val inValid = Json.obj("trusteeDetailsType" -> mappedTrustee)
 
-            validator.validate(schema, inValid).isError mustBe true
+            validateJson(elementToValidate = inValid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType").isError mustBe true
           }
         }
       }

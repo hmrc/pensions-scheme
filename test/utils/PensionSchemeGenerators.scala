@@ -141,15 +141,15 @@ trait PensionSchemeGenerators {
   } yield PartnershipTrustee(name,utr,noUtrReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
 
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
-    individuals <- Gen.listOfN(randomNumberFromRange(0,0),individualGen)
-    companies <- Gen.listOfN(randomNumberFromRange(0,0),companyEstablisherGen)
-    partnerships <- Gen.listOfN(randomNumberFromRange(0,0),partnershipGen)
+    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyEstablisherGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipGen)
   } yield EstablisherDetails(individuals,companies,partnerships)
 
   val trusteeDetailsGen: Gen[TrusteeDetails] = for {
-    individuals <- Gen.listOfN(randomNumberFromRange(0,0),individualGen)
-    companies <- Gen.listOfN(randomNumberFromRange(0,0),companyTrusteeGen)
-    partnerships <- Gen.listOfN(randomNumberFromRange(0,0),partnershipTrusteeGen)
+    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyTrusteeGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipTrusteeGen)
   } yield TrusteeDetails(individuals,companies,partnerships)
 
   def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {

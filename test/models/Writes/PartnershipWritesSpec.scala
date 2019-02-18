@@ -16,34 +16,27 @@
 
 package models.Writes
 
-import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import models.{Partnership, PartnershipTrustee}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.PensionSchemeGenerators
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-
-  val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-  val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
+class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An establisher partnership object" should {
+
     "parse correctly to a valid DES format for variations api - API 1468" when {
       "we have a valid partnership" in {
         forAll(partnershipGen) {
           partnership => {
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails" }
-                |}""".stripMargin).get
-
 
             val mappedPartner: JsValue = Json.toJson(partnership)(Partnership.updateWrites)
             val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
 
-            validator.validate(schema, testJsValue).isSuccess mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isSuccess mustBe true
           }
         }
       }
@@ -55,16 +48,12 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
           partnership => {
             val invalidPartnership = partnership.copy(partnerDetails = Nil)
 
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails" }
-                |}""".stripMargin).get
-
-
             val mappedPartner: JsValue = Json.toJson(invalidPartnership)(Partnership.updateWrites)
             val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
 
-            validator.validate(schema, testJsValue).isError mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isError mustBe true
           }
         }
       }
@@ -76,16 +65,13 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
       "we have a valid trustee partnership" in {
         forAll(partnershipTrusteeGen) {
           partnership => {
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails" }
-                |}""".stripMargin).get
-
 
             val mappedPartner: JsValue = Json.toJson(partnership)(PartnershipTrustee.updateWrites)
             val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
 
-            validator.validate(schema, testJsValue).isSuccess mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isSuccess mustBe true
           }
         }
       }
@@ -97,16 +83,12 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
           partnership => {
             val invalidPartnership = partnership.copy(utr = Some("invalid utr"))
 
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": { "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails" }
-                |}""".stripMargin).get
-
-
             val mappedPartner: JsValue = Json.toJson(invalidPartnership)(PartnershipTrustee.updateWrites)
             val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
 
-            validator.validate(schema, testJsValue).isError mustBe true
+            validateJson(elementToValidate = testJsValue,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isError mustBe true
           }
         }
       }

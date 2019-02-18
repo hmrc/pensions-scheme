@@ -16,14 +16,13 @@
 
 package models.Writes
 
-import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import models.EstablisherDetails
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
-import utils.PensionSchemeGenerators
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests{
 
   "An establisher details object" should {
 
@@ -33,21 +32,13 @@ class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with Optio
         forAll(establisherDetailsGen) {
           establisher => {
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails" }
-                |}""".stripMargin).get
-
             val mappedEstablisher: JsValue = Json.toJson(establisher)(EstablisherDetails.updateWrites)
 
             val valid = Json.obj("establisherDetails" -> mappedEstablisher)
 
-            validator.validate(schema, valid).isSuccess mustBe true
+            validateJson(elementToValidate = valid,
+                         schemaFileName = "api1468_schema.json",
+                         schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails").isSuccess mustBe true
           }
         }
       }
@@ -67,19 +58,11 @@ class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with Optio
 
             val mappedEstablisher: JsValue = Json.toJson(localEstablisher)(EstablisherDetails.updateWrites)
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails" }
-                |}""".stripMargin).get
-
             val inValid = Json.obj("establisherDetails" -> mappedEstablisher)
 
-            validator.validate(schema, inValid).isError mustBe true
+            validateJson(elementToValidate = inValid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails").isError mustBe true
           }
         }
       }

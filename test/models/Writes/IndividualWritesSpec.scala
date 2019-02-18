@@ -16,7 +16,6 @@
 
 package models.Writes
 
-import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import models.Individual
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
@@ -25,9 +24,7 @@ import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 
 
-class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
-
-  val schemaValidator = SchemaValidatorForTests()
+class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An Individual object" should {
 
@@ -37,21 +34,13 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
         forAll(individualGen) {
           individual => {
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails" }
-                |}""".stripMargin).get
-
             val mappedIndividual: JsValue = Json.toJson(individual)(Individual.establisherIndividualDetailsUpdateWrites)
 
             val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
-            validator.validate(schema, valid).isSuccess mustBe true
+            validateJson(elementToValidate = valid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails").isSuccess mustBe true
           }
         }
       }
@@ -65,19 +54,11 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
 
             val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualUpdateWrites)
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails" }
-                |}""".stripMargin).get
-
             val inValid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
-            validator.validate(schema, inValid).isError mustBe true
+            validateJson(elementToValidate = inValid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails").isError mustBe true
           }
         }
       }
@@ -87,21 +68,13 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
         forAll(individualGen) {
           individual => {
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails" }
-                |}""".stripMargin).get
-
             val mappedIndividual: JsValue = Json.toJson(individual)(Individual.individualUpdateWrites)
 
             val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
-            validator.validate(schema, valid).isSuccess mustBe true
+            validateJson(elementToValidate = valid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails").isSuccess mustBe true
           }
         }
       }
@@ -115,19 +88,11 @@ class IndividualWritesSpec extends WordSpec with MustMatchers with OptionValues 
 
             val mappedIndividual: JsValue = Json.toJson(invalidCompany)(Individual.individualUpdateWrites)
 
-            val rootSchema = JsonSource.schemaFromUrl(getClass.getResource("/schemas/api1468_schema.json")).get
-
-            val validator = SchemaValidator().addSchema("/schemas/api1468_schema.json", rootSchema)
-
-            val schema = JsonSource.schemaFromString(
-              """{
-                |  "additionalProperties": {
-                |  "$ref": "/schemas/api1468_schema.json#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails" }
-                |}""".stripMargin).get
-
             val inValid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
-            validator.validate(schema, inValid).isError mustBe true
+            validateJson(elementToValidate = inValid,
+              schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails").isError mustBe true
           }
         }
       }
