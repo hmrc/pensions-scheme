@@ -19,15 +19,20 @@ package utils
 import models._
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
-import play.api.libs.json.{JsValue, Json}
-import wolfendale.scalacheck.regexp.RegexpGen
-
+import play.api.libs.json.Json
 
 trait PensionSchemeGenerators {
   val specialCharStringGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
   val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
   val postalCodeGem: Gen[String] = Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString)
+  val optionalNinoGenerator = Gen.option("SL221122D")
+  val ninoGenerator = Gen.const("SL221122D")
+  val utrGenerator = Gen.listOfN[Char](10, Gen.numChar).map(_.mkString)
+  val crnGenerator = Gen.const("11111111")
+  val vatGenerator = Gen.const("123456789")
+  val payeGenerator = Gen.const("1111111111111")
+
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
 
@@ -73,14 +78,14 @@ trait PensionSchemeGenerators {
   val previousAddressDetailsGen: Gen[PreviousAddressDetails] = for {
     isPrev: Boolean <- Gen.oneOf(true, false)
     address <- if (isPrev) Gen.option(ukAddressGen) else Gen.const(None)
-    } yield PreviousAddressDetails(isPrev,address)
+  } yield PreviousAddressDetails(isPrev, address)
 
 
   val individualGen: Gen[Individual] = for {
     personalDetails <- personalDetailsGen
-    referenceOrNino <- Gen.option("SL221122D")
+    referenceOrNino <- optionalNinoGenerator
     noNinoReason <- Gen.option(reasonGen)
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
     address <- ukAddressGen
     contact <- contactDetailsGen
@@ -91,69 +96,73 @@ trait PensionSchemeGenerators {
 
   val companyEstablisherGen: Gen[CompanyEstablisher] = for {
     orgName <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    crn <- Gen.option("11111111")
+    crn <- Gen.option(crnGenerator)
     noCrnReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
-    haveMoreThan10Directors <- Gen.oneOf(Seq(true,false))
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
+    haveMoreThan10Directors <- Gen.oneOf(Seq(true, false))
     address <- ukAddressGen
     contact <- contactDetailsGen
     previous <- Gen.option(previousAddressDetailsGen)
-    directors <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
-  } yield CompanyEstablisher(orgName,utr,noUtrReason,crn,noCrnReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,directors)
+    directors <- Gen.listOfN(randomNumberFromRange(1, 10), individualGen)
+  } yield CompanyEstablisher(orgName, utr, noUtrReason, crn, noCrnReason, vat,
+    paye, haveMoreThan10Directors, CorrespondenceAddressDetails(address), CorrespondenceContactDetails(contact),
+    previous, directors)
 
 
   val companyTrusteeGen: Gen[CompanyTrustee] = for {
     orgName <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    crn <- Gen.option("11111111")
+    crn <- Gen.option(crnGenerator)
     noCrnReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     address <- ukAddressGen
     contact <- contactDetailsGen
     previous <- Gen.option(previousAddressDetailsGen)
-  } yield CompanyTrustee(orgName,utr,noUtrReason,crn,noCrnReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
+  } yield CompanyTrustee(orgName, utr, noUtrReason, crn, noCrnReason, vat, paye, CorrespondenceAddressDetails(address),
+    CorrespondenceContactDetails(contact), previous)
 
   val partnershipGen: Gen[Partnership] = for {
     name <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
-    haveMoreThan10Directors <- Gen.oneOf(Seq(true,false))
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
+    haveMoreThan10Directors <- Gen.oneOf(Seq(true, false))
     address <- ukAddressGen
     contact <- contactDetailsGen
     previous <- Gen.option(previousAddressDetailsGen)
-    partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
-  } yield Partnership(name,utr,noUtrReason,vat,paye,haveMoreThan10Directors,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous,partners)
+    partners <- Gen.listOfN(randomNumberFromRange(1, 10), individualGen)
+  } yield Partnership(name, utr, noUtrReason, vat, paye, haveMoreThan10Directors, CorrespondenceAddressDetails(address),
+    CorrespondenceContactDetails(contact), previous, partners)
 
   val partnershipTrusteeGen: Gen[PartnershipTrustee] = for {
     name <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     address <- ukAddressGen
     contact <- contactDetailsGen
     previous <- Gen.option(previousAddressDetailsGen)
-    partners <- Gen.listOfN(randomNumberFromRange(1,10),individualGen)
-  } yield PartnershipTrustee(name,utr,noUtrReason,vat,paye,CorrespondenceAddressDetails(address),CorrespondenceContactDetails(contact),previous)
+    partners <- Gen.listOfN(randomNumberFromRange(1, 10), individualGen)
+  } yield PartnershipTrustee(name, utr, noUtrReason, vat, paye, CorrespondenceAddressDetails(address), CorrespondenceContactDetails(contact), previous)
 
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
-    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
-    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyEstablisherGen)
-    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipGen)
-  } yield EstablisherDetails(individuals,companies,partnerships)
+    individuals <- Gen.listOfN(randomNumberFromRange(0, 10), individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0, 10), companyEstablisherGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0, 10), partnershipGen)
+  } yield EstablisherDetails(individuals, companies, partnerships)
 
   val trusteeDetailsGen: Gen[TrusteeDetails] = for {
-    individuals <- Gen.listOfN(randomNumberFromRange(0,10),individualGen)
-    companies <- Gen.listOfN(randomNumberFromRange(0,10),companyTrusteeGen)
-    partnerships <- Gen.listOfN(randomNumberFromRange(0,10),partnershipTrusteeGen)
-  } yield TrusteeDetails(individuals,companies,partnerships)
+    individuals <- Gen.listOfN(randomNumberFromRange(0, 10), individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0, 10), companyTrusteeGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0, 10), partnershipTrusteeGen)
+  } yield TrusteeDetails(individuals, companies, partnerships)
 
 
   val CustomerAndSchemeDetailsGen: Gen[CustomerAndSchemeDetails] = for {
@@ -200,36 +209,8 @@ trait PensionSchemeGenerators {
                                     "A group life/death in service scheme",
                                     "A body corporate",
                                     "Other")))
-  def addressJsValueGen(isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
-    line1 <- addressLineGen
-    line2 <- addressLineGen
-    line3 <- addressLineOptional
-    line4 <- addressLineOptional
-    postalCode <- optionalPostalCodeGen
-    countryCode <- countryCode
-  } yield {
-    (
-      Json.obj(
-        "desAddress" -> (Json.obj("nonUKAddress" -> true) ++
-          Json.obj("line1" -> line1) ++
-          Json.obj("line2" -> line2) ++
-          optional("line3", line3) ++
-          optional("line4", line4) ++
-          optional("postalCode", postalCode) ++
-          Json.obj("countryCode" -> countryCode))
-      ),
-      Json.obj(
-        "userAnswersAddress" -> (Json.obj("addressLine1" -> line1) ++
-          Json.obj("addressLine2" -> line2) ++
-          optional("addressLine3", line3) ++
-          optional("addressLine4", line4) ++
-          optional(if (isDifferent) "postcode" else "postalCode", postalCode) ++
-          Json.obj((if (isDifferent) "country" else "countryCode") -> countryCode))
-      )
-    )
-  }
 
-  private def optional(key: String, element: Option[String]) = {
+  protected def optional(key: String, element: Option[String]) = {
     element.map { value =>
       Json.obj(key -> value)
     }.getOrElse(Json.obj())
