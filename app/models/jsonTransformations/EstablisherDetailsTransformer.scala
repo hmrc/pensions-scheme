@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package utils.JsonTransformations
+package models.jsonTransformations
 
 import com.google.inject.Inject
-import models.jsonTransformations.{AddressTransformer, JsonTransformer}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._

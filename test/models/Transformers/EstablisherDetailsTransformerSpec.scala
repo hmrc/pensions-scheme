@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package utils.JsonTransformations
+package models.Transformers
 
 import base.JsonFileReader
-import models.jsonTransformations.AddressTransformer
+import models.jsonTransformations.{AddressTransformer, EstablisherDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.{PensionSchemeGenerators, PensionSchemeJsValueGenerators}
+import utils.PensionSchemeJsValueGenerators
 
 
 class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
