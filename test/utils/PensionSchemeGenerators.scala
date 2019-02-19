@@ -85,7 +85,7 @@ trait PensionSchemeGenerators {
     personalDetails <- personalDetailsGen
     referenceOrNino <- optionalNinoGenerator
     noNinoReason <- Gen.option(reasonGen)
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
     address <- ukAddressGen
     contact <- contactDetailsGen
@@ -96,12 +96,12 @@ trait PensionSchemeGenerators {
 
   val companyEstablisherGen: Gen[CompanyEstablisher] = for {
     orgName <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    crn <- Gen.option("11111111")
+    crn <- Gen.option(crnGenerator)
     noCrnReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     haveMoreThan10Directors <- Gen.oneOf(Seq(true, false))
     address <- ukAddressGen
     contact <- contactDetailsGen
@@ -114,12 +114,12 @@ trait PensionSchemeGenerators {
 
   val companyTrusteeGen: Gen[CompanyTrustee] = for {
     orgName <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    crn <- Gen.option("11111111")
+    crn <- Gen.option(crnGenerator)
     noCrnReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     address <- ukAddressGen
     contact <- contactDetailsGen
     previous <- Gen.option(previousAddressDetailsGen)
