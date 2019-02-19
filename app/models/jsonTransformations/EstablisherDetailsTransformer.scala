@@ -38,8 +38,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
 
   def userAnswersEstablisherIndividualReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads and
-      userAnswersNinoReads and
+      userAnswersIndividualDetailsReads("establisherDetails") and
+      userAnswersNinoReads("establisherNino") and
       userAnswersUtrReads("uniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'addressYears) and
@@ -70,45 +70,11 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       userAnswersContactDetailsReads("partnershipContactDetails") and
       (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
 
-  def userAnswersIndividualDetailsReads: Reads[JsObject] =
-    (__ \ 'establisherDetails \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
-      ((__ \ 'establisherDetails \ 'middleName).json.copyFrom((__ \ 'personDetails \ 'middleName).json.pick) orElse doNothing) and
-      (__ \ 'establisherDetails \ 'lastName).json.copyFrom((__ \ 'personDetails \ 'lastName).json.pick) and
-      (__ \ 'establisherDetails \ 'date).json.copyFrom((__ \ 'personDetails \ 'dateOfBirth).json.pick) reduce
-
-  def userAnswersNinoReads: Reads[JsObject] = {
-    (__ \ "nino").read[String].flatMap { _ =>
-      (__ \ 'establisherNino \ 'hasNino).json.put(JsBoolean(true)) and
-        (__ \ 'establisherNino \ 'nino).json.copyFrom((__ \ 'nino).json.pick) reduce
-
-    } orElse {
-      (__ \ 'establisherNino \ 'hasNino).json.put(JsBoolean(false)) and
-        (__ \ 'establisherNino \ 'reason).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
-
-    }
-  }
-
-  def userAnswersUtrReads(userAnswersBase: String): Reads[JsObject] = {
-    (__ \ "utr").read[String].flatMap { _ =>
-      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
-        (__ \ userAnswersBase \ 'utr).json.copyFrom((__ \ 'utr).json.pick) reduce
-
-    } orElse {
-      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
-        (__ \ userAnswersBase \ 'reason).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
-
-    }
-  }
-
   def userAnswersCompanyDetailsReads: Reads[JsObject] =
     (__ \ 'companyDetails \ 'companyName).json.copyFrom((__ \ 'organisationName).json.pick) and
       (__ \ 'companyDetails \ 'vatNumber).json.copyFrom((__ \ 'vatRegistrationNumber).json.pick) and
       (__ \ 'companyDetails \ 'payeNumber).json.copyFrom((__ \ 'payeReference).json.pick) reduce
 
-
-  def userAnswersContactDetailsReads(userAnswersBase: String): Reads[JsObject] =
-    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ 'correspondenceContactDetails \ 'email).json.pick) and
-      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
 
   def userAnswersCrnReads: Reads[JsObject] = {
     (__ \ "crnNumber").read[String].flatMap { _ =>

@@ -21,6 +21,15 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 
 trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
+  private def utrJsValue(utr: String) = Json.obj(
+    "hasUtr" -> true,
+    "utr" -> utr
+  )
+
+  private def ninoJsValue(nino: String) = Json.obj(
+    "hasNino" -> true,
+    "nino" -> nino
+  )
   def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
                         isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
     line1 <- addressLineGen
@@ -107,14 +116,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "lastName" -> lastName,
           "date" -> date.toString
         ),
-        "establisherNino" -> Json.obj(
-          "hasNino" -> true,
-          "nino" -> referenceOrNino
-        ),
-        "uniqueTaxReference" -> Json.obj(
-          "hasUtr" -> true,
-          "utr" -> utr
-        ),
+        "establisherNino" -> ninoJsValue(referenceOrNino),
+        "uniqueTaxReference" -> utrJsValue(utr),
         "addressYears" -> "under_a_year",
         "contactDetails" -> userAnswersContactDetails,
         "isEstablisherComplete" -> true
@@ -158,10 +161,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "hasCrn" -> true,
           "crn" -> crn
         ),
-        "companyUniqueTaxReference" -> Json.obj(
-          "hasUtr" -> true,
-          "utr" -> utr
-        ),
+        "companyUniqueTaxReference" -> utrJsValue(utr),
         "companyAddressYears" -> "under_a_year",
         "companyContactDetails" -> userAnswersContactDetails,
         "isCompanyComplete" -> true
@@ -205,10 +205,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "hasPaye" -> true,
           "paye" -> paye
         ),
-        "partnershipUniqueTaxReference" -> Json.obj(
-          "hasUtr" -> true,
-          "utr" -> utr
-        ),
+        "partnershipUniqueTaxReference" -> utrJsValue(utr),
         "partnershipAddressYears" -> "under_a_year",
         "partnershipContactDetails" -> userAnswersContactDetails,
         "isPartnershipCompleteId" -> true
@@ -234,4 +231,56 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       )
     )
   }
+
+  def directorOrPartnerJsValueGen(directorOrPartner: String): Gen[(JsValue, JsValue)] = for {
+    title <- Gen.option(titleGenerator)
+    firstName <- nameGenerator
+    middleName <- Gen.option(nameGenerator)
+    lastName <- nameGenerator
+    referenceOrNino <- ninoGenerator
+    contactDetails <- contactDetailsJsValueGen
+    utr <- utrGenerator
+    address <- addressJsValueGen("correspondenceAddressDetails", s"${directorOrPartner}AddressId", isDifferent = true)
+    partnerPreviousAddress <- addressJsValueGen("previousAddress", "partnerPreviousAddress", isDifferent = true)
+    directorPreviousAddress <- addressJsValueGen("previousAddress", "previousAddress", isDifferent = true)
+    date <- dateGenerator
+  } yield {
+    val (desPreviousAddress, userAnswersPreviousAddress) = if (directorOrPartner.contains("partner")) partnerPreviousAddress else directorPreviousAddress
+    val previousAddress = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
+    val addressYearsKey = if (directorOrPartner.contains("partner")) directorOrPartner else "companyDirector"
+    val userAnswersIsComplete = if (directorOrPartner.contains("partner")) Json.obj("isPartnerComplete" -> true) else Json.obj("isDirectorComplete" -> true)
+    val (desAddress, userAnswersAddress) = address
+    val (desContactDetails, userAnswersContactDetails) = contactDetails
+    (
+      Json.obj(
+        "personDetails" -> Json.obj(
+          "title" -> title,
+          "firstName" -> firstName,
+          "middleName" -> middleName,
+          "lastName" -> lastName,
+          "dateOfBirth" -> date.toString
+        ),
+        "nino" -> referenceOrNino,
+        "utr" -> utr,
+        "correspondenceContactDetails" -> desContactDetails,
+        "previousAddressDetails" -> previousAddress
+      ) ++ desAddress.as[JsObject],
+      Json.obj(
+        s"${directorOrPartner}Details" -> Json.obj(
+          "firstName" -> firstName,
+          "middleName" -> middleName,
+          "lastName" -> lastName,
+          "date" -> date.toString
+        ),
+        s"${directorOrPartner}Nino" -> ninoJsValue(referenceOrNino),
+        s"${directorOrPartner}UniqueTaxReference" -> utrJsValue(utr),
+        s"${addressYearsKey}AddressYears" -> "under_a_year",
+        s"${directorOrPartner}ContactDetails" -> userAnswersContactDetails
+      ) ++ userAnswersAddress.as[JsObject]
+        ++ userAnswersPreviousAddress.as[JsObject]
+        ++ userAnswersIsComplete
+    )
+  }
+
+
 }
