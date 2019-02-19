@@ -24,14 +24,17 @@ import play.api.libs.json._
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def userAnswersEstablishersReads(desJsValue: JsValue): JsValue = {
-    val individuals = desJsValue.transform((__ \ 'individualDetails)
-      .read(__.read(Reads.seq(userAnswersEstablisherIndividualReads)).map(JsArray(_)))).getOrElse(JsArray())
-    val companies = desJsValue.transform((__ \ 'companyOrOrganisationDetails)
-      .read(__.read(Reads.seq(userAnswersEstablisherCompanyReads)).map(JsArray(_)))).getOrElse(JsArray())
-    val partnerships = desJsValue.transform((__ \ 'partnershipTrusteeDetail)
-      .read(__.read(Reads.seq(userAnswersEstablisherPartnershipReads)).map(JsArray(_)))).getOrElse(JsArray())
-    Json.obj("establishers" -> (individuals ++ companies ++ partnerships))
+  def userAnswersEstablishersReads: Reads[JsObject] = {
+    (__ \ 'individualDetails).readNullable(
+      __.read(Reads.seq(userAnswersEstablisherIndividualReads)).map(JsArray(_))).flatMap { indv =>
+      (__ \ 'companyOrOrganisationDetails).readNullable(
+        __.read(Reads.seq(userAnswersEstablisherCompanyReads)).map(JsArray(_))).flatMap { comp =>
+        (__ \ 'partnershipTrusteeDetail).readNullable(
+          __.read(Reads.seq(userAnswersEstablisherPartnershipReads)).map(JsArray(_))).flatMap { part =>
+          (__ \ 'establishers).json.put(indv.getOrElse(JsArray()) ++ comp.getOrElse(JsArray()) ++ part.getOrElse(JsArray()))
+        }
+      }
+    }
   }
 
   def userAnswersEstablisherIndividualReads: Reads[JsObject] =
@@ -98,7 +101,6 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
     }
   }
 
-
   def userAnswersCompanyDetailsReads: Reads[JsObject] =
     (__ \ 'companyDetails \ 'companyName).json.copyFrom((__ \ 'organisationName).json.pick) and
       (__ \ 'companyDetails \ 'vatNumber).json.copyFrom((__ \ 'vatRegistrationNumber).json.pick) and
@@ -121,7 +123,6 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
     }
   }
 
-
   def userAnswersPartnershipDetailsReads: Reads[JsObject] =
     (__ \ 'partnershipDetails \ 'name).json.copyFrom((__ \ 'partnershipName).json.pick)
 
@@ -142,5 +143,4 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
     (__ \ 'partnershipPaye \ 'hasPaye).json.put(JsBoolean(false))
 
   }
-
 }
