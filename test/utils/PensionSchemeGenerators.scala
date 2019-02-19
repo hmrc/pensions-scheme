@@ -195,6 +195,7 @@ trait PensionSchemeGenerators {
                                                 "Mixture of money purchase benefits and defined benefits"))
 
   val policyNumberGen =  Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
+  val otherSchemeStructureGen =  Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
 
   val boolenGen = Gen.oneOf(Seq(true, false))
 
@@ -210,7 +211,24 @@ trait PensionSchemeGenerators {
                                     "A body corporate",
                                     "Other")))
 
+  val schemeStatusGen = Gen.oneOf(
+    "Pending",
+    "Pending Info Required",
+    "Pending Info Received",
+    "Rejected",
+    "Open",
+    "Deregistered",
+    "Wound-up",
+    "Rejected Under Appeal"
+  )
+
   protected def optional(key: String, element: Option[String]) = {
+    element.map { value =>
+      Json.obj(key -> value)
+    }.getOrElse(Json.obj())
+  }
+
+  protected def optionalBoolean(key: String, element: Option[Boolean]) = {
     element.map { value =>
       Json.obj(key -> value)
     }.getOrElse(Json.obj())

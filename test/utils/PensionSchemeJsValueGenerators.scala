@@ -16,8 +16,10 @@
 
 package utils
 
+import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import org.scalacheck.Gen
-import play.api.libs.json.{JsObject, JsValue, Json}
+import org.scalacheck.Gen.{const, frequency, some}
+import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 
 trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
@@ -30,6 +32,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     "hasNino" -> true,
     "nino" -> nino
   )
+
   def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
                         isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
     line1 <- addressLineGen
@@ -126,7 +129,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  val companyJsValueGen: Gen[(JsObject, JsObject)]= for {
+  val companyJsValueGen: Gen[(JsObject, JsObject)] = for {
     orgName <- nameGenerator
     utr <- utrGenerator
     crn <- crnGenerator
@@ -282,5 +285,66 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-
+  val schemeDetailsGen: Gen[(JsValue, JsValue)] = for {
+    schemeName <- specialCharStringGen
+    schemeStatus <- schemeStatusGen
+    isSchemeMasterTrust <- Gen.option(boolenGen)
+    schemeStructure <- schemeTypeGen
+    currentSchemeMembers <- memberGen
+    futureSchemeMembers <- memberGen
+    isReguledSchemeInvestment <- boolenGen
+    isOccupationalPensionScheme <- boolenGen
+    areBenefitsSecuredContractInsuranceCompany <- boolenGen
+    schemeProvideBenefits <- schemeProvideBenefitsGen
+    schemeEstablishedCountry <- countryCode
+    insuranceCompanyName <- Gen.option(specialCharStringGen)
+    policyNumber <- Gen.option(policyNumberGen)
+    insuranceAddress <- Gen.option(addressJsValueGen("insuranceCompanyAddressDetails", "insurerAddress"))
+    otherPensionSchemeStructure <- Gen.option(otherSchemeStructureGen)
+    moreThanTenTrustees <- Gen.option(booleanGen)
+    contactDetails <- contactDetailsJsValueGen
+    optionalContact <- Gen.option(contactDetails._1)
+  } yield {
+    val schemeTypeName = if (isSchemeMasterTrust.contains(true)) Json.obj("name" -> "master") else
+      schemeStructure.map(schemeType => Json.obj("name" -> SchemeType.nameWithValue(schemeType))).getOrElse(Json.obj())
+    val otherDetails = optional("schemeTypeDetails", otherPensionSchemeStructure)
+    val schemeType = schemeTypeName ++ otherDetails
+    (
+    Json.obj(
+      "srn" -> "",
+      "pstr" -> "",
+      "schemeStatus" -> schemeStatus,
+      "schemeName" -> schemeName,
+      "currentSchemeMembers" -> currentSchemeMembers,
+      "futureSchemeMembers" -> futureSchemeMembers,
+      "isReguledSchemeInvestment" -> isReguledSchemeInvestment,
+      "isOccupationalPensionScheme" -> isOccupationalPensionScheme,
+      "schemeProvideBenefits" -> schemeProvideBenefits,
+      "schemeEstablishedCountry" -> schemeEstablishedCountry,
+      "isSchemeBenefitsInsuranceCompany" -> areBenefitsSecuredContractInsuranceCompany
+    ) ++ optionalBoolean("isSchemeMasterTrust", isSchemeMasterTrust) ++
+      optional("insuranceCompanyName", insuranceCompanyName) ++
+      optional("policyNumber", policyNumber) ++
+      optionalContact.map { value => Json.obj("insuranceCompanyContactDetails" -> value) }.getOrElse(Json.obj()) ++
+      insuranceAddress.map { value => value._1.as[JsObject] }.getOrElse(Json.obj()) ++
+      optional("otherPensionSchemeStructure", otherPensionSchemeStructure) ++
+      optional("pensionSchemeStructure", schemeStructure) ++
+      optionalBoolean("hasMoreThanTenTrustees", moreThanTenTrustees) ++
+      optional("insuranceCompanyName", insuranceCompanyName)
+    ,
+    Json.obj(
+      "schemeName" -> schemeName,
+      "schemeType" -> schemeType,
+      "schemeEstablishedCountry" -> schemeEstablishedCountry,
+      "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
+      "membershipFuture" -> SchemeMembers.nameWithValue(futureSchemeMembers),
+      "investmentRegulated" -> isReguledSchemeInvestment,
+      "occupationalPensionScheme" -> isOccupationalPensionScheme,
+      "benefits" -> Benefits.nameWithValue(schemeProvideBenefits),
+      "securedBenefits" -> areBenefitsSecuredContractInsuranceCompany
+    ) ++ optional("insuranceCompanyName", insuranceCompanyName) ++
+      optional("insurancePolicyNumber", policyNumber) ++
+      insuranceAddress.map { value => value._2.as[JsObject] }.getOrElse(Json.obj())
+    )
+  }
 }
