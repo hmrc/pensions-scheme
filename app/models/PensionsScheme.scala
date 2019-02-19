@@ -546,4 +546,15 @@ object PensionsScheme {
         )
   }
 
+  val updateWriteEstablisherAndTrustDetails: Writes[(
+    Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])] = {
+    ((JsPath \ "changeOfEstablisherOrTrustDetails").write[Boolean] and
+      (JsPath \ "haveMoreThanTenTrustees").writeNullable[Boolean] and
+      (JsPath \ "establisherDetails").write(EstablisherDetails.updateWrites) and
+      (JsPath \ "trusteeDetailsType").writeNullable(TrusteeDetails.updateWrites)
+      )(element => element)
+  }
+
+
+
 }

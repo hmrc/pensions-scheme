@@ -26,7 +26,7 @@ class TrusteeDetailsWritesSpec extends WordSpec with MustMatchers with OptionVal
 
   "An trustee details object" should {
 
-    "map correctly to an update payload for for trusteeDetailsType API 1468" when {
+    "map correctly to an update payload for trusteeDetailsType API 1468" when {
 
       "validate trusteeDetails write with schema" in {
         forAll(trusteeDetailsGen) {

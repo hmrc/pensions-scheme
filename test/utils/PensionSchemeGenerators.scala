@@ -181,6 +181,16 @@ trait PensionSchemeGenerators {
     insuranceCompanyAddress, isInsuranceDetailsChanged)
 
 
+
+  val establisherAndTrustDetailsGen : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
+    changeOfEstablisherOrTrustDetails <- booleanGen
+    haveMoreThanTenTrustees <- Gen.option(booleanGen)
+    establisherDetails <- establisherDetailsGen
+    trusteeDetailsType <- Gen.option(trusteeDetailsGen)
+  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+
+
+
   val schemeProvideBenefitsGen = Gen.oneOf(Seq("Money Purchase benefits only (defined contribution)",
                                                 "Defined Benefits only",
                                                 "Mixture of money purchase benefits and defined benefits"))
