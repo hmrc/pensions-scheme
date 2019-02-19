@@ -19,18 +19,19 @@ package utils
 import models._
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
-import play.api.libs.json.{JsValue, Json}
-import wolfendale.scalacheck.regexp.RegexpGen
-
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json.Json
 
 trait PensionSchemeGenerators {
   val specialCharStringGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
   val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
   val postalCodeGem: Gen[String] = Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString)
-  val ninoGenerator = Gen.option("SL221122D")
+  val optionalNinoGenerator = Gen.option("SL221122D")
+  val ninoGenerator = Gen.const("SL221122D")
   val utrGenerator = Gen.listOfN[Char](10, Gen.numChar).map(_.mkString)
+  val crnGenerator = Gen.const("11111111")
+  val vatGenerator = Gen.const("123456789")
+  val payeGenerator = Gen.const("1111111111111")
 
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
@@ -82,7 +83,7 @@ trait PensionSchemeGenerators {
 
   val individualGen: Gen[Individual] = for {
     personalDetails <- personalDetailsGen
-    referenceOrNino <- ninoGenerator
+    referenceOrNino <- optionalNinoGenerator
     noNinoReason <- Gen.option(reasonGen)
     utr <- Gen.option("1111111111")
     noUtrReason <- Gen.option(reasonGen)
@@ -127,10 +128,10 @@ trait PensionSchemeGenerators {
 
   val partnershipGen: Gen[Partnership] = for {
     name <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     haveMoreThan10Directors <- Gen.oneOf(Seq(true, false))
     address <- ukAddressGen
     contact <- contactDetailsGen
@@ -141,10 +142,10 @@ trait PensionSchemeGenerators {
 
   val partnershipTrusteeGen: Gen[PartnershipTrustee] = for {
     name <- nameGenerator
-    utr <- Gen.option("1111111111")
+    utr <- Gen.option(utrGenerator)
     noUtrReason <- Gen.option(reasonGen)
-    vat <- Gen.option("123456789")
-    paye <- Gen.option("1111111111111")
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     address <- ukAddressGen
     contact <- contactDetailsGen
     previous <- Gen.option(previousAddressDetailsGen)
