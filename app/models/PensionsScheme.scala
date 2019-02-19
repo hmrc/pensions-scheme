@@ -586,7 +586,6 @@ object PensionsScheme {
       )(element => element)
   }
 
-
   def updateWrite(psaId : String): Writes[PensionsScheme] = (
     (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId)) and
       (JsPath \ "pensionSchemeDeclaration").write(Declaration.writes) and

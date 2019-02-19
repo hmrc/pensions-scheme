@@ -30,37 +30,32 @@ class EstablisherAndTrusteeTypeWritesSpec extends WordSpec with MustMatchers wit
 
       "validate establisherAndTrustDetailsType write with schema" in {
 
-        forAll(establisherAndTrustDetailsGen) {
-          element => {
+        forAll(establisherAndTrustDetailsGen) { element =>
 
-            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(element)(PensionsScheme.updateWriteEstablisherAndTrustDetails)
+          val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(element)(PensionsScheme.updateWriteEstablisherAndTrustDetails)
 
-            val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
+          val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
 
-            validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType").isSuccess mustBe true
-          }
+          validateJson(elementToValidate = valid,
+            schemaFileName = "api1468_schema.json",
+            schemaNodePath = "#/properties/establisherAndTrustDetailsType").isSuccess mustBe true
         }
       }
 
       "invalidate establisherAndTrustDetailsType write with schema for incorrect json" in {
 
-        forAll(establisherAndTrustDetailsGen) {
-          element => {
-            val establisher =  element._3
-            val invalidEstablisher = establisher.copy(individual = Seq(individualGen.sample.get.copy(utr = Some("12313123213123123123"))))
+        val element = establisherAndTrustDetailsGen.sample.get
+        val establisher = element._3
+        val invalidEstablisher = establisher.copy(individual = Seq(individualGen.sample.get.copy(utr = Some("12313123213123123123"))))
 
-            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson((element._1, element._2, invalidEstablisher, element._4)
-            )(PensionsScheme.updateWriteEstablisherAndTrustDetails)
+        val mappedEstablisherAndTrustDetails: JsValue = Json.toJson((element._1, element._2, invalidEstablisher, element._4)
+        )(PensionsScheme.updateWriteEstablisherAndTrustDetails)
 
-            val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
+        val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
 
-            validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType").isError mustBe true
-          }
-        }
+        validateJson(elementToValidate = valid,
+          schemaFileName = "api1468_schema.json",
+          schemaNodePath = "#/properties/establisherAndTrustDetailsType").isError mustBe true
       }
     }
   }
