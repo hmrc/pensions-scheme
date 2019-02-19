@@ -76,6 +76,17 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
   }
 
+  override def updateScheme(pstr: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
+                                                         ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+    transformJsonToModel(json).fold(
+      error => Future.failed(error),
+      validPensionsScheme => {
+        val updatedScheme = Json.toJson(validPensionsScheme)
+        Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
+        schemeConnector.updateSchemeDetails(pstr, updatedScheme)
+      })
+  }
+
   private[service] def transformJsonToModel(json: JsValue): Either[BadRequestException, PensionsScheme] = {
 
     val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] = CustomerAndSchemeDetails.apiReads
@@ -169,6 +180,5 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
     )
 
   }
-
 
 }

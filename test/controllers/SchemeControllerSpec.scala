@@ -38,6 +38,7 @@ import scala.concurrent.Future
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
   val mockSchemeService: SchemeService = mock[SchemeService]
   val schemeController = new SchemeController(mockSchemeService, stubControllerComponents())
+  val validSchemeUpdateData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
 
   before {
     reset(mockSchemeService)
@@ -220,6 +221,100 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         e mustBe a[Exception]
         e.getMessage mustBe "Generic Exception"
         verify(mockSchemeService, times(1)).listOfSchemes(Matchers.eq("A2000001"))(any(), any(), any())
+      }
+    }
+  }
+
+  "updateScheme" must {
+
+    def fakeRequest(data: JsValue): FakeRequest[AnyContentAsJson] = FakeRequest("POST", "/").withJsonBody(data).withHeaders(("pstr", "20010010AA"))
+
+    "return OK when the scheme is updated successfully" in {
+      val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
+      when(mockSchemeService.updateScheme(Matchers.any(), Matchers.eq(validSchemeUpdateData))(any(), any(), any())).thenReturn(
+        Future.successful(HttpResponse(OK, Some(successResponse))))
+
+      val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
+      ScalaFutures.whenReady(result) { _ =>
+        status(result) mustBe OK
+        contentAsJson(result) mustBe successResponse
+      }
+    }
+
+    "throw BadRequestException when PSTR is not present in the header" in {
+
+      val result = schemeController.updateScheme()(FakeRequest("POST", "/").withJsonBody(validSchemeUpdateData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe "Bad Request without PSTR or request body"
+        verify(mockSchemeService, never()).updateScheme(Matchers.any(),
+          Matchers.any())(any(), any(), any())
+      }
+    }
+
+    "throw BadRequestException when no data is not present in the request" in {
+      val result = schemeController.updateScheme()(FakeRequest("POST", "/").withHeaders(("pstr", "20010010AA")))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe "Bad Request without PSTR or request body"
+        verify(mockSchemeService, never()).updateScheme(Matchers.any(),
+          Matchers.any())(any(), any(), any())
+      }
+    }
+
+    "throw BadRequestException when bad request returned from Des" in {
+      val invalidPayload: JsObject = Json.obj(
+        "code" -> "INVALID_PAYLOAD",
+        "reason" -> "Submission has not passed validation. Invalid PAYLOAD"
+      )
+      when(mockSchemeService.updateScheme(any(), any())(any(), any(), any())).thenReturn(
+        Future.failed(new BadRequestException(invalidPayload.toString())))
+
+      val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe invalidPayload.toString()
+      }
+    }
+
+    "throw Upstream4xxResponse when UpStream4XXResponse returned from Des" in {
+      val invalidSubmission: JsObject = Json.obj(
+        "code" -> "DUPLICATE_SUBMISSION",
+        "reason" -> "The back end has indicated that duplicate submission or acknowledgement reference."
+      )
+      when(mockSchemeService.updateScheme(any(), any())(any(), any(), any())).thenReturn(
+        Future.failed(Upstream4xxResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
+
+      val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[ConflictException]
+        e.getMessage mustBe invalidSubmission.toString()
+      }
+    }
+
+    "throw Upstream5xxResponse when UpStream5XXResponse returned from Des" in {
+      val serviceUnavailable: JsObject = Json.obj(
+        "code" -> "SERVICE_UNAVAILABLE",
+        "reason" -> "Dependent systems are currently not responding."
+      )
+      when(mockSchemeService.updateScheme(any(), any())(any(), any(), any())).thenReturn(
+        Future.failed(Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+
+      val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Upstream5xxResponse]
+        e.getMessage mustBe serviceUnavailable.toString()
+      }
+    }
+
+    "throw generic exception when any other exception returned from Des" in {
+      when(mockSchemeService.updateScheme(any(), any())(any(), any(), any())).thenReturn(
+        Future.failed(new Exception("Generic Exception")))
+
+      val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe "Generic Exception"
       }
     }
   }
