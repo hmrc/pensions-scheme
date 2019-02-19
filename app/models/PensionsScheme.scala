@@ -556,5 +556,21 @@ object PensionsScheme {
   }
 
 
+  def updateWrite(psaId : String): Writes[PensionsScheme] = (
+    (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId)) and
+      (JsPath \ "pensionSchemeDeclaration").write[PensionSchemeDeclaration] and
+      (JsPath \ "establisherAndTrustDetailsType").write(updateWriteEstablisherAndTrustDetails)
+    ) (schemeDetails=> (
+    schemeDetails.customerAndSchemeDetails,
+    schemeDetails.pensionSchemeDeclaration,
+    (schemeDetails.isEstablisherOrTrusteeDetailsChanged.getOrElse(false),
+      Some(haveMoreThanTenTrustees(schemeDetails.trusteeDetails)),
+      schemeDetails.establisherDetails,
+      Some(schemeDetails.trusteeDetails)))
+  )
+
+  private def haveMoreThanTenTrustees(trusteeDetails: TrusteeDetails) : Boolean ={
+    trusteeDetails.companyTrusteeDetail.length + trusteeDetails.individualTrusteeDetail.length + trusteeDetails.partnershipTrusteeDetail.length > 10
+  }
 
 }
