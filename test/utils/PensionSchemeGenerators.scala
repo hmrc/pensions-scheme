@@ -19,9 +19,13 @@ package utils
 import models._
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
+import play.api.libs.json.{JsValue, Json}
+import wolfendale.scalacheck.regexp.RegexpGen
+
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
 trait PensionSchemeGenerators {
+  val specialCharStringGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
   val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
   val postalCodeGem: Gen[String] = Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString)
@@ -158,6 +162,52 @@ trait PensionSchemeGenerators {
     companies <- Gen.listOfN(randomNumberFromRange(0, 10), companyTrusteeGen)
     partnerships <- Gen.listOfN(randomNumberFromRange(0, 10), partnershipTrusteeGen)
   } yield TrusteeDetails(individuals, companies, partnerships)
+
+
+  val CustomerAndSchemeDetailsGen: Gen[CustomerAndSchemeDetails] = for {
+    schemeName <- specialCharStringGen
+    isSchemeMasterTrust <- boolenGen
+    schemeStructure <- schemeTypeGen
+    currentSchemeMembers <- memberGen
+    futureSchemeMembers <- memberGen
+    isReguledSchemeInvestment <- boolenGen
+    isOccupationalPensionScheme <- boolenGen
+    areBenefitsSecuredContractInsuranceCompany <- boolenGen
+    doesSchemeProvideBenefits <- schemeProvideBenefitsGen
+    schemeEstablishedCountry <- countryCode
+    haveInvalidBank <- boolenGen
+    insuranceCompanyName <- Gen.option(specialCharStringGen)
+    policyNumber <- Gen.option(policyNumberGen)
+    insuranceCompanyAddress <- Gen.option(internationalAddressGen)
+    isInsuranceDetailsChanged <- Gen.option(boolenGen)
+  } yield CustomerAndSchemeDetails(schemeName, isSchemeMasterTrust, schemeStructure,
+    otherSchemeStructure = None, haveMoreThanTenTrustee = None,
+    currentSchemeMembers, futureSchemeMembers, isReguledSchemeInvestment,
+    isOccupationalPensionScheme, areBenefitsSecuredContractInsuranceCompany,
+    doesSchemeProvideBenefits, schemeEstablishedCountry, haveInvalidBank,
+    insuranceCompanyName, policyNumber,
+    insuranceCompanyAddress, isInsuranceDetailsChanged)
+
+
+  val schemeProvideBenefitsGen = Gen.oneOf(Seq("Money Purchase benefits only (defined contribution)",
+                                                "Defined Benefits only",
+                                                "Mixture of money purchase benefits and defined benefits"))
+
+  val policyNumberGen =  Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
+
+  val boolenGen = Gen.oneOf(Seq(true, false))
+
+  val memberGen = Gen.oneOf(Seq("0",
+                                "1",
+                                "2 to 11",
+                                "12 to 50",
+                                "51 to 10,000",
+                                "More than 10,000"))
+
+  val schemeTypeGen = Gen.option(Gen.oneOf(Seq("A single trust under which all of the assets are held for the benefit of all members of the scheme",
+                                    "A group life/death in service scheme",
+                                    "A body corporate",
+                                    "Other")))
 
   protected def optional(key: String, element: Option[String]) = {
     element.map { value =>

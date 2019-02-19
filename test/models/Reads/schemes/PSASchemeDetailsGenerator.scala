@@ -19,9 +19,9 @@ package models.Reads.schemes
 import org.joda.time.LocalDate
 import org.scalacheck.Arbitrary.{arbitrary, _}
 import org.scalacheck.Gen
+import play.api.libs.json.JodaWrites._
 import play.api.libs.json.{JsObject, Json}
 import wolfendale.scalacheck.regexp.RegexpGen
-import play.api.libs.json.JodaWrites._
 
 //scalastyle:off magic.number
 trait PSASchemeDetailsGenerator {
