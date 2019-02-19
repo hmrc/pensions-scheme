@@ -1,0 +1,133 @@
+{
+  "schemeDetails": {
+    "psaid": "A2123456",
+    "schemeStatus": "Open",
+    "schemeName": "ABC Scheme",
+    "isSchemeMasterTrust": true,
+    "pensionSchemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
+    "otherPensionSchemeStructure": "NA",
+    "currentSchemeMembers": "1",
+    "futureSchemeMembers": "0",
+    "isReguledSchemeInvestment": true,
+    "isOccupationalPensionScheme": true,
+    "schemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
+    "schemeEstablishedCountry": "AD",
+    "insuranceCompanyDetails": {
+      "isInsuranceDetailsChanged": true,
+      "isSchemeBenefitsInsuranceCompany": true,
+      "insuranceCompanyName": "ABC Company",
+      "policyNumber": "1234567",
+      "insuranceCompanyAddressDetails": {
+        "nonUKAddress": true,
+        "line1": "line 1",
+        "line2": "line 2",
+        "line3": "line 3",
+        "line4": "line 4",
+        "postalCode": "123456",
+        "countryCode": "FR"
+      }
+    }
+  },
+  "pensionSchemeDeclaration": {
+    "declaration1": true
+  },
+  "establisherAndTrustDetailsType": {
+    "changeOfEstablisherOrTrustDetails": true,
+    "haveMoreThanTenTrustees": true,
+    "establisherDetails": {
+      "individualDetails": [
+        {
+          "personalDetails": {
+            "title": "Mr",
+            "firstName": "James",
+            "middleName": "S",
+            "lastName": "Reynolds",
+            "dateOfBirth": "1960-02-29"
+          },
+          "nino": "AA123456D",
+          "noNinoReason": "NA",
+          "utr": "1234567890",
+          "noUtrReason": " ",
+          "correspondenceAddressDetails": {
+            "addressDetails": {
+              "nonUKAddress": true,
+              "line1": "ln 1",
+              "line2": "ln 2",
+              "line3": "ln 3",
+              "line4": "ln 4",
+              "postalCode": "222345",
+              "countryCode": "ES"
+            }
+          },
+          "correspondenceContactDetails": {
+            "contactDetails": {
+              "telephone": "1234567890",
+              "mobileNumber": "07123456789",
+              "fax": "0121345678",
+              "email": "aaa@aa.com"
+            }
+          },
+          "previousAddressDetails": {
+            "isPreviousAddressLast12Month": true,
+            "previousAddressDetails": {
+              "nonUKAddress": true,
+              "line1": "lane 1",
+              "line2": "lane 2",
+              "line3": "lane 3",
+              "line4": "lane 4",
+              "postalCode": "123456",
+              "countryCode": "FR"
+            }
+          }
+        }
+      ]
+    },
+    "trusteeDetailsType": {
+      "companyTrusteeDetailsType": [
+        {
+          "organisationName": "gft ltd",
+          "utr": "7000000000",
+          "noUtrReason": "NA",
+          "crnNumber": "123456",
+          "noCrnReason": "NA",
+          "vatRegistrationNumber": "900000000",
+          "payeReference": "0000",
+          "correspondenceAddressDetails": {
+            "addressDetails": {
+              "nonUKAddress": true,
+              "line1": "dfaf",
+              "line2": "sdfdsf",
+              "line3": "dsfsdf",
+              "line4": "dsfsdf",
+              "postalCode": "974321",
+              "countryCode": "ES"
+            }
+          },
+          "correspondenceContactDetails": {
+            "contactDetails": {
+              "telephone": "02012345678",
+              "mobileNumber": "072345678323",
+              "fax": "020546739433",
+              "email": "jj@jj.com"
+            }
+          },
+          "previousAddressDetails": {
+            "isPreviousAddressLast12Month": true,
+            "previousAddressDetails": {
+              "nonUKAddress": false,
+              "line1": "dsfsdf",
+              "line2": "wtwtwe",
+              "line3": "nxcbnds",
+              "line4": "hagdfas",
+              "postalCode": "TF3 4LT",
+              "countryCode": "GB"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
