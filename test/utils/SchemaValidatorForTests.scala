@@ -26,8 +26,6 @@ trait SchemaValidatorForTests {
 
     val validator = SchemaValidator().addSchema(s"/schemas/$schemaFileName", rootSchema)
 
-    validator.validate(getClass.getResource(s"/schemas/$schemaFileName"), elementToValidate)
-
     val schema = JsonSource.schemaFromString(
       s"""{
         |  "additionalProperties": {
