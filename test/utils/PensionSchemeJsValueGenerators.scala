@@ -129,9 +129,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
   val companyJsValueGen: Gen[(JsObject, JsObject)]= for {
     orgName <- nameGenerator
     utr <- utrGenerator
-    crn <- Gen.const("11111111")
+    crn <- crnGenerator
     vat <- vatGenerator
-    paye <- Gen.const("1111111111111")
+    paye <- payeGenerator
     address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
@@ -174,7 +174,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     orgName <- nameGenerator
     vat <- vatGenerator
     utr <- utrGenerator
-    paye <- Gen.const("1111111111111")
+    paye <- payeGenerator
     address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
@@ -241,16 +241,16 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     contactDetails <- contactDetailsJsValueGen
     utr <- utrGenerator
     address <- addressJsValueGen("correspondenceAddressDetails", s"${directorOrPartner}AddressId", isDifferent = true)
-    previousAddress <- addressJsValueGen("previousAddress", "partnerPreviousAddress", isDifferent = true)
-    previousAddressDir <- addressJsValueGen("previousAddress", "previousAddress", isDifferent = true)
+    partnerPreviousAddress <- addressJsValueGen("previousAddress", "partnerPreviousAddress", isDifferent = true)
+    directorPreviousAddress <- addressJsValueGen("previousAddress", "previousAddress", isDifferent = true)
     date <- dateGenerator
   } yield {
-    val (desPreviousAddress, userAnswersPreviousAddress) = if (directorOrPartner.contains("partner")) previousAddress else previousAddressDir
-    val previousAddr = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
-    val (desAddress, userAnswersAddress) = address
-    val (desContactDetails, userAnswersContactDetails) = contactDetails
+    val (desPreviousAddress, userAnswersPreviousAddress) = if (directorOrPartner.contains("partner")) partnerPreviousAddress else directorPreviousAddress
+    val previousAddress = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
     val addressYearsKey = if (directorOrPartner.contains("partner")) directorOrPartner else "companyDirector"
     val userAnswersIsComplete = if (directorOrPartner.contains("partner")) Json.obj("isPartnerComplete" -> true) else Json.obj("isDirectorComplete" -> true)
+    val (desAddress, userAnswersAddress) = address
+    val (desContactDetails, userAnswersContactDetails) = contactDetails
     (
       Json.obj(
         "personDetails" -> Json.obj(
@@ -263,7 +263,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "nino" -> referenceOrNino,
         "utr" -> utr,
         "correspondenceContactDetails" -> desContactDetails,
-        "previousAddressDetails" -> previousAddr
+        "previousAddressDetails" -> previousAddress
       ) ++ desAddress.as[JsObject],
       Json.obj(
         s"${directorOrPartner}Details" -> Json.obj(
