@@ -65,7 +65,7 @@ class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with O
           )
         )
 
-        val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite)
+        val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456"))
 
         validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schema.json").isSuccess mustBe true
       }
