@@ -21,34 +21,34 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
-class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
+class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def userAnswersEstablishersReads: Reads[JsObject] = {
+  def userAnswersTrusteesReads: Reads[JsObject] = {
     (__ \ 'individualDetails).readNullable(
-      __.read(Reads.seq(userAnswersEstablisherIndividualReads)).map(JsArray(_))).flatMap { individual =>
+      __.read(Reads.seq(userAnswersTrusteeIndividualReads)).map(JsArray(_))).flatMap { individual =>
       (__ \ 'companyOrOrganisationDetails).readNullable(
-        __.read(Reads.seq(userAnswersEstablisherCompanyReads)).map(JsArray(_))).flatMap { company =>
+        __.read(Reads.seq(userAnswersTrusteeCompanyReads)).map(JsArray(_))).flatMap { company =>
         (__ \ 'partnershipTrusteeDetail).readNullable(
-          __.read(Reads.seq(userAnswersEstablisherPartnershipReads)).map(JsArray(_))).flatMap { partnership =>
-          (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
+          __.read(Reads.seq(userAnswersTrusteePartnershipReads)).map(JsArray(_))).flatMap { partnership =>
+          (__ \ 'trustees).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
         }
       }
     }
   }
 
-  def userAnswersEstablisherIndividualReads: Reads[JsObject] =
-    (__ \ 'establisherKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("establisherDetails") and
-      userAnswersNinoReads("establisherNino") and
+  def userAnswersTrusteeIndividualReads: Reads[JsObject] =
+    (__ \ 'trusteeKind).json.put(JsString("individual")) and
+      userAnswersIndividualDetailsReads("trusteeDetails") and
+      userAnswersNinoReads("trusteeNino") and
       userAnswersUtrReads("uniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'addressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'previousAddress) and
-      userAnswersContactDetailsReads("contactDetails") and
-      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
+      addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(__, __ \ 'trusteeAddressYears) and
+      addressTransformer.getPreviousAddress(__, __ \ 'trusteePreviousAddress) and
+      userAnswersContactDetailsReads("trusteeContactDetails") and
+      (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
 
-  def userAnswersEstablisherCompanyReads: Reads[JsObject] =
-    (__ \ 'establisherKind).json.put(JsString("company")) and
+  def userAnswersTrusteeCompanyReads: Reads[JsObject] =
+    (__ \ 'trusteeKind).json.put(JsString("company")) and
       userAnswersCompanyDetailsReads and
       userAnswersCrnReads and
       userAnswersUtrReads("companyUniqueTaxReference") and
@@ -58,8 +58,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       userAnswersContactDetailsReads("companyContactDetails") and
       (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) reduce
 
-  def userAnswersEstablisherPartnershipReads: Reads[JsObject] =
-    (__ \ 'establisherKind).json.put(JsString("partnership")) and
+  def userAnswersTrusteePartnershipReads: Reads[JsObject] =
+    (__ \ 'trusteeKind).json.put(JsString("partnership")) and
       userAnswersPartnershipDetailsReads and
       transformVatToUserAnswersReads and
       userAnswersPayeReads and

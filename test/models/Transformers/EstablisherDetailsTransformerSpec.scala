@@ -33,7 +33,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     "have the individual details transformed correctly to valid user answers format" that {
 
       s"has person details in establishers array" in {
-        forAll(individualJsValueGen) {
+        forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
             val details = individualDetails._1
             val result = details.transform(transformer.userAnswersIndividualDetailsReads("establisherDetails")).get
@@ -46,7 +46,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has nino details in establishers array" in {
-        forAll(individualJsValueGen) {
+        forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
             val details = individualDetails._1
             val result = details.transform(transformer.userAnswersNinoReads("establisherNino")).get
@@ -64,7 +64,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has utr details in establishers array" in {
-        forAll(individualJsValueGen) {
+        forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
             val details = individualDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
@@ -83,7 +83,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has contact details in establishers array" in {
-        forAll(individualJsValueGen) {
+        forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
             val details = individualDetails._1
             val result = details.transform(transformer.userAnswersContactDetailsReads("contactDetails")).get
@@ -95,7 +95,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       "has complete individual details" in {
-        forAll(individualJsValueGen) {
+        forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
             val (desIndividualDetails, userAnswersIndividualDetails) = individualDetails
             val result = desIndividualDetails.transform(transformer.userAnswersEstablisherIndividualReads).get

@@ -17,54 +17,54 @@
 package models.Transformers
 
 import base.JsonFileReader
-import models.jsonTransformations.{AddressTransformer, EstablisherDetailsTransformer}
+import models.jsonTransformations.{AddressTransformer, EstablisherDetailsTransformer, TrusteeDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import utils.PensionSchemeJsValueGenerators
 
 
-class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
+class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
 
   private val addressTransformer = new AddressTransformer()
-  private val transformer = new EstablisherDetailsTransformer(addressTransformer)
+  private val transformer = new TrusteeDetailsTransformer(addressTransformer)
 
-  "A DES payload containing establisher details" must {
+  "A DES payload containing trustee details" must {
     "have the individual details transformed correctly to valid user answers format" that {
 
-      s"has person details in establishers array" in {
-        forAll(individualJsValueGen) {
+      s"has person details in trustee array" in {
+        forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersIndividualDetailsReads("establisherDetails")).get
-            (result \ "establisherDetails" \ "firstName").as[String] mustBe (details \ "personDetails" \ "firstName").as[String]
-            (result \ "establisherDetails" \ "middleName").asOpt[String] mustBe (details \ "personDetails" \ "middleName").asOpt[String]
-            (result \ "establisherDetails" \ "lastName").as[String] mustBe (details \ "personDetails" \ "lastName").as[String]
-            (result \ "establisherDetails" \ "date").as[String] mustBe (details \ "personDetails" \ "dateOfBirth").as[String]
+            val result = details.transform(transformer.userAnswersIndividualDetailsReads("trusteeDetails")).get
+            (result \ "trusteeDetails" \ "firstName").as[String] mustBe (details \ "personDetails" \ "firstName").as[String]
+            (result \ "trusteeDetails" \ "middleName").asOpt[String] mustBe (details \ "personDetails" \ "middleName").asOpt[String]
+            (result \ "trusteeDetails" \ "lastName").as[String] mustBe (details \ "personDetails" \ "lastName").as[String]
+            (result \ "trusteeDetails" \ "date").as[String] mustBe (details \ "personDetails" \ "dateOfBirth").as[String]
           }
         }
       }
 
-      s"has nino details in establishers array" in {
-        forAll(individualJsValueGen) {
+      s"has nino details in trustees array" in {
+        forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersNinoReads("establisherNino")).get
+            val result = details.transform(transformer.userAnswersNinoReads("trusteeNino")).get
 
-            (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe true
-            (result \ "establisherNino" \ "nino").asOpt[String] mustBe (details \ "nino").asOpt[String]
+            (result \ "trusteeNino" \ "hasNino").as[Boolean] mustBe true
+            (result \ "trusteeNino" \ "nino").asOpt[String] mustBe (details \ "nino").asOpt[String]
 
             val noNinoJs = details.as[JsObject] - "nino" + ("noNinoReason" -> JsString("test reason"))
-            val noNinoResult = noNinoJs.transform(transformer.userAnswersNinoReads("establisherNino")).get
+            val noNinoResult = noNinoJs.transform(transformer.userAnswersNinoReads("trusteeNino")).get
 
-            (noNinoResult \ "establisherNino" \ "hasNino").as[Boolean] mustBe false
-            (noNinoResult \ "establisherNino" \ "reason").asOpt[String] mustBe (noNinoJs \ "noNinoReason").asOpt[String]
+            (noNinoResult \ "trusteeNino" \ "hasNino").as[Boolean] mustBe false
+            (noNinoResult \ "trusteeNino" \ "reason").asOpt[String] mustBe (noNinoJs \ "noNinoReason").asOpt[String]
           }
         }
       }
 
-      s"has utr details in establishers array" in {
-        forAll(individualJsValueGen) {
+      s"has utr details in trustees array" in {
+        forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val details = individualDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
@@ -82,23 +82,23 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has contact details in establishers array" in {
-        forAll(individualJsValueGen) {
+      s"has contact details in trustees array" in {
+        forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersContactDetailsReads("contactDetails")).get
+            val result = details.transform(transformer.userAnswersContactDetailsReads("trusteeContactDetails")).get
 
-            (result \ "contactDetails" \ "emailAddress").as[String] mustBe (details \ "correspondenceContactDetails" \ "email").as[String]
-            (result \ "contactDetails" \ "phoneNumber").as[String] mustBe (details \ "correspondenceContactDetails" \ "telephone").as[String]
+            (result \ "trusteeContactDetails" \ "emailAddress").as[String] mustBe (details \ "correspondenceContactDetails" \ "email").as[String]
+            (result \ "trusteeContactDetails" \ "phoneNumber").as[String] mustBe (details \ "correspondenceContactDetails" \ "telephone").as[String]
           }
         }
       }
 
       "has complete individual details" in {
-        forAll(individualJsValueGen) {
+        forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val (desIndividualDetails, userAnswersIndividualDetails) = individualDetails
-            val result = desIndividualDetails.transform(transformer.userAnswersEstablisherIndividualReads).get
+            val result = desIndividualDetails.transform(transformer.userAnswersTrusteeIndividualReads).get
 
             result mustBe userAnswersIndividualDetails
           }
@@ -106,8 +106,8 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
     }
 
-    "have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
-      s"has establisher details in establishers array" in {
+    /*"have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
+      s"has trustee details in trustees array" in {
         forAll(companyJsValueGen) {
           companyDetails => {
             val details = companyDetails._1
@@ -119,7 +119,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has crn details in establishers array" in {
+      s"has crn details in trustees array" in {
         forAll(companyJsValueGen) {
           companyDetails => {
             val details = companyDetails._1
@@ -135,7 +135,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has utr details in establishers array" in {
+      s"has utr details in trustees array" in {
         forAll(companyJsValueGen) {
           companyDetails => {
             val details = companyDetails._1
@@ -146,7 +146,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has contact details in establishers array" in {
+      s"has contact details in trustees array" in {
         forAll(companyJsValueGen) {
           companyDetails => {
             val details = companyDetails._1
@@ -159,7 +159,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has complete company details in establishers array" in {
+      s"has complete company details in trustees array" in {
         forAll(companyJsValueGen) {
           companyDetails => {
             val (desCompanyDetails, userAnswersCompanyDetails) = companyDetails
@@ -171,9 +171,9 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
     }
 
-    "have the establisherPartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
+    "have the trusteePartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
-      s"has establisher details in establishers array" in {
+      s"has trustee details in trustees array" in {
         forAll(partnershipJsValueGen) {
           partnershipDetails => {
             val details = partnershipDetails._1
@@ -183,7 +183,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has vat details for partnership in establishers array" in {
+      s"has vat details for partnership in trustees array" in {
         forAll(partnershipJsValueGen) {
           partnershipDetails => {
             val details = partnershipDetails._1 - "vatRegistrationNumber"
@@ -193,7 +193,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has paye details for partnership in establishers array" in {
+      s"has paye details for partnership in trustees array" in {
         forAll(partnershipJsValueGen) {
           partnershipDetails => {
             val details = partnershipDetails._1
@@ -204,7 +204,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has utr details in establishers array" in {
+      s"has utr details in trustees array" in {
         forAll(partnershipJsValueGen) {
           partnershipDetails => {
             val details = partnershipDetails._1
@@ -215,7 +215,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has contact details in establishers array" in {
+      s"has contact details in trustees array" in {
         forAll(partnershipJsValueGen) {
           partnershipDetails => {
             val details = partnershipDetails._1
@@ -228,7 +228,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         }
       }
 
-      s"has complete partnership details in establishers array" in {
+      s"has complete partnership details in trustees array" in {
         forAll(partnershipJsValueGen) {
           partnershipDetails => {
             val (desPartnershipDetails, userAnswersPartnershipDetails) = partnershipDetails
@@ -240,22 +240,22 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
     }
 
-    "have all establishers transformed" in {
-      forAll(establisherJsValueGen) {
-        establishers =>
-          val result = establishers._1.transform(transformer.userAnswersEstablishersReads).get
+    "have all trustees transformed" in {
+      forAll(trusteeJsValueGen) {
+        trustees =>
+          val result = trustees._1.transform(transformer.userAnswersEstablishersReads).get
 
-          result mustBe establishers._2
+          result mustBe trustees._2
       }
     }
 
-    "if no establishers are present" in {
+    "if no trustees are present" in {
 
       val result = Json.obj().transform(transformer.userAnswersEstablishersReads).get
 
       result mustBe Json.obj(
-        "establishers" -> JsArray()
+        "trustees" -> JsArray()
       )
-    }
+    }*/
   }
 }
