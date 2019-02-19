@@ -31,63 +31,30 @@ class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with O
 
       "validate scheme variation details write with schema" in {
 
-        val pensionsScheme = PensionsScheme(
-          CustomerAndSchemeDetails(
-            schemeName = "test-pensions-scheme",
-            isSchemeMasterTrust = false,
-            schemeStructure = Some(SchemeType.single.value),
-            currentSchemeMembers = "test-current-scheme-members",
-            futureSchemeMembers = "test-future-scheme-members",
-            isReguledSchemeInvestment = false,
-            isOccupationalPensionScheme = false,
-            areBenefitsSecuredContractInsuranceCompany = false,
-            doesSchemeProvideBenefits = "test-does-scheme-provide-benefits",
-            schemeEstablishedCountry = "test-scheme-established-country",
-            haveInvalidBank = false
-          ),
-          PensionSchemeDeclaration(
-            box1 = false,
-            box2 = false,
-            box6 = false,
-            box7 = false,
-            box8 = false,
-            box9 = false
-          ),
-          EstablisherDetails(
-            Nil,
-            Nil,
-            Nil
-          ),
-          TrusteeDetails(
-            Nil,
-            Nil,
-            Nil
-          )
-        )
+        forAll(schemeDetailsVariationGen) { pensionsScheme =>
 
-        val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456"))
+          val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456"))
 
-        validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schema.json").isSuccess mustBe true
+          val result = validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schema.json")
+
+          result.isSuccess mustBe true
+        }
       }
 
-      /*"invalidate establisherAndTrustDetailsType write with schema for incorrect json" in {
+        "invalidate establisherAndTrustDetailsType write with schema for incorrect json" in {
 
-        forAll(establisherAndTrustDetailsGen) {
-          element => {
-            val establisher =  element._3
-            val invalidEstablisher = establisher.copy(individual = Seq(individualGen.sample.get.copy(utr = Some("12313123213123123123"))))
+            val pensionsScheme= schemeDetailsVariationGen.sample.get
+            val invalidPensionsScheme= pensionsScheme.copy(
+              customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(schemeStructure = Some("INVALID")) )
 
-            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson((element._1, element._2, invalidEstablisher, element._4)
-            )(PensionsScheme.updateWriteEstablisherAndTrustDetails)
+            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(invalidPensionsScheme)(PensionsScheme.updateWrite("A0123456"))
 
             val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
 
             validateJson(elementToValidate = valid,
               schemaFileName = "api1468_schema.json",
               schemaNodePath = "#/properties/establisherAndTrustDetailsType").isError mustBe true
-          }
         }
-      }*/
+      }
     }
   }
-}

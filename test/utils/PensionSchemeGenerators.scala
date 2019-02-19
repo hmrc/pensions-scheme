@@ -186,10 +186,22 @@ trait PensionSchemeGenerators {
     changeOfEstablisherOrTrustDetails <- booleanGen
     haveMoreThanTenTrustees <- Gen.option(booleanGen)
     establisherDetails <- establisherDetailsGen
-    trusteeDetailsType <- Gen.option(trusteeDetailsGen)
+    trusteeDetailsType <- Gen.option(trusteeDetailsGen).suchThat(_.nonEmpty)
   } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
 
+  val pensionSchemeUpdateDeclarationGen: Gen[PensionSchemeUpdateDeclaration] = for {
+    declaration1 <- booleanGen
+  } yield PensionSchemeUpdateDeclaration(declaration1)
 
+  val schemeDetailsVariationGen: Gen[PensionsScheme]  = for {
+    schemeDetails <- CustomerAndSchemeDetailsGen
+    pensionSchemeDeclaration <- pensionSchemeUpdateDeclarationGen
+    establisherAndTrustDetailsType <- establisherAndTrustDetailsGen
+  } yield PensionsScheme(schemeDetails,
+    pensionSchemeDeclaration,
+    establisherAndTrustDetailsType._3,
+    establisherAndTrustDetailsType._4.get
+  )
 
   val schemeProvideBenefitsGen = Gen.oneOf(Seq("Money Purchase benefits only (defined contribution)",
                                                 "Defined Benefits only",

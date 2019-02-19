@@ -589,7 +589,7 @@ object PensionsScheme {
 
   def updateWrite(psaId : String): Writes[PensionsScheme] = (
     (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId)) and
-      (JsPath \ "pensionSchemeDeclaration").write[PensionSchemeDeclaration] and
+      (JsPath \ "pensionSchemeDeclaration").write(Declaration.writes) and
       (JsPath \ "establisherAndTrustDetailsType").write(updateWriteEstablisherAndTrustDetails)
     ) (schemeDetails=> (
     schemeDetails.customerAndSchemeDetails,
@@ -597,11 +597,17 @@ object PensionsScheme {
     (schemeDetails.isEstablisherOrTrusteeDetailsChanged.getOrElse(false),
       Some(haveMoreThanTenTrustees(schemeDetails.trusteeDetails)),
       schemeDetails.establisherDetails,
-      Some(schemeDetails.trusteeDetails)))
+      getOptionalTrustee(schemeDetails.trusteeDetails)))
   )
 
   private def haveMoreThanTenTrustees(trusteeDetails: TrusteeDetails) : Boolean ={
     trusteeDetails.companyTrusteeDetail.length + trusteeDetails.individualTrusteeDetail.length + trusteeDetails.partnershipTrusteeDetail.length > 10
+  }
+
+  private def getOptionalTrustee(trusteeDetails: TrusteeDetails): Option[TrusteeDetails] = {
+    if(trusteeDetails.companyTrusteeDetail.isEmpty &&
+      trusteeDetails.individualTrusteeDetail.isEmpty &&
+      trusteeDetails.partnershipTrusteeDetail.isEmpty) None else Some(trusteeDetails)
   }
 
 }
