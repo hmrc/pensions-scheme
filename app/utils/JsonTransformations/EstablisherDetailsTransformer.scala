@@ -26,12 +26,12 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
 
   def userAnswersEstablishersReads: Reads[JsObject] = {
     (__ \ 'individualDetails).readNullable(
-      __.read(Reads.seq(userAnswersEstablisherIndividualReads)).map(JsArray(_))).flatMap { indv =>
+      __.read(Reads.seq(userAnswersEstablisherIndividualReads)).map(JsArray(_))).flatMap { individual =>
       (__ \ 'companyOrOrganisationDetails).readNullable(
-        __.read(Reads.seq(userAnswersEstablisherCompanyReads)).map(JsArray(_))).flatMap { comp =>
+        __.read(Reads.seq(userAnswersEstablisherCompanyReads)).map(JsArray(_))).flatMap { company =>
         (__ \ 'partnershipTrusteeDetail).readNullable(
-          __.read(Reads.seq(userAnswersEstablisherPartnershipReads)).map(JsArray(_))).flatMap { part =>
-          (__ \ 'establishers).json.put(indv.getOrElse(JsArray()) ++ comp.getOrElse(JsArray()) ++ part.getOrElse(JsArray()))
+          __.read(Reads.seq(userAnswersEstablisherPartnershipReads)).map(JsArray(_))).flatMap { partnership =>
+          (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
         }
       }
     }

@@ -51,7 +51,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  val contactDetailsJsValueGen = for {
+  private val contactDetailsJsValueGen = for {
     email <- Gen.const("aaa@gmail.com")
     phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
   } yield {
@@ -77,8 +77,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     referenceOrNino <- Gen.const("SL221122D")
     contactDetails <- contactDetailsJsValueGen
     utr <- utrGenerator
-    address <- addressJsValueGen("correspondenceAddressDetails", "address", true)
-    previousAddress <- addressJsValueGen("previousAddress", "previousAddress", true)
+    address <- addressJsValueGen("correspondenceAddressDetails", "address", isDifferent = true)
+    previousAddress <- addressJsValueGen("previousAddress", "previousAddress", isDifferent = true)
     date <- dateGenerator
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
@@ -123,14 +123,14 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  val companyJsValueGen = for {
+  val companyJsValueGen: Gen[(JsObject, JsObject)]= for {
     orgName <- nameGenerator
     utr <- utrGenerator
     crn <- Gen.const("11111111")
     vat <- Gen.const("123456789")
     paye <- Gen.const("1111111111111")
-    address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", true)
-    previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", true)
+    address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", isDifferent = true)
+    previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
@@ -170,13 +170,13 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  val partnershipJsValueGen = for {
+  val partnershipJsValueGen: Gen[(JsObject, JsObject)] = for {
     orgName <- nameGenerator
     vat <- Gen.const("123456789")
     utr <- utrGenerator
     paye <- Gen.const("1111111111111")
-    address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", true)
-    previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", true)
+    address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", isDifferent = true)
+    previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
@@ -217,7 +217,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  val establisherJsValueGen = for {
+  val establisherJsValueGen: Gen[(JsObject, JsObject)] = for {
     individual <- Gen.listOfN(randomNumberFromRange(0, 3), individualJsValueGen)
     company <- Gen.listOfN(randomNumberFromRange(0, 3), companyJsValueGen)
     partnership <- Gen.listOfN(randomNumberFromRange(0, 4), partnershipJsValueGen)
