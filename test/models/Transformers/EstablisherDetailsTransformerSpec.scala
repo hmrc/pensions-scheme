@@ -30,13 +30,13 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
   private val transformer = new EstablisherDetailsTransformer(addressTransformer)
 
   "A DES payload containing establisher details" must {
-    "have the individual details transformed correctly to valid user answers format for first json file" that {
+    "have the individual details transformed correctly to valid user answers format" that {
 
       s"has person details in establishers array" in {
         forAll(individualJsValueGen) {
           individualDetails => {
             val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersIndividualDetailsReads).get
+            val result = details.transform(transformer.userAnswersIndividualDetailsReads("establisherDetails")).get
             (result \ "establisherDetails" \ "firstName").as[String] mustBe (details \ "personDetails" \ "firstName").as[String]
             (result \ "establisherDetails" \ "middleName").asOpt[String] mustBe (details \ "personDetails" \ "middleName").asOpt[String]
             (result \ "establisherDetails" \ "lastName").as[String] mustBe (details \ "personDetails" \ "lastName").as[String]
@@ -49,13 +49,13 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         forAll(individualJsValueGen) {
           individualDetails => {
             val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersNinoReads).get
+            val result = details.transform(transformer.userAnswersNinoReads("establisherNino")).get
 
             (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe true
             (result \ "establisherNino" \ "nino").asOpt[String] mustBe (details \ "nino").asOpt[String]
 
             val noNinoJs = details.as[JsObject] - "nino" + ("noNinoReason" -> JsString("test reason"))
-            val noNinoResult = noNinoJs.transform(transformer.userAnswersNinoReads).get
+            val noNinoResult = noNinoJs.transform(transformer.userAnswersNinoReads("establisherNino")).get
 
             (noNinoResult \ "establisherNino" \ "hasNino").as[Boolean] mustBe false
             (noNinoResult \ "establisherNino" \ "reason").asOpt[String] mustBe (noNinoJs \ "noNinoReason").asOpt[String]

@@ -29,8 +29,10 @@ trait PensionSchemeGenerators {
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
   val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
   val postalCodeGem: Gen[String] = Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString)
-  val ninoGenerator = Gen.option("SL221122D")
+  val optionalNinoGenerator = Gen.option("SL221122D")
+  val ninoGenerator = Gen.const("SL221122D")
   val utrGenerator = Gen.listOfN[Char](10, Gen.numChar).map(_.mkString)
+  val vatGenerator = Gen.const("123456789")
 
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
@@ -82,7 +84,7 @@ trait PensionSchemeGenerators {
 
   val individualGen: Gen[Individual] = for {
     personalDetails <- personalDetailsGen
-    referenceOrNino <- ninoGenerator
+    referenceOrNino <- optionalNinoGenerator
     noNinoReason <- Gen.option(reasonGen)
     utr <- Gen.option("1111111111")
     noUtrReason <- Gen.option(reasonGen)
