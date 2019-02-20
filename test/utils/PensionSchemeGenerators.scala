@@ -211,24 +211,7 @@ trait PensionSchemeGenerators {
                                     "A body corporate",
                                     "Other")))
 
-  val schemeStatusGen = Gen.oneOf(
-    "Pending",
-    "Pending Info Required",
-    "Pending Info Received",
-    "Rejected",
-    "Open",
-    "Deregistered",
-    "Wound-up",
-    "Rejected Under Appeal"
-  )
-
   protected def optional(key: String, element: Option[String]) = {
-    element.map { value =>
-      Json.obj(key -> value)
-    }.getOrElse(Json.obj())
-  }
-
-  protected def optionalBoolean(key: String, element: Option[Boolean]) = {
     element.map { value =>
       Json.obj(key -> value)
     }.getOrElse(Json.obj())

@@ -287,8 +287,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
   val schemeDetailsGen: Gen[(JsValue, JsValue)] = for {
     schemeName <- specialCharStringGen
-    schemeStatus <- schemeStatusGen
-    isSchemeMasterTrust <- Gen.option(boolenGen)
+    isSchemeMasterTrust <- Gen.option(booleanGen)
     schemeStructure <- schemeTypeGen
     currentSchemeMembers <- memberGen
     futureSchemeMembers <- memberGen
@@ -309,42 +308,44 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       schemeStructure.map(schemeType => Json.obj("name" -> SchemeType.nameWithValue(schemeType))).getOrElse(Json.obj())
     val otherDetails = optional("schemeTypeDetails", otherPensionSchemeStructure)
     val schemeType = schemeTypeName ++ otherDetails
+    val schemeTypeJs = if (isSchemeMasterTrust.nonEmpty | schemeStructure.nonEmpty | otherPensionSchemeStructure.nonEmpty)
+      Json.obj("schemeType" -> schemeType) else Json.obj()
     (
-    Json.obj(
-      "srn" -> "",
-      "pstr" -> "",
-      "schemeStatus" -> schemeStatus,
-      "schemeName" -> schemeName,
-      "currentSchemeMembers" -> currentSchemeMembers,
-      "futureSchemeMembers" -> futureSchemeMembers,
-      "isReguledSchemeInvestment" -> isReguledSchemeInvestment,
-      "isOccupationalPensionScheme" -> isOccupationalPensionScheme,
-      "schemeProvideBenefits" -> schemeProvideBenefits,
-      "schemeEstablishedCountry" -> schemeEstablishedCountry,
-      "isSchemeBenefitsInsuranceCompany" -> areBenefitsSecuredContractInsuranceCompany
-    ) ++ optionalBoolean("isSchemeMasterTrust", isSchemeMasterTrust) ++
-      optional("insuranceCompanyName", insuranceCompanyName) ++
-      optional("policyNumber", policyNumber) ++
-      optionalContact.map { value => Json.obj("insuranceCompanyContactDetails" -> value) }.getOrElse(Json.obj()) ++
-      insuranceAddress.map { value => value._1.as[JsObject] }.getOrElse(Json.obj()) ++
-      optional("otherPensionSchemeStructure", otherPensionSchemeStructure) ++
-      optional("pensionSchemeStructure", schemeStructure) ++
-      optionalBoolean("hasMoreThanTenTrustees", moreThanTenTrustees) ++
-      optional("insuranceCompanyName", insuranceCompanyName)
-    ,
-    Json.obj(
-      "schemeName" -> schemeName,
-      "schemeType" -> schemeType,
-      "schemeEstablishedCountry" -> schemeEstablishedCountry,
-      "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
-      "membershipFuture" -> SchemeMembers.nameWithValue(futureSchemeMembers),
-      "investmentRegulated" -> isReguledSchemeInvestment,
-      "occupationalPensionScheme" -> isOccupationalPensionScheme,
-      "benefits" -> Benefits.nameWithValue(schemeProvideBenefits),
-      "securedBenefits" -> areBenefitsSecuredContractInsuranceCompany
-    ) ++ optional("insuranceCompanyName", insuranceCompanyName) ++
-      optional("insurancePolicyNumber", policyNumber) ++
-      insuranceAddress.map { value => value._2.as[JsObject] }.getOrElse(Json.obj())
+      Json.obj(
+        "srn" -> "",
+        "pstr" -> "",
+        "schemeStatus" -> "Open",
+        "schemeName" -> schemeName,
+        "currentSchemeMembers" -> currentSchemeMembers,
+        "futureSchemeMembers" -> futureSchemeMembers,
+        "isReguledSchemeInvestment" -> isReguledSchemeInvestment,
+        "isOccupationalPensionScheme" -> isOccupationalPensionScheme,
+        "schemeProvideBenefits" -> schemeProvideBenefits,
+        "schemeEstablishedCountry" -> schemeEstablishedCountry,
+        "isSchemeBenefitsInsuranceCompany" -> areBenefitsSecuredContractInsuranceCompany
+      ) ++ isSchemeMasterTrust.map { value => Json.obj("isSchemeMasterTrust" -> value) }.getOrElse(Json.obj()) ++
+        optional("insuranceCompanyName", insuranceCompanyName) ++
+        optional("policyNumber", policyNumber) ++
+        optionalContact.map { value => Json.obj("insuranceCompanyContactDetails" -> value) }.getOrElse(Json.obj()) ++
+        insuranceAddress.map { value => value._1.as[JsObject] }.getOrElse(Json.obj()) ++
+        optional("otherPensionSchemeStructure", otherPensionSchemeStructure) ++
+        optional("pensionSchemeStructure", schemeStructure) ++
+        moreThanTenTrustees.map { value => Json.obj("hasMoreThanTenTrustees" -> value) }.getOrElse(Json.obj()) ++
+        optional("insuranceCompanyName", insuranceCompanyName)
+      ,
+      Json.obj(
+        "schemeName" -> schemeName,
+        "schemeEstablishedCountry" -> schemeEstablishedCountry,
+        "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
+        "membershipFuture" -> SchemeMembers.nameWithValue(futureSchemeMembers),
+        "investmentRegulated" -> isReguledSchemeInvestment,
+        "occupationalPensionScheme" -> isOccupationalPensionScheme,
+        "benefits" -> Benefits.nameWithValue(schemeProvideBenefits),
+        "securedBenefits" -> areBenefitsSecuredContractInsuranceCompany
+      ) ++ optional("insuranceCompanyName", insuranceCompanyName) ++
+        optional("insurancePolicyNumber", policyNumber) ++
+        insuranceAddress.map { value => value._2.as[JsObject] }.getOrElse(Json.obj()) ++
+        schemeTypeJs
     )
   }
 }

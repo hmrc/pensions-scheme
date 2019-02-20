@@ -60,8 +60,8 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
         orElse doNothing) and
       (addressTransformer.getAddress(__ \ 'insurerAddress, __ \ 'insuranceCompanyAddressDetails)
         orElse doNothing) and
+      membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
+      membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and
       benefitsReads and
-      schemeTypeReads and
-      membersReads("currentSchemeMembers", "membership") and
-      membersReads("futureSchemeMembers", "membershipFuture") reduce
+      schemeTypeReads reduce
 }
