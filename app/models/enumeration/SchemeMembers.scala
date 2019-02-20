@@ -30,4 +30,7 @@ object SchemeMembers extends Enumeration {
   def valueWithName(name: String): String = {
     super.withName(name).asInstanceOf[TypeValue].value
   }
+
+  def nameWithValue(value: String): String =
+    Seq(opt1, opt2, opt3, opt4, opt5, opt6).find(_.value == value).getOrElse(throw new IllegalArgumentException("Unknown value")).name
 }
