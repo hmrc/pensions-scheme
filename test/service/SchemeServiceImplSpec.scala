@@ -154,8 +154,8 @@ class FakeSchemeConnector extends SchemeConnector {
   override def getCorrelationId(requestId: Option[String]): String =
     "4725c81192514c069b8ff1d84659b2df"
 
-  override def updateSchemeDetails(pstr: String, data: JsValue)(implicit headerCarrier: HeaderCarrier,
-                                                                ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = ???
+  override def updateSchemeDetails(pstr: String, data: JsValue)(
+    implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = ???
 }
 
 object FakeSchemeConnector extends SchemeDetailsStubData {
