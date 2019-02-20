@@ -56,4 +56,45 @@ trait JsonTransformer {
   def userAnswersContactDetailsReads(userAnswersBase: String): Reads[JsObject] =
     (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ 'correspondenceContactDetails \ 'email).json.pick) and
       (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
+
+
+
+  def userAnswersCompanyDetailsReads: Reads[JsObject] =
+    (__ \ 'companyDetails \ 'companyName).json.copyFrom((__ \ 'organisationName).json.pick) and
+      (__ \ 'companyDetails \ 'vatNumber).json.copyFrom((__ \ 'vatRegistrationNumber).json.pick) and
+      (__ \ 'companyDetails \ 'payeNumber).json.copyFrom((__ \ 'payeReference).json.pick) reduce
+
+
+  def userAnswersCrnReads: Reads[JsObject] = {
+    (__ \ "crnNumber").read[String].flatMap { _ =>
+      (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(true)) and
+        (__ \ 'companyRegistrationNumber \ 'crn).json.copyFrom((__ \ 'crnNumber).json.pick) reduce
+
+    } orElse {
+      (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
+        (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((__ \ 'noCrnReason).json.pick) reduce
+
+    }
+  }
+
+  def userAnswersPartnershipDetailsReads: Reads[JsObject] =
+    (__ \ 'partnershipDetails \ 'name).json.copyFrom((__ \ 'partnershipName).json.pick)
+
+  def transformVatToUserAnswersReads: Reads[JsObject] = (__ \ "vatRegistrationNumber").read[String].flatMap { _ =>
+    (__ \ 'partnershipVat \ 'hasVat).json.put(JsBoolean(true)) and
+      (__ \ 'partnershipVat \ 'vat).json.copyFrom((__ \ 'vatRegistrationNumber).json.pick) reduce
+
+  } orElse {
+    (__ \ 'partnershipVat \ 'hasVat).json.put(JsBoolean(false))
+
+  }
+
+  def userAnswersPayeReads: Reads[JsObject] = (__ \ "payeReference").read[String].flatMap { _ =>
+    (__ \ 'partnershipPaye \ 'hasPaye).json.put(JsBoolean(true)) and
+      (__ \ 'partnershipPaye \ 'paye).json.copyFrom((__ \ 'payeReference).json.pick) reduce
+
+  } orElse {
+    (__ \ 'partnershipPaye \ 'hasPaye).json.put(JsBoolean(false))
+
+  }
 }
