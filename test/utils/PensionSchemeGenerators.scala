@@ -195,6 +195,7 @@ trait PensionSchemeGenerators {
                                                 "Mixture of money purchase benefits and defined benefits"))
 
   val policyNumberGen =  Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
+  val otherSchemeStructureGen =  Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
 
   val boolenGen = Gen.oneOf(Seq(true, false))
 
