@@ -106,9 +106,9 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       }
     }
 
-    /*"have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
+    "have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
       s"has trustee details in trustees array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersCompanyDetailsReads).get
@@ -120,7 +120,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       }
 
       s"has crn details in trustees array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersCrnReads).get
@@ -136,7 +136,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       }
 
       s"has utr details in trustees array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("companyUniqueTaxReference")).get
@@ -147,7 +147,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       }
 
       s"has contact details in trustees array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersContactDetailsReads("companyContactDetails")).get
@@ -160,10 +160,10 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       }
 
       s"has complete company details in trustees array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val (desCompanyDetails, userAnswersCompanyDetails) = companyDetails
-            val result = desCompanyDetails.transform(transformer.userAnswersEstablisherCompanyReads).get
+            val result = desCompanyDetails.transform(transformer.userAnswersTrusteeCompanyReads).get
 
             result mustBe userAnswersCompanyDetails
           }
@@ -171,7 +171,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       }
     }
 
-    "have the trusteePartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
+    /*"have the trusteePartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
       s"has trustee details in trustees array" in {
         forAll(partnershipJsValueGen) {

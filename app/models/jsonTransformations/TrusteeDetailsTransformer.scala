@@ -53,10 +53,10 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
       userAnswersCrnReads and
       userAnswersUtrReads("companyUniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'companyAddressYears) and
+      addressTransformer.getAddressYears(__, __ \ 'trusteesCompanyAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
       userAnswersContactDetailsReads("companyContactDetails") and
-      (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) reduce
+      (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
 
   def userAnswersTrusteePartnershipReads: Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and

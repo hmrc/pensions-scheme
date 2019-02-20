@@ -108,7 +108,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
     "have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
       s"has establisher details in establishers array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersCompanyDetailsReads).get
@@ -120,7 +120,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has crn details in establishers array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersCrnReads).get
@@ -136,7 +136,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has utr details in establishers array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("companyUniqueTaxReference")).get
@@ -147,7 +147,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has contact details in establishers array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersContactDetailsReads("companyContactDetails")).get
@@ -160,7 +160,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has complete company details in establishers array" in {
-        forAll(companyJsValueGen) {
+        forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
             val (desCompanyDetails, userAnswersCompanyDetails) = companyDetails
             val result = desCompanyDetails.transform(transformer.userAnswersEstablisherCompanyReads).get
