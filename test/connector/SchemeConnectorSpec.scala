@@ -412,6 +412,105 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     val result = connector.getCorrelationId(requestId)
     result shouldBe "4725c81192514c069b8ff1"
   }
+
+  "SchemeConnector updateSchemeDetails" should "handle OK (200)" in {
+    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
+    server.stubFor(
+      post(urlEqualTo(updateSchemeUrl))
+        .withHeader("Content-Type", equalTo("application/json"))
+        .withRequestBody(equalToJson(Json.stringify(updateSchemeData)))
+        .willReturn(
+          ok(Json.stringify(successResponse))
+            .withHeader("Content-Type", "application/json")
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+      response.status shouldBe OK
+    }
+  }
+
+  it should "handle FORBIDDEN (403) - INVALID_VARIATION" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeUrl))
+        .willReturn(
+          forbidden
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_VARIATION"))
+        )
+    )
+
+    recoverToSucceededIf[Upstream4xxResponse] {
+      connector.updateSchemeDetails(pstr, updateSchemeData)
+    }
+  }
+
+  it should "handle CONFLICT (409) - DUPLICATE_SUBMISSION" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.CONFLICT)
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("DUPLICATE_SUBMISSION"))
+        )
+    )
+
+    recoverToSucceededIf[Upstream4xxResponse] {
+      connector.updateSchemeDetails(pstr, updateSchemeData)
+    }
+  }
+
+  it should "handle INVALID_PSTR (400)" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_PSTR"))
+        )
+    )
+
+    recoverToSucceededIf[BadRequestException] {
+      connector.updateSchemeDetails(pstr, updateSchemeData)
+    }
+  }
+
+  it should "handle INVALID_CORRELATION_ID (400)" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_CORRELATION_ID"))
+        )
+    )
+
+    recoverToSucceededIf[BadRequestException] {
+      connector.updateSchemeDetails(pstr, updateSchemeData)
+    }
+  }
+
+  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody("INVALID_PAYLOAD")
+        )
+    )
+
+    logger.reset()
+
+    connector.updateSchemeDetails(pstr, updateSchemeData).map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          logger.getLogEntries.size shouldBe 1
+          logger.getLogEntries.head.level shouldBe Level.WARN
+        case _ => fail("Expected BadRequestException")
+      }
+  }
 }
 
 object SchemeConnectorSpec extends JsonFileReader with SchemeDetailsStubJsonData {
@@ -420,10 +519,13 @@ object SchemeConnectorSpec extends JsonFileReader with SchemeDetailsStubJsonData
   val psaId = "test"
   val schemeIdType = "srn"
   val idNumber = "S1234567890"
+  val pstr = "20010010AA"
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
+  private val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
   val schemeUrl = s"/pension-online/scheme-subscription/$psaId"
   val listOfSchemeUrl = s"/pension-online/subscription/$psaId/list"
   val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$idNumber"
+  val updateSchemeUrl = s"/pension-online/scheme-variation/pstr/$pstr"
   private val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
 
   private val invalidBusinessPartnerResponse =

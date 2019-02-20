@@ -20,9 +20,9 @@ import models.jsonTransformations.AddressTransformer
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.PensionSchemeGenerators
+import utils.PensionSchemeJsValueGenerators
 
-class AddressTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+class AddressTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
 
   import AddressTransformationSpec._
 
