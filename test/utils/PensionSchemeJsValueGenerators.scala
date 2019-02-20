@@ -18,8 +18,8 @@ package utils
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{const, frequency, some}
-import play.api.libs.json.{JsObject, JsString, JsValue, Json}
+import org.scalacheck.Gen.const
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
