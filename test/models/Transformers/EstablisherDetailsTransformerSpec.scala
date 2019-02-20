@@ -174,7 +174,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     "have the establisherPartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
       s"has establisher details in establishers array" in {
-        forAll(partnershipJsValueGen) {
+        forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersPartnershipDetailsReads).get
@@ -184,7 +184,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has vat details for partnership in establishers array" in {
-        forAll(partnershipJsValueGen) {
+        forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val details = partnershipDetails._1 - "vatRegistrationNumber"
             val result = details.transform(transformer.transformVatToUserAnswersReads).get
@@ -194,7 +194,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has paye details for partnership in establishers array" in {
-        forAll(partnershipJsValueGen) {
+        forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersPayeReads).get
@@ -205,7 +205,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has utr details in establishers array" in {
-        forAll(partnershipJsValueGen) {
+        forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("partnershipUniqueTaxReference")).get
@@ -216,7 +216,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has contact details in establishers array" in {
-        forAll(partnershipJsValueGen) {
+        forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersContactDetailsReads("partnershipContactDetails")).get
@@ -229,7 +229,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       }
 
       s"has complete partnership details in establishers array" in {
-        forAll(partnershipJsValueGen) {
+        forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val (desPartnershipDetails, userAnswersPartnershipDetails) = partnershipDetails
             val result = desPartnershipDetails.transform(transformer.userAnswersEstablisherPartnershipReads).get

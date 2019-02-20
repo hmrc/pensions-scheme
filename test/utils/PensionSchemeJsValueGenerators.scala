@@ -170,7 +170,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  val partnershipJsValueGen: Gen[(JsObject, JsObject)] = for {
+  def partnershipJsValueGen(isEstablisher:Boolean): Gen[(JsObject, JsObject)] = for {
     orgName <- nameGenerator
     vat <- vatGenerator
     utr <- utrGenerator
@@ -193,7 +193,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "previousAddressDetails" -> pa
       ) ++ desAddress.as[JsObject],
       Json.obj(
-        "establisherKind" -> "partnership",
+        (if(isEstablisher)"establisherKind" else "trusteeKind") -> "partnership",
         "partnershipDetails" -> Json.obj(
           "name" -> orgName
         ),
@@ -217,7 +217,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
   val establisherJsValueGen: Gen[(JsObject, JsObject)] = for {
     individual <- Gen.listOfN(randomNumberFromRange(0, 3), individualJsValueGen(isEstablisher = true))
     company <- Gen.listOfN(randomNumberFromRange(0, 3), companyJsValueGen(isEstablisher = true))
-    partnership <- Gen.listOfN(randomNumberFromRange(0, 4), partnershipJsValueGen)
+    partnership <- Gen.listOfN(randomNumberFromRange(0, 4), partnershipJsValueGen(isEstablisher = true))
   } yield {
     val userAnswersListOfEstablishers = individual.map(_._2) ++ company.map(_._2) ++ partnership.map(_._2)
     (
