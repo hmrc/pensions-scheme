@@ -12,8 +12,6 @@
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes
 
-DELETE      /test-only/psa-name                                   controllers.PSANameController.dropCollection
-
 GET         /test-only/mongo-diagnostics                          controllers.MongoDiagnosticsController.mongoDiagnostics()
 
 GET        /pensions-scheme/test-only/toggle-on/:featureSwitch     controllers.testonly.TestFeatureSwitchManagerController.toggleOn(featureSwitch: String)
