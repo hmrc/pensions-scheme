@@ -214,12 +214,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  val establisherJsValueGen: Gen[(JsObject, JsObject)] = for {
-    individual <- Gen.listOfN(randomNumberFromRange(0, 3), individualJsValueGen(isEstablisher = true))
-    company <- Gen.listOfN(randomNumberFromRange(0, 3), companyJsValueGen(isEstablisher = true))
-    partnership <- Gen.listOfN(randomNumberFromRange(0, 4), partnershipJsValueGen(isEstablisher = true))
+  def establisherOrTrusteeJsValueGen(isEstablisher:Boolean): Gen[(JsObject, JsObject)] = for {
+    individual <- Gen.listOfN(randomNumberFromRange(0, 3), individualJsValueGen(isEstablisher))
+    company <- Gen.listOfN(randomNumberFromRange(0, 3), companyJsValueGen(isEstablisher))
+    partnership <- Gen.listOfN(randomNumberFromRange(0, 4), partnershipJsValueGen(isEstablisher))
   } yield {
-    val userAnswersListOfEstablishers = individual.map(_._2) ++ company.map(_._2) ++ partnership.map(_._2)
+    val userAnswersListOfEstablisherOrTrustees = individual.map(_._2) ++ company.map(_._2) ++ partnership.map(_._2)
     (
       Json.obj(
         "individualDetails" -> individual.map(_._1),
@@ -227,7 +227,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "partnershipTrusteeDetail" -> partnership.map(_._1)
       ),
       Json.obj(
-        "establishers" -> userAnswersListOfEstablishers
+        (if(isEstablisher)"establishers" else "trustees") -> userAnswersListOfEstablisherOrTrustees
       )
     )
   }

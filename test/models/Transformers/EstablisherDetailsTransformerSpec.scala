@@ -241,7 +241,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     }
 
     "have all establishers transformed" in {
-      forAll(establisherJsValueGen) {
+      forAll(establisherOrTrusteeJsValueGen(isEstablisher = true)) {
         establishers =>
           val result = establishers._1.transform(transformer.userAnswersEstablishersReads).get
 

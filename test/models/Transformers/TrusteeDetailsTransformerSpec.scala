@@ -240,10 +240,10 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       }
     }
 
-    /*"have all trustees transformed" in {
-      forAll(trusteeJsValueGen) {
+    "have all trustees transformed" in {
+      forAll(establisherOrTrusteeJsValueGen(isEstablisher = false)) {
         trustees =>
-          val result = trustees._1.transform(transformer.userAnswersEstablishersReads).get
+          val result = trustees._1.transform(transformer.userAnswersTrusteesReads).get
 
           result mustBe trustees._2
       }
@@ -251,11 +251,11 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
 
     "if no trustees are present" in {
 
-      val result = Json.obj().transform(transformer.userAnswersEstablishersReads).get
+      val result = Json.obj().transform(transformer.userAnswersTrusteesReads).get
 
       result mustBe Json.obj(
         "trustees" -> JsArray()
       )
-    }*/
+    }
   }
 }
