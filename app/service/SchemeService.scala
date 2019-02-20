@@ -32,7 +32,7 @@ trait SchemeService {
   def listOfSchemes(psaId: String)
                    (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
 
-  def updateScheme(pstr: String, json: JsValue)
+  def updateScheme(pstr: String,psaId: String, json: JsValue)
                     (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
 
 }

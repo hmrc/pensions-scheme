@@ -26,7 +26,8 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
 import utils.validationUtils._
-import scala.concurrent.{Future, ExecutionContext}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeController @Inject()(schemeService: SchemeService,
                                  cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
@@ -66,17 +67,18 @@ class SchemeController @Inject()(schemeService: SchemeService,
   def updateScheme: Action[AnyContent] = Action.async {
     implicit request => {
       val pstr = request.headers.get("pstr")
+      val psaId = request.headers.get("psaId")
       val json = request.body.asJson
       Logger.debug(s"[Update-Scheme-Incoming-Payload]$json")
 
-      (pstr, json) match {
-        case (Some(pstr), Some(jsValue)) =>
-          schemeService.updateScheme(pstr, jsValue).map {
+      (pstr, psaId, json) match {
+        case (Some(pstr), Some(psaId), Some(jsValue)) =>
+          schemeService.updateScheme(pstr, psaId, jsValue).map {
             response =>
               Ok(response.body)
           }
 
-        case _ => Future.failed(new BadRequestException("Bad Request without PSTR or request body"))
+        case _ => Future.failed(new BadRequestException("Bad Request without PSTR or PSAId or request body"))
       }
     } recoverWith recoverFromError
   }

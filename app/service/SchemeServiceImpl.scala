@@ -76,12 +76,12 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
   }
 
-  override def updateScheme(pstr: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
+  override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
                                                          ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
     transformJsonToModel(json).fold(
       error => Future.failed(error),
       validPensionsScheme => {
-        val updatedScheme = Json.toJson(validPensionsScheme)
+        val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
         Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
         schemeConnector.updateSchemeDetails(pstr, updatedScheme)
       })
