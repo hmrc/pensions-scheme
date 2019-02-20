@@ -21,7 +21,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
-class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
+class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
+                                              directorsOrPartnersTransformer: DirectorsOrPartnersTransformer) extends JsonTransformer {
 
   def userAnswersEstablishersReads: Reads[JsObject] = {
     (__ \ 'individualDetails).readNullable(
@@ -56,7 +57,13 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getAddressYears(__, __ \ 'companyAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
       userAnswersContactDetailsReads("companyContactDetails") and
-      (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) reduce
+      (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) and
+      getDirector reduce
+
+  val getDirector = (__ \ 'directorsDetails).readNullable(
+    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersDirectorReads)).map(JsArray(_))).flatMap { directors =>
+    directors.map(allDirectors => (__ \ 'director).json.put(allDirectors)).getOrElse(doNothing)
+  }
 
   def userAnswersEstablisherPartnershipReads: Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("partnership")) and
@@ -68,5 +75,11 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getAddressYears(__, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'partnershipPreviousAddress) and
       userAnswersContactDetailsReads("partnershipContactDetails") and
-      (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
+      (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) and
+      getPartner reduce
+
+  val getPartner = (__ \ 'partnerDetails).readNullable(
+    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersPartnerReads)).map(JsArray(_))).flatMap { partners =>
+    partners.map(allPartners => (__ \ 'partner).json.put(allPartners)).getOrElse(doNothing)
+  }
 }
