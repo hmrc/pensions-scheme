@@ -16,8 +16,44 @@
 
 package models.jsonTransformations
 
-import play.api.libs.json.{JsObject, Json, Reads, __}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
 
-trait JsonTransformer{
+trait JsonTransformer {
   val doNothing: Reads[JsObject] = __.json.put(Json.obj())
+
+  def userAnswersIndividualDetailsReads(userAnswersPath: String): Reads[JsObject] =
+    (__ \ userAnswersPath \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
+      ((__ \ userAnswersPath \ 'middleName).json.copyFrom((__ \ 'personDetails \ 'middleName).json.pick) orElse doNothing) and
+      (__ \ userAnswersPath \ 'lastName).json.copyFrom((__ \ 'personDetails \ 'lastName).json.pick) and
+      (__ \ userAnswersPath \ 'date).json.copyFrom((__ \ 'personDetails \ 'dateOfBirth).json.pick) reduce
+
+  def userAnswersNinoReads(userAnswersPath: String): Reads[JsObject] = {
+    (__ \ "nino").read[String].flatMap { _ =>
+      (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(true)) and
+        (__ \ userAnswersPath \ 'nino).json.copyFrom((__ \ 'nino).json.pick) reduce
+
+    } orElse {
+      (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
+        (__ \ userAnswersPath \ 'reason).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
+
+    }
+  }
+
+  def userAnswersUtrReads(userAnswersBase: String): Reads[JsObject] = {
+    (__ \ "utr").read[String].flatMap { _ =>
+      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
+        (__ \ userAnswersBase \ 'utr).json.copyFrom((__ \ 'utr).json.pick) reduce
+
+    } orElse {
+      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
+        (__ \ userAnswersBase \ 'reason).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
+
+    }
+  }
+
+  def userAnswersContactDetailsReads(userAnswersBase: String): Reads[JsObject] =
+    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ 'correspondenceContactDetails \ 'email).json.pick) and
+      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
 }

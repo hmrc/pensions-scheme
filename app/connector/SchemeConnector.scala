@@ -51,6 +51,11 @@ trait SchemeConnector {
                                                                               ec: ExecutionContext,
                                                                               request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]]
 
+  def updateSchemeDetails(pstr: String, data: JsValue)(implicit
+                                              headerCarrier: HeaderCarrier,
+                                              ec: ExecutionContext,
+                                              request: RequestHeader): Future[HttpResponse]
+
 }
 
 class SchemeConnectorImpl @Inject()(
@@ -147,5 +152,23 @@ class SchemeConnectorImpl @Inject()(
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
 
+  }
+
+  def updateSchemeDetails(pstr: String, data: JsValue)(implicit
+                                                       headerCarrier: HeaderCarrier,
+                                                       ec: ExecutionContext,
+                                                       request: RequestHeader): Future[HttpResponse] = {
+
+    val updateSchemeUrl = config.updateSchemeUrl.format(pstr)
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+
+    Logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
+
+    http.POST(updateSchemeUrl, data)(implicitly[Writes[JsValue]],
+    implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
+    .andThen {
+    case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
+    invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
+  }
   }
 }

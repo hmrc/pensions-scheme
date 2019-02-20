@@ -63,4 +63,22 @@ class SchemeController @Inject()(schemeService: SchemeService,
     } recoverWith recoverFromError
   }
 
+  def updateScheme: Action[AnyContent] = Action.async {
+    implicit request => {
+      val pstr = request.headers.get("pstr")
+      val json = request.body.asJson
+      Logger.debug(s"[Update-Scheme-Incoming-Payload]$json")
+
+      (pstr, json) match {
+        case (Some(pstr), Some(jsValue)) =>
+          schemeService.updateScheme(pstr, jsValue).map {
+            response =>
+              Ok(response.body)
+          }
+
+        case _ => Future.failed(new BadRequestException("Bad Request without PSTR or request body"))
+      }
+    } recoverWith recoverFromError
+  }
+
 }
