@@ -51,14 +51,9 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
             val details = individualDetails._1
             val result = details.transform(transformer.userAnswersNinoReads("trusteeNino")).get
 
-            (result \ "trusteeNino" \ "hasNino").as[Boolean] mustBe true
+            (result \ "trusteeNino" \ "hasNino").as[Boolean] mustBe (details \ "nino").isDefined
             (result \ "trusteeNino" \ "nino").asOpt[String] mustBe (details \ "nino").asOpt[String]
-
-            val noNinoJs = details.as[JsObject] - "nino" + ("noNinoReason" -> JsString("test reason"))
-            val noNinoResult = noNinoJs.transform(transformer.userAnswersNinoReads("trusteeNino")).get
-
-            (noNinoResult \ "trusteeNino" \ "hasNino").as[Boolean] mustBe false
-            (noNinoResult \ "trusteeNino" \ "reason").asOpt[String] mustBe (noNinoJs \ "noNinoReason").asOpt[String]
+            (result \ "trusteeNino" \ "reason").asOpt[String] mustBe (details \ "noNinoReason").asOpt[String]
           }
         }
       }
@@ -69,14 +64,9 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
             val details = individualDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
 
-            (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+            (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe (details \ "utr").isDefined
             (result \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (details \ "utr").asOpt[String]
-
-            val noUtrJs = details.as[JsObject] - "utr" + ("noUtrReason" -> JsString("test reason"))
-            val noUtrJsResult = noUtrJs.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
-
-            (noUtrJsResult \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe false
-            (noUtrJsResult \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (noUtrJs \ "noUtrReason").asOpt[String]
+            (result \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (details \ "noUtrReason").asOpt[String]
 
           }
         }
@@ -124,13 +114,10 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersCrnReads).get
-            (result \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe true
-            (result \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (details \ "crnNumber").asOpt[String]
 
-            val noCrn = details.as[JsObject] - "crnNumber" + ("noCrnReason" -> JsString("no crn"))
-            val noCrnResult = noCrn.transform(transformer.userAnswersCrnReads).get
-            (noCrnResult \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe false
-            (noCrnResult \ "companyRegistrationNumber" \ "reason").as[String] mustBe "no crn"
+            (result \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe (details \ "crnNumber").isDefined
+            (result \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (details \ "crnNumber").asOpt[String]
+            (result \ "companyRegistrationNumber" \ "reason").asOpt[String] mustBe (details \ "noCrnReason").asOpt[String]
           }
         }
       }
@@ -140,8 +127,10 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
           companyDetails => {
             val details = companyDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("companyUniqueTaxReference")).get
-            (result \ "companyUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+
+            (result \ "companyUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe (details \ "utr").isDefined
             (result \ "companyUniqueTaxReference" \ "utr").asOpt[String] mustBe (details \ "utr").asOpt[String]
+            (result \ "companyUniqueTaxReference" \ "reason").asOpt[String] mustBe (details \ "noUtrReason").asOpt[String]
           }
         }
       }
@@ -178,6 +167,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
           partnershipDetails => {
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersPartnershipDetailsReads).get
+
             (result \ "partnershipDetails" \ "name").as[String] mustBe (details \ "partnershipName").as[String]
           }
         }
@@ -186,9 +176,11 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
       s"has vat details for partnership in trustees array" in {
         forAll(partnershipJsValueGen(isEstablisher = false)) {
           partnershipDetails => {
-            val details = partnershipDetails._1 - "vatRegistrationNumber"
+            val details = partnershipDetails._1
             val result = details.transform(transformer.transformVatToUserAnswersReads).get
-            (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe false
+
+            (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe (details \ "vatRegistrationNumber").isDefined
+            (result \ "partnershipVat" \ "vat").asOpt[String] mustBe (details \ "vatRegistrationNumber").asOpt[String]
           }
         }
       }
@@ -198,6 +190,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
           partnershipDetails => {
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersPayeReads).get
+
             (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe true
             (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (details \ "payeReference").asOpt[String]
           }
@@ -209,8 +202,10 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
           partnershipDetails => {
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersUtrReads("partnershipUniqueTaxReference")).get
-            (result \ "partnershipUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
+
+            (result \ "partnershipUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe (details \ "utr").isDefined
             (result \ "partnershipUniqueTaxReference" \ "utr").asOpt[String] mustBe (details \ "utr").asOpt[String]
+            (result \ "partnershipUniqueTaxReference" \ "reason").asOpt[String] mustBe (details \ "noUtrReason").asOpt[String]
           }
         }
       }

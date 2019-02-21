@@ -216,4 +216,9 @@ trait PensionSchemeGenerators {
       Json.obj(key -> value)
     }.getOrElse(Json.obj())
   }
+  protected def optionalWithReason(key: String, element: Option[String], reason: String) = {
+    element.map { value =>
+      Json.obj(key -> value)
+    }.getOrElse(Json.obj(reason -> reason))
+  }
 }
