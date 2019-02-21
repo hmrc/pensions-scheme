@@ -195,7 +195,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val details = partnershipDetails._1
             val result = details.transform(transformer.userAnswersPayeReads).get
 
-            (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe true
+            (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe (details \ "payeReference").isDefined
             (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (details \ "payeReference").asOpt[String]
           }
         }

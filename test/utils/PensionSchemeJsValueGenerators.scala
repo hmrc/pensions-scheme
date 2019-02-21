@@ -43,6 +43,11 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     vat => Json.obj("hasVat" -> true, "vat" -> vat)
   )
 
+  private def payeJsValue(paye: Option[String]) = paye.fold(
+    Json.obj("hasPaye" -> false))(
+    paye => Json.obj("hasPaye" -> true, "paye" -> paye)
+  )
+
   def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
                         isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
     line1 <- addressLineGen
@@ -97,8 +102,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     middleName <- Gen.option(nameGenerator)
     lastName <- nameGenerator
     referenceOrNino <- Gen.option(ninoGenerator)
-    contactDetails <- contactDetailsJsValueGen
     utr <- Gen.option(utrGenerator)
+    contactDetails <- contactDetailsJsValueGen
     address <- addressJsValueGen("correspondenceAddressDetails", if(isEstablisher)"address" else "trusteeAddressId", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", if(isEstablisher) "previousAddress" else "trusteePreviousAddress", isDifferent = true)
     date <- dateGenerator
@@ -143,8 +148,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     orgName <- nameGenerator
     utr <- Gen.option(utrGenerator)
     crn <- Gen.option(crnGenerator)
-    vat <- vatGenerator
-    paye <- payeGenerator
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
@@ -196,7 +201,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     orgName <- nameGenerator
     vat <- Gen.option(vatGenerator)
     utr <- Gen.option(utrGenerator)
-    paye <- payeGenerator
+    paye <- Gen.option(payeGenerator)
     address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
@@ -219,11 +224,11 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     (
       Json.obj(
         "partnershipName" -> orgName,
-        "payeReference" -> paye,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> pa
       ) ++ desAddress.as[JsObject] ++ optional("vatRegistrationNumber", vat)
         ++ optionalWithReason("utr", utr, "noUtrReason")
+        ++ optional("payeReference", paye)
         ++ desPartners,
       Json.obj(
         (if (isEstablisher) "establisherKind" else "trusteeKind") -> "partnership",
@@ -231,10 +236,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "name" -> orgName
         ),
         "partnershipVat" -> vatJsValue(vat),
-        "partnershipPaye" -> Json.obj(
-          "hasPaye" -> true,
-          "paye" -> paye
-        ),
+        "partnershipPaye" -> payeJsValue(paye),
         "partnershipUniqueTaxReference" -> utrJsValue(utr),
         "partnershipAddressYears" -> "under_a_year",
         "partnershipContactDetails" -> userAnswersContactDetails,
@@ -269,8 +271,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     middleName <- Gen.option(nameGenerator)
     lastName <- nameGenerator
     referenceOrNino <- Gen.option(ninoGenerator)
-    contactDetails <- contactDetailsJsValueGen
     utr <- Gen.option(utrGenerator)
+    contactDetails <- contactDetailsJsValueGen
     address <- addressJsValueGen("correspondenceAddressDetails", s"${directorOrPartner}AddressId", isDifferent = true)
     partnerPreviousAddress <- addressJsValueGen("previousAddress", "partnerPreviousAddress", isDifferent = true)
     directorPreviousAddress <- addressJsValueGen("previousAddress", "previousAddress", isDifferent = true)
@@ -291,8 +293,6 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "lastName" -> lastName,
           "dateOfBirth" -> date.toString
         ),
-        "nino" -> referenceOrNino,
-        "utr" -> utr,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> previousAddress
       ) ++ desAddress.as[JsObject] ++ optionalWithReason("nino", referenceOrNino, "noNinoReason")
