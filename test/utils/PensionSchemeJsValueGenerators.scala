@@ -256,24 +256,35 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     company <- Gen.option(Gen.listOfN(randomNumberFromRange(1, 1), companyJsValueGen(isEstablisher)))
     partnership <- Gen.option(Gen.listOfN(randomNumberFromRange(1, 1), partnershipJsValueGen(isEstablisher)))
   } yield {
-    val individualDetails = individual.map { indv => Json.obj("individualDetails" -> indv.map(_._1)) }.getOrElse(Json.obj())
-    val companyDetails = company.map { comp => Json.obj("companyOrOrganisationDetails" -> comp.map(_._1)) }.getOrElse(Json.obj())
-    val partnershipDetails = partnership.map { part => Json.obj("partnershipTrusteeDetail" -> part.map(_._1)) }.getOrElse(Json.obj())
 
     val uaIndividualDetails = individual.map { indv => indv.map(_._2) }.getOrElse(Nil)
     val uaCompanyDetails = company.map { comp => comp.map(_._2) }.getOrElse(Nil)
     val uaPartnershipDetails = partnership.map { part => part.map(_._2) }.getOrElse(Nil)
 
-    val desEstablishers = individualDetails ++ companyDetails ++ partnershipDetails
+    val desEstablishers = individual.map { indv => Json.obj("individualDetails" -> indv.map(_._1)) }.getOrElse(Json.obj()) ++
+      company.map { comp => Json.obj("companyOrOrganisationDetails" -> comp.map(_._1)) }.getOrElse(Json.obj()) ++
+      partnership.map { part => Json.obj("partnershipTrusteeDetail" -> part.map(_._1)) }.getOrElse(Json.obj())
+
+    val desTrustees = individual.map {indv => Json.obj("individualTrusteeDetails" -> indv.map(_._1))}.getOrElse(Json.obj()) ++
+    company.map {comp => Json.obj("companyTrusteeDetails" -> comp.map(_._1))}.getOrElse(Json.obj()) ++
+    partnership.map {part => Json.obj("partnershipTrusteeDetails" -> part.map(_._1))}.getOrElse(Json.obj())
+
+    val desEstablishersJson = Json.obj(
+      "psaSchemeDetails" -> Json.obj(
+        "establisherDetails" -> desEstablishers
+      )
+    )
+
+    val desTrusteesJson = Json.obj(
+      "psaSchemeDetails" -> Json.obj(
+        "trusteeDetails" -> desTrustees
+      )
+    )
 
     val lisOfAll = uaIndividualDetails ++ uaCompanyDetails ++ uaPartnershipDetails
 
     (
-      Json.obj(
-        "psaSchemeDetails" -> Json.obj(
-          "establisherDetails" -> desEstablishers
-        )
-      ),
+      if(isEstablisher) desEstablishersJson else desTrusteesJson,
       Json.obj(
         (if (isEstablisher) "establishers" else "trustees") -> lisOfAll
       )

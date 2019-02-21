@@ -29,9 +29,9 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
   private val addressTransformer = new AddressTransformer()
   private val transformer = new TrusteeDetailsTransformer(addressTransformer)
 
-  /*"A DES payload containing trustee details" must {
+  "A DES payload containing trustee details" must {
     "have the individual details transformed correctly to valid user answers format" that {
-
+      val desTrusteeIndividualPath = __ \ 'psaSchemeDetails \ 'trusteeDetails \ 'individualTrusteeDetails
       /*s"has person details in trustee array" in {
         forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
@@ -45,7 +45,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
         }
       }*/
 
-      s"has nino details in trustees array" in {
+     /* s"has nino details in trustees array" in {
         forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val details = individualDetails._1
@@ -92,13 +92,20 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
             (result \ "trusteeContactDetails" \ "phoneNumber").as[String] mustBe (details \ "correspondenceContactDetails" \ "telephone").as[String]
           }
         }
-      }
+      }*/
 
       "has complete individual details" in {
         forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val (desIndividualDetails, userAnswersIndividualDetails) = individualDetails
-            val result = desIndividualDetails.transform(transformer.userAnswersTrusteeIndividualReads).get
+            val desIndvTrusteeDetails = Json.obj(
+              "psaSchemeDetails" -> Json.obj(
+                "trusteeDetails" -> Json.obj(
+                  "individualTrusteeDetails" -> desIndividualDetails
+                )
+              )
+            )
+            val result = desIndvTrusteeDetails.transform(transformer.userAnswersTrusteeIndividualReads(desTrusteeIndividualPath)).get
 
             result mustBe userAnswersIndividualDetails
           }
@@ -107,7 +114,8 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
     }
 
     "have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
-      s"has trustee details in trustees array" in {
+      val desTrusteeCompanyPath = __ \ 'psaSchemeDetails \ 'trusteeDetails \ 'companyTrusteeDetails
+      /*s"has trustee details in trustees array" in {
         forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = companyDetails._1
@@ -157,13 +165,20 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
               (details \ "correspondenceContactDetails" \ "telephone").as[String]
           }
         }
-      }
+      }*/
 
       s"has complete company details in trustees array" in {
         forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val (desCompanyDetails, userAnswersCompanyDetails) = companyDetails
-            val result = desCompanyDetails.transform(transformer.userAnswersTrusteeCompanyReads).get
+            val desCompanyTrusteeDetails = Json.obj(
+              "psaSchemeDetails" -> Json.obj(
+                "trusteeDetails" -> Json.obj(
+                  "companyTrusteeDetails" -> desCompanyDetails
+                )
+              )
+            )
+            val result = desCompanyTrusteeDetails.transform(transformer.userAnswersTrusteeCompanyReads(desTrusteeCompanyPath)).get
 
             result mustBe userAnswersCompanyDetails
           }
@@ -172,8 +187,8 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
     }
 
     "have the trusteePartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
-
-      s"has trustee details in trustees array" in {
+      val desTrusteePartnershipPath = __ \ 'psaSchemeDetails \ 'trusteeDetails \ 'partnershipTrusteeDetails
+      /*s"has trustee details in trustees array" in {
         forAll(partnershipJsValueGen(isEstablisher = false)) {
           partnershipDetails => {
             val details = partnershipDetails._1
@@ -226,13 +241,20 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
               (details \ "correspondenceContactDetails" \ "telephone").as[String]
           }
         }
-      }
+      }*/
 
       s"has complete partnership details in trustees array" in {
         forAll(partnershipJsValueGen(isEstablisher = false)) {
           partnershipDetails => {
             val (desPartnershipDetails, userAnswersPartnershipDetails) = partnershipDetails
-            val result = desPartnershipDetails.transform(transformer.userAnswersTrusteePartnershipReads).get
+            val desPartnershipTrusteeDetails = Json.obj(
+              "psaSchemeDetails" -> Json.obj(
+                "trusteeDetails" -> Json.obj(
+                  "partnershipTrusteeDetails" -> desPartnershipDetails
+                )
+              )
+            )
+            val result = desPartnershipTrusteeDetails.transform(transformer.userAnswersTrusteePartnershipReads(desTrusteePartnershipPath)).get
 
             result mustBe userAnswersPartnershipDetails
           }
@@ -251,11 +273,9 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
 
     "if no trustees are present" in {
 
-      val result = Json.obj().transform(transformer.userAnswersTrusteesReads).get
+      val result = Json.obj("psaSchemeDetails" -> "").transform(transformer.userAnswersTrusteesReads).get
 
-      result mustBe Json.obj(
-        "trustees" -> JsArray()
-      )
+      result mustBe Json.obj()
     }
-  }*/
+  }
 }
