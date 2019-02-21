@@ -17,9 +17,10 @@
 package models.Transformers
 
 import models.jsonTransformations.{AddressTransformer, DirectorsOrPartnersTransformer}
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import utils.PensionSchemeJsValueGenerators
 import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import play.api.libs.json._
+import utils.PensionSchemeJsValueGenerators
 
 class DirectorsOrPartnersTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
 
@@ -33,7 +34,7 @@ class DirectorsOrPartnersTransformationSpec extends WordSpec with MustMatchers w
         forAll(directorOrPartnerJsValueGen("partner")) {
           partnerDetails =>
             val (desPartnerDetails, userAnswersPartnerDetails) = partnerDetails
-            val result = desPartnerDetails.transform(directorOrPartnerTransformer.userAnswersPartnerReads).get
+            val result = desPartnerDetails.transform(directorOrPartnerTransformer.userAnswersPartnerReads(__)).get
 
             result mustBe userAnswersPartnerDetails
         }
@@ -46,7 +47,7 @@ class DirectorsOrPartnersTransformationSpec extends WordSpec with MustMatchers w
         forAll(directorOrPartnerJsValueGen("director")) {
           directorDetails =>
             val (desDirectorDetails, userAnswersDirectorDetails) = directorDetails
-            val result = desDirectorDetails.transform(directorOrPartnerTransformer.userAnswersDirectorReads).get
+            val result = desDirectorDetails.transform(directorOrPartnerTransformer.userAnswersDirectorReads(__)).get
 
             result mustBe userAnswersDirectorDetails
         }

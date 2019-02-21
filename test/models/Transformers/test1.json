@@ -1,0 +1,136 @@
+{
+  "benefits": "opt1",
+  "establishers": [
+    {
+      "establisherDetails": {
+        "date": "1955-03-29",
+        "firstName": "abcdef",
+        "lastName": "dfgfdgdfg",
+        "middleName": "fdgdgfggfdg"
+      },
+      "uniqueTaxReference": {
+        "utr": "1234567892",
+        "hasUtr": true
+      },
+      "address": {
+        "country": "GB",
+        "postcode": "TF3 5TR",
+        "addressLine1": "addressline1",
+        "addressLine2": "addressline2",
+        "addressLine3": "addressline3",
+        "addressLine4": "addressline4"
+      },
+      "previousAddress": {
+        "country": "AD",
+        "postcode": "456546",
+        "addressLine1": "sddsfsfsdf",
+        "addressLine2": "sddsfsdf",
+        "addressLine3": "sdfdsfsdf",
+        "addressLine4": "sfdsfsdf"
+      },
+      "establisherKind": "individual",
+      "addressYears": "under_a_year",
+      "establisherNino": {
+        "hasNino": true,
+        "nino": "AA999999A"
+      },
+      "contactDetails": {
+        "emailAddress": "aaa@gmail.com",
+        "phoneNumber": "0044-09876542334"
+      },
+      "isEstablisherComplete": true
+    },
+    {
+      "companyDetails": {
+        "payeNumber": "9999",
+        "companyName": "abc organisation",
+        "vatNumber": "789770000"
+      },
+      "companyRegistrationNumber": {
+        "hasCrn": true,
+        "crn": "sdfsfs"
+      },
+      "companyUniqueTaxReference": {
+        "utr": "7897700000",
+        "hasUtr": true
+      },
+      "isCompanyComplete": true,
+      "establisherKind": "company",
+      "companyAddress": {
+        "country": "GB",
+        "postcode": "LE45RT",
+        "addressLine1": "line1",
+        "addressLine2": "line2",
+        "addressLine3": "line3",
+        "addressLine4": "line4"
+      },
+      "companyAddressYears": "under_a_year",
+      "companyContactDetails": {
+        "emailAddress": "abcfe@hmrc.gsi.gov.uk",
+        "phoneNumber": "0044-09876542312"
+      },
+      "companyPreviousAddress": {
+        "country": "AD",
+        "postcode": "ST36TR",
+        "addressLine1": "addline1",
+        "addressLine2": "addline2",
+        "addressLine3": "addline3",
+        "addressLine4": "addline4"
+      }
+    }
+  ],
+  "schemeType": {
+    "schemeTypeDetails": " ",
+    "name": "master"
+  },
+  "occupationalPensionScheme": true,
+  "schemeName": "Benefits Scheme",
+  "membership": "opt1",
+  "schemeEstablishedCountry": "AD",
+  "insuranceCompanyName": "Aviva Insurance",
+  "membershipFuture": "opt1",
+  "insurancePolicyNumber": " ",
+  "securedBenefits": true,
+  "investmentRegulated": true,
+  "trustees": [
+    {
+      "trusteeAddressYears": "under_a_year",
+      "isTrusteeComplete": true,
+      "trusteeAddressId": {
+        "country": "GB",
+        "postcode": "TF3 5TR",
+        "addressLine1": "addressline1 trustee",
+        "addressLine2": "addressline2 trustee",
+        "addressLine3": "addressline3 trustee",
+        "addressLine4": "addressline4 trustee"
+      },
+      "trusteePreviousAddress": {
+        "country": "AD",
+        "postcode": "4565465467",
+        "addressLine1": "sddsfsfsdf trustee",
+        "addressLine2": "sddsfsdf trustee",
+        "addressLine3": "sdfdsfsdf trustee",
+        "addressLine4": "sfdsfsdf trustee"
+      },
+      "trusteeKind": "individual",
+      "trusteeDetails": {
+        "date": "2001-03-29",
+        "firstName": "abcdef trustee",
+        "lastName": "dfgfdgdfg trustee",
+        "middleName": "fdgdgfggfdg trustee"
+      },
+      "trusteeContactDetails": {
+        "emailAddress": "aaa@trustee.com",
+        "phoneNumber": "0044-09876542334"
+      }
+    }
+  ],
+  "insurerAddress": {
+    "countryCode": "GB",
+    "postalCode": "TF3 4ER",
+    "addressLine1": "Telford1",
+    "addressLine2": "Telford2",
+    "addressLine3": "Telford13",
+    "addressLine4": "Telford14"
+  }
+}

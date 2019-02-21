@@ -23,50 +23,53 @@ import play.api.libs.json._
 
 class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def userAnswersTrusteesReads: Reads[JsObject] = {
-    (__ \ 'individualDetails).readNullable(
-      __.read(Reads.seq(userAnswersTrusteeIndividualReads)).map(JsArray(_))).flatMap { individual =>
-      (__ \ 'companyOrOrganisationDetails).readNullable(
-        __.read(Reads.seq(userAnswersTrusteeCompanyReads)).map(JsArray(_))).flatMap { company =>
-        (__ \ 'partnershipTrusteeDetail).readNullable(
-          __.read(Reads.seq(userAnswersTrusteePartnershipReads)).map(JsArray(_))).flatMap { partnership =>
-          (__ \ 'trustees).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
+  val userAnswersTrusteesReads: Reads[JsObject] = {
+    (__ \ 'psaSchemeDetails \ 'trusteeDetails).readNullable(__.read(
+      (__ \ 'individualTrusteeDetails).readNullable(
+        __.read(Reads.seq(userAnswersTrusteeIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
+        (__ \ 'companyTrusteeDetails).readNullable(
+          __.read(Reads.seq(userAnswersTrusteeCompanyReads(__))).map(JsArray(_))).flatMap { company =>
+          (__ \ 'partnershipTrusteeDetails).readNullable(
+            __.read(Reads.seq(userAnswersTrusteePartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
+            (__ \ 'trustees).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
+          }
         }
-      }
+      })).map {
+      _.getOrElse(Json.obj())
     }
   }
 
-  def userAnswersTrusteeIndividualReads: Reads[JsObject] =
+  def userAnswersTrusteeIndividualReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("trusteeDetails") and
-      userAnswersNinoReads("trusteeNino") and
-      userAnswersUtrReads("uniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'trusteeAddressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'trusteePreviousAddress) and
-      userAnswersContactDetailsReads("trusteeContactDetails") and
+      userAnswersIndividualDetailsReads("trusteeDetails", desPath) and
+      userAnswersNinoReads("trusteeNino", desPath) and
+      userAnswersUtrReads("uniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'trusteeAddressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'trusteePreviousAddress) and
+      userAnswersContactDetailsReads("trusteeContactDetails", desPath) and
       (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
 
-  def userAnswersTrusteeCompanyReads: Reads[JsObject] =
+  def userAnswersTrusteeCompanyReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
-      userAnswersCompanyDetailsReads and
-      userAnswersCrnReads and
-      userAnswersUtrReads("companyUniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'trusteesCompanyAddressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
-      userAnswersContactDetailsReads("companyContactDetails") and
+      userAnswersCompanyDetailsReads(desPath) and
+      userAnswersCrnReads(desPath) and
+      userAnswersUtrReads("companyUniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'trusteesCompanyAddressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
+      userAnswersContactDetailsReads("companyContactDetails", desPath) and
       (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
 
-  def userAnswersTrusteePartnershipReads: Reads[JsObject] =
+  def userAnswersTrusteePartnershipReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and
-      userAnswersPartnershipDetailsReads and
-      transformVatToUserAnswersReads and
-      userAnswersPayeReads and
-      userAnswersUtrReads("partnershipUniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'partnershipAddressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'partnershipPreviousAddress) and
-      userAnswersContactDetailsReads("partnershipContactDetails") and
+      userAnswersPartnershipDetailsReads(desPath) and
+      transformVatToUserAnswersReads(desPath) and
+      userAnswersPayeReads(desPath) and
+      userAnswersUtrReads("partnershipUniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
+      userAnswersContactDetailsReads("partnershipContactDetails", desPath) and
       (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
 }
