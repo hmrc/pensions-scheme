@@ -17,18 +17,23 @@
 package models.Transformers
 
 import base.JsonFileReader
-import models.jsonTransformations.{AddressTransformer, DirectorsOrPartnersTransformer, EstablisherDetailsTransformer}
+import models.jsonTransformations._
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json._
+import play.api.libs.json.JsValue
 import utils.PensionSchemeJsValueGenerators
 
 
 class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
-
   private val addressTransformer = new AddressTransformer()
   private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)
-  private val transformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
+  private val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer)
+  private val establisherTransformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
+  private val trusteesTransformer = new TrusteeDetailsTransformer(addressTransformer)
+  private val transformer = new SchemeSubscriptionDetailsTransformer(schemeDetailsTransformer, establisherTransformer, trusteesTransformer)
+
+  private val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+  private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
   "A DES payload with full scheme subscription details " must {
     "have the details transformed correctly to valid user answers format" which {
@@ -38,9 +43,15 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
           schemeDetails => {
             val (desScheme, uaScheme) = schemeDetails
 
-            //println("\n\n\n desScheme : "+desScheme)
+            val result = desScheme.transform(transformer.userAnswersSchemeSubscriptionDetailsReads).get
+            result mustBe uaScheme
           }
         }
+      }
+
+      s"uses request/response json" in {
+        val result = desResponse.transform(transformer.userAnswersSchemeSubscriptionDetailsReads).get
+        result mustBe userAnswersResponse
       }
     }
   }

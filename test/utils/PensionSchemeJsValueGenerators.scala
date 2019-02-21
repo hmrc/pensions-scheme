@@ -265,9 +265,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       company.map { comp => Json.obj("companyOrOrganisationDetails" -> comp.map(_._1)) }.getOrElse(Json.obj()) ++
       partnership.map { part => Json.obj("partnershipTrusteeDetail" -> part.map(_._1)) }.getOrElse(Json.obj())
 
-    val desTrustees = individual.map {indv => Json.obj("individualTrusteeDetails" -> indv.map(_._1))}.getOrElse(Json.obj()) ++
-    company.map {comp => Json.obj("companyTrusteeDetails" -> comp.map(_._1))}.getOrElse(Json.obj()) ++
-    partnership.map {part => Json.obj("partnershipTrusteeDetails" -> part.map(_._1))}.getOrElse(Json.obj())
+    val desTrustees = individual.map { indv => Json.obj("individualTrusteeDetails" -> indv.map(_._1)) }.getOrElse(Json.obj()) ++
+      company.map { comp => Json.obj("companyTrusteeDetails" -> comp.map(_._1)) }.getOrElse(Json.obj()) ++
+      partnership.map { part => Json.obj("partnershipTrusteeDetails" -> part.map(_._1)) }.getOrElse(Json.obj())
 
     val desEstablishersJson = Json.obj(
       "psaSchemeDetails" -> Json.obj(
@@ -284,7 +284,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val lisOfAll = uaIndividualDetails ++ uaCompanyDetails ++ uaPartnershipDetails
 
     (
-      if(isEstablisher) desEstablishersJson else desTrusteesJson,
+      if (isEstablisher) desEstablishersJson else desTrusteesJson,
       Json.obj(
         (if (isEstablisher) "establishers" else "trustees") -> lisOfAll
       )
@@ -417,27 +417,22 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     establishers <- Gen.option(establisherOrTrusteeJsValueGen(true))
     trustees <- Gen.option(establisherOrTrusteeJsValueGen(false))
   } yield {
-    val establisherDetails = establishers.map { est => est._1 }.getOrElse(Json.obj())
-    val trusteeDetails = trustees.map { trustee => trustee._1 }.getOrElse(Json.obj())
-    val uaEstablisherDetails = establishers.map {
-      _._2
-    }.getOrElse(Json.obj())
-    val uaErusteeDetails = trustees.map {
-      _._2
-    }.getOrElse(Json.obj())
+    val establisherDetails = establishers.map { est => est._1 }.getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
+    val trusteeDetails = trustees.map { trustee => trustee._1 }.getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
 
-    val estBranch = (__ \ 'psaSchemeDetails).json.pick
+    val uaEstablisherDetails = establishers.map(_._2).getOrElse(Json.obj())
+    val uaErusteeDetails = trustees.map(_._2).getOrElse(Json.obj())
 
-    val esta = establisherDetails.transform(estBranch).get
+    val branch = (__ \ 'psaSchemeDetails).json.pick
+
+    val desEstablishers = establisherDetails.transform(branch).get
+    val desTrustee = trusteeDetails.transform(branch).get
 
     val jsonTransformer = (__ \ 'psaSchemeDetails).json.update(
-      __.read[JsObject].map { o => o ++ esta.as[JsObject] }
-    )
-    val x = schemeDetails._1.as[JsObject].transform(jsonTransformer).get
+      __.read[JsObject].map { o => o ++ desEstablishers.as[JsObject] ++ desTrustee.as[JsObject] }
+    ).orElse(__.json.put(Json.obj()))
 
-    val completeJson = schemeDetails._1.as[JsObject] ++ establisherDetails ++ trusteeDetails
-
-    (completeJson,
+    (schemeDetails._1.as[JsObject].transform(jsonTransformer).get,
       schemeDetails._2.as[JsObject] ++ uaEstablisherDetails ++ uaErusteeDetails
     )
   }

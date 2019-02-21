@@ -39,6 +39,8 @@ trait JsonTransformer {
     } orElse {
       (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
         (__ \ userAnswersPath \ 'reason).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
+    } orElse {
+      doNothing
     }
   }
 
@@ -50,7 +52,8 @@ trait JsonTransformer {
     } orElse {
       (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
         (__ \ userAnswersBase \ 'reason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
-
+    } orElse {
+      doNothing
     }
   }
 
@@ -59,11 +62,12 @@ trait JsonTransformer {
       (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((desPath \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
 
 
-
   def userAnswersCompanyDetailsReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'companyDetails \ 'companyName).json.copyFrom((desPath \ 'organisationName).json.pick) and
-      (__ \ 'companyDetails \ 'vatNumber).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) and
-      (__ \ 'companyDetails \ 'payeNumber).json.copyFrom((desPath \ 'payeReference).json.pick) reduce
+      ((__ \ 'companyDetails \ 'vatNumber).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick)
+        orElse doNothing) and
+      ((__ \ 'companyDetails \ 'payeNumber).json.copyFrom((desPath \ 'payeReference).json.pick)
+        orElse doNothing) reduce
 
 
   def userAnswersCrnReads(desPath: JsPath): Reads[JsObject] = {
@@ -75,6 +79,8 @@ trait JsonTransformer {
       (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
         (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
 
+    } orElse {
+      doNothing
     }
   }
 
@@ -87,7 +93,6 @@ trait JsonTransformer {
 
   } orElse {
     (__ \ 'partnershipVat \ 'hasVat).json.put(JsBoolean(false))
-
   }
 
   def userAnswersPayeReads(desPath: JsPath): Reads[JsObject] = (desPath \ "payeReference").read[String].flatMap { _ =>

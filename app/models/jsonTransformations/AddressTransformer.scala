@@ -54,7 +54,7 @@ class AddressTransformer @Inject()() extends JsonTransformer {
         JsString("over_a_year")
       }
       uaAddressYearsPath.json.put(value)
-    }
+    } orElse doNothing
   }
 
   def getPreviousAddress(desPath: JsPath, userAnswersPath: JsPath): Reads[JsObject] = {
