@@ -24,62 +24,66 @@ import play.api.libs.json._
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
                                               directorsOrPartnersTransformer: DirectorsOrPartnersTransformer) extends JsonTransformer {
 
-  def userAnswersEstablishersReads: Reads[JsObject] = {
+
+  val userAnswersEstablishersReads: Reads[JsObject] = {
+    (__ \ 'psaSchemeDetails \ 'establisherDetails).readNullable(__.read(
     (__ \ 'individualDetails).readNullable(
-      __.read(Reads.seq(userAnswersEstablisherIndividualReads)).map(JsArray(_))).flatMap { individual =>
+      __.read(Reads.seq(userAnswersEstablisherIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
       (__ \ 'companyOrOrganisationDetails).readNullable(
-        __.read(Reads.seq(userAnswersEstablisherCompanyReads)).map(JsArray(_))).flatMap { company =>
+        __.read(Reads.seq(userAnswersEstablisherCompanyReads(__))).map(JsArray(_))).flatMap { company =>
         (__ \ 'partnershipTrusteeDetail).readNullable(
-          __.read(Reads.seq(userAnswersEstablisherPartnershipReads)).map(JsArray(_))).flatMap { partnership =>
-          (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
+          __.read(Reads.seq(userAnswersEstablisherPartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
+          (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
         }
       }
+    })).map{ _.getOrElse(Json.obj())
     }
   }
 
-  def userAnswersEstablisherIndividualReads: Reads[JsObject] =
+  def userAnswersEstablisherIndividualReads(desPath: JsPath): Reads[JsObject] = {
     (__ \ 'establisherKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("establisherDetails") and
-      userAnswersNinoReads("establisherNino") and
-      userAnswersUtrReads("uniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'address, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'addressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'previousAddress) and
-      userAnswersContactDetailsReads("contactDetails") and
+      userAnswersIndividualDetailsReads("establisherDetails", desPath) and
+      userAnswersNinoReads("establisherNino", desPath) and
+      userAnswersUtrReads("uniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'address, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'addressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'previousAddress) and
+      userAnswersContactDetailsReads("contactDetails", desPath) and
       (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
+  }
 
-  def userAnswersEstablisherCompanyReads: Reads[JsObject] =
+  def userAnswersEstablisherCompanyReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("company")) and
-      userAnswersCompanyDetailsReads and
-      userAnswersCrnReads and
-      userAnswersUtrReads("companyUniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'companyAddressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
-      userAnswersContactDetailsReads("companyContactDetails") and
+      userAnswersCompanyDetailsReads(desPath) and
+      userAnswersCrnReads(desPath) and
+      userAnswersUtrReads("companyUniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'companyAddressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
+      userAnswersContactDetailsReads("companyContactDetails", desPath) and
       (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) and
-      getDirector reduce
+      getDirector(desPath) reduce
 
-  val getDirector = (__ \ 'directorsDetails).readNullable(
-    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersDirectorReads)).map(JsArray(_))).flatMap { directors =>
+  def getDirector(desPath: JsPath): Reads[JsObject] = (desPath \ 'directorsDetails).readNullable(
+    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersDirectorReads(__))).map(JsArray(_))).flatMap { directors =>
     directors.map(allDirectors => (__ \ 'director).json.put(allDirectors)).getOrElse(doNothing)
   }
 
-  def userAnswersEstablisherPartnershipReads: Reads[JsObject] =
+  def userAnswersEstablisherPartnershipReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("partnership")) and
-      userAnswersPartnershipDetailsReads and
-      transformVatToUserAnswersReads and
-      userAnswersPayeReads and
-      userAnswersUtrReads("partnershipUniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'partnershipAddressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'partnershipPreviousAddress) and
-      userAnswersContactDetailsReads("partnershipContactDetails") and
+      userAnswersPartnershipDetailsReads(desPath) and
+      transformVatToUserAnswersReads(desPath) and
+      userAnswersPayeReads(desPath) and
+      userAnswersUtrReads("partnershipUniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
+      userAnswersContactDetailsReads("partnershipContactDetails", desPath) and
       (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) and
-      getPartner reduce
+      getPartner(desPath) reduce
 
-  val getPartner = (__ \ 'partnerDetails).readNullable(
-    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersPartnerReads)).map(JsArray(_))).flatMap { partners =>
+  def getPartner(desPath: JsPath): Reads[JsObject] = (desPath \ 'partnerDetails).readNullable(
+    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersPartnerReads(__))).map(JsArray(_))).flatMap { partners =>
     partners.map(allPartners => (__ \ 'partner).json.put(allPartners)).getOrElse(doNothing)
   }
 }

@@ -23,7 +23,7 @@ import play.api.libs.json._
 
 class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def userAnswersTrusteesReads: Reads[JsObject] = {
+  val userAnswersTrusteesReads: Reads[JsObject] = {
     (__ \ 'individualDetails).readNullable(
       __.read(Reads.seq(userAnswersTrusteeIndividualReads)).map(JsArray(_))).flatMap { individual =>
       (__ \ 'companyOrOrganisationDetails).readNullable(
@@ -36,37 +36,37 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
     }
   }
 
-  def userAnswersTrusteeIndividualReads: Reads[JsObject] =
+  val userAnswersTrusteeIndividualReads: Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("trusteeDetails") and
-      userAnswersNinoReads("trusteeNino") and
-      userAnswersUtrReads("uniqueTaxReference") and
+      //userAnswersIndividualDetailsReads("trusteeDetails") and
+      //userAnswersNinoReads("trusteeNino") and
+      //userAnswersUtrReads("uniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'trusteeAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'trusteePreviousAddress) and
-      userAnswersContactDetailsReads("trusteeContactDetails") and
+      //userAnswersContactDetailsReads("trusteeContactDetails") and
       (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
 
-  def userAnswersTrusteeCompanyReads: Reads[JsObject] =
+  val userAnswersTrusteeCompanyReads: Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
-      userAnswersCompanyDetailsReads and
-      userAnswersCrnReads and
-      userAnswersUtrReads("companyUniqueTaxReference") and
+      //userAnswersCompanyDetailsReads and
+      //userAnswersCrnReads and
+      //userAnswersUtrReads("companyUniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'trusteesCompanyAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'companyPreviousAddress) and
-      userAnswersContactDetailsReads("companyContactDetails") and
+      //userAnswersContactDetailsReads("companyContactDetails") and
       (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
 
-  def userAnswersTrusteePartnershipReads: Reads[JsObject] =
+  val userAnswersTrusteePartnershipReads: Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and
-      userAnswersPartnershipDetailsReads and
-      transformVatToUserAnswersReads and
-      userAnswersPayeReads and
-      userAnswersUtrReads("partnershipUniqueTaxReference") and
+      //userAnswersPartnershipDetailsReads and
+      //transformVatToUserAnswersReads and
+      //userAnswersPayeReads and
+      //userAnswersUtrReads("partnershipUniqueTaxReference") and
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, __ \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(__, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(__, __ \ 'partnershipPreviousAddress) and
-      userAnswersContactDetailsReads("partnershipContactDetails") and
+      //userAnswersContactDetailsReads("partnershipContactDetails") and
       (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
 }
