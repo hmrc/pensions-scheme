@@ -86,21 +86,21 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
 
-      testFixture().schemeService.transformJsonToModel(pensionsSchemeJson) shouldBe a[Right[_, PensionsScheme]]
+      testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads) shouldBe a[Right[_, PensionsScheme]]
 
     }
 
     it should "return a flag that says whether there has been any changes on establishers or trustee details" in {
       val inputWithUpdatedTrusteesOrEstablishers = pensionsSchemeJson.as[JsObject] ++ Json.obj("isEstablisherOrTrusteeDetailsChanged" -> true)
 
-      val result = testFixture().schemeService.transformJsonToModel(inputWithUpdatedTrusteesOrEstablishers)
+      val result = testFixture().schemeService.transformJsonToModel(inputWithUpdatedTrusteesOrEstablishers, PensionSchemeDeclaration.apiReads)
 
       result.right.get.isEstablisherOrTrusteeDetailsChanged mustBe Some(true)
     }
 
     it should "return a BadRequestException if the JSON is invalid" in {
 
-      testFixture().schemeService.transformJsonToModel(Json.obj()) shouldBe a[Left[BadRequestException, _]]
+      testFixture().schemeService.transformJsonToModel(Json.obj(), PensionSchemeDeclaration.apiReads) shouldBe a[Left[BadRequestException, _]]
 
     }
 
@@ -439,7 +439,7 @@ object SchemeServiceSpec extends SpecBase {
 
   def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
 
-    service.transformJsonToModel(pensionsSchemeJson).fold(
+    service.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads).fold(
       ex => throw ex,
       scheme => Json.toJson(scheme)
     )

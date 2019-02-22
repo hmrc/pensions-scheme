@@ -221,10 +221,14 @@ object Declaration {
   }
 }
 
-case class PensionSchemeUpdateDeclaration(declaration1: Boolean) extends Declaration
+case class PensionSchemeUpdateDeclaration(declaration: Boolean) extends Declaration
+
 object PensionSchemeUpdateDeclaration{
+
   implicit val reads = Json.reads[PensionSchemeUpdateDeclaration]
-  implicit val writes = Json.writes[PensionSchemeUpdateDeclaration]
+
+  implicit val writes : Writes[PensionSchemeUpdateDeclaration] = (__ \ "declaration1").write[Boolean].contramap(
+    (f: PensionSchemeUpdateDeclaration) => f.declaration)
 }
 
 case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,
