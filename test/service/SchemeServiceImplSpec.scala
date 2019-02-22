@@ -123,7 +123,7 @@ class FakeSchemeConnector extends SchemeConnector {
   private var registerSchemeResponse = Future.successful(
     HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
 
-  private var updateSchemeResponse = Future.successful(HttpResponse(Status.OK))
+  protected var updateSchemeResponse = Future.successful(HttpResponse(Status.OK))
 
   private var listOfSchemesResponse =
     Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))

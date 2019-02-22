@@ -41,7 +41,7 @@ object AppDependencies {
   val compile = Seq(
       ws,
     "uk.gov.hmrc"             %% "simple-reactivemongo"   % reactiveMongoVersion,
-    "com.typesafe.play"       %% "play-json"              % playJsonVersion,
+    "com.typesafe.play"       %% "play-json"              % "2.6.10",
     "com.typesafe.play"       %% "play-json-joda"         % playJsonVersion,
     "uk.gov.hmrc"             %% "bootstrap-play-26"      % bootstrapVersion,
     "com.networknt"           %  "json-schema-validator"  % jsonSchemeValidatorVersion,
