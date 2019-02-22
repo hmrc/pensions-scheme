@@ -347,7 +347,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
   }
 
   "updateScheme" should "return the result of submitting the pensions scheme and have the right declaration type" in {
-    class FakeSchemeConnector2 extends FakeSchemeConnector {
+    class FakeSchemeConnectorStoreJson extends FakeSchemeConnector {
       var lastUpdateSchemeDetailsdata: JsValue = JsNull
 
       override def updateSchemeDetails(pstr: String, data: JsValue)(
@@ -358,7 +358,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     }
 
     trait TestFixture {
-      val schemeConnector: FakeSchemeConnector2 = new FakeSchemeConnector2()
+      val schemeConnector: FakeSchemeConnectorStoreJson = new FakeSchemeConnectorStoreJson()
       val barsConnector: FakeBarsConnector = new FakeBarsConnector()
       val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
       val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
