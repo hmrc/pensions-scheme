@@ -23,7 +23,6 @@ import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.JsValue
 import utils.PensionSchemeJsValueGenerators
 
-
 class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
   private val addressTransformer = new AddressTransformer()
   private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)

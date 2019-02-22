@@ -19,11 +19,8 @@ package utils
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import org.scalacheck.Gen
 import org.scalacheck.Gen.const
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
-import com.google.inject.Inject
-import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json._
+import play.api.libs.json.{JsObject, JsValue, Json, _}
 
 trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
@@ -220,8 +217,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val pa = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
     val desPartners = if (isEstablisher) Json.obj("partnerDetails" -> partnerDetails.map(_._1)) else Json.obj()
     val uaPartners = if (isEstablisher) Json.obj("partner" -> partnerDetails.map(_._2)) else Json.obj()
-    val desMoreThanTenPartner = if(isEstablisher) Json.obj("areMorethanTenPartners" -> areMorethanTenPartners) else Json.obj()
-    val uaMoreThanTenPartner = if(isEstablisher) Json.obj("otherPartners" -> areMorethanTenPartners) else Json.obj()
+    val desMoreThanTenPartner = if (isEstablisher) Json.obj("areMorethanTenPartners" -> areMorethanTenPartners) else Json.obj()
+    val uaMoreThanTenPartner = if (isEstablisher) Json.obj("otherPartners" -> areMorethanTenPartners) else Json.obj()
     (
       Json.obj(
         "partnershipName" -> orgName,
@@ -279,11 +276,11 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "trusteeDetails" -> desTrustees
       )
     )
-    val lisOfAll = uaIndividualDetails ++ uaCompanyDetails ++ uaPartnershipDetails
+    val lisOfAllUserAnswersEstablishers = uaIndividualDetails ++ uaCompanyDetails ++ uaPartnershipDetails
     (
       if (isEstablisher) desEstablishersJson else desTrusteesJson,
       Json.obj(
-        (if (isEstablisher) "establishers" else "trustees") -> lisOfAll
+        (if (isEstablisher) "establishers" else "trustees") -> lisOfAllUserAnswersEstablishers
       )
     )
   }
@@ -386,11 +383,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         moreThanTenTrustees.map { value => Json.obj("hasMoreThanTenTrustees" -> value) }.getOrElse(Json.obj()) ++
         optional("insuranceCompanyName", insuranceCompanyName)
 
-    (Json.obj(
-      "psaSchemeDetails" -> Json.obj(
-        "schemeDetails" -> schemeDetails
-      )
-    ),
+    (
+      Json.obj(
+        "psaSchemeDetails" -> Json.obj(
+          "schemeDetails" -> schemeDetails
+        )
+      ),
       Json.obj(
         "schemeName" -> schemeName,
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
@@ -412,8 +410,10 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     establishers <- Gen.option(establisherOrTrusteeJsValueGen(true))
     trustees <- Gen.option(establisherOrTrusteeJsValueGen(false))
   } yield {
-    val establisherDetails = establishers.map { est => est._1 }.getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
-    val trusteeDetails = trustees.map { trustee => trustee._1 }.getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
+    val (desSchemeDetails, uaSchemeDetails) = schemeDetails
+    val establisherDetails = establishers.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
+    val trusteeDetails = trustees.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
+
     val branch = (__ \ 'psaSchemeDetails).json.pick
     val desEstablishers = establisherDetails.transform(branch).get
     val desTrustee = trusteeDetails.transform(branch).get
@@ -425,8 +425,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       __.read[JsObject].map { o => o ++ desEstablishers.as[JsObject] ++ desTrustee.as[JsObject] }
     ).orElse(__.json.put(Json.obj()))
 
-    (schemeDetails._1.as[JsObject].transform(jsonTransformer).get,
-      schemeDetails._2.as[JsObject] ++ uaEstablisherDetails ++ uaErusteeDetails
+    (desSchemeDetails.as[JsObject].transform(jsonTransformer).get,
+      uaSchemeDetails.as[JsObject] ++ uaEstablisherDetails ++ uaErusteeDetails
     )
   }
 }
