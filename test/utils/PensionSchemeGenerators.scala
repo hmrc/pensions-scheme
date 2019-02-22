@@ -169,6 +169,7 @@ trait PensionSchemeGenerators {
     schemeName <- specialCharStringGen
     isSchemeMasterTrust <- boolenGen
     schemeStructure <- schemeTypeGen
+    haveMoreThanTenTrustee <- Gen.option(booleanGen)
     currentSchemeMembers <- memberGen
     futureSchemeMembers <- memberGen
     isReguledSchemeInvestment <- boolenGen
@@ -182,7 +183,7 @@ trait PensionSchemeGenerators {
     insuranceCompanyAddress <- Gen.option(internationalAddressGen)
     isInsuranceDetailsChanged <- Gen.option(boolenGen)
   } yield CustomerAndSchemeDetails(schemeName, isSchemeMasterTrust, schemeStructure,
-    otherSchemeStructure = None, haveMoreThanTenTrustee = None,
+    otherSchemeStructure = None, haveMoreThanTenTrustee,
     currentSchemeMembers, futureSchemeMembers, isReguledSchemeInvestment,
     isOccupationalPensionScheme, areBenefitsSecuredContractInsuranceCompany,
     doesSchemeProvideBenefits, schemeEstablishedCountry, haveInvalidBank,

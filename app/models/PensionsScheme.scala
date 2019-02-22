@@ -598,14 +598,10 @@ object PensionsScheme {
     schemeDetails.customerAndSchemeDetails,
     schemeDetails.pensionSchemeDeclaration,
     (schemeDetails.isEstablisherOrTrusteeDetailsChanged.getOrElse(false),
-      Some(haveMoreThanTenTrustees(schemeDetails.trusteeDetails)),
+      Some(schemeDetails.customerAndSchemeDetails.haveMoreThanTenTrustee.getOrElse(false)),
       schemeDetails.establisherDetails,
       getOptionalTrustee(schemeDetails.trusteeDetails)))
   )
-
-  private def haveMoreThanTenTrustees(trusteeDetails: TrusteeDetails) : Boolean ={
-    trusteeDetails.companyTrusteeDetail.length + trusteeDetails.individualTrusteeDetail.length + trusteeDetails.partnershipTrusteeDetail.length > 10
-  }
 
   private def getOptionalTrustee(trusteeDetails: TrusteeDetails): Option[TrusteeDetails] = {
     if(trusteeDetails.companyTrusteeDetail.isEmpty &&
