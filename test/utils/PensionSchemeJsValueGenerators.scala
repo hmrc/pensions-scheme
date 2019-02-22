@@ -308,7 +308,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       schemeStructure.map(schemeType => Json.obj("name" -> SchemeType.nameWithValue(schemeType))).getOrElse(Json.obj())
     val otherDetails = optional("schemeTypeDetails", otherPensionSchemeStructure)
     val schemeType = schemeTypeName ++ otherDetails
-    val schemeTypeJs = if (isSchemeMasterTrust.nonEmpty | schemeStructure.nonEmpty | otherPensionSchemeStructure.nonEmpty)
+    val schemeTypeJs = if (isSchemeMasterTrust.contains(true) | schemeStructure.nonEmpty | otherPensionSchemeStructure.nonEmpty)
       Json.obj("schemeType" -> schemeType) else Json.obj()
     (
       Json.obj(
