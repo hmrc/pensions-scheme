@@ -12,12 +12,15 @@ POST          /journey-cache/scheme/:id                    controllers.SchemeJou
 DELETE        /journey-cache/scheme/:id                    controllers.SchemeJourneyCacheController.remove(id: String)
 GET           /journey-cache/scheme/:id/lastUpdated        controllers.SchemeJourneyCacheController.lastUpdated(id: String)
 
+# answers caching in protected mongo
+GET           /journey-cache/update-scheme/:id                    controllers.UpdateSchemeJourneyCacheController.get(id: String)
+POST          /journey-cache/update-scheme/:id                    controllers.UpdateSchemeJourneyCacheController.save(id: String)
+DELETE        /journey-cache/update-scheme/:id                    controllers.UpdateSchemeJourneyCacheController.remove(id: String)
+GET           /journey-cache/update-scheme/:id/lastUpdated        controllers.UpdateSchemeJourneyCacheController.lastUpdated(id: String)
+
 GET           /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.get(id: String)
 POST          /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.save(id: String)
 DELETE        /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.remove(id: String)
-
-GET           /psa-name/*id                                controllers.PSANameController.get(id: String)
-POST          /psa-name/*id                                controllers.PSANameController.save(id: String)
 
 POST          /email-response/*id                          controllers.EmailResponseController.retrieveStatus(id: String)
 
