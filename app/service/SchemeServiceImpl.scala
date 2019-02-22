@@ -91,11 +91,9 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
     val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] = CustomerAndSchemeDetails.apiReads
 
-    val readsDeclaration = PensionSchemeDeclaration.apiReads
-
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
-      declaration <- json.validate[PensionSchemeDeclaration](readsDeclaration)
+      declaration <- json.validate[A](readsDeclaration)
       establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
       isEstablisherOrTrusteeDetailsChanged <- json.validate[Option[Boolean]]((JsPath \ "isEstablisherOrTrusteeDetailsChanged").readNullable[Boolean])
