@@ -80,8 +80,49 @@
         "addressLine3": "line3",
         "addressLine4": "line4"
       },
+      "partner": [
+        {
+          "partnerNino": {
+            "hasNino": false,
+            "reason": "no Nino"
+          },
+          "partnerPreviousAddress": {
+            "country": "AD",
+            "postcode": "ST36TR",
+            "addressLine1": "addline1 partner",
+            "addressLine2": "addline2 partner",
+            "addressLine3": "addline3 partner",
+            "addressLine4": "addline4 partner"
+          },
+          "partnerContactDetails": {
+            "emailAddress": "abcfe@hmrc.gsi.gov.uk",
+            "phoneNumber": "0044-09876542312"
+          },
+          "partnerUniqueTaxReference": {
+            "utr": "1234567890",
+            "hasUtr": true
+          },
+          "partnerDetails": {
+            "date": "2001-03-29",
+            "firstName": "abcdef partner",
+            "lastName": "dfgfdgdfg partner",
+            "middleName": "fdgdgfggfdg partner"
+          },
+          "partnerAddressId": {
+            "country": "GB",
+            "postcode": "LE45RT",
+            "addressLine1": "line1 partner",
+            "addressLine2": "line2 partner",
+            "addressLine3": "line3 partner",
+            "addressLine4": "line4 partner"
+          },
+          "partnerAddressYears": "under_a_year",
+          "isPartnerComplete": true
+        }
+      ],
       "establisherKind": "partnership",
       "isPartnershipCompleteId": true,
+      "otherPartners": false,
       "partnershipAddressYears": "under_a_year",
       "partnershipVat": {
         "hasVat": false

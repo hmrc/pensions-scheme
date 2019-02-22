@@ -139,12 +139,52 @@
               "postalCode": "ST36TR",
               "countryCode": "AD"
             }
-          }
+          },
+          "partnerDetails": [
+            {
+              "personDetails": {
+                "title": "Mr",
+                "firstName": "abcdef partner",
+                "middleName": "fdgdgfggfdg partner",
+                "lastName": "dfgfdgdfg partner",
+                "dateOfBirth": "2001-03-29"
+              },
+              "noNinoReason": "no Nino",
+              "utr": "1234567890",
+              "correspondenceAddressDetails": {
+                "nonUKAddress": true,
+                "line1": "line1 partner",
+                "line2": "line2 partner",
+                "line3": "line3 partner",
+                "line4": "line4 partner",
+                "postalCode": "LE45RT",
+                "countryCode": "GB"
+              },
+              "correspondenceContactDetails": {
+                "telephone": "0044-09876542312",
+                "mobileNumber": "0044-09876542312",
+                "fax": "0044-09876542312",
+                "email": "abcfe@hmrc.gsi.gov.uk"
+              },
+              "previousAddressDetails": {
+                "isPreviousAddressLast12Month": true,
+                "previousAddress": {
+                  "nonUKAddress": true,
+                  "line1": "addline1 partner",
+                  "line2": "addline2 partner",
+                  "line3": "addline3 partner",
+                  "line4": "addline4 partner",
+                  "postalCode": "ST36TR",
+                  "countryCode": "AD"
+                }
+              }
+            }
+          ]
         }
       ]
     },
     "trusteeDetails": {
-      "individualTrusteeDetails" : [
+      "individualTrusteeDetails": [
         {
           "personDetails": {
             "title": "Mr",
@@ -184,39 +224,39 @@
       ],
       "companyTrusteeDetails": [
         {
-        "organisationName" : "trustee org",
-        "correspondenceAddressDetails": {
-          "nonUKAddress": false,
-          "line1": "addressline1 trustee comp",
-          "line2": "addressline2 trustee comp",
-          "line3": "addressline3 trustee comp",
-          "line4": "addressline4 trustee comp",
-          "postalCode": "TF3 5TR",
-          "countryCode": "GB"
-        },
-        "previousAddressDetails": {
-          "isPreviousAddressLast12Month": true,
-          "previousAddress": {
-            "nonUKAddress": true,
-            "line1": "sddsfsfsdf trustee comp",
-            "line2": "sddsfsdf trustee comp",
-            "line3": "sdfdsfsdf trustee comp",
-            "line4": "sfdsfsdf trustee comp",
-            "postalCode": "4565465467",
-            "countryCode": "AD"
+          "organisationName": "trustee org",
+          "correspondenceAddressDetails": {
+            "nonUKAddress": false,
+            "line1": "addressline1 trustee comp",
+            "line2": "addressline2 trustee comp",
+            "line3": "addressline3 trustee comp",
+            "line4": "addressline4 trustee comp",
+            "postalCode": "TF3 5TR",
+            "countryCode": "GB"
+          },
+          "previousAddressDetails": {
+            "isPreviousAddressLast12Month": true,
+            "previousAddress": {
+              "nonUKAddress": true,
+              "line1": "sddsfsfsdf trustee comp",
+              "line2": "sddsfsdf trustee comp",
+              "line3": "sdfdsfsdf trustee comp",
+              "line4": "sfdsfsdf trustee comp",
+              "postalCode": "4565465467",
+              "countryCode": "AD"
+            }
+          },
+          "correspondenceContactDetails": {
+            "telephone": "0044-09876542334",
+            "mobileNumber": "0044-09876542312",
+            "fax": "0044-09876542312",
+            "email": "aaa@trusteecomp.com"
           }
-        },
-        "correspondenceContactDetails": {
-          "telephone": "0044-09876542334",
-          "mobileNumber": "0044-09876542312",
-          "fax": "0044-09876542312",
-          "email": "aaa@trusteecomp.com"
         }
-      }
       ],
       "partnershipTrusteeDetails": [
         {
-         "partnershipName": "test partnership",
+          "partnershipName": "test partnership",
           "correspondenceAddressDetails": {
             "nonUKAddress": false,
             "line1": "addressline1 trustee part",
