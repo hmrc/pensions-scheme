@@ -158,6 +158,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
     directorDetails <- Gen.option(Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("director")))
+    haveMoreThanTenDirectors <- Gen.option(booleanGen)
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
     val (desAddress, userAnswersAddress) = address
@@ -182,6 +183,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "previousAddressDetails" -> pa
       ) ++ desAddress.as[JsObject] ++ optionalWithReason("utr", utr, "noUtrReason")
         ++ optionalWithReason("crnNumber", crn, "noCrnReason")
+        ++ haveMoreThanTenDirectors.map { value => Json.obj("haveMoreThanTenDirectors" -> value)}.getOrElse(Json.obj())
         ++ desDirectors,
       Json.obj(
         (if (isEstablisher) "establisherKind" else "trusteeKind") -> "company",
@@ -197,6 +199,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         (if (isEstablisher) "isCompanyComplete" else "isTrusteeComplete") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
+        ++ haveMoreThanTenDirectors.map { value => Json.obj("otherDirectors" -> value)}.getOrElse(Json.obj())
         ++ uaDirectors
     )
   }
@@ -209,27 +212,21 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
-    partnerDetails <- Gen.option(Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("partner")))
+    partnerDetails <- Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("partner"))
+    areMorethanTenPartners <- booleanGen
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
     val (desAddress, userAnswersAddress) = address
     val (desContactDetails, userAnswersContactDetails) = contactDetails
     val pa = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
-    val desPartners = if (isEstablisher) partnerDetails.map { pd =>
-      if (pd.nonEmpty) Json.obj("partnerDetails" -> pd.map {
-        _._1
-      }) else Json.obj()
-    }.getOrElse(Json.obj()) else Json.obj()
-    val uaPartners = if (isEstablisher) partnerDetails.map { pd =>
-      if (pd.nonEmpty) Json.obj("partner" -> pd.map {
-        _._2
-      }) else Json.obj()
-    }.getOrElse(Json.obj()) else Json.obj()
+    val desPartners = if (isEstablisher) Json.obj("partnerDetails" -> partnerDetails.map(_._1)) else Json.obj()
+    val uaPartners = if (isEstablisher) Json.obj("partner" -> partnerDetails.map(_._2)) else Json.obj()
     (
       Json.obj(
         "partnershipName" -> orgName,
         "correspondenceContactDetails" -> desContactDetails,
-        "previousAddressDetails" -> pa
+        "previousAddressDetails" -> pa,
+        "areMorethanTenPartners" -> areMorethanTenPartners
       ) ++ desAddress.as[JsObject] ++ optional("vatRegistrationNumber", vat)
         ++ optionalWithReason("utr", utr, "noUtrReason")
         ++ optional("payeReference", paye)
@@ -244,7 +241,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "partnershipUniqueTaxReference" -> utrJsValue(utr),
         "partnershipAddressYears" -> "under_a_year",
         "partnershipContactDetails" -> userAnswersContactDetails,
-        "isPartnershipCompleteId" -> true
+        "isPartnershipCompleteId" -> true,
+        "otherPartners" -> areMorethanTenPartners
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ uaPartners

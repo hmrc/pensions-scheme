@@ -27,16 +27,17 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
 
   val userAnswersEstablishersReads: Reads[JsObject] = {
     (__ \ 'psaSchemeDetails \ 'establisherDetails).readNullable(__.read(
-    (__ \ 'individualDetails).readNullable(
-      __.read(Reads.seq(userAnswersEstablisherIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
-      (__ \ 'companyOrOrganisationDetails).readNullable(
-        __.read(Reads.seq(userAnswersEstablisherCompanyReads(__))).map(JsArray(_))).flatMap { company =>
-        (__ \ 'partnershipTrusteeDetail).readNullable(
-          __.read(Reads.seq(userAnswersEstablisherPartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
-          (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
+      (__ \ 'individualDetails).readNullable(
+        __.read(Reads.seq(userAnswersEstablisherIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
+        (__ \ 'companyOrOrganisationDetails).readNullable(
+          __.read(Reads.seq(userAnswersEstablisherCompanyReads(__))).map(JsArray(_))).flatMap { company =>
+          (__ \ 'partnershipTrusteeDetail).readNullable(
+            __.read(Reads.seq(userAnswersEstablisherPartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
+            (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
+          }
         }
-      }
-    })).map{ _.getOrElse(Json.obj())
+      })).map {
+      _.getOrElse(Json.obj())
     }
   }
 
@@ -61,6 +62,7 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getAddressYears(desPath, __ \ 'companyAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
       userAnswersContactDetailsReads("companyContactDetails", desPath) and
+      ((__ \ 'otherDirectors).json.copyFrom((desPath \ 'haveMoreThanTenDirectors).json.pick) orElse doNothing) and
       (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) and
       getDirector(desPath) reduce
 
@@ -79,11 +81,12 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
       userAnswersContactDetailsReads("partnershipContactDetails", desPath) and
+      (__ \ 'otherPartners).json.copyFrom((desPath \ 'areMorethanTenPartners).json.pick) and
       (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) and
       getPartner(desPath) reduce
 
-  def getPartner(desPath: JsPath): Reads[JsObject] = (desPath \ 'partnerDetails).readNullable(
-    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersPartnerReads(__))).map(JsArray(_))).flatMap { partners =>
-    partners.map(allPartners => (__ \ 'partner).json.put(allPartners)).getOrElse(doNothing)
-  }
+  def getPartner(desPath: JsPath): Reads[JsObject] = (desPath \ 'partnerDetails).read(
+    __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersPartnerReads(__))).map(JsArray(_))).flatMap(
+    partners => (__ \ 'partner).json.put(partners)
+  )
 }

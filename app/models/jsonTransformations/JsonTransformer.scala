@@ -38,7 +38,7 @@ trait JsonTransformer {
 
     } orElse {
       (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
-        (__ \ userAnswersPath \ 'reason).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
+        (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
     } orElse {
       doNothing
     }
