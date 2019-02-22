@@ -29,6 +29,9 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 import utils.Lens
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{__, _}
 
 import scala.concurrent.Future
 
@@ -90,6 +93,22 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     }
 
+    it should "return a pensions scheme object given valid JSON with correct register scheme declaration reads" in {
+
+      val result = testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads)
+
+      Json.toJson(result.right.get).transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt shouldBe None
+
+    }
+
+    it should "return a pensions scheme object given valid JSON with correct update scheme declaration reads" in {
+
+      val result = testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeUpdateDeclaration.reads)
+
+      Json.toJson(result.right.get).transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt shouldBe Some(JsBoolean(false))
+
+    }
+
     it should "return a flag that says whether there has been any changes on establishers or trustee details" in {
       val inputWithUpdatedTrusteesOrEstablishers = pensionsSchemeJson.as[JsObject] ++ Json.obj("isEstablisherOrTrusteeDetailsChanged" -> true)
 
@@ -110,7 +129,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
         response =>
           response.status shouldBe Status.OK
           val json = Json.parse(response.body)
+
+          json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt  mustBe None
+
           json.validate[SchemeRegistrationResponse] shouldBe JsSuccess(schemeRegistrationResponse)
+
+
       }
 
     }
@@ -324,6 +348,20 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     }
 
+  "updateScheme" should "return the result of submitting the pensions scheme" in {
+
+    testFixture().schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
+      response =>
+
+        response.status shouldBe Status.OK
+
+    }
+
+  }
+
+
+
+
 }
 
 object SchemeServiceSpec extends SpecBase {
@@ -339,6 +377,7 @@ object SchemeServiceSpec extends SpecBase {
   def testFixture(): TestFixture = new TestFixture() {}
 
   val psaId: String = "test-psa-id"
+  val pstr: String = "test-pstr"
   val invalidAccountNumber: String = "111"
   val notInvalidAccountNumber: String = "112"
 

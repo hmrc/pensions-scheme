@@ -122,6 +122,9 @@ class FakeSchemeConnector extends SchemeConnector {
 
   private var registerSchemeResponse = Future.successful(
     HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
+
+  private var updateSchemeResponse = Future.successful(HttpResponse(Status.OK))
+
   private var listOfSchemesResponse =
     Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))
 
@@ -155,7 +158,7 @@ class FakeSchemeConnector extends SchemeConnector {
     "4725c81192514c069b8ff1d84659b2df"
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(
-    implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = ???
+    implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = updateSchemeResponse
 }
 
 object FakeSchemeConnector extends SchemeDetailsStubData {
