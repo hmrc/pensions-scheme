@@ -74,7 +74,7 @@ trait SchemeDetailsStubJsonData {
     "otherPensionSchemeStructure" -> "Other type",
     "hasMoreThanTenTrustees" -> JsBoolean(true),
     "currentSchemeMembers" -> "1",
-    "futureSchemeMembers" -> "2",
+    "futureSchemeMembers" -> "0",
     "isReguledSchemeInvestment" -> JsBoolean(true),
     "isOccupationalPensionScheme" -> JsBoolean(true),
     "schemeProvideBenefits" -> "Defined Benefits only",

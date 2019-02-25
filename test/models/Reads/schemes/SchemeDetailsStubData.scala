@@ -56,7 +56,7 @@ trait SchemeDetailsStubData {
       Some("Other"),
       Some("Other type"),
       hasMoreThanTenTrustees=true,
-      SchemeMemberNumbers("1","2"),
+      SchemeMemberNumbers("1","0"),
       isInvestmentRegulated=true,
       isOccupational=true,
       "Defined Benefits only",

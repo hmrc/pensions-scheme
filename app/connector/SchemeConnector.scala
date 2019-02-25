@@ -99,6 +99,13 @@ class SchemeConnectorImpl @Inject()(
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
       case OK =>
+        val temporaryMappingTest = response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers)
+        if (temporaryMappingTest.isSuccess)
+          Logger.warn("PensionsSchemeSuccessfulMapToUserAnswers")
+        else {
+          Logger.warn(s"PensionsSchemeFailedMapToUserAnswers - [$temporaryMappingTest]")
+        }
+
         response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
         _ => {
           invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
