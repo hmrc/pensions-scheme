@@ -27,7 +27,7 @@ class SchemeSubscriptionDetailsTransformer @Inject()(schemeDetailsTransformer: S
                                                      trusteeDetailsTransformer: TrusteeDetailsTransformer
                                                     ) extends JsonTransformer {
 
-  val userAnswersSchemeSubscriptionDetailsReads: Reads[JsObject] =
+  val transformToUserAnswers: Reads[JsObject] =
       schemeDetailsTransformer.userAnswersSchemeDetailsReads and
       establisherDetailsTransformer.userAnswersEstablishersReads and
       trusteeDetailsTransformer.userAnswersTrusteesReads reduce

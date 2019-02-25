@@ -42,14 +42,14 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
           schemeDetails => {
             val (desScheme, uaScheme) = schemeDetails
 
-            val result = desScheme.transform(transformer.userAnswersSchemeSubscriptionDetailsReads).get
+            val result = desScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
           }
         }
       }
 
       s"uses request/response json" in {
-        val result = desResponse.transform(transformer.userAnswersSchemeSubscriptionDetailsReads).get
+        val result = desResponse.transform(transformer.transformToUserAnswers).get
         result mustBe userAnswersResponse
       }
     }

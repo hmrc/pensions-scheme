@@ -20,7 +20,8 @@ import java.util.UUID.randomUUID
 
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
-import config.AppConfig
+import config.{AppConfig, FeatureSwitchManagementService}
+import models.jsonTransformations.SchemeSubscriptionDetailsTransformer
 import models.schemes.PsaSchemeDetails
 import play.Logger
 import play.api.http.Status._
@@ -29,9 +30,10 @@ import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.InvalidPayloadHandler
+import utils.Toggles._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
@@ -62,8 +64,12 @@ class SchemeConnectorImpl @Inject()(
                                      http: HttpClient,
                                      config: AppConfig,
                                      auditService: AuditService,
-                                     invalidPayloadHandler: InvalidPayloadHandler
+                                     invalidPayloadHandler: InvalidPayloadHandler,
+                                     schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
+                                     fs: FeatureSwitchManagementService
                                    ) extends SchemeConnector with HttpErrorFunctions {
+
+  case class SchemeFailedMapToUserAnswersException() extends Exception
 
   def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
     val requestId = getCorrelationId(hc.requestId.map(_.value))
@@ -92,12 +98,20 @@ class SchemeConnectorImpl @Inject()(
 
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
-      case OK => response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
-        error => {
+      case OK =>
+        response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
+        _ => {
           invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
           Left(new BadRequestException("INVALID PAYLOAD"))
         },
-        value => Right(value))
+        value =>{
+          if(fs.get(IsVariationsEnabled)) {
+            val userAnswersJson = response.json.transform(
+              schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
+            Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
+          }
+          Right(value)
+        })
       case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
       case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
       case NOT_FOUND => Left(new NotFoundException(response.body))
@@ -165,10 +179,10 @@ class SchemeConnectorImpl @Inject()(
     Logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
 
     http.POST(updateSchemeUrl, data)(implicitly[Writes[JsValue]],
-    implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
-    .andThen {
-    case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
-    invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
-  }
+      implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
+      .andThen {
+        case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
+          invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
+      }
   }
 }
