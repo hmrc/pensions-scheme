@@ -29,7 +29,7 @@ class PensionSchemeDeclarationWriteSpec extends WordSpec with MustMatchers with 
 
       val declaration = PensionSchemeUpdateDeclaration(true)
 
-      val valid = Json.toJson("pensionSchemeDeclaration" -> Json.toJson(declaration))
+      val valid = Json.toJson("pensionSchemeDeclaration" -> Json.toJson(declaration)(PensionSchemeUpdateDeclaration.writes))
 
       val result = validateJson(elementToValidate = valid,
         schemaFileName = "api1468_schema.json",

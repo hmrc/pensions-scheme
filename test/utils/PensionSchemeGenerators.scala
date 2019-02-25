@@ -169,6 +169,7 @@ trait PensionSchemeGenerators {
     schemeName <- specialCharStringGen
     isSchemeMasterTrust <- boolenGen
     schemeStructure <- schemeTypeGen
+    haveMoreThanTenTrustee <- Gen.option(booleanGen)
     currentSchemeMembers <- memberGen
     futureSchemeMembers <- memberGen
     isReguledSchemeInvestment <- boolenGen
@@ -182,13 +183,35 @@ trait PensionSchemeGenerators {
     insuranceCompanyAddress <- Gen.option(internationalAddressGen)
     isInsuranceDetailsChanged <- Gen.option(boolenGen)
   } yield CustomerAndSchemeDetails(schemeName, isSchemeMasterTrust, schemeStructure,
-    otherSchemeStructure = None, haveMoreThanTenTrustee = None,
+    otherSchemeStructure = None, haveMoreThanTenTrustee,
     currentSchemeMembers, futureSchemeMembers, isReguledSchemeInvestment,
     isOccupationalPensionScheme, areBenefitsSecuredContractInsuranceCompany,
     doesSchemeProvideBenefits, schemeEstablishedCountry, haveInvalidBank,
     insuranceCompanyName, policyNumber,
     insuranceCompanyAddress, isInsuranceDetailsChanged)
 
+
+
+  val establisherAndTrustDetailsGen : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
+    changeOfEstablisherOrTrustDetails <- booleanGen
+    haveMoreThanTenTrustees <- Gen.option(booleanGen)
+    establisherDetails <- establisherDetailsGen
+    trusteeDetailsType <- Gen.option(trusteeDetailsGen).suchThat(_.nonEmpty)
+  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+
+  val pensionSchemeUpdateDeclarationGen: Gen[PensionSchemeUpdateDeclaration] = for {
+    declaration1 <- booleanGen
+  } yield PensionSchemeUpdateDeclaration(declaration1)
+
+  val schemeDetailsVariationGen: Gen[PensionsScheme]  = for {
+    schemeDetails <- CustomerAndSchemeDetailsGen
+    pensionSchemeDeclaration <- pensionSchemeUpdateDeclarationGen
+    establisherAndTrustDetailsType <- establisherAndTrustDetailsGen
+  } yield PensionsScheme(schemeDetails,
+    pensionSchemeDeclaration,
+    establisherAndTrustDetailsType._3,
+    establisherAndTrustDetailsType._4.get
+  )
 
   val schemeProvideBenefitsGen = Gen.oneOf(Seq("Money Purchase benefits only (defined contribution)",
                                                 "Defined Benefits only",

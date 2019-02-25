@@ -221,10 +221,14 @@ object Declaration {
   }
 }
 
-case class PensionSchemeUpdateDeclaration(declaration1: Boolean) extends Declaration
+case class PensionSchemeUpdateDeclaration(declaration: Boolean) extends Declaration
+
 object PensionSchemeUpdateDeclaration{
+
   implicit val reads = Json.reads[PensionSchemeUpdateDeclaration]
-  implicit val writes = Json.writes[PensionSchemeUpdateDeclaration]
+
+  implicit val writes : Writes[PensionSchemeUpdateDeclaration] = (__ \ "declaration1").write[Boolean].contramap(
+    (f: PensionSchemeUpdateDeclaration) => f.declaration)
 }
 
 case class PensionSchemeDeclaration(box1: Boolean, box2: Boolean, box3: Option[Boolean] = None, box4: Option[Boolean] = None,
@@ -575,6 +579,34 @@ object PensionsScheme {
           customerAndSchemeDetails =
             pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = haveInvalidBank)
         )
+  }
+
+  val updateWriteEstablisherAndTrustDetails: Writes[(
+    Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])] = {
+    ((JsPath \ "changeOfEstablisherOrTrustDetails").write[Boolean] and
+      (JsPath \ "haveMoreThanTenTrustees").writeNullable[Boolean] and
+      (JsPath \ "establisherDetails").write(EstablisherDetails.updateWrites) and
+      (JsPath \ "trusteeDetailsType").writeNullable(TrusteeDetails.updateWrites)
+      )(element => element)
+  }
+
+  def updateWrite(psaId : String): Writes[PensionsScheme] = (
+    (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId)) and
+      (JsPath \ "pensionSchemeDeclaration").write(Declaration.writes) and
+      (JsPath \ "establisherAndTrustDetailsType").write(updateWriteEstablisherAndTrustDetails)
+    ) (schemeDetails=> (
+    schemeDetails.customerAndSchemeDetails,
+    schemeDetails.pensionSchemeDeclaration,
+    (schemeDetails.isEstablisherOrTrusteeDetailsChanged.getOrElse(false),
+      Some(schemeDetails.customerAndSchemeDetails.haveMoreThanTenTrustee.getOrElse(false)),
+      schemeDetails.establisherDetails,
+      getOptionalTrustee(schemeDetails.trusteeDetails)))
+  )
+
+  private def getOptionalTrustee(trusteeDetails: TrusteeDetails): Option[TrusteeDetails] = {
+    if(trusteeDetails.companyTrusteeDetail.isEmpty &&
+      trusteeDetails.individualTrusteeDetail.isEmpty &&
+      trusteeDetails.partnershipTrusteeDetail.isEmpty) None else Some(trusteeDetails)
   }
 
 }

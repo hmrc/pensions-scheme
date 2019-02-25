@@ -57,7 +57,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
-    transformJsonToModel(json).fold(
+    transformJsonToModel(json, PensionSchemeDeclaration.apiReads).fold(
       error => Future.failed(error),
       validPensionsScheme =>
         readBankAccount(json).fold(
@@ -76,26 +76,24 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
   }
 
-  override def updateScheme(pstr: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
+  override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
                                                          ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-    transformJsonToModel(json).fold(
+    transformJsonToModel(json, PensionSchemeUpdateDeclaration.reads).fold(
       error => Future.failed(error),
       validPensionsScheme => {
-        val updatedScheme = Json.toJson(validPensionsScheme)
+        val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
         Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
         schemeConnector.updateSchemeDetails(pstr, updatedScheme)
       })
   }
 
-  private[service] def transformJsonToModel(json: JsValue): Either[BadRequestException, PensionsScheme] = {
+  private[service] def transformJsonToModel[A<:Declaration](json: JsValue, readsDeclaration: Reads[A]): Either[BadRequestException, PensionsScheme] = {
 
     val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] = CustomerAndSchemeDetails.apiReads
 
-    val readsDeclaration = PensionSchemeDeclaration.apiReads
-
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
-      declaration <- json.validate[PensionSchemeDeclaration](readsDeclaration)
+      declaration <- json.validate[A](readsDeclaration)
       establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
       isEstablisherOrTrusteeDetailsChanged <- json.validate[Option[Boolean]]((JsPath \ "isEstablisherOrTrusteeDetailsChanged").readNullable[Boolean])

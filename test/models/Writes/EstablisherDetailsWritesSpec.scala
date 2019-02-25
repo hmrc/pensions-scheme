@@ -26,7 +26,7 @@ class EstablisherDetailsWritesSpec extends WordSpec with MustMatchers with Optio
 
   "An establisher details object" should {
 
-    "map correctly to an update payload for for establisherDetails API 1468" when {
+    "map correctly to an update payload for establisherDetails API 1468" when {
 
       "validate establisherDetails write with schema" in {
         forAll(establisherDetailsGen) {

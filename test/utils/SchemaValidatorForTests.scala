@@ -34,4 +34,14 @@ trait SchemaValidatorForTests {
 
     validator.validate(schema, elementToValidate)
   }
+
+  def validateJson(elementToValidate: JsValue, schemaFileName: String): JsResult[JsValue]  = {
+
+    val rootSchema = JsonSource.schemaFromUrl(getClass.getResource(s"/schemas/$schemaFileName")).get
+
+    val validator = SchemaValidator().addSchema(s"/schemas/$schemaFileName", rootSchema)
+
+    validator.validate(getClass.getResource(s"/schemas/$schemaFileName"), elementToValidate)
+  }
+
 }
