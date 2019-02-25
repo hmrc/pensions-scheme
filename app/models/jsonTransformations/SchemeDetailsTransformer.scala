@@ -25,40 +25,40 @@ import play.api.libs.json._
 class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
   private def membersReads(desPath: String, uaPath: String): Reads[JsObject] =
-    (__ \ desPath).read[String].flatMap { members =>
+    (__ \ 'psaSchemeDetails \ 'schemeDetails \ desPath).read[String].flatMap { members =>
       (__ \ uaPath).json.put(JsString(SchemeMembers.nameWithValue(members)))
     }
 
   private val benefitsReads: Reads[JsObject] =
-    (__ \ 'schemeProvideBenefits).read[String].flatMap { members =>
+    (__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeProvideBenefits).read[String].flatMap { members =>
       (__ \ 'benefits).json.put(JsString(Benefits.nameWithValue(members)))
     }
 
   private val schemeTypeReads: Reads[JsObject] = {
-    (__ \ 'isSchemeMasterTrust).readNullable[Boolean].flatMap {
+    (__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isSchemeMasterTrust).readNullable[Boolean].flatMap {
       case Some(true) => (__ \ 'schemeType \ 'name).json.put(JsString("master"))
       case _ =>
-        (__ \ 'pensionSchemeStructure).readNullable[String].flatMap { schemeStructure =>
+        (__ \ 'psaSchemeDetails \ 'schemeDetails \ 'pensionSchemeStructure).readNullable[String].flatMap { schemeStructure =>
           schemeStructure.map { schemeType =>
             (__ \ 'schemeType \ 'name).json.put(JsString(SchemeType.nameWithValue(schemeType)))
           } getOrElse doNothing
         }
     } and
-    ((__ \ 'schemeType \ 'schemeTypeDetails).json.copyFrom((__ \ 'otherPensionSchemeStructure).json.pick)
+    ((__ \ 'schemeType \ 'schemeTypeDetails).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'otherPensionSchemeStructure).json.pick)
       orElse doNothing) reduce
   }
 
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
-    (__ \ 'schemeName).json.copyFrom((__ \ 'schemeName).json.pick) and
-      (__ \ 'investmentRegulated).json.copyFrom((__ \ 'isReguledSchemeInvestment).json.pick) and
-      (__ \ 'occupationalPensionScheme).json.copyFrom((__ \ 'isOccupationalPensionScheme).json.pick) and
-      (__ \ 'schemeEstablishedCountry).json.copyFrom((__ \ 'schemeEstablishedCountry).json.pick) and
-      (__ \ 'securedBenefits).json.copyFrom((__ \ 'isSchemeBenefitsInsuranceCompany).json.pick) and
-      ((__ \ 'insuranceCompanyName).json.copyFrom((__ \ 'insuranceCompanyName).json.pick)
+    (__ \ 'schemeName).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeName).json.pick) and
+      (__ \ 'investmentRegulated).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isReguledSchemeInvestment).json.pick) and
+      (__ \ 'occupationalPensionScheme).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isOccupationalPensionScheme).json.pick) and
+      (__ \ 'schemeEstablishedCountry).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeEstablishedCountry).json.pick) and
+      (__ \ 'securedBenefits).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isSchemeBenefitsInsuranceCompany).json.pick) and
+      ((__ \ 'insuranceCompanyName).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'insuranceCompanyName).json.pick)
         orElse doNothing) and
-      ((__ \ 'insurancePolicyNumber).json.copyFrom((__ \ 'policyNumber).json.pick)
+      ((__ \ 'insurancePolicyNumber).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'policyNumber).json.pick)
         orElse doNothing) and
-      (addressTransformer.getAddress(__ \ 'insurerAddress, __ \ 'insuranceCompanyAddressDetails)
+      (addressTransformer.getAddress(__ \ 'insurerAddress, __ \ 'psaSchemeDetails \ 'schemeDetails \ 'insuranceCompanyAddressDetails)
         orElse doNothing) and
       membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
       membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and

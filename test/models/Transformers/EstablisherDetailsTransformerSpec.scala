@@ -17,30 +17,37 @@
 package models.Transformers
 
 import base.JsonFileReader
-import models.jsonTransformations.{AddressTransformer, EstablisherDetailsTransformer}
+import models.jsonTransformations.{AddressTransformer, DirectorsOrPartnersTransformer, EstablisherDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import utils.PensionSchemeJsValueGenerators
 
-
 class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
 
+  import EstablisherDetailsTransformerSpec._
+
   private val addressTransformer = new AddressTransformer()
-  private val transformer = new EstablisherDetailsTransformer(addressTransformer)
+  private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)
+  private val transformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
 
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format" that {
 
+      val desEstablisherIndividualPath = __ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails
+
+      def individualValuePath(details: JsObject): JsLookupResult = details \ "psaSchemeDetails" \ "establisherDetails" \ "individualDetails"
+
       s"has person details in establishers array" in {
         forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
-            val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersIndividualDetailsReads("establisherDetails")).get
-            (result \ "establisherDetails" \ "firstName").as[String] mustBe (details \ "personDetails" \ "firstName").as[String]
-            (result \ "establisherDetails" \ "middleName").asOpt[String] mustBe (details \ "personDetails" \ "middleName").asOpt[String]
-            (result \ "establisherDetails" \ "lastName").as[String] mustBe (details \ "personDetails" \ "lastName").as[String]
-            (result \ "establisherDetails" \ "date").as[String] mustBe (details \ "personDetails" \ "dateOfBirth").as[String]
+            val details = desIndividualJson(individualDetails._1)
+            val result = details.transform(transformer.userAnswersIndividualDetailsReads("establisherDetails", desEstablisherIndividualPath)).get
+
+            (result \ "establisherDetails" \ "firstName").as[String] mustBe (individualValuePath(details) \ "personDetails" \ "firstName").as[String]
+            (result \ "establisherDetails" \ "middleName").asOpt[String] mustBe (individualValuePath(details) \ "personDetails" \ "middleName").asOpt[String]
+            (result \ "establisherDetails" \ "lastName").as[String] mustBe (individualValuePath(details) \ "personDetails" \ "lastName").as[String]
+            (result \ "establisherDetails" \ "date").as[String] mustBe (individualValuePath(details) \ "personDetails" \ "dateOfBirth").as[String]
           }
         }
       }
@@ -48,17 +55,12 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has nino details in establishers array" in {
         forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
-            val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersNinoReads("establisherNino")).get
+            val details = desIndividualJson(individualDetails._1)
+            val result = details.transform(transformer.userAnswersNinoReads("establisherNino", desEstablisherIndividualPath)).get
 
-            (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe true
-            (result \ "establisherNino" \ "nino").asOpt[String] mustBe (details \ "nino").asOpt[String]
-
-            val noNinoJs = details.as[JsObject] - "nino" + ("noNinoReason" -> JsString("test reason"))
-            val noNinoResult = noNinoJs.transform(transformer.userAnswersNinoReads("establisherNino")).get
-
-            (noNinoResult \ "establisherNino" \ "hasNino").as[Boolean] mustBe false
-            (noNinoResult \ "establisherNino" \ "reason").asOpt[String] mustBe (noNinoJs \ "noNinoReason").asOpt[String]
+            (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe (individualValuePath(details) \ "nino").isDefined
+            (result \ "establisherNino" \ "nino").asOpt[String] mustBe (individualValuePath(details) \ "nino").asOpt[String]
+            (result \ "establisherNino" \ "reason").asOpt[String] mustBe (individualValuePath(details) \ "noNinoReason").asOpt[String]
           }
         }
       }
@@ -66,18 +68,12 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has utr details in establishers array" in {
         forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
-            val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
+            val details = desIndividualJson(individualDetails._1)
+            val result = details.transform(transformer.userAnswersUtrReads("uniqueTaxReference", desEstablisherIndividualPath)).get
 
-            (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
-            (result \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (details \ "utr").asOpt[String]
-
-            val noUtrJs = details.as[JsObject] - "utr" + ("noUtrReason" -> JsString("test reason"))
-            val noUtrJsResult = noUtrJs.transform(transformer.userAnswersUtrReads("uniqueTaxReference")).get
-
-            (noUtrJsResult \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe false
-            (noUtrJsResult \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (noUtrJs \ "noUtrReason").asOpt[String]
-
+            (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe (individualValuePath(details) \ "utr").isDefined
+            (result \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (individualValuePath(details) \ "utr").asOpt[String]
+            (result \ "uniqueTaxReference" \ "reason").asOpt[String] mustBe (individualValuePath(details) \ "noUtrReason").asOpt[String]
           }
         }
       }
@@ -85,11 +81,12 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has contact details in establishers array" in {
         forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
-            val details = individualDetails._1
-            val result = details.transform(transformer.userAnswersContactDetailsReads("contactDetails")).get
+            val details = desIndividualJson(individualDetails._1)
+            val result = details.transform(transformer.userAnswersContactDetailsReads("contactDetails", desEstablisherIndividualPath)).get
 
-            (result \ "contactDetails" \ "emailAddress").as[String] mustBe (details \ "correspondenceContactDetails" \ "email").as[String]
-            (result \ "contactDetails" \ "phoneNumber").as[String] mustBe (details \ "correspondenceContactDetails" \ "telephone").as[String]
+            (result \ "contactDetails" \ "emailAddress").as[String] mustBe (individualValuePath(details) \ "correspondenceContactDetails" \ "email").as[String]
+            (result \ "contactDetails" \ "phoneNumber").as[String] mustBe
+              (individualValuePath(details) \ "correspondenceContactDetails" \ "telephone").as[String]
           }
         }
       }
@@ -98,8 +95,9 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         forAll(individualJsValueGen(isEstablisher = true)) {
           individualDetails => {
             val (desIndividualDetails, userAnswersIndividualDetails) = individualDetails
-            val result = desIndividualDetails.transform(transformer.userAnswersEstablisherIndividualReads).get
+            val details = desIndividualJson(desIndividualDetails)
 
+            val result = details.transform(transformer.userAnswersEstablisherIndividualReads(desEstablisherIndividualPath)).get
             result mustBe userAnswersIndividualDetails
           }
         }
@@ -107,14 +105,19 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     }
 
     "have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
+      val desCompanyPath = __ \ 'psaSchemeDetails \ 'establisherDetails \ 'companyOrOrganisationDetails
+
+      def companyValuePath(details: JsObject): JsLookupResult = details \ "psaSchemeDetails" \ "establisherDetails" \ "companyOrOrganisationDetails"
+
       s"has establisher details in establishers array" in {
         forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
-            val details = companyDetails._1
-            val result = details.transform(transformer.userAnswersCompanyDetailsReads).get
-            (result \ "companyDetails" \ "companyName").as[String] mustBe (details \ "organisationName").as[String]
-            (result \ "companyDetails" \ "vatNumber").asOpt[String] mustBe (details \ "vatRegistrationNumber").asOpt[String]
-            (result \ "companyDetails" \ "payeNumber").asOpt[String] mustBe (details \ "payeReference").asOpt[String]
+            val details = desCompanyJson(companyDetails._1)
+            val result = details.transform(transformer.userAnswersCompanyDetailsReads(desCompanyPath)).get
+
+            (result \ "companyDetails" \ "companyName").as[String] mustBe (companyValuePath(details) \ "organisationName").as[String]
+            (result \ "companyDetails" \ "vatNumber").asOpt[String] mustBe (companyValuePath(details) \ "vatRegistrationNumber").asOpt[String]
+            (result \ "companyDetails" \ "payeNumber").asOpt[String] mustBe (companyValuePath(details) \ "payeReference").asOpt[String]
           }
         }
       }
@@ -122,15 +125,12 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has crn details in establishers array" in {
         forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
-            val details = companyDetails._1
-            val result = details.transform(transformer.userAnswersCrnReads).get
-            (result \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe true
-            (result \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (details \ "crnNumber").asOpt[String]
+            val details = desCompanyJson(companyDetails._1)
+            val result = details.transform(transformer.userAnswersCrnReads(desCompanyPath)).get
 
-            val noCrn = details.as[JsObject] - "crnNumber" + ("noCrnReason" -> JsString("no crn"))
-            val noCrnResult = noCrn.transform(transformer.userAnswersCrnReads).get
-            (noCrnResult \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe false
-            (noCrnResult \ "companyRegistrationNumber" \ "reason").as[String] mustBe "no crn"
+            (result \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe (companyValuePath(details) \ "crnNumber").isDefined
+            (result \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (companyValuePath(details) \ "crnNumber").asOpt[String]
+            (result \ "companyRegistrationNumber" \ "reason").asOpt[String] mustBe (companyValuePath(details) \ "noCrnReason").asOpt[String]
           }
         }
       }
@@ -138,10 +138,12 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has utr details in establishers array" in {
         forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
-            val details = companyDetails._1
-            val result = details.transform(transformer.userAnswersUtrReads("companyUniqueTaxReference")).get
-            (result \ "companyUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
-            (result \ "companyUniqueTaxReference" \ "utr").asOpt[String] mustBe (details \ "utr").asOpt[String]
+            val details = desCompanyJson(companyDetails._1)
+            val result = details.transform(transformer.userAnswersUtrReads("companyUniqueTaxReference", desCompanyPath)).get
+
+            (result \ "companyUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe (companyValuePath(details) \ "utr").isDefined
+            (result \ "companyUniqueTaxReference" \ "utr").asOpt[String] mustBe (companyValuePath(details) \ "utr").asOpt[String]
+            (result \ "companyUniqueTaxReference" \ "reason").asOpt[String] mustBe (companyValuePath(details) \ "noUtrReason").asOpt[String]
           }
         }
       }
@@ -149,12 +151,13 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has contact details in establishers array" in {
         forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
-            val details = companyDetails._1
-            val result = details.transform(transformer.userAnswersContactDetailsReads("companyContactDetails")).get
+            val details = desCompanyJson(companyDetails._1)
+            val result = details.transform(transformer.userAnswersContactDetailsReads("companyContactDetails", desCompanyPath)).get
+
             (result \ "companyContactDetails" \ "emailAddress").as[String] mustBe
-              (details \ "correspondenceContactDetails" \ "email").as[String]
+              (companyValuePath(details) \ "correspondenceContactDetails" \ "email").as[String]
             (result \ "companyContactDetails" \ "phoneNumber").as[String] mustBe
-              (details \ "correspondenceContactDetails" \ "telephone").as[String]
+              (companyValuePath(details) \ "correspondenceContactDetails" \ "telephone").as[String]
           }
         }
       }
@@ -163,7 +166,8 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         forAll(companyJsValueGen(isEstablisher = true)) {
           companyDetails => {
             val (desCompanyDetails, userAnswersCompanyDetails) = companyDetails
-            val result = desCompanyDetails.transform(transformer.userAnswersEstablisherCompanyReads).get
+            val details = desCompanyJson(desCompanyDetails)
+            val result = details.transform(transformer.userAnswersEstablisherCompanyReads(desCompanyPath)).get
 
             result mustBe userAnswersCompanyDetails
           }
@@ -173,12 +177,17 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
     "have the establisherPartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
+      val desPartnershipPath = __ \ 'psaSchemeDetails \ 'establisherDetails \ 'partnershipTrusteeDetail
+
+      def partnershipValuePath(details: JsObject): JsLookupResult = details \ "psaSchemeDetails" \ "establisherDetails" \ "partnershipTrusteeDetail"
+
       s"has establisher details in establishers array" in {
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
-            val details = partnershipDetails._1
-            val result = details.transform(transformer.userAnswersPartnershipDetailsReads).get
-            (result \ "partnershipDetails" \ "name").as[String] mustBe (details \ "partnershipName").as[String]
+            val details = desPartnershipJson(partnershipDetails._1)
+            val result = details.transform(transformer.userAnswersPartnershipDetailsReads(desPartnershipPath)).get
+
+            (result \ "partnershipDetails" \ "name").as[String] mustBe (partnershipValuePath(details) \ "partnershipName").as[String]
           }
         }
       }
@@ -186,9 +195,11 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has vat details for partnership in establishers array" in {
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
-            val details = partnershipDetails._1 - "vatRegistrationNumber"
-            val result = details.transform(transformer.transformVatToUserAnswersReads).get
-            (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe false
+            val details = desPartnershipJson(partnershipDetails._1)
+            val result = details.transform(transformer.transformVatToUserAnswersReads(desPartnershipPath)).get
+
+            (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").isDefined
+            (result \ "partnershipVat" \ "vat").asOpt[String] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").asOpt[String]
           }
         }
       }
@@ -196,10 +207,11 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has paye details for partnership in establishers array" in {
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
-            val details = partnershipDetails._1
-            val result = details.transform(transformer.userAnswersPayeReads).get
-            (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe true
-            (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (details \ "payeReference").asOpt[String]
+            val details = desPartnershipJson(partnershipDetails._1)
+            val result = details.transform(transformer.userAnswersPayeReads(desPartnershipPath)).get
+
+            (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe (partnershipValuePath(details) \ "payeReference").isDefined
+            (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (partnershipValuePath(details) \ "payeReference").asOpt[String]
           }
         }
       }
@@ -207,10 +219,12 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has utr details in establishers array" in {
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
-            val details = partnershipDetails._1
-            val result = details.transform(transformer.userAnswersUtrReads("partnershipUniqueTaxReference")).get
-            (result \ "partnershipUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe true
-            (result \ "partnershipUniqueTaxReference" \ "utr").asOpt[String] mustBe (details \ "utr").asOpt[String]
+            val details = desPartnershipJson(partnershipDetails._1)
+            val result = details.transform(transformer.userAnswersUtrReads("partnershipUniqueTaxReference", desPartnershipPath)).get
+
+            (result \ "partnershipUniqueTaxReference" \ "hasUtr").as[Boolean] mustBe (partnershipValuePath(details) \ "utr").isDefined
+            (result \ "partnershipUniqueTaxReference" \ "utr").asOpt[String] mustBe (partnershipValuePath(details) \ "utr").asOpt[String]
+            (result \ "partnershipUniqueTaxReference" \ "reason").asOpt[String] mustBe (partnershipValuePath(details) \ "noUtrReason").asOpt[String]
           }
         }
       }
@@ -218,12 +232,13 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
       s"has contact details in establishers array" in {
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
-            val details = partnershipDetails._1
-            val result = details.transform(transformer.userAnswersContactDetailsReads("partnershipContactDetails")).get
+            val details = desPartnershipJson(partnershipDetails._1)
+            val result = details.transform(transformer.userAnswersContactDetailsReads("partnershipContactDetails", desPartnershipPath)).get
+
             (result \ "partnershipContactDetails" \ "emailAddress").as[String] mustBe
-              (details \ "correspondenceContactDetails" \ "email").as[String]
+              (partnershipValuePath(details) \ "correspondenceContactDetails" \ "email").as[String]
             (result \ "partnershipContactDetails" \ "phoneNumber").as[String] mustBe
-              (details \ "correspondenceContactDetails" \ "telephone").as[String]
+              (partnershipValuePath(details) \ "correspondenceContactDetails" \ "telephone").as[String]
           }
         }
       }
@@ -232,7 +247,9 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val (desPartnershipDetails, userAnswersPartnershipDetails) = partnershipDetails
-            val result = desPartnershipDetails.transform(transformer.userAnswersEstablisherPartnershipReads).get
+
+            val details = desPartnershipJson(desPartnershipDetails)
+            val result = details.transform(transformer.userAnswersEstablisherPartnershipReads(desPartnershipPath)).get
 
             result mustBe userAnswersPartnershipDetails
           }
@@ -243,19 +260,49 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
     "have all establishers transformed" in {
       forAll(establisherOrTrusteeJsValueGen(isEstablisher = true)) {
         establishers =>
-          val result = establishers._1.transform(transformer.userAnswersEstablishersReads).get
-
-          result mustBe establishers._2
+          val (desEstablishers, uaEstablishers) = establishers
+          val result = desEstablishers.transform(transformer.userAnswersEstablishersReads).get
+          result mustBe uaEstablishers
       }
     }
 
     "if no establishers are present" in {
+      val result = Json.obj("psaSchemeDetails" -> "").transform(transformer.userAnswersEstablishersReads).get
 
-      val result = Json.obj().transform(transformer.userAnswersEstablishersReads).get
-
-      result mustBe Json.obj(
-        "establishers" -> JsArray()
-      )
+      result mustBe Json.obj()
     }
+  }
+}
+
+object EstablisherDetailsTransformerSpec {
+
+  private def desIndividualJson(individualDetails: JsValue) = {
+    Json.obj(
+      "psaSchemeDetails" -> Json.obj(
+        "establisherDetails" -> Json.obj(
+          "individualDetails" -> individualDetails
+        )
+      )
+    )
+  }
+
+  private def desCompanyJson(companyDetails: JsValue) = {
+    Json.obj(
+      "psaSchemeDetails" -> Json.obj(
+        "establisherDetails" -> Json.obj(
+          "companyOrOrganisationDetails" -> companyDetails
+        )
+      )
+    )
+  }
+
+  private def desPartnershipJson(partnershipDetails: JsValue) = {
+    Json.obj(
+      "psaSchemeDetails" -> Json.obj(
+        "establisherDetails" -> Json.obj(
+          "partnershipTrusteeDetail" -> partnershipDetails
+        )
+      )
+    )
   }
 }

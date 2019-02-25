@@ -19,18 +19,34 @@ package utils
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import org.scalacheck.Gen
 import org.scalacheck.Gen.const
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.Reads._
+import play.api.libs.json.{JsObject, JsValue, Json, _}
 
 trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
-  private def utrJsValue(utr: String) = Json.obj(
-    "hasUtr" -> true,
-    "utr" -> utr
+  private def utrJsValue(utr: Option[String]) = utr.fold(
+    Json.obj("reason" -> "noUtrReason", "hasUtr" -> false))(
+    utr => Json.obj("hasUtr" -> true, "utr" -> utr)
   )
 
-  private def ninoJsValue(nino: String) = Json.obj(
-    "hasNino" -> true,
-    "nino" -> nino
+  private def crnJsValue(crn: Option[String]) = crn.fold(
+    Json.obj("reason" -> "noCrnReason", "hasCrn" -> false))(
+    crn => Json.obj("hasCrn" -> true, "crn" -> crn)
+  )
+
+  private def ninoJsValue(nino: Option[String]) = nino.fold(
+    Json.obj("reason" -> "noNinoReason", "hasNino" -> false))(
+    nino => Json.obj("hasNino" -> true, "nino" -> nino)
+  )
+
+  private def vatJsValue(vat: Option[String]) = vat.fold(
+    Json.obj("hasVat" -> false))(
+    vat => Json.obj("hasVat" -> true, "vat" -> vat)
+  )
+
+  private def payeJsValue(paye: Option[String]) = paye.fold(
+    Json.obj("hasPaye" -> false))(
+    paye => Json.obj("hasPaye" -> true, "paye" -> paye)
   )
 
   def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
@@ -81,16 +97,16 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  def individualJsValueGen(isEstablisher:Boolean): Gen[(JsValue, JsValue)] = for {
+  def individualJsValueGen(isEstablisher: Boolean): Gen[(JsObject, JsObject)] = for {
     title <- Gen.option(titleGenerator)
     firstName <- nameGenerator
     middleName <- Gen.option(nameGenerator)
     lastName <- nameGenerator
-    referenceOrNino <- ninoGenerator
+    referenceOrNino <- Gen.option(ninoGenerator)
+    utr <- Gen.option(utrGenerator)
     contactDetails <- contactDetailsJsValueGen
-    utr <- utrGenerator
-    address <- addressJsValueGen("correspondenceAddressDetails", if(isEstablisher)"address" else "trusteeAddressId", isDifferent = true)
-    previousAddress <- addressJsValueGen("previousAddress", if(isEstablisher) "previousAddress" else "trusteePreviousAddress", isDifferent = true)
+    address <- addressJsValueGen("correspondenceAddressDetails", if (isEstablisher) "address" else "trusteeAddressId", isDifferent = true)
+    previousAddress <- addressJsValueGen("previousAddress", if (isEstablisher) "previousAddress" else "trusteePreviousAddress", isDifferent = true)
     date <- dateGenerator
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
@@ -106,131 +122,165 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "lastName" -> lastName,
           "dateOfBirth" -> date.toString
         ),
-        "nino" -> referenceOrNino,
-        "utr" -> utr,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> previousAddr
-      ) ++ desAddress.as[JsObject],
+      ) ++ desAddress.as[JsObject] ++ optionalWithReason("nino", referenceOrNino, "noNinoReason")
+        ++ optionalWithReason("utr", utr, "noUtrReason"),
       Json.obj(
-        (if(isEstablisher)"establisherKind" else "trusteeKind") -> "individual",
-        (if(isEstablisher)"establisherDetails" else "trusteeDetails") -> Json.obj(
+        (if (isEstablisher) "establisherKind" else "trusteeKind") -> "individual",
+        (if (isEstablisher) "establisherDetails" else "trusteeDetails") -> Json.obj(
           "firstName" -> firstName,
           "middleName" -> middleName,
           "lastName" -> lastName,
           "date" -> date.toString
         ),
-        (if(isEstablisher)"establisherNino" else "trusteeNino") -> ninoJsValue(referenceOrNino),
+        (if (isEstablisher) "establisherNino" else "trusteeNino") -> ninoJsValue(referenceOrNino),
         "uniqueTaxReference" -> utrJsValue(utr),
-        (if(isEstablisher)"addressYears" else "trusteeAddressYears") -> "under_a_year",
-        (if(isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails,
-        (if(isEstablisher) "isEstablisherComplete" else "isTrusteeComplete") -> true
+        (if (isEstablisher) "addressYears" else "trusteeAddressYears") -> "under_a_year",
+        (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails,
+        (if (isEstablisher) "isEstablisherComplete" else "isTrusteeComplete") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
     )
   }
 
-  def companyJsValueGen(isEstablisher:Boolean): Gen[(JsObject, JsObject)] = for {
+  // scalastyle:off method.length
+  //scalastyle:off cyclomatic.complexity
+  def companyJsValueGen(isEstablisher: Boolean): Gen[(JsObject, JsObject)] = for {
     orgName <- nameGenerator
-    utr <- utrGenerator
-    crn <- crnGenerator
-    vat <- vatGenerator
-    paye <- payeGenerator
+    utr <- Gen.option(utrGenerator)
+    crn <- Gen.option(crnGenerator)
+    vat <- Gen.option(vatGenerator)
+    paye <- Gen.option(payeGenerator)
     address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
+    directorDetails <- Gen.option(Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("director")))
+    haveMoreThanTenDirectors <- Gen.option(booleanGen)
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
     val (desAddress, userAnswersAddress) = address
     val (desContactDetails, userAnswersContactDetails) = contactDetails
     val pa = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
+    val desDirectors = if (isEstablisher) directorDetails.map(dd => if (dd.nonEmpty)
+      Json.obj("directorsDetails" -> dd.map(_._1)) else Json.obj()).getOrElse(Json.obj()) else Json.obj()
+    val uaDirectors = if (isEstablisher) directorDetails.map(dd => if (dd.nonEmpty)
+      Json.obj("director" -> dd.map(_._2)) else Json.obj()).getOrElse(Json.obj()) else Json.obj()
+    val uaMoreThanTenDirectors = if (isEstablisher) haveMoreThanTenDirectors.map(value =>
+      Json.obj("otherDirectors" -> value)).getOrElse(Json.obj()) else Json.obj()
+    val desMoreThanTenDirectors = if (isEstablisher) haveMoreThanTenDirectors.map(value =>
+      Json.obj("haveMoreThanTenDirectors" -> value)).getOrElse(Json.obj()) else Json.obj()
     (
       Json.obj(
         "organisationName" -> orgName,
-        "utr" -> utr,
-        "crnNumber" -> crn,
         "vatRegistrationNumber" -> vat,
         "payeReference" -> paye,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> pa
-      ) ++ desAddress.as[JsObject],
+      ) ++ desAddress.as[JsObject] ++ optionalWithReason("utr", utr, "noUtrReason")
+        ++ optionalWithReason("crnNumber", crn, "noCrnReason")
+        ++ desMoreThanTenDirectors
+        ++ desDirectors,
       Json.obj(
-        (if(isEstablisher)"establisherKind" else "trusteeKind") -> "company",
+        (if (isEstablisher) "establisherKind" else "trusteeKind") -> "company",
         "companyDetails" -> Json.obj(
           "companyName" -> orgName,
           "vatNumber" -> vat,
           "payeNumber" -> paye
         ),
-        "companyRegistrationNumber" -> Json.obj(
-          "hasCrn" -> true,
-          "crn" -> crn
-        ),
+        "companyRegistrationNumber" -> crnJsValue(crn),
         "companyUniqueTaxReference" -> utrJsValue(utr),
-        (if(isEstablisher)"companyAddressYears" else "trusteesCompanyAddressYears") -> "under_a_year",
+        (if (isEstablisher) "companyAddressYears" else "trusteesCompanyAddressYears") -> "under_a_year",
         "companyContactDetails" -> userAnswersContactDetails,
-        (if(isEstablisher)"isCompanyComplete" else "isTrusteeComplete") -> true
+        (if (isEstablisher) "isCompanyComplete" else "isTrusteeComplete") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
+        ++ uaMoreThanTenDirectors
+        ++ uaDirectors
     )
   }
 
-  def partnershipJsValueGen(isEstablisher:Boolean): Gen[(JsObject, JsObject)] = for {
+  def partnershipJsValueGen(isEstablisher: Boolean): Gen[(JsObject, JsObject)] = for {
     orgName <- nameGenerator
-    vat <- vatGenerator
-    utr <- utrGenerator
-    paye <- payeGenerator
+    vat <- Gen.option(vatGenerator)
+    utr <- Gen.option(utrGenerator)
+    paye <- Gen.option(payeGenerator)
     address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
+    partnerDetails <- Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("partner"))
+    areMorethanTenPartners <- booleanGen
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
     val (desAddress, userAnswersAddress) = address
     val (desContactDetails, userAnswersContactDetails) = contactDetails
     val pa = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
+    val desPartners = if (isEstablisher) Json.obj("partnerDetails" -> partnerDetails.map(_._1)) else Json.obj()
+    val uaPartners = if (isEstablisher) Json.obj("partner" -> partnerDetails.map(_._2)) else Json.obj()
+    val desMoreThanTenPartner = if (isEstablisher) Json.obj("areMorethanTenPartners" -> areMorethanTenPartners) else Json.obj()
+    val uaMoreThanTenPartner = if (isEstablisher) Json.obj("otherPartners" -> areMorethanTenPartners) else Json.obj()
     (
       Json.obj(
         "partnershipName" -> orgName,
-        "utr" -> utr,
-        "vatRegistrationNumber" -> vat,
-        "payeReference" -> paye,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> pa
-      ) ++ desAddress.as[JsObject],
+      ) ++ desAddress.as[JsObject] ++ optional("vatRegistrationNumber", vat)
+        ++ optionalWithReason("utr", utr, "noUtrReason")
+        ++ optional("payeReference", paye)
+        ++ desMoreThanTenPartner
+        ++ desPartners,
       Json.obj(
-        (if(isEstablisher)"establisherKind" else "trusteeKind") -> "partnership",
+        (if (isEstablisher) "establisherKind" else "trusteeKind") -> "partnership",
         "partnershipDetails" -> Json.obj(
           "name" -> orgName
         ),
-        "partnershipVat" -> Json.obj(
-          "hasVat" -> true,
-          "vat" -> vat
-        ),
-        "partnershipPaye" -> Json.obj(
-          "hasPaye" -> true,
-          "paye" -> paye
-        ),
+        "partnershipVat" -> vatJsValue(vat),
+        "partnershipPaye" -> payeJsValue(paye),
         "partnershipUniqueTaxReference" -> utrJsValue(utr),
         "partnershipAddressYears" -> "under_a_year",
         "partnershipContactDetails" -> userAnswersContactDetails,
         "isPartnershipCompleteId" -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
+        ++ uaMoreThanTenPartner
+        ++ uaPartners
     )
   }
 
-  def establisherOrTrusteeJsValueGen(isEstablisher:Boolean): Gen[(JsObject, JsObject)] = for {
-    individual <- Gen.listOfN(randomNumberFromRange(0, 3), individualJsValueGen(isEstablisher))
-    company <- Gen.listOfN(randomNumberFromRange(0, 3), companyJsValueGen(isEstablisher))
-    partnership <- Gen.listOfN(randomNumberFromRange(0, 4), partnershipJsValueGen(isEstablisher))
+  def establisherOrTrusteeJsValueGen(isEstablisher: Boolean): Gen[(JsObject, JsObject)] = for {
+    individual <- Gen.option(Gen.listOfN(randomNumberFromRange(1, 1), individualJsValueGen(isEstablisher)))
+    company <- Gen.option(Gen.listOfN(randomNumberFromRange(1, 1), companyJsValueGen(isEstablisher)))
+    partnership <- Gen.option(Gen.listOfN(randomNumberFromRange(1, 1), partnershipJsValueGen(isEstablisher)))
   } yield {
-    val userAnswersListOfEstablisherOrTrustees = individual.map(_._2) ++ company.map(_._2) ++ partnership.map(_._2)
+
+    val uaIndividualDetails = individual.map { indv => indv.map(_._2) }.getOrElse(Nil)
+    val uaCompanyDetails = company.map { comp => comp.map(_._2) }.getOrElse(Nil)
+    val uaPartnershipDetails = partnership.map { part => part.map(_._2) }.getOrElse(Nil)
+
+    val desEstablishers = individual.map { indv => Json.obj("individualDetails" -> indv.map(_._1)) }.getOrElse(Json.obj()) ++
+      company.map { comp => Json.obj("companyOrOrganisationDetails" -> comp.map(_._1)) }.getOrElse(Json.obj()) ++
+      partnership.map { part => Json.obj("partnershipTrusteeDetail" -> part.map(_._1)) }.getOrElse(Json.obj())
+
+    val desTrustees = individual.map { indv => Json.obj("individualTrusteeDetails" -> indv.map(_._1)) }.getOrElse(Json.obj()) ++
+      company.map { comp => Json.obj("companyTrusteeDetails" -> comp.map(_._1)) }.getOrElse(Json.obj()) ++
+      partnership.map { part => Json.obj("partnershipTrusteeDetails" -> part.map(_._1)) }.getOrElse(Json.obj())
+
+    val desEstablishersJson = Json.obj(
+      "psaSchemeDetails" -> Json.obj(
+        "establisherDetails" -> desEstablishers
+      )
+    )
+
+    val desTrusteesJson = Json.obj(
+      "psaSchemeDetails" -> Json.obj(
+        "trusteeDetails" -> desTrustees
+      )
+    )
+    val lisOfAllUserAnswersEstablishers = uaIndividualDetails ++ uaCompanyDetails ++ uaPartnershipDetails
     (
+      if (isEstablisher) desEstablishersJson else desTrusteesJson,
       Json.obj(
-        "individualDetails" -> individual.map(_._1),
-        "companyOrOrganisationDetails" -> company.map(_._1),
-        "partnershipTrusteeDetail" -> partnership.map(_._1)
-      ),
-      Json.obj(
-        (if(isEstablisher)"establishers" else "trustees") -> userAnswersListOfEstablisherOrTrustees
+        (if (isEstablisher) "establishers" else "trustees") -> lisOfAllUserAnswersEstablishers
       )
     )
   }
@@ -240,9 +290,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     firstName <- nameGenerator
     middleName <- Gen.option(nameGenerator)
     lastName <- nameGenerator
-    referenceOrNino <- ninoGenerator
+    referenceOrNino <- Gen.option(ninoGenerator)
+    utr <- Gen.option(utrGenerator)
     contactDetails <- contactDetailsJsValueGen
-    utr <- utrGenerator
     address <- addressJsValueGen("correspondenceAddressDetails", s"${directorOrPartner}AddressId", isDifferent = true)
     partnerPreviousAddress <- addressJsValueGen("previousAddress", "partnerPreviousAddress", isDifferent = true)
     directorPreviousAddress <- addressJsValueGen("previousAddress", "previousAddress", isDifferent = true)
@@ -263,11 +313,10 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "lastName" -> lastName,
           "dateOfBirth" -> date.toString
         ),
-        "nino" -> referenceOrNino,
-        "utr" -> utr,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> previousAddress
-      ) ++ desAddress.as[JsObject],
+      ) ++ desAddress.as[JsObject] ++ optionalWithReason("nino", referenceOrNino, "noNinoReason")
+        ++ optionalWithReason("utr", utr, "noUtrReason"),
       Json.obj(
         s"${directorOrPartner}Details" -> Json.obj(
           "firstName" -> firstName,
@@ -310,7 +359,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val schemeType = schemeTypeName ++ otherDetails
     val schemeTypeJs = if (isSchemeMasterTrust.contains(true) | schemeStructure.nonEmpty | otherPensionSchemeStructure.nonEmpty)
       Json.obj("schemeType" -> schemeType) else Json.obj()
-    (
+
+    val schemeDetails =
       Json.obj(
         "srn" -> "",
         "pstr" -> "",
@@ -332,7 +382,13 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         optional("pensionSchemeStructure", schemeStructure) ++
         moreThanTenTrustees.map { value => Json.obj("hasMoreThanTenTrustees" -> value) }.getOrElse(Json.obj()) ++
         optional("insuranceCompanyName", insuranceCompanyName)
-      ,
+
+    (
+      Json.obj(
+        "psaSchemeDetails" -> Json.obj(
+          "schemeDetails" -> schemeDetails
+        )
+      ),
       Json.obj(
         "schemeName" -> schemeName,
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
@@ -346,6 +402,31 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         optional("insurancePolicyNumber", policyNumber) ++
         insuranceAddress.map { value => value._2.as[JsObject] }.getOrElse(Json.obj()) ++
         schemeTypeJs
+    )
+  }
+
+  def getSchemeDetailsGen: Gen[(JsObject, JsObject)] = for {
+    schemeDetails <- schemeDetailsGen
+    establishers <- Gen.option(establisherOrTrusteeJsValueGen(true))
+    trustees <- Gen.option(establisherOrTrusteeJsValueGen(false))
+  } yield {
+    val (desSchemeDetails, uaSchemeDetails) = schemeDetails
+    val establisherDetails = establishers.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
+    val trusteeDetails = trustees.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
+
+    val branch = (__ \ 'psaSchemeDetails).json.pick
+    val desEstablishers = establisherDetails.transform(branch).get
+    val desTrustee = trusteeDetails.transform(branch).get
+
+    val uaEstablisherDetails = establishers.map(_._2).getOrElse(Json.obj())
+    val uaErusteeDetails = trustees.map(_._2).getOrElse(Json.obj())
+
+    val jsonTransformer = (__ \ 'psaSchemeDetails).json.update(
+      __.read[JsObject].map { o => o ++ desEstablishers.as[JsObject] ++ desTrustee.as[JsObject] }
+    ).orElse(__.json.put(Json.obj()))
+
+    (desSchemeDetails.as[JsObject].transform(jsonTransformer).get,
+      uaSchemeDetails.as[JsObject] ++ uaEstablisherDetails ++ uaErusteeDetails
     )
   }
 }

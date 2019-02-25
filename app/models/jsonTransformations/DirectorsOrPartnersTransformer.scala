@@ -23,23 +23,24 @@ import play.api.libs.json._
 
 class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  val userAnswersDirectorReads: Reads[JsObject] =
-      userAnswersIndividualDetailsReads("directorDetails") and
-      userAnswersNinoReads("directorNino") and
-      userAnswersUtrReads("directorUniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'directorAddressId, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'companyDirectorAddressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'previousAddress) and
-      userAnswersContactDetailsReads("directorContactDetails") and
+  def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
+    userAnswersIndividualDetailsReads("directorDetails", desPath) and
+      userAnswersNinoReads("directorNino", desPath) and
+      userAnswersUtrReads("directorUniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'directorAddressId, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'companyDirectorAddressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'previousAddress) and
+      userAnswersContactDetailsReads("directorContactDetails", desPath) and
       (__ \ 'isDirectorComplete).json.put(JsBoolean(true)) reduce
+  }
 
-  val userAnswersPartnerReads: Reads[JsObject] =
-    userAnswersIndividualDetailsReads("partnerDetails") and
-      userAnswersNinoReads("partnerNino") and
-      userAnswersUtrReads("partnerUniqueTaxReference") and
-      addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__, __ \ 'partnerAddressYears) and
-      addressTransformer.getPreviousAddress(__, __ \ 'partnerPreviousAddress) and
-      userAnswersContactDetailsReads("partnerContactDetails") and
+  def userAnswersPartnerReads(desPath: JsPath): Reads[JsObject] =
+      userAnswersIndividualDetailsReads("partnerDetails", desPath) and
+      userAnswersNinoReads("partnerNino", desPath) and
+      userAnswersUtrReads("partnerUniqueTaxReference", desPath) and
+      addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, desPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(desPath, __ \ 'partnerAddressYears) and
+      addressTransformer.getPreviousAddress(desPath, __ \ 'partnerPreviousAddress) and
+      userAnswersContactDetailsReads("partnerContactDetails", desPath) and
       (__ \ 'isPartnerComplete).json.put(JsBoolean(true)) reduce
 }

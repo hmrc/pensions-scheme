@@ -214,29 +214,35 @@ trait PensionSchemeGenerators {
   )
 
   val schemeProvideBenefitsGen = Gen.oneOf(Seq("Money Purchase benefits only (defined contribution)",
-                                                "Defined Benefits only",
-                                                "Mixture of money purchase benefits and defined benefits"))
+    "Defined Benefits only",
+    "Mixture of money purchase benefits and defined benefits"))
 
-  val policyNumberGen =  Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
-  val otherSchemeStructureGen =  Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
+  val policyNumberGen = Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
+  val otherSchemeStructureGen = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
 
   val boolenGen = Gen.oneOf(Seq(true, false))
 
   val memberGen = Gen.oneOf(Seq("0",
-                                "1",
-                                "2 to 11",
-                                "12 to 50",
-                                "51 to 10,000",
-                                "More than 10,000"))
+    "1",
+    "2 to 11",
+    "12 to 50",
+    "51 to 10,000",
+    "More than 10,000"))
 
   val schemeTypeGen = Gen.option(Gen.oneOf(Seq("A single trust under which all of the assets are held for the benefit of all members of the scheme",
-                                    "A group life/death in service scheme",
-                                    "A body corporate",
-                                    "Other")))
+    "A group life/death in service scheme",
+    "A body corporate",
+    "Other")))
 
   protected def optional(key: String, element: Option[String]) = {
     element.map { value =>
       Json.obj(key -> value)
     }.getOrElse(Json.obj())
+  }
+
+  protected def optionalWithReason(key: String, element: Option[String], reason: String) = {
+    element.map { value =>
+      Json.obj(key -> value)
+    }.getOrElse(Json.obj(reason -> reason))
   }
 }
