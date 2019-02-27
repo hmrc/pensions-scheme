@@ -39,7 +39,12 @@ object CollectionDiagnostics {
                   s"Fields: ${index.fields.mkString(", ")}\n" +
                   s"Unique: ${index.unique}\n" +
                   s"TTL:    ${index.ttl.getOrElse("<none>")}\n"
+                  s"row count:    ${index.ttl.getOrElse("<none>")}\n"
             } mkString "\n")
+        )
+
+        Logger.warn(
+          s"\nRow count for collection ${collection.name} : ${collection.count()}\n\n"
         )
     }
 
