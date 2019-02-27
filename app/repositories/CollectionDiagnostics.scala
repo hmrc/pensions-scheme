@@ -41,6 +41,10 @@ object CollectionDiagnostics {
                   s"TTL:    ${index.ttl.getOrElse("<none>")}\n"
             } mkString "\n")
         )
+
+        Logger.warn(
+          s"\nRow count for collection ${collection.name} : ${collection.count()}\n\n"
+        )
     }
 
   }
