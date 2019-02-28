@@ -42,9 +42,11 @@ object CollectionDiagnostics {
             } mkString "\n")
         )
 
-        Logger.warn(
-          s"\nRow count for collection ${collection.name} : ${collection.count()}\n\n"
-        )
+        collection.count().foreach { count =>
+          Logger.warn(
+            s"\nRow count for collection ${collection.name} : $count\n\n"
+          )
+        }
     }
 
   }
