@@ -19,14 +19,14 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeConnector
+import models.schemes.PsaSchemeDetails
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
-import scala.concurrent.{Future, ExecutionContext}
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
                                         cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
@@ -35,11 +35,11 @@ class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
       val psaId = request.headers.get("psaId")
       val srn = request.headers.get("schemeReferenceNumber")
       val srnRequest = "srn"
-
       (srn,psaId) match {
         case (Some(schemeReferenceNumber),Some(id)) =>
-          schemeConnector.getSchemeDetails(id, srnRequest, schemeReferenceNumber).map {
-            case Right(schemeDetails) =>
+          schemeConnector.getSchemeDetails(id, srnRequest, schemeReferenceNumber, true).map {
+            case Right(json) =>
+              val schemeDetails = json.as[PsaSchemeDetails](PsaSchemeDetails.apiReads)
               val isAssociated = schemeDetails.psaDetails.exists(psa => psa.id == id)
               Ok(Json.toJson(isAssociated))
             case Left(e) => result(e)

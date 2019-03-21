@@ -25,7 +25,7 @@ import models.jsonTransformations.SchemeSubscriptionDetailsTransformer
 import models.schemes.PsaSchemeDetails
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{JsValue, Writes}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -49,9 +49,9 @@ trait SchemeConnector {
 
   def getCorrelationId(requestId: Option[String]): String
 
-  def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
+  def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String, isAssociation:Boolean)(implicit headerCarrier: HeaderCarrier,
                                                                               ec: ExecutionContext,
-                                                                              request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]]
+                                                                              request: RequestHeader): Future[Either[HttpException, JsValue]]
 
   def updateSchemeDetails(pstr: String, data: JsValue)(implicit
                                               headerCarrier: HeaderCarrier,
@@ -66,19 +66,20 @@ class SchemeConnectorImpl @Inject()(
                                      auditService: AuditService,
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
-                                     fs: FeatureSwitchManagementService
+                                     fs: FeatureSwitchManagementService,
+                                     schemeAuditService: SchemeAuditService
                                    ) extends SchemeConnector with HttpErrorFunctions {
 
   case class SchemeFailedMapToUserAnswersException() extends Exception
 
-  def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
+  private def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
     val requestId = getCorrelationId(hc.requestId.map(_.value))
 
     Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
-  def getCorrelationId(requestId: Option[String]): String = {
+  override def getCorrelationId(requestId: Option[String]): String = {
     requestId.getOrElse {
       Logger.error("No Request Id found while calling register with Id")
       randomUUID.toString
@@ -86,20 +87,14 @@ class SchemeConnectorImpl @Inject()(
   }
 
   //scalastyle:off cyclomatic.complexity
-  private def handleResponse(psaId: String, response: HttpResponse)(
+  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, isAssociation:Boolean)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
-    auditService.sendEvent(
-      SchemeDetailsAuditEvent(
-        psaId = psaId,
-        status = response.status,
-        payload = if (response.body.isEmpty) None else Some(response.json)
-      )
-    )
 
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
     response.status match {
       case OK =>
         val temporaryMappingTest = response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers)
+
         if (temporaryMappingTest.isSuccess)
           Logger.warn("PensionsSchemeSuccessfulMapToUserAnswers")
         else {
@@ -111,14 +106,17 @@ class SchemeConnectorImpl @Inject()(
           invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
           Left(new BadRequestException("INVALID PAYLOAD"))
         },
-        value =>{
-          if(fs.get(IsVariationsEnabled)) {
+        _ =>{
+          if(fs.get(IsVariationsEnabled) && !isAssociation) {
             val userAnswersJson = response.json.transform(
               schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
             Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
+            Right(userAnswersJson)
+          } else {
+            Right(response.json)
           }
-          Right(value)
         })
+
       case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
       case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
       case NOT_FOUND => Left(new NotFoundException(response.body))
@@ -147,10 +145,10 @@ class SchemeConnectorImpl @Inject()(
       }
   }
 
-  override def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit
+  override def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String, isAssociation:Boolean)(implicit
                                                                                        headerCarrier: HeaderCarrier,
                                                                                        ec: ExecutionContext,
-                                                                                       request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]] = {
+                                                                                       request: RequestHeader): Future[Either[HttpException, JsValue]] = {
 
     implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
       override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
@@ -160,7 +158,8 @@ class SchemeConnectorImpl @Inject()(
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly)
-      .map (response => handleResponse(psaId, response))
+      .map (response => handleSchemeDetailsResponse(psaId, response, isAssociation)) andThen
+      schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
   override def listOfSchemes(psaId: String)(implicit
@@ -175,7 +174,7 @@ class SchemeConnectorImpl @Inject()(
 
   }
 
-  def updateSchemeDetails(pstr: String, data: JsValue)(implicit
+  override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
                                                        headerCarrier: HeaderCarrier,
                                                        ec: ExecutionContext,
                                                        request: RequestHeader): Future[HttpResponse] = {

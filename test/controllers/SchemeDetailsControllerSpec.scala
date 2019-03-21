@@ -53,8 +53,9 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
     "return OK when the scheme is registered successfully" in {
 
       val successResponse = Json.toJson(psaSchemeDetailsSample)
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.successful(Right(psaSchemeDetailsSample)))
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
+        Future.successful(Right(Json.toJson(psaSchemeDetailsSample))))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
 
@@ -69,7 +70,7 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
         verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any())(any(), any(), any())
+          Matchers.any(), Matchers.any())(any(), any(), any())
       }
     }
 
@@ -80,7 +81,7 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
         verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any())(any(), any(), any())
+          Matchers.any(), Matchers.any())(any(), any(), any())
       }
     }
 
@@ -91,14 +92,15 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
         verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any())(any(), any(), any())
+          Matchers.any(), Matchers.any())(any(), any(), any())
       }
     }
 
 
     "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
@@ -110,7 +112,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw BadRequestException when bad request with INVALID_SRN returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_SRN"))))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
@@ -122,7 +125,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw BadRequestException when bad request with INVALID_PSTR returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_PSTR"))))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
@@ -134,7 +138,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw BadRequestException when bad request with INVALID_CORRELATIONID returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_CORRELATIONID"))))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
@@ -146,7 +151,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw Upstream4xxResponse when UpStream4XXResponse returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(Upstream4xxResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
@@ -158,7 +164,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(Upstream5xxResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
@@ -170,7 +177,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(Upstream5xxResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
@@ -182,7 +190,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw generic exception when any other exception returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber),
+        Matchers.eq(false))(any(), any(), any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)

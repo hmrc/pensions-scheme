@@ -20,20 +20,21 @@ import audit.{AuditService, SchemeDetailsAuditEvent}
 import audit.testdoubles.StubSuccessfulAuditService
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
+import config.FeatureSwitchManagementService
 import models.Reads.schemes.{SchemeDetailsStubData, SchemeDetailsStubJsonData}
 import org.joda.time.LocalDate
 import org.scalatest._
 import org.slf4j.event.Level
-import play.api.LoggerLike
+import play.api.{Application, LoggerLike}
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.inject.bind
-import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsObject, Json}
+import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http._
-import utils.{StubLogger, WireMockHelper}
+import utils.{FakeFeatureSwitchManagementService, StubLogger, WireMockHelper}
 import play.api.libs.json.JodaWrites._
 
 class SchemeConnectorSpec extends AsyncFlatSpec
@@ -43,7 +44,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   with RecoverMethods
   with EitherValues
   with SchemeDetailsStubData
-  with ConnectorBehaviours {
+  with ConnectorBehaviours with JsonFileReader{
 
   import SchemeConnectorSpec._
 
@@ -221,8 +222,56 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(psaSchemeDetails.toString())
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe psaSchemeDetailsSample
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
+      response.right.value shouldBe psaSchemeDetails
+    }
+  }
+
+  it should "return user answer json if scheme variation is enabled" in {
+
+    lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
+      "auditing.enabled" -> false,
+      "metrics.enabled" -> false
+    ).overrides(bind[FeatureSwitchManagementService].toInstance(FakeFeatureSwitchManagementService(true)),
+      bind[AuditService].toInstance(auditService)).build()
+
+    val connector: SchemeConnector = appWithFeatureEnabled.injector.instanceOf[SchemeConnector]
+
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
+
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(desResponse.toString())
+        )
+    )
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
+      response.right.value shouldBe userAnswersResponse
+    }
+  }
+
+  it should "return scheme details if scheme variation is enabled and its association call" in {
+    lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
+      "auditing.enabled" -> false,
+      "metrics.enabled" -> false
+    ).overrides(bind[FeatureSwitchManagementService].toInstance(FakeFeatureSwitchManagementService(true)),
+      bind[AuditService].toInstance(auditService)).build()
+
+    val connector: SchemeConnector = appWithFeatureEnabled.injector.instanceOf[SchemeConnector]
+
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(psaSchemeDetails.toString())
+        )
+    )
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, true).map { response =>
+      response.right.value shouldBe psaSchemeDetails
     }
   }
 
@@ -235,7 +284,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("INVALID_IDTYPE"))
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_IDTYPE")
@@ -252,7 +301,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_SRN")
@@ -269,7 +318,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_PSTR")
@@ -286,7 +335,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_CORRELATIONID")
@@ -303,7 +352,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber, false)) map {
       ex =>
         ex.upstreamResponseCode shouldBe BAD_REQUEST
         ex.message should include ("not valid")
@@ -318,7 +367,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("NOT_FOUND"))
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
       response.left.value shouldBe a[NotFoundException]
       response.left.value.message should include("NOT_FOUND")
     }
@@ -332,7 +381,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("FORBIDDEN"))
         )
     )
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber, false)) map {
       ex =>
         ex.upstreamResponseCode shouldBe FORBIDDEN
         ex.message should include ("FORBIDDEN")
@@ -349,7 +398,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
+    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber, false)) map {
       ex =>
         ex.upstreamResponseCode shouldBe INTERNAL_SERVER_ERROR
         ex.message should include("SERVER_ERROR")
@@ -366,7 +415,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(psaSchemeDetails.toString())
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { _ =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { _ =>
       auditService.verifySent(
         SchemeDetailsAuditEvent(psaId, 200, Some(Json.toJson(psaSchemeDetails)))
       ) shouldBe true
@@ -385,10 +434,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-
-    //SchemeDetailsAuditEvent(test,404,Some({"code":"NOT_FOUND","reason":"Reason for NOT_FOUND"}))
-
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
       auditService.verifySent(
         SchemeDetailsAuditEvent(psaId, 404, Some(Json.parse(expectedResponse)))
       ) shouldBe true
