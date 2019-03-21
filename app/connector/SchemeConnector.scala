@@ -49,14 +49,14 @@ trait SchemeConnector {
 
   def getCorrelationId(requestId: Option[String]): String
 
-  def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String, isAssociation:Boolean)(implicit headerCarrier: HeaderCarrier,
-                                                                              ec: ExecutionContext,
-                                                                              request: RequestHeader): Future[Either[HttpException, JsValue]]
+  def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String, isAssociation: Boolean)(implicit headerCarrier: HeaderCarrier,
+                                                                                                      ec: ExecutionContext,
+                                                                                                      request: RequestHeader): Future[Either[HttpException, JsValue]]
 
   def updateSchemeDetails(pstr: String, data: JsValue)(implicit
-                                              headerCarrier: HeaderCarrier,
-                                              ec: ExecutionContext,
-                                              request: RequestHeader): Future[HttpResponse]
+                                                       headerCarrier: HeaderCarrier,
+                                                       ec: ExecutionContext,
+                                                       request: RequestHeader): Future[HttpResponse]
 
 }
 
@@ -72,59 +72,11 @@ class SchemeConnectorImpl @Inject()(
 
   case class SchemeFailedMapToUserAnswersException() extends Exception
 
-  private def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
-    val requestId = getCorrelationId(hc.requestId.map(_.value))
-
-    Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
-      "Content-Type" -> "application/json", "CorrelationId" -> requestId)
-  }
-
   override def getCorrelationId(requestId: Option[String]): String = {
     requestId.getOrElse {
       Logger.error("No Request Id found while calling register with Id")
       randomUUID.toString
     }.replaceAll("(govuk-tax-|-)", "").slice(0, 32)
-  }
-
-  //scalastyle:off cyclomatic.complexity
-  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, isAssociation:Boolean)(
-    implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
-
-    val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
-    response.status match {
-      case OK =>
-        val temporaryMappingTest = response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers)
-
-        if (temporaryMappingTest.isSuccess)
-          Logger.warn("PensionsSchemeSuccessfulMapToUserAnswers")
-        else {
-          Logger.warn(s"PensionsSchemeFailedMapToUserAnswers - [$temporaryMappingTest]")
-        }
-
-        response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
-        _ => {
-          invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
-          Left(new BadRequestException("INVALID PAYLOAD"))
-        },
-        _ =>{
-          if(fs.get(IsVariationsEnabled) && !isAssociation) {
-            val userAnswersJson = response.json.transform(
-              schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
-            Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
-            Right(userAnswersJson)
-          } else {
-            Right(response.json)
-          }
-        })
-
-      case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
-      case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
-      case NOT_FOUND => Left(new NotFoundException(response.body))
-      case FORBIDDEN if response.body.contains("INVALID_BUSINESS_PARTNER") => Left(new ForbiddenException(response.body))
-      case status if is4xx(status) => throw Upstream4xxResponse(response.body, status, BAD_REQUEST, response.allHeaders)
-      case status if is5xx(status) => throw Upstream5xxResponse(response.body, status, BAD_GATEWAY)
-      case status => throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
-    }
   }
 
   override def registerScheme(psaId: String, registerData: JsValue)(implicit
@@ -145,10 +97,12 @@ class SchemeConnectorImpl @Inject()(
       }
   }
 
-  override def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String, isAssociation:Boolean)(implicit
-                                                                                       headerCarrier: HeaderCarrier,
-                                                                                       ec: ExecutionContext,
-                                                                                       request: RequestHeader): Future[Either[HttpException, JsValue]] = {
+  override def getSchemeDetails(psaId: String, schemeIdType: String,
+                                idNumber: String,
+                                isAssociation: Boolean)(implicit
+                                                        headerCarrier: HeaderCarrier,
+                                                        ec: ExecutionContext,
+                                                        request: RequestHeader): Future[Either[HttpException, JsValue]] = {
 
     implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
       override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
@@ -158,7 +112,7 @@ class SchemeConnectorImpl @Inject()(
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly)
-      .map (response => handleSchemeDetailsResponse(psaId, response, isAssociation)) andThen
+      .map(response => handleSchemeDetailsResponse(psaId, response, isAssociation)) andThen
       schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
@@ -175,9 +129,9 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
-                                                       headerCarrier: HeaderCarrier,
-                                                       ec: ExecutionContext,
-                                                       request: RequestHeader): Future[HttpResponse] = {
+                                                                headerCarrier: HeaderCarrier,
+                                                                ec: ExecutionContext,
+                                                                request: RequestHeader): Future[HttpResponse] = {
 
     val updateSchemeUrl = config.updateSchemeUrl.format(pstr)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
@@ -190,5 +144,53 @@ class SchemeConnectorImpl @Inject()(
         case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
           invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
       }
+  }
+
+  private def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
+    val requestId = getCorrelationId(hc.requestId.map(_.value))
+
+    Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
+      "Content-Type" -> "application/json", "CorrelationId" -> requestId)
+  }
+
+  //scalastyle:off cyclomatic.complexity
+  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, isAssociation: Boolean)(
+    implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
+
+    val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
+    response.status match {
+      case OK =>
+        val temporaryMappingTest = response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers)
+
+        if (temporaryMappingTest.isSuccess)
+          Logger.warn("PensionsSchemeSuccessfulMapToUserAnswers")
+        else {
+          Logger.warn(s"PensionsSchemeFailedMapToUserAnswers - [$temporaryMappingTest]")
+        }
+
+        response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
+          _ => {
+            invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
+            Left(new BadRequestException("INVALID PAYLOAD"))
+          },
+          _ => {
+            if (fs.get(IsVariationsEnabled) && !isAssociation) {
+              val userAnswersJson = response.json.transform(
+                schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
+              Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
+              Right(userAnswersJson)
+            } else {
+              Right(response.json)
+            }
+          })
+
+      case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
+      case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
+      case NOT_FOUND => Left(new NotFoundException(response.body))
+      case FORBIDDEN if response.body.contains("INVALID_BUSINESS_PARTNER") => Left(new ForbiddenException(response.body))
+      case status if is4xx(status) => throw Upstream4xxResponse(response.body, status, BAD_REQUEST, response.allHeaders)
+      case status if is5xx(status) => throw Upstream5xxResponse(response.body, status, BAD_GATEWAY)
+      case status => throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
+    }
   }
 }
