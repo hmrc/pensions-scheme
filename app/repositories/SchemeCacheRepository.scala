@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeCacheRepository @Inject()(collectionName: String,
                                       encryptionKey: String,
-                                      ttl: Option[Int],
+                                      expireAtTime: Option[DateTime],
                                       config: Configuration,
                                       component: ReactiveMongoComponent
                                             )(implicit ec: ExecutionContext)extends ReactiveRepository[JsValue, BSONObjectID](
@@ -43,6 +43,9 @@ collectionName,
 component.mongoConnector.db,
 implicitly
 ){
+
+  private def getExpireAt: DateTime =
+    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(config.underlying.getInt("defaultDataExpireAfterDays") + 1).toDateTimeAtStartOfDay()
 
   private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
 
@@ -57,17 +60,13 @@ implicitly
 
   private object DataEntry {
 
-    def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC), expireAt: DateTime = getExpireAt): DataEntry =
+    def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC),
+              expireAt: DateTime = expireAtTime.getOrElse(getExpireAt)): DataEntry =
       DataEntry(id, BSONBinary(data, GenericBinarySubtype), lastUpdated, expireAt)
 
     private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
     implicit val reads: OFormat[DataEntry] = Json.format[DataEntry]
     implicit val writes: OWrites[DataEntry] = Json.format[DataEntry]
-  }
-
-  private def getExpireAt: DateTime = {
-    val days: Int = ttl.fold(config.underlying.getInt("defaultDataExpireAfterDays"))(t => t)
-    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(days + 1).toDateTimeAtStartOfDay()
   }
 
   private case class JsonDataEntry(
@@ -83,16 +82,15 @@ implicitly
     implicit val writes: OWrites[JsonDataEntry] = Json.format[JsonDataEntry]
   }
 
+  private val ttl = 0
   private val expireAt = "expireAt"
   private val dataExpiry = "dataExpiry"
-  private val fieldName = "lastUpdated"
   private val createdIndexName = "userAnswersExpiry"
   private val expireAfterSeconds = "expireAfterSeconds"
 
   (for {
-    _ <- checkIndexTtl(createdIndexName, ttl)
-    _ <- ensureIndex(fieldName, createdIndexName, ttl)
-    _ <- ensureIndex(expireAt, dataExpiry, ttl)
+    _ <- checkIndexTtl(createdIndexName, Some(ttl))
+    _ <- ensureIndex(expireAt, dataExpiry, Some(ttl))
   } yield {
     ()
   }) recoverWith {
@@ -106,15 +104,15 @@ implicitly
     CollectionDiagnostics.indexInfo(collection)
       .flatMap {seqIndexes =>
         seqIndexes
-          .find(index => index.name == indexName && index.ttl != ttl)
+          .find(index => index.name == indexName)
           .map {
             index =>
-              Logger.warn(s"Index $indexName on collection ${collection.name} with TTL ${index.ttl} does not match configuration value $ttl")
+              Logger.warn(s"Index $indexName on collection ${collection.name} is not required")
               collection.indexesManager.drop(index.name) map {
-                case n if n > 0 => Logger.warn(s"Dropped index $indexName on collection ${collection.name} as TTL value incorrect")
+                case n if n > 0 => Logger.warn(s"Dropped index $indexName on collection ${collection.name} as index not required")
                 case _ => Logger.warn(s"Index index $indexName on collection ${collection.name} had already been dropped (possible race condition)")
               }
-          } getOrElse Future.successful(Logger.info(s"Index $indexName on collection ${collection.name} has correct TTL $ttl"))
+          } getOrElse Future.successful(Logger.info(s"Index $indexName on collection ${collection.name} is not available"))
       }
 
   }
@@ -143,6 +141,7 @@ implicitly
   }
 
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
+    println("\n\n\n expireAtTime: "+expireAtTime)
     val document: JsValue = {
       if (encrypted) {
         val unencrypted = PlainText(Json.stringify(data))
@@ -150,7 +149,7 @@ implicitly
         val dataAsByteArray: Array[Byte] = encryptedData.getBytes("UTF-8")
         Json.toJson(DataEntry(id, dataAsByteArray))
       } else
-        Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC), getExpireAt))
+        Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC), expireAtTime.getOrElse(getExpireAt)))
     }
     val selector = BSONDocument("id" -> id)
     val modifier = BSONDocument("$set" -> document)

@@ -18,6 +18,11 @@ POST          /journey-cache/update-scheme/:id                    controllers.Up
 DELETE        /journey-cache/update-scheme/:id                    controllers.UpdateSchemeJourneyCacheController.remove(id: String)
 GET           /journey-cache/update-scheme/:id/lastUpdated        controllers.UpdateSchemeJourneyCacheController.lastUpdated(id: String)
 
+# scheme details read only caching in protected mongo
+GET           /journey-cache/scheme-details/:id                    controllers.SchemeDetailsJourneyCacheController.get(id: String)
+POST          /journey-cache/scheme-details/:id                    controllers.SchemeDetailsJourneyCacheController.save(id: String)
+DELETE        /journey-cache/scheme-details/:id                    controllers.SchemeDetailsJourneyCacheController.remove(id: String)
+
 GET           /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.get(id: String)
 POST          /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.save(id: String)
 DELETE        /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.remove(id: String)

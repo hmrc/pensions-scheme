@@ -23,14 +23,13 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 
 import scala.concurrent.ExecutionContext
 
-class UpdateSchemeCacheRepository @Inject()(
+class SchemeDetailsCacheRepository @Inject()(
                                              config: Configuration,
                                              component: ReactiveMongoComponent
                                            )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.update-scheme.name"),
+  config.underlying.getString("mongodb.pensions-scheme-cache.scheme-details.name"),
   "scheme.json.encryption",
-  Some(DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(
-    config.underlying.getInt("mongodb.pensions-scheme-cache.update-scheme.timeToLiveInDays") + 1).toDateTimeAtStartOfDay()),
+  Some(DateTime.now(DateTimeZone.UTC).plusSeconds(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds"))),
   config,
   component
 )
