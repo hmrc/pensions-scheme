@@ -61,7 +61,8 @@ object AppDependencies {
     "org.scalatestplus.play"      %% "scalatestplus-play"           % scalaTestPlusPlayVersion  % scope,
     "org.mockito"                  % "mockito-all"                  % mockitoAllVersion         % scope,
     "com.github.tomakehurst"       % "wiremock"                     % wireMockVersion           % scope,
-    "wolfendale"                  %% "scalacheck-gen-regexp"        % scalacheckGenRegexp       % scope
+    "wolfendale"                  %% "scalacheck-gen-regexp"        % scalacheckGenRegexp       % scope,
+    "uk.gov.hmrc"                 %% "reactivemongo-test"           % "4.8.0-play-25"           % scope
   )
 
   // Fixes a transitive dependency clash between wiremock and scalatestplus-play
