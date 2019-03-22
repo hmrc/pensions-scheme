@@ -141,7 +141,6 @@ implicitly
   }
 
   def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
-    println("\n\n\n expireAtTime: "+expireAtTime)
     val document: JsValue = {
       if (encrypted) {
         val unencrypted = PlainText(Json.stringify(data))
