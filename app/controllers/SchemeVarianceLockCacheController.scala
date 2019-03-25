@@ -20,6 +20,7 @@ import com.google.inject.Inject
 import play.api.Configuration
 import play.api.libs.json.{JsArray, Json, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.libs.F.Tuple
 import repositories.{LockRepository, SchemeVariance}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
@@ -35,12 +36,13 @@ class SchemeVarianceLockCacheController @Inject()(
 
   implicit def tuple2Writes[A, B](implicit aWrites: Writes[A], bWrites: Writes[B]): Writes[Tuple2[A, B]] = new Writes[Tuple2[A, B]] {
     def writes(tuple: Tuple2[A, B]) = JsArray(Seq(aWrites.writes(tuple._1), bWrites.writes(tuple._2)))
+  }
 
   def lock(psaId: String, srn: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
         repository.lock(SchemeVariance(psaId, srn))
-          .map{ Ok(_)}
+          .map{ Ok(Json.toJson[Tuple2[Boolean, Boolean]](Tuple2(.1, _.2))(tuple2Writes))}
       }
   }
 
