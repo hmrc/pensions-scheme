@@ -99,9 +99,9 @@ class SchemeConnectorImpl @Inject()(
 
   override def getSchemeDetails(psaId: String, schemeIdType: String,
                                 idNumber: String)(implicit
-                                                        headerCarrier: HeaderCarrier,
-                                                        ec: ExecutionContext,
-                                                        request: RequestHeader): Future[Either[HttpException, JsValue]] = {
+                                                  headerCarrier: HeaderCarrier,
+                                                  ec: ExecutionContext,
+                                                  request: RequestHeader): Future[Either[HttpException, JsValue]] = {
 
     implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
       override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
@@ -111,7 +111,7 @@ class SchemeConnectorImpl @Inject()(
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly)
-      .map(response => handleSchemeDetailsResponse(psaId, response)) andThen
+      .map(response => handleSchemeDetailsResponse(psaId, response, schemeDetailsUrl)) andThen
       schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
@@ -152,8 +152,7 @@ class SchemeConnectorImpl @Inject()(
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
-  //scalastyle:off cyclomatic.complexity
-  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse)(
+  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, url:String)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
 
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
@@ -182,14 +181,21 @@ class SchemeConnectorImpl @Inject()(
               Right(response.json)
             }
           })
-
-      case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => Left(new BadRequestException(response.body))
-      case CONFLICT if response.body.contains("DUPLICATE_SUBMISSION") => Left(new ConflictException(response.body))
-      case NOT_FOUND => Left(new NotFoundException(response.body))
       case FORBIDDEN if response.body.contains("INVALID_BUSINESS_PARTNER") => Left(new ForbiddenException(response.body))
-      case status if is4xx(status) => throw Upstream4xxResponse(response.body, status, BAD_REQUEST, response.allHeaders)
-      case status if is5xx(status) => throw Upstream5xxResponse(response.body, status, BAD_GATEWAY)
-      case status => throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
+      case _ => Left(handleErrorResponse("getSchemeDetails", url, response, badResponseSeq))
     }
   }
+
+  private def handleErrorResponse(methodContext: String, url: String, response: HttpResponse, badResponseSeq: Seq[String]): HttpException =
+    response.status match {
+      case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => new BadRequestException(response.body)
+      case NOT_FOUND => new NotFoundException(response.body)
+      case status if is4xx(status) =>
+        throw Upstream4xxResponse(upstreamResponseMessage(methodContext, url, status, response.body), status, status, response.allHeaders)
+      case status if is5xx(status) =>
+        throw Upstream5xxResponse(upstreamResponseMessage(methodContext, url, status, response.body), status, BAD_GATEWAY)
+      case status =>
+        throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
+
+    }
 }
