@@ -51,11 +51,11 @@ object SchemeVariance {
 @ImplementedBy(classOf[LockMongoRepository])
 trait LockRepository {
 
-  def removeLock(lock: SchemeVariance): Future[Unit]
+  def releaseLock(lock: SchemeVariance): Future[Unit]
 
-  def removeByPSA(psaId: String): Future[Unit]
+  def releaseLockByPSA(psaId: String): Future[Unit]
 
-  def removeBySRN(id: String): Future[Unit]
+  def releaseLockBySRN(id: String): Future[Unit]
 
   def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]]
 
@@ -89,11 +89,11 @@ class LockMongoRepository @Inject()(config: AppConfig,
     Future.sequence(indexes.map(collection.indexesManager.ensure(_)))
   }
 
-  override def removeLock(lock: SchemeVariance): Future[Unit] = collection.findAndRemove(byLock(lock.psaId, lock.srn)).map(_ => ())
+  override def releaseLock(lock: SchemeVariance): Future[Unit] = collection.findAndRemove(byLock(lock.psaId, lock.srn)).map(_ => ())
 
-  override def removeByPSA(psaId: String): Future[Unit] = collection.findAndRemove(byPsaId(psaId)).map(_ => ())
+  override def releaseLockByPSA(psaId: String): Future[Unit] = collection.findAndRemove(byPsaId(psaId)).map(_ => ())
 
-  override def removeBySRN(srn: String): Future[Unit] = collection.findAndRemove(bySrn(srn)).map(_ => ())
+  override def releaseLockBySRN(srn: String): Future[Unit] = collection.findAndRemove(bySrn(srn)).map(_ => ())
 
   override def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]] = collection.find(byLock(lock.psaId, lock.srn)).one[SchemeVariance]
 
@@ -116,25 +116,29 @@ class LockMongoRepository @Inject()(config: AppConfig,
         lastError.writeErrors.isEmpty
     } recoverWith {
       case e: LastError if e.code == documentExistsErrorCode => {
-        getExistingLock(newLock).map {
-          _.getOrElse(throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}"))
-        }.map{existingLock=> existingLock.psaId==newLock.psaId && existingLock.srn==newLock.srn }
+        getExistingLock(newLock).map{
+          case Some(existingLock) => existingLock.psaId==newLock.psaId && existingLock.srn==newLock.srn
+          case None => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
+        }
       }
     }
   }
 
   override def lock(newLock: SchemeVariance): Future[(Boolean, Boolean)] = {
+    val lockNotAvailableForPsa : Boolean = false
+    val lockNotAvailableForSRN : Boolean = false
+    val locked : Boolean = true
     collection.insert(newLock)
-      .map(_ => (true, true)) recoverWith {
+      .map(_ => (locked, locked)) recoverWith {
       case e: LastError if e.code == documentExistsErrorCode => {
         for{
           psaLock <- getExistingLockByPSA(newLock.psaId)
           srnLock <- getExistingLockBySRN(newLock.srn)
         } yield {
           (psaLock, srnLock) match {
-            case (Some(existingPsaLock), None) => (existingPsaLock.psaId!=newLock.psaId, existingPsaLock.srn!=newLock.srn)
-            case (None, Some(existingSrnLock)) => (existingSrnLock.psaId!=newLock.psaId, existingSrnLock.srn!=newLock.srn)
-            case (Some(existingPsaLock), Some(existingSrnLock)) => (existingSrnLock.psaId==newLock.psaId, existingSrnLock.srn==newLock.srn)
+            case (Some(_), None) => (lockNotAvailableForPsa, locked)
+            case (None, Some(_)) => (locked, lockNotAvailableForSRN)
+            case (Some(_), Some(_)) => (locked, locked)
             case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
           }
         }
@@ -142,15 +146,9 @@ class LockMongoRepository @Inject()(config: AppConfig,
     }
   }
 
-  private def byPsaId(psaId: String): JsObject = {
-    Json.obj("psaId" -> psaId)
-  }
+  private def byPsaId(psaId: String): JsObject = Json.obj("psaId" -> psaId)
 
-  private def bySrn(srn: String): JsObject = {
-    Json.obj("srn" -> srn)
-  }
+  private def bySrn(srn: String): JsObject = Json.obj("srn" -> srn)
 
-  private def byLock(psaId: String, srn: String): JsObject = {
-    Json.obj("psaId" -> psaId, "srn" -> srn)
-  }
+  private def byLock(psaId: String, srn: String): JsObject = Json.obj("psaId" -> psaId, "srn" -> srn)
 }

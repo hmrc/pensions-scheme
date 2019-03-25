@@ -55,34 +55,34 @@ class LockMongoRepositoryTest extends MongoUnitSpec
     await(repository.drop)
   }
 
-  "removeLock" should {
+  "releaseLock" should {
     "Delete One" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
 
-      await(repository.removeLock(SchemeVariance("psa2", "srn2")))
+      await(repository.releaseLock(SchemeVariance("psa2", "srn2")))
 
       thenTheDocumentCountShouldBe(1)
     }
   }
 
-  "removeByPSA by psaId" should {
+  "releaseLockByPSA by psaId" should {
     "Delete One" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
 
-      await(repository.removeByPSA("psa1"))
+      await(repository.releaseLockByPSA("psa1"))
 
       thenTheDocumentCountShouldBe(1)
     }
   }
 
-  "removeBySRN by srn" should {
+  "releaseLockBySRN by srn" should {
     "Delete One" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
 
-      await(repository.removeBySRN("srn2"))
+      await(repository.releaseLockBySRN("srn2"))
 
       thenTheDocumentCountShouldBe(1)
     }
@@ -159,24 +159,25 @@ class LockMongoRepositoryTest extends MongoUnitSpec
 
     val lockNotAvailableForPsa : Boolean = false
     val lockNotAvailableForSRN : Boolean = false
+    val locked : Boolean = true
 
-    "return true if its new and unique combination for psaId and srn"in {
-      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe (true, true)
+    "return locked if its new and unique combination for psaId and srn"in {
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe (locked, locked)
     }
 
-    "return true if exiting lock"in {
+    "return locked if exiting lock"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe (true, true)
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe (locked, locked)
     }
 
-    "return false if its not unique combination for psaId and srn, existing psaId"in {
+    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa1", "srn2"))) shouldBe (lockNotAvailableForPsa, true)
+      await(repository.lock(SchemeVariance("psa1", "srn2"))) shouldBe (lockNotAvailableForPsa, locked)
     }
 
-    "return false if its not unique combination for psaId and srn, existing srn"in {
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe (true, lockNotAvailableForSRN)
+      await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe (locked, lockNotAvailableForSRN)
     }
   }
 
