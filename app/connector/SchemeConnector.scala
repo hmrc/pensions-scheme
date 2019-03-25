@@ -50,8 +50,8 @@ trait SchemeConnector {
   def getCorrelationId(requestId: Option[String]): String
 
   def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
-                                                                                                      ec: ExecutionContext,
-                                                                                                      request: RequestHeader): Future[Either[HttpException, JsValue]]
+                                                                              ec: ExecutionContext,
+                                                                              request: RequestHeader): Future[Either[HttpException, JsValue]]
 
   def updateSchemeDetails(pstr: String, data: JsValue)(implicit
                                                        headerCarrier: HeaderCarrier,
@@ -152,10 +152,11 @@ class SchemeConnectorImpl @Inject()(
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
-  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, url:String)(
+  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, url: String)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
 
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
+
     response.status match {
       case OK =>
         val temporaryMappingTest = response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers)
