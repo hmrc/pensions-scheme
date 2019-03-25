@@ -49,7 +49,7 @@ trait SchemeConnector {
 
   def getCorrelationId(requestId: Option[String]): String
 
-  def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String, isAssociation: Boolean)(implicit headerCarrier: HeaderCarrier,
+  def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
                                                                                                       ec: ExecutionContext,
                                                                                                       request: RequestHeader): Future[Either[HttpException, JsValue]]
 
@@ -98,8 +98,7 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def getSchemeDetails(psaId: String, schemeIdType: String,
-                                idNumber: String,
-                                isAssociation: Boolean)(implicit
+                                idNumber: String)(implicit
                                                         headerCarrier: HeaderCarrier,
                                                         ec: ExecutionContext,
                                                         request: RequestHeader): Future[Either[HttpException, JsValue]] = {
@@ -112,7 +111,7 @@ class SchemeConnectorImpl @Inject()(
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly)
-      .map(response => handleSchemeDetailsResponse(psaId, response, isAssociation)) andThen
+      .map(response => handleSchemeDetailsResponse(psaId, response)) andThen
       schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
@@ -154,7 +153,7 @@ class SchemeConnectorImpl @Inject()(
   }
 
   //scalastyle:off cyclomatic.complexity
-  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, isAssociation: Boolean)(
+  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
 
     val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
@@ -174,7 +173,7 @@ class SchemeConnectorImpl @Inject()(
             Left(new BadRequestException("INVALID PAYLOAD"))
           },
           _ => {
-            if (fs.get(IsVariationsEnabled) && !isAssociation) {
+            if (fs.get(IsVariationsEnabled)) {
               val userAnswersJson = response.json.transform(
                 schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
               Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")

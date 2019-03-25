@@ -16,32 +16,35 @@
 
 package controllers
 
-import base.SpecBase
+import base.{JsonFileReader, SpecBase}
 import connector.SchemeConnector
-import models.Reads.schemes.{SchemeDetailsStubData, SchemeDetailsStubJsonData}
-import models.schemes.PsaSchemeDetails
+import models.Reads.schemes.SchemeDetailsStubJsonData
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{never, reset, verify, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.BadRequestException
+import utils.FakeFeatureSwitchManagementService
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubJsonData {
+class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration
+  with SchemeDetailsStubJsonData with JsonFileReader{
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
+  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents(), FakeFeatureSwitchManagementService(false))
   private val schemeReferenceNumber = "S999999999"
   private val psaIdNumber = "A1234567"
   val srnRequest = "srn"
+  val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+  val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
   before {
     reset(mockSchemeConnector)
@@ -55,7 +58,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
     "return OK" when {
       "we retrieve whether if the psa is associated or not" in {
         when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
-          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber), Matchers.eq(true))(any(), any(), any())).thenReturn(
+          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
           Future.successful(Right(psaSchemeDetails)))
 
         val result = associatedPsaController.isPsaAssociated()(fakeRequest)
@@ -65,7 +68,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
 
       "the psa we retrieve does not exist within the list of PSAs we receive from getSchemeDetails" in {
         when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
-          Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber), Matchers.eq(true))(any(), any(), any())).thenReturn(
+          Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
           Future.successful(Right(psaSchemeDetails)))
 
         val result = associatedPsaController.isPsaAssociated()(fakeRequest)
@@ -78,8 +81,23 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
         val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
 
         when(mockSchemeConnector.getSchemeDetails(Matchers.any(),
-          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber), Matchers.eq(true))(any(), any(), any())).thenReturn(
+          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
           Future.successful(Right(psaSchemeDetails)))
+
+        val result = associatedPsaController.isPsaAssociated()(request)
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe Json.toJson(true)
+      }
+
+      "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails if variation enabled" in {
+        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents(), FakeFeatureSwitchManagementService(true))
+
+        val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
+
+        when(mockSchemeConnector.getSchemeDetails(Matchers.any(),
+          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+          Future.successful(Right(userAnswersResponse)))
 
         val result = associatedPsaController.isPsaAssociated()(request)
 
@@ -97,7 +115,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
         verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any(), Matchers.any())(any(), any(), any())
+          Matchers.any())(any(), any(), any())
       }
     }
 
@@ -109,7 +127,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
         verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any(), Matchers.any())(any(), any(), any())
+          Matchers.any())(any(), any(), any())
       }
     }
 
@@ -120,13 +138,13 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
         verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any(), Matchers.any())(any(), any(), any())
+          Matchers.any())(any(), any(), any())
       }
     }
 
     "we receive INVALID_IDTYPE returned from Des" in {
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
-        Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber), Matchers.eq(true))(any(), any(), any())).thenReturn(
+        Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
       val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/")

@@ -222,7 +222,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(psaSchemeDetails.toString())
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       response.right.value shouldBe psaSchemeDetails
     }
   }
@@ -248,30 +248,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(desResponse.toString())
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       response.right.value shouldBe userAnswersResponse
-    }
-  }
-
-  it should "return scheme details if scheme variation is enabled and its association call" in {
-    lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
-      "auditing.enabled" -> false,
-      "metrics.enabled" -> false
-    ).overrides(bind[FeatureSwitchManagementService].toInstance(FakeFeatureSwitchManagementService(true)),
-      bind[AuditService].toInstance(auditService)).build()
-
-    val connector: SchemeConnector = appWithFeatureEnabled.injector.instanceOf[SchemeConnector]
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsUrl))
-        .willReturn(
-          ok
-            .withHeader("Content-Type", "application/json")
-            .withBody(psaSchemeDetails.toString())
-        )
-    )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, true).map { response =>
-      response.right.value shouldBe psaSchemeDetails
     }
   }
 
@@ -284,7 +262,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("INVALID_IDTYPE"))
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_IDTYPE")
@@ -301,7 +279,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_SRN")
@@ -318,7 +296,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_PSTR")
@@ -335,7 +313,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false) map {
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
         response.left.value shouldBe a[BadRequestException]
         response.left.value.message should include("INVALID_CORRELATIONID")
@@ -352,7 +330,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber, false)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe BAD_REQUEST
         ex.message should include ("not valid")
@@ -367,7 +345,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("NOT_FOUND"))
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       response.left.value shouldBe a[NotFoundException]
       response.left.value.message should include("NOT_FOUND")
     }
@@ -381,7 +359,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("FORBIDDEN"))
         )
     )
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber, false)) map {
+    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe FORBIDDEN
         ex.message should include ("FORBIDDEN")
@@ -398,7 +376,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber, false)) map {
+    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
       ex =>
         ex.upstreamResponseCode shouldBe INTERNAL_SERVER_ERROR
         ex.message should include("SERVER_ERROR")
@@ -415,7 +393,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(psaSchemeDetails.toString())
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { _ =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { _ =>
       auditService.verifySent(
         SchemeDetailsAuditEvent(psaId, 200, Some(Json.toJson(psaSchemeDetails)))
       ) shouldBe true
@@ -434,7 +412,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map { response =>
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
       auditService.verifySent(
         SchemeDetailsAuditEvent(psaId, 404, Some(Json.parse(expectedResponse)))
       ) shouldBe true

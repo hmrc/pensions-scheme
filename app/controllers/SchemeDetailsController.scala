@@ -37,7 +37,7 @@ class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector,
 
       (idType,id, idPsa) match {
         case (Some(schemeIdType),Some(idNumber), Some(psaId)) =>
-          schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber, false).map {
+          schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
             case Right(psaSchemeDetails) => Ok(Json.toJson(psaSchemeDetails))
             case Left(e) => result(e)
           }

@@ -259,5 +259,9 @@
     "addressLine2": "Telford2",
     "addressLine3": "Telford13",
     "addressLine4": "Telford14"
-  }
+  },
+  "psaDetails" :[
+    {"id":"A0000000"},
+    {"id":"A0000001"}
+  ]
 }
