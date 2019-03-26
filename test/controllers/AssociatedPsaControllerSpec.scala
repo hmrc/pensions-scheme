@@ -18,7 +18,7 @@ package controllers
 
 import base.{JsonFileReader, SpecBase}
 import connector.SchemeConnector
-import models.Reads.schemes.SchemeDetailsStubJsonData
+import models.Reads.schemes.{SchemeDetailsStubData, SchemeDetailsStubJsonData}
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{never, reset, verify, when}
@@ -30,21 +30,21 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.BadRequestException
-import utils.FakeFeatureSwitchManagementService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration
-  with SchemeDetailsStubJsonData with JsonFileReader{
+  with SchemeDetailsStubData with JsonFileReader{
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents(), FakeFeatureSwitchManagementService(false))
+  val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
   private val schemeReferenceNumber = "S999999999"
   private val psaIdNumber = "A1234567"
   val srnRequest = "srn"
   val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
   val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
+  val psaSchemeDetails = Json.toJson(psaSchemeDetailsSample)
 
   before {
     reset(mockSchemeConnector)
@@ -91,7 +91,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       }
 
       "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails if variation enabled" in {
-        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents(), FakeFeatureSwitchManagementService(true))
+        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
 
         val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
 
@@ -106,7 +106,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       }
 
       "the psa we retrieve dont exists in the list of PSAs we receive from getSchemeDetails as its empty if variation enabled" in {
-        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents(), FakeFeatureSwitchManagementService(true))
+        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
 
         val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
 

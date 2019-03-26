@@ -223,7 +223,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
     connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe psaSchemeDetails
+      response.right.value shouldBe Json.toJson(psaSchemeDetailsSample)
     }
   }
 
@@ -395,7 +395,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     )
     connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { _ =>
       auditService.verifySent(
-        SchemeDetailsAuditEvent(psaId, 200, Some(Json.toJson(psaSchemeDetails)))
+        SchemeDetailsAuditEvent(psaId, 200, Some(Json.toJson(psaSchemeDetailsSample)))
       ) shouldBe true
     }
   }
