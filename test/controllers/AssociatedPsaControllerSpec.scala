@@ -25,7 +25,7 @@ import org.mockito.Mockito.{never, reset, verify, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -103,6 +103,23 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
 
         status(result) mustBe OK
         contentAsJson(result) mustBe Json.toJson(true)
+      }
+
+      "the psa we retrieve dont exists in the list of PSAs we receive from getSchemeDetails as its empty if variation enabled" in {
+        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents(), FakeFeatureSwitchManagementService(true))
+
+        val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
+
+        val emptyPsa = (userAnswersResponse.as[JsObject] -  "psaDetails")
+
+        when(mockSchemeConnector.getSchemeDetails(Matchers.any(),
+          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
+          Future.successful(Right(emptyPsa)))
+
+        val result = associatedPsaController.isPsaAssociated()(request)
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe Json.toJson(false)
       }
     }
   }

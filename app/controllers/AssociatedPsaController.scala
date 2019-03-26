@@ -44,9 +44,9 @@ class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
             case Right(json) =>
 
               val isAssociated =  if (fs.get(IsVariationsEnabled)){
-                (json \ "psaDetails").as[JsArray].value.map {
+                (json \ "psaDetails").asOpt[JsArray].exists(_.value.map {
                   item => item.\("id").as[String]
-                }.toList.contains(id)
+                }.toList.contains(id))
               } else {
                 val schemeDetails = json.as[PsaSchemeDetails](PsaSchemeDetails.apiReads)
                 schemeDetails.psaDetails.exists(psa => psa.id == id)
