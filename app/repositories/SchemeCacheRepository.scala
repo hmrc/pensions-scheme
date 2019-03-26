@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeCacheRepository @Inject()(collectionName: String,
                                       encryptionKey: String,
-                                      expireAtTime: Option[DateTime],
+                                      expireInSeconds: Option[Int],
                                       config: Configuration,
                                       component: ReactiveMongoComponent
                                             )(implicit ec: ExecutionContext)extends ReactiveRepository[JsValue, BSONObjectID](
@@ -44,8 +44,12 @@ component.mongoConnector.db,
 implicitly
 ){
 
-  private def getExpireAt: DateTime =
-    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(config.underlying.getInt("defaultDataExpireAfterDays") + 1).toDateTimeAtStartOfDay()
+  private def getExpireAt: DateTime = if(expireInSeconds.isEmpty){
+    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(
+      config.underlying.getInt("mongodb.pensions-scheme-cache.update-scheme.timeToLiveInDays") + 1).toDateTimeAtStartOfDay()
+  } else {
+    DateTime.now(DateTimeZone.UTC).plusSeconds(expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds")))
+  }
 
   private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
 
@@ -61,7 +65,7 @@ implicitly
   private object DataEntry {
 
     def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC),
-              expireAt: DateTime = expireAtTime.getOrElse(getExpireAt)): DataEntry =
+              expireAt: DateTime = getExpireAt): DataEntry =
       DataEntry(id, BSONBinary(data, GenericBinarySubtype), lastUpdated, expireAt)
 
     private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
@@ -148,7 +152,7 @@ implicitly
         val dataAsByteArray: Array[Byte] = encryptedData.getBytes("UTF-8")
         Json.toJson(DataEntry(id, dataAsByteArray))
       } else
-        Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC), expireAtTime.getOrElse(getExpireAt)))
+        Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC), getExpireAt))
     }
     val selector = BSONDocument("id" -> id)
     val modifier = BSONDocument("$set" -> document)

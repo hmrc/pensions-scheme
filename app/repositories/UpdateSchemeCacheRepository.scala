@@ -17,7 +17,6 @@
 package repositories
 
 import com.google.inject.Inject
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
 
@@ -29,8 +28,7 @@ class UpdateSchemeCacheRepository @Inject()(
                                            )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.update-scheme.name"),
   "scheme.json.encryption",
-  Some(DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(
-    config.underlying.getInt("mongodb.pensions-scheme-cache.update-scheme.timeToLiveInDays") + 1).toDateTimeAtStartOfDay()),
+  None,
   config,
   component
 )

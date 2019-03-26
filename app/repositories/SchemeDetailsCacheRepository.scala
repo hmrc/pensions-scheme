@@ -29,7 +29,7 @@ class SchemeDetailsCacheRepository @Inject()(
                                            )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.scheme-details.name"),
   "scheme.json.encryption",
-  Some(DateTime.now(DateTimeZone.UTC).plusSeconds(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds"))),
+  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")),
   config,
   component
 )
