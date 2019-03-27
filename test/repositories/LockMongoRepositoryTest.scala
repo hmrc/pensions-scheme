@@ -188,9 +188,7 @@ class LockMongoRepositoryTest extends MongoUnitSpec
 
     "create ttl on expireAt field" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      val indexes = await(repository.collection.indexesManager.list())
-      val index = indexes.find(index => index.key.exists(_._1.contains("expireAt"))).get
-
+      val index = getIndex("expireAt").get
       val expected = Index(key = Seq("expireAt" -> Ascending),
         name = Some("dataExpiry"),
         options = BSONDocument("expireAfterSeconds" -> 0)).copy(version = index.version)
