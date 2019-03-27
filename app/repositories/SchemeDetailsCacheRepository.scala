@@ -17,18 +17,19 @@
 package repositories
 
 import com.google.inject.Inject
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
 
 import scala.concurrent.ExecutionContext
 
-class UpdateSchemeCacheRepository @Inject()(
+class SchemeDetailsCacheRepository @Inject()(
                                              config: Configuration,
                                              component: ReactiveMongoComponent
                                            )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.update-scheme.name"),
+  config.underlying.getString("mongodb.pensions-scheme-cache.scheme-details.name"),
   "scheme.json.encryption",
-  None,
+  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")),
   config,
   component
 )
