@@ -16,6 +16,7 @@
 
 package models
 
+import models.schemes.PreviousAddressInfo
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -31,6 +32,8 @@ object CorrespondenceAddress {
       (JsPath \ "countryCode").read[String] and
       (JsPath \ "postalCode").readNullable[String]
     ) (CorrespondenceAddress.apply _)
+
+  implicit val formats: OFormat[PreviousAddressInfo] = Json.format[PreviousAddressInfo]
 }
 
 sealed trait Address

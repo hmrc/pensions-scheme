@@ -38,7 +38,7 @@ import uk.gov.hmrc.http.{
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeServiceImplSpec
-    extends AsyncFlatSpec
+  extends AsyncFlatSpec
     with Matchers
     with EitherValues {
 
@@ -98,9 +98,9 @@ object SchemeServiceImplSpec extends SpecBase {
       auditService,
       appConfig) {
       override def registerScheme(psaId: String, json: JsValue)(
-          implicit headerCarrier: HeaderCarrier,
-          ec: ExecutionContext,
-          request: RequestHeader): Future[HttpResponse] = {
+        implicit headerCarrier: HeaderCarrier,
+        ec: ExecutionContext,
+        request: RequestHeader): Future[HttpResponse] = {
         throw new NotImplementedError()
       }
     }
@@ -135,23 +135,21 @@ class FakeSchemeConnector extends SchemeConnector {
     this.listOfSchemesResponse = response
 
   override def registerScheme(psaId: String, registerData: JsValue)(
-      implicit
-      headerCarrier: HeaderCarrier,
-      ec: ExecutionContext,
-      request: RequestHeader): Future[HttpResponse] = registerSchemeResponse
+    implicit
+    headerCarrier: HeaderCarrier,
+    ec: ExecutionContext,
+    request: RequestHeader): Future[HttpResponse] = registerSchemeResponse
 
   override def listOfSchemes(psaId: String)(
-      implicit
-      headerCarrier: HeaderCarrier,
-      ec: ExecutionContext,
-      request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
+    implicit
+    headerCarrier: HeaderCarrier,
+    ec: ExecutionContext,
+    request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
-  override def getSchemeDetails(psaId: String,
-                                schemeIdType: String,
-                                idNumber: String)(
-      implicit headerCarrier: HeaderCarrier,
-      ec: ExecutionContext,
-      request: RequestHeader): Future[Either[HttpException, PsaSchemeDetails]] =
+  override def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(
+    implicit headerCarrier: HeaderCarrier,
+    ec: ExecutionContext,
+    request: RequestHeader): Future[Either[HttpException, JsValue]] =
     validSchemeDetailsResponse
 
   override def getCorrelationId(requestId: Option[String]): String =
@@ -179,7 +177,7 @@ object FakeSchemeConnector extends SchemeDetailsStubData {
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
 
   private val validSchemeDetailsResponse =
-    Future.successful(Right(psaSchemeDetailsSample))
+    Future.successful(Right(Json.toJson(psaSchemeDetailsSample)))
 }
 
 class FakeBarsConnector extends BarsConnector {
@@ -187,15 +185,15 @@ class FakeBarsConnector extends BarsConnector {
   import SchemeServiceSpec._
 
   override def invalidBankAccount(bankAccount: BankAccount, psaId: String)(
-      implicit ec: ExecutionContext,
-      hc: HeaderCarrier,
-      rh: RequestHeader): Future[Boolean] = {
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier,
+    rh: RequestHeader): Future[Boolean] = {
     bankAccount match {
       case BankAccount(_, accountNumber)
-          if accountNumber == invalidAccountNumber =>
+        if accountNumber == invalidAccountNumber =>
         Future.successful(true)
       case BankAccount(_, accountNumber)
-          if accountNumber == notInvalidAccountNumber =>
+        if accountNumber == notInvalidAccountNumber =>
         Future.successful(false)
       case _ =>
         throw new IllegalArgumentException(

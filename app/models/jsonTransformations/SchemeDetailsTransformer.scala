@@ -48,7 +48,15 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       orElse doNothing) reduce
   }
 
+  private def getPsaIds: Reads[JsObject] = {
+    (__ \ 'psaSchemeDetails \ 'psaDetails).readNullable(
+      __.read(Reads.seq((__ \ 'id).json.copyFrom((__ \ 'psaid).json.pick)).map(JsArray(_)))).flatMap { partnership =>
+        (__ \ 'psaDetails).json.put(partnership.getOrElse(JsArray())) orElse doNothing
+      }
+  }
+
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
+    getPsaIds and
     (__ \ 'schemeName).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeName).json.pick) and
       (__ \ 'investmentRegulated).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isReguledSchemeInvestment).json.pick) and
       (__ \ 'occupationalPensionScheme).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isOccupationalPensionScheme).json.pick) and

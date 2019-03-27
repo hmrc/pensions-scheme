@@ -24,9 +24,8 @@ import play.api.mvc._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
-import scala.concurrent.{Future, ExecutionContext}
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
                                         cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
@@ -35,13 +34,17 @@ class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
       val psaId = request.headers.get("psaId")
       val srn = request.headers.get("schemeReferenceNumber")
       val srnRequest = "srn"
-
       (srn,psaId) match {
         case (Some(schemeReferenceNumber),Some(id)) =>
           schemeConnector.getSchemeDetails(id, srnRequest, schemeReferenceNumber).map {
-            case Right(schemeDetails) =>
-              val isAssociated = schemeDetails.psaDetails.exists(psa => psa.id == id)
+            case Right(json) =>
+
+              val isAssociated =  (json \ "psaDetails").asOpt[JsArray].exists(_.value.map {
+                item => item.\("id").as[String]
+              }.toList.contains(id))
+
               Ok(Json.toJson(isAssociated))
+
             case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters PSA Id or SRN"))
