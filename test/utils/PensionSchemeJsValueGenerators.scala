@@ -383,14 +383,17 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         moreThanTenTrustees.map { value => Json.obj("hasMoreThanTenTrustees" -> value) }.getOrElse(Json.obj()) ++
         optional("insuranceCompanyName", insuranceCompanyName)
 
+
     (
       Json.obj(
         "psaSchemeDetails" -> Json.obj(
-          "schemeDetails" -> schemeDetails
+          "schemeDetails" -> schemeDetails,
+                "psaDetails" -> JsArray(Seq(Json.obj("psaid"->"A0000000"),Json.obj("psaid"-> "A0000001")))
         )
       ),
       Json.obj(
         "schemeName" -> schemeName,
+        "psaDetails" -> JsArray(Seq(Json.obj("id"->"A0000000"),Json.obj("id"-> "A0000001"))),
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
         "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
         "membershipFuture" -> SchemeMembers.nameWithValue(futureSchemeMembers),

@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package repositories
+package controllers
 
 import com.google.inject.Inject
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
+import play.api.mvc.ControllerComponents
+import repositories.SchemeDetailsCacheRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.ExecutionContext
 
-class UpdateSchemeCacheRepository @Inject()(
-                                             config: Configuration,
-                                             component: ReactiveMongoComponent
-                                           )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.update-scheme.name"),
-  "scheme.json.encryption",
-  None,
-  config,
-  component
-)
+class SchemeDetailsJourneyCacheController @Inject()(
+                                                     config: Configuration,
+                                                     repository: SchemeDetailsCacheRepository,
+                                                     authConnector: AuthConnector,
+                                                     cc: ControllerComponents
+                                            )(implicit val ec: ExecutionContext) extends SchemeCacheController(config, repository, authConnector, cc)

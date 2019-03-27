@@ -54,7 +54,7 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
       val successResponse = Json.toJson(psaSchemeDetailsSample)
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.successful(Right(psaSchemeDetailsSample)))
+        Future.successful(Right(successResponse)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
 

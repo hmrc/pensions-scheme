@@ -18,7 +18,6 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeConnector
-import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
@@ -38,7 +37,7 @@ class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector,
       (idType,id, idPsa) match {
         case (Some(schemeIdType),Some(idNumber), Some(psaId)) =>
           schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
-            case Right(psaSchemeDetails) => Ok(Json.toJson(psaSchemeDetails))
+            case Right(psaSchemeDetails) =>  Ok(psaSchemeDetails)
             case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))

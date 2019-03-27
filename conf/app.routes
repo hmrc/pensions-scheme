@@ -18,11 +18,16 @@ POST          /journey-cache/update-scheme/:id                          controll
 DELETE        /journey-cache/update-scheme/:id                          controllers.UpdateSchemeJourneyCacheController.remove(id: String)
 GET           /journey-cache/update-scheme/:id/lastUpdated              controllers.UpdateSchemeJourneyCacheController.lastUpdated(id: String)
 
-# answers caching in protected mongo
+# scheme details lock caching in protected mongo
 GET           /journey-cache/update-scheme/get-lock/:psaId/:srn         controllers.SchemeVarianceLockCacheController.getLock(psaId: String, srn: String)
 POST          /journey-cache/update-scheme/lock/:psaId/:srn             controllers.SchemeVarianceLockCacheController.lock(psaId: String, srn: String)
 DELETE        /journey-cache/update-scheme/release-lock/:psaId/:srn     controllers.SchemeVarianceLockCacheController.releaseLock(psaId: String, srn: String)
 
+
+# scheme details read only caching in protected mongo
+GET           /journey-cache/scheme-details/:id                         controllers.SchemeDetailsJourneyCacheController.get(id: String)
+POST          /journey-cache/scheme-details/:id                         controllers.SchemeDetailsJourneyCacheController.save(id: String)
+DELETE        /journey-cache/scheme-details/:id                         controllers.SchemeDetailsJourneyCacheController.remove(id: String)
 
 GET           /journey-cache/psa/:id                                    controllers.PSAJourneyCacheController.get(id: String)
 POST          /journey-cache/psa/:id                                    controllers.PSAJourneyCacheController.save(id: String)
