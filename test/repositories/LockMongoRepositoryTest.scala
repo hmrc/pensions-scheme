@@ -17,11 +17,16 @@
 package repositories
 
 import config.AppConfig
+import models.{SchemeVariance, SchemeVarianceLock}
+import org.mockito.Mockito._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import reactivemongo.api.DB
+import reactivemongo.api.indexes.Index
+import reactivemongo.api.indexes.IndexType.Ascending
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
@@ -39,9 +44,10 @@ class LockMongoRepositoryTest extends MongoUnitSpec
     override val mongo: () => DB = self.mongo
   }
 
-  private val config = mock[AppConfig]
+  private val appConfig = mock[AppConfig]
+  when(appConfig.defaultDataExpireAfterDays).thenReturn(0)
 
-  private def repository = new LockMongoRepository(config, provider)
+  private def repository = new LockMongoRepository(appConfig, provider)
 
   override protected def collection: JSONCollection = repository.collection
 
@@ -162,22 +168,34 @@ class LockMongoRepositoryTest extends MongoUnitSpec
     val locked : Boolean = true
 
     "return locked if its new and unique combination for psaId and srn"in {
-      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe (locked, locked)
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe SchemeVarianceLock(locked, locked)
     }
 
     "return locked if exiting lock"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe (locked, locked)
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe SchemeVarianceLock(locked, locked)
     }
 
     "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa1", "srn2"))) shouldBe (lockNotAvailableForPsa, locked)
+      await(repository.lock(SchemeVariance("psa1", "srn2"))) shouldBe SchemeVarianceLock(lockNotAvailableForPsa, locked)
     }
 
     "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe (locked, lockNotAvailableForSRN)
+      await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe SchemeVarianceLock(locked, lockNotAvailableForSRN)
+    }
+
+    "create ttl on expireAt field" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      val indexes = await(repository.collection.indexesManager.list())
+      val index = indexes.find(index => index.key.exists(_._1.contains("expireAt"))).get
+
+      val expected = Index(key = Seq("expireAt" -> Ascending),
+        name = Some("dataExpiry"),
+        options = BSONDocument("expireAfterSeconds" -> 0)).copy(version = index.version)
+
+      index shouldBe expected
     }
   }
 

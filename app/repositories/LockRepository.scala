@@ -18,15 +18,18 @@ package repositories
 
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import config.AppConfig
+import models.{SchemeVariance, SchemeVarianceLock}
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.LastError
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{Cursor, DB}
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,12 +44,6 @@ class MongoDb @Inject()(component: ReactiveMongoComponent) extends MongoDbProvid
   override val mongo: () => DB = component.mongoConnector.db
 }
 
-
-case class SchemeVariance(psaId: String, srn: String)
-
-object SchemeVariance {
-  implicit val format: OFormat[SchemeVariance] = Json.format[SchemeVariance]
-}
 
 @ImplementedBy(classOf[LockMongoRepository])
 trait LockRepository {
@@ -67,7 +64,7 @@ trait LockRepository {
 
   def replaceLock(newLock: SchemeVariance): Future[Boolean]
 
-  def lock(newLock: SchemeVariance): Future[(Boolean, Boolean)]
+  def lock(newLock: SchemeVariance): Future[SchemeVarianceLock]
 }
 
 @Singleton
@@ -80,9 +77,21 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   private lazy val documentExistsErrorCode = Some(11000)
 
+  private def getExpireAt: DateTime =
+    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(config.defaultDataExpireAfterDays + 1).toDateTimeAtStartOfDay()
+
+  private case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+
+  private object JsonDataEntry{
+    implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
+    implicit val format: OFormat[JsonDataEntry] = Json.format[JsonDataEntry]
+  }
+
+
   override lazy val indexes: Seq[Index] = Seq(
     Index(key = Seq("psaId" -> Ascending), name = Some("psaId_Index"), unique = true),
-    Index(key = Seq("srn" -> Ascending), name = Some("srn_Index"), unique = true)
+    Index(key = Seq("srn" -> Ascending), name = Some("srn_Index"), unique = true),
+    Index(key = Seq("expireAt" -> Ascending), name = Some("dataExpiry"), options = BSONDocument("expireAfterSeconds" -> 0))
   )
 
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = {
@@ -110,8 +119,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   override def replaceLock(newLock: SchemeVariance): Future[Boolean] = {
     collection.update(
-      byLock(newLock.psaId,newLock.srn),
-      Json.obj("$set" -> newLock), upsert = true).map {
+      byLock(newLock.psaId,newLock.srn), modifier(newLock), upsert = true).map {
       lastError =>
         lastError.writeErrors.isEmpty
     } recoverWith {
@@ -124,21 +132,22 @@ class LockMongoRepository @Inject()(config: AppConfig,
     }
   }
 
-  override def lock(newLock: SchemeVariance): Future[(Boolean, Boolean)] = {
+  override def lock(newLock: SchemeVariance): Future[SchemeVarianceLock] = {
     val lockNotAvailableForPsa : Boolean = false
     val lockNotAvailableForSRN : Boolean = false
     val locked : Boolean = true
-    collection.insert(newLock)
-      .map(_ => (locked, locked)) recoverWith {
+
+    collection.update(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
+      .map(_ => SchemeVarianceLock(locked, locked)) recoverWith {
       case e: LastError if e.code == documentExistsErrorCode => {
         for{
           psaLock <- getExistingLockByPSA(newLock.psaId)
           srnLock <- getExistingLockBySRN(newLock.srn)
         } yield {
           (psaLock, srnLock) match {
-            case (Some(_), None) => (lockNotAvailableForPsa, locked)
-            case (None, Some(_)) => (locked, lockNotAvailableForSRN)
-            case (Some(_), Some(_)) => (locked, locked)
+            case (Some(_), None) => SchemeVarianceLock(lockNotAvailableForPsa, locked)
+            case (None, Some(_)) => SchemeVarianceLock(locked, lockNotAvailableForSRN)
+            case (Some(_), Some(_)) => SchemeVarianceLock(locked, locked)
             case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
           }
         }
@@ -146,9 +155,12 @@ class LockMongoRepository @Inject()(config: AppConfig,
     }
   }
 
-  private def byPsaId(psaId: String): JsObject = Json.obj("psaId" -> psaId)
+  private def byPsaId(psaId: String): BSONDocument = BSONDocument("psaId" -> psaId)
 
-  private def bySrn(srn: String): JsObject = Json.obj("srn" -> srn)
+  private def bySrn(srn: String): BSONDocument = BSONDocument("srn" -> srn)
 
-  private def byLock(psaId: String, srn: String): JsObject = Json.obj("psaId" -> psaId, "srn" -> srn)
+  private def byLock(psaId: String, srn: String): BSONDocument = BSONDocument("psaId" -> psaId, "srn" -> srn)
+
+  private def modifier(newLock: SchemeVariance): BSONDocument =  BSONDocument("$set" -> Json.toJson(
+      JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), DateTime.now(DateTimeZone.UTC), getExpireAt)))
 }

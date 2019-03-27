@@ -24,9 +24,8 @@ import play.api.mvc._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
-import scala.concurrent.{Future, ExecutionContext}
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
                                         cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {

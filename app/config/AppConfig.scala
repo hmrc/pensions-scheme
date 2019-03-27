@@ -17,18 +17,21 @@
 package config
 
 import com.google.inject.Inject
+import com.typesafe.config.Config
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Environment, servicesConfig: ServicesConfig) {
+  lazy val underlying: Config = runModeConfiguration.underlying
+  lazy val defaultDataExpireAfterDays: Int = underlying.getInt("defaultDataExpireAfterDays")
   lazy val baseURL: String = servicesConfig.baseUrl("des-hod")
   lazy val barsBaseUrl: String = servicesConfig.baseUrl("bank-account-reputation")
-  lazy val appName: String = runModeConfiguration.underlying.getString("appName")
+  lazy val appName: String = underlying.getString("appName")
 
-  lazy val schemeRegistrationUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.register")}"
-  lazy val listOfSchemesUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.list.of.schemes")}"
-  lazy val schemeDetailsUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.scheme.details")}"
-  lazy val updateSchemeUrl: String = s"$baseURL${runModeConfiguration.underlying.getString("serviceUrls.update.scheme")}"
+  lazy val schemeRegistrationUrl: String = s"$baseURL${underlying.getString("serviceUrls.scheme.register")}"
+  lazy val listOfSchemesUrl: String = s"$baseURL${underlying.getString("serviceUrls.list.of.schemes")}"
+  lazy val schemeDetailsUrl: String = s"$baseURL${underlying.getString("serviceUrls.scheme.details")}"
+  lazy val updateSchemeUrl: String = s"$baseURL${underlying.getString("serviceUrls.update.scheme")}"
   lazy val desEnvironment: String = runModeConfiguration.getOptional[String]("microservice.services.des-hod.env").getOrElse("local")
   lazy val authorization: String = "Bearer " + runModeConfiguration.getOptional[String]("microservice.services.des-hod.authorizationToken").getOrElse("local")
 }
