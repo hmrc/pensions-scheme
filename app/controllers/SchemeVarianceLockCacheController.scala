@@ -20,12 +20,13 @@ import com.google.inject.Inject
 import models.SchemeVariance
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc._
 import repositories.LockRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeVarianceLockCacheController @Inject()(
                                                    config: Configuration,
@@ -34,29 +35,42 @@ class SchemeVarianceLockCacheController @Inject()(
                                                    cc: ControllerComponents
                                                  )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
 
-  def lock(psaId: String, srn: String): Action[AnyContent] = Action.async {
+  def lock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        repository.lock(SchemeVariance(psaId, srn))
-          .map{ lock =>  Ok(Json.toJson(lock))}
+        getIds { (psaId, srn) =>
+            repository.lock(SchemeVariance(psaId, srn))
+              .map { lock => Ok(Json.toJson(lock.toString)) }
+        }
       }
   }
 
-  def getLock(psaId: String, srn: String): Action[AnyContent] = Action.async {
+  def getLock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        repository.getExistingLock(SchemeVariance(psaId, srn))
-          .map{
-            case Some(schemeVariance)=> Ok(Json.toJson(schemeVariance))
-            case None=>  NotFound
-          }
+        getIds { (psaId, srn) =>
+          repository.getExistingLock(SchemeVariance(psaId, srn))
+            .map {
+              case Some(schemeVariance) => Ok(Json.toJson(schemeVariance))
+              case None => NotFound
+            }
+        }
       }
   }
 
-  def releaseLock(psaId: String, srn: String): Action[AnyContent] = Action.async {
+  def releaseLock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        repository.releaseLock(SchemeVariance(psaId, srn)).map(_ => Ok)
+        getIds { (psaId, srn) =>
+          repository.releaseLock(SchemeVariance(psaId, srn)).map(_ => Ok)
+        }
       }
+  }
+
+  private def getIds(block: (String, String) => Future[Result])(implicit request: Request[_]) : Future[Result] = {
+    (request.headers.get("psaId"), request.headers.get("srn"))  match {
+      case (Some(psaId), Some(srn)) => block(psaId, srn)
+      case _ => Future.failed(new BadRequestException("Bad Request without psaId and srn"))
+    }
   }
 }

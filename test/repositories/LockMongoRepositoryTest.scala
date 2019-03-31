@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.{SchemeVariance, SchemeVarianceLock}
+import models._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.ScalaFutures._
@@ -168,27 +168,27 @@ class LockMongoRepositoryTest extends MongoUnitSpec
     val locked : Boolean = true
 
     "return locked if its new and unique combination for psaId and srn"in {
-      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe SchemeVarianceLock(locked, locked)
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe VarianceLock
     }
 
     "return locked if exiting lock"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe SchemeVarianceLock(locked, locked)
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe VarianceLock
     }
 
     "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa1", "srn2"))) shouldBe SchemeVarianceLock(lockNotAvailableForPsa, locked)
+      await(repository.lock(SchemeVariance("psa1", "srn2"))) shouldBe PsaLock
     }
 
     "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe SchemeVarianceLock(locked, lockNotAvailableForSRN)
+      await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe SchemeLock
     }
 
     "create ttl on expireAt field" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      val index = getIndex("expireAt").get
+      val index = getIndex("dataExpiry").get
       val expected = Index(key = Seq("expireAt" -> Ascending),
         name = Some("dataExpiry"),
         options = BSONDocument("expireAfterSeconds" -> 0)).copy(version = index.version)

@@ -18,7 +18,7 @@ package repositories
 
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import config.AppConfig
-import models.{SchemeVariance, SchemeVarianceLock}
+import models._
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -64,7 +64,7 @@ trait LockRepository {
 
   def replaceLock(newLock: SchemeVariance): Future[Boolean]
 
-  def lock(newLock: SchemeVariance): Future[SchemeVarianceLock]
+  def lock(newLock: SchemeVariance): Future[Lock]
 }
 
 @Singleton
@@ -132,22 +132,19 @@ class LockMongoRepository @Inject()(config: AppConfig,
     }
   }
 
-  override def lock(newLock: SchemeVariance): Future[SchemeVarianceLock] = {
-    val lockNotAvailableForPsa : Boolean = false
-    val lockNotAvailableForSRN : Boolean = false
-    val locked : Boolean = true
+  override def lock(newLock: SchemeVariance): Future[Lock] = {
 
     collection.update(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
-      .map(_ => SchemeVarianceLock(locked, locked)) recoverWith {
+      .map[Lock](_ => VarianceLock) recoverWith {
       case e: LastError if e.code == documentExistsErrorCode => {
         for{
           psaLock <- getExistingLockByPSA(newLock.psaId)
           srnLock <- getExistingLockBySRN(newLock.srn)
         } yield {
           (psaLock, srnLock) match {
-            case (Some(_), None) => SchemeVarianceLock(lockNotAvailableForPsa, locked)
-            case (None, Some(_)) => SchemeVarianceLock(locked, lockNotAvailableForSRN)
-            case (Some(_), Some(_)) => SchemeVarianceLock(locked, locked)
+            case (Some(_), None) => PsaLock
+            case (None, Some(_)) => SchemeLock
+            case (Some(_), Some(_)) => VarianceLock
             case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
           }
         }
