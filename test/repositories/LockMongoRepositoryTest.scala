@@ -186,6 +186,12 @@ class LockMongoRepositoryTest extends MongoUnitSpec
       await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe SchemeLock
     }
 
+    "return both locked if its not unique combination for psaId and srn, existing srn"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+      await(repository.lock(SchemeVariance("psa2", "srn1"))) shouldBe BothLock
+    }
+
     "create ttl on expireAt field" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       val index = getIndex("dataExpiry").get

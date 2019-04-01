@@ -144,7 +144,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
           (psaLock, srnLock) match {
             case (Some(_), None) => PsaLock
             case (None, Some(_)) => SchemeLock
-            case (Some(_), Some(_)) => VarianceLock
+            case (Some(id), Some(srn)) => if(id==newLock.psaId && srn == newLock.srn) VarianceLock else BothLock
             case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
           }
         }
