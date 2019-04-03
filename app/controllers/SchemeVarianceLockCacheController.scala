@@ -38,7 +38,7 @@ class SchemeVarianceLockCacheController @Inject()(
   def lock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        getIds { (psaId, srn) =>
+        withIDs { (psaId, srn) =>
             repository.lock(SchemeVariance(psaId, srn))
               .map { lock => Ok(Json.toJson(lock.toString)) }
         }
@@ -48,7 +48,7 @@ class SchemeVarianceLockCacheController @Inject()(
   def getLock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        getIds { (psaId, srn) =>
+        withIDs { (psaId, srn) =>
           repository.getExistingLock(SchemeVariance(psaId, srn))
             .map {
               case Some(schemeVariance) => Ok(Json.toJson(schemeVariance))
@@ -61,13 +61,13 @@ class SchemeVarianceLockCacheController @Inject()(
   def releaseLock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        getIds { (psaId, srn) =>
+        withIDs { (psaId, srn) =>
           repository.releaseLock(SchemeVariance(psaId, srn)).map(_ => Ok)
         }
       }
   }
 
-  private def getIds(block: (String, String) => Future[Result])(implicit request: Request[_]) : Future[Result] = {
+  private def withIDs(block: (String, String) => Future[Result])(implicit request: Request[_]) : Future[Result] = {
     (request.headers.get("psaId"), request.headers.get("srn"))  match {
       case (Some(psaId), Some(srn)) => block(psaId, srn)
       case _ => Future.failed(new BadRequestException("Bad Request without psaId and srn"))

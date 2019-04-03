@@ -74,7 +74,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
     collectionName = "scheme_variation_lock",
     mongo = mongoDbProvider.mongo,
     domainFormat = SchemeVariance.format) with LockRepository {
-
+  //scalastyle:off magic.number
   private lazy val documentExistsErrorCode = Some(11000)
 
   private def getExpireAt: DateTime =
@@ -111,6 +111,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
   override def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]] = collection.find(bySrn(srn)).one[SchemeVariance]
 
   override def list: Future[List[SchemeVariance]] = {
+    //scalastyle:off magic.number
     val arbitraryLimit = 10000
     collection.find(Json.obj())
       .cursor[SchemeVariance]()
@@ -144,7 +145,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
           (psaLock, srnLock) match {
             case (Some(_), None) => PsaLock
             case (None, Some(_)) => SchemeLock
-            case (Some(id), Some(srn)) => if(id==newLock.psaId && srn == newLock.srn) VarianceLock else BothLock
+            case (Some(pLock), Some(sLock)) => if(pLock.psaId==newLock.psaId && sLock.srn == newLock.srn) BothLock else VarianceLock
             case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
           }
         }
