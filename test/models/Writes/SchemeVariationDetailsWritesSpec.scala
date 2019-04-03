@@ -43,7 +43,7 @@ class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with O
 
         "invalidate establisherAndTrustDetailsType write with schema for incorrect json" in {
 
-            val pensionsScheme= schemeDetailsVariationGen.sample.get
+            val pensionsScheme= schemeDetailsVariationGen.retryUntil(_.customerAndSchemeDetails.schemeName.nonEmpty).sample.get
             val invalidPensionsScheme= pensionsScheme.copy(
               customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(schemeStructure = Some("INVALID")) )
 
