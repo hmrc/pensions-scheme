@@ -1,32 +1,38 @@
 # microservice specific routes
 
-POST          /register-scheme                             controllers.SchemeController.registerScheme
-POST          /update-scheme                               controllers.SchemeController.updateScheme
-GET           /list-of-schemes                             controllers.SchemeController.listOfSchemes
+POST          /register-scheme                                  controllers.SchemeController.registerScheme
+POST          /update-scheme                                    controllers.SchemeController.updateScheme
+GET           /list-of-schemes                                  controllers.SchemeController.listOfSchemes
 
-GET           /scheme                                      controllers.SchemeDetailsController.getSchemeDetails
-
-# answers caching in protected mongo
-GET           /journey-cache/scheme/:id                    controllers.SchemeJourneyCacheController.get(id: String)
-POST          /journey-cache/scheme/:id                    controllers.SchemeJourneyCacheController.save(id: String)
-DELETE        /journey-cache/scheme/:id                    controllers.SchemeJourneyCacheController.remove(id: String)
-GET           /journey-cache/scheme/:id/lastUpdated        controllers.SchemeJourneyCacheController.lastUpdated(id: String)
+GET           /scheme                                           controllers.SchemeDetailsController.getSchemeDetails
 
 # answers caching in protected mongo
-GET           /journey-cache/update-scheme/:id                    controllers.UpdateSchemeJourneyCacheController.get(id: String)
-POST          /journey-cache/update-scheme/:id                    controllers.UpdateSchemeJourneyCacheController.save(id: String)
-DELETE        /journey-cache/update-scheme/:id                    controllers.UpdateSchemeJourneyCacheController.remove(id: String)
-GET           /journey-cache/update-scheme/:id/lastUpdated        controllers.UpdateSchemeJourneyCacheController.lastUpdated(id: String)
+GET           /journey-cache/scheme/:id                         controllers.SchemeJourneyCacheController.get(id: String)
+POST          /journey-cache/scheme/:id                         controllers.SchemeJourneyCacheController.save(id: String)
+DELETE        /journey-cache/scheme/:id                         controllers.SchemeJourneyCacheController.remove(id: String)
+GET           /journey-cache/scheme/:id/lastUpdated             controllers.SchemeJourneyCacheController.lastUpdated(id: String)
+
+# answers caching in protected mongo
+GET           /journey-cache/update-scheme/:id                  controllers.UpdateSchemeJourneyCacheController.get(id: String)
+POST          /journey-cache/update-scheme/:id                  controllers.UpdateSchemeJourneyCacheController.save(id: String)
+DELETE        /journey-cache/update-scheme/:id                  controllers.UpdateSchemeJourneyCacheController.remove(id: String)
+GET           /journey-cache/update-scheme/:id/lastUpdated      controllers.UpdateSchemeJourneyCacheController.lastUpdated(id: String)
+
+# scheme details lock caching in protected mongo
+GET           /update-scheme/get-lock                           controllers.SchemeVarianceLockCacheController.getLock()
+POST          /update-scheme/lock                               controllers.SchemeVarianceLockCacheController.lock()
+DELETE        /update-scheme/release-lock                       controllers.SchemeVarianceLockCacheController.releaseLock()
+
 
 # scheme details read only caching in protected mongo
-GET           /journey-cache/scheme-details/:id                    controllers.SchemeDetailsJourneyCacheController.get(id: String)
-POST          /journey-cache/scheme-details/:id                    controllers.SchemeDetailsJourneyCacheController.save(id: String)
-DELETE        /journey-cache/scheme-details/:id                    controllers.SchemeDetailsJourneyCacheController.remove(id: String)
+GET           /journey-cache/scheme-details/:id                 controllers.SchemeDetailsJourneyCacheController.get(id: String)
+POST          /journey-cache/scheme-details/:id                 controllers.SchemeDetailsJourneyCacheController.save(id: String)
+DELETE        /journey-cache/scheme-details/:id                 controllers.SchemeDetailsJourneyCacheController.remove(id: String)
 
-GET           /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.get(id: String)
-POST          /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.save(id: String)
-DELETE        /journey-cache/psa/:id                       controllers.PSAJourneyCacheController.remove(id: String)
+GET           /journey-cache/psa/:id                            controllers.PSAJourneyCacheController.get(id: String)
+POST          /journey-cache/psa/:id                            controllers.PSAJourneyCacheController.save(id: String)
+DELETE        /journey-cache/psa/:id                            controllers.PSAJourneyCacheController.remove(id: String)
 
-POST          /email-response/*id                          controllers.EmailResponseController.retrieveStatus(id: String)
+POST          /email-response/*id                               controllers.EmailResponseController.retrieveStatus(id: String)
 
-GET           /is-psa-associated                               controllers.AssociatedPsaController.isPsaAssociated
+GET           /is-psa-associated                                controllers.AssociatedPsaController.isPsaAssociated
