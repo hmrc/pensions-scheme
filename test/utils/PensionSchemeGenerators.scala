@@ -219,7 +219,7 @@ trait PensionSchemeGenerators {
   } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
 
 
-  val gen = Gen.listOf(establisherAndTrustDetailsGenNonEmpty).suchThat(_.nonEmpty)
+  val establisherAndTrustDetailsNonEmpty = Gen.listOf(establisherAndTrustDetailsGenNonEmpty).suchThat(_.nonEmpty)
 
   val pensionSchemeUpdateDeclarationGen: Gen[PensionSchemeUpdateDeclaration] = for {
     declaration1 <- booleanGen
