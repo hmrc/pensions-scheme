@@ -164,6 +164,18 @@ trait PensionSchemeGenerators {
     partnerships <- Gen.listOfN(randomNumberFromRange(0, 10), partnershipTrusteeGen)
   } yield TrusteeDetails(individuals, companies, partnerships)
 
+  val establisherDetailsGenNonEmpty: Gen[EstablisherDetails] = for {
+    individuals <- Gen.listOfN(randomNumberFromRange(0, 1), individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0, 1), companyEstablisherGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0, 1), partnershipGen)
+  } yield EstablisherDetails(individuals, companies, partnerships)
+
+  val trusteeDetailsGenNonEmpty: Gen[TrusteeDetails] = for {
+    individuals <- Gen.listOfN(randomNumberFromRange(0, 1), individualGen)
+    companies <- Gen.listOfN(randomNumberFromRange(0, 1), companyTrusteeGen)
+    partnerships <- Gen.listOfN(randomNumberFromRange(0, 1), partnershipTrusteeGen)
+  } yield TrusteeDetails(individuals, companies, partnerships)
+
 
   val CustomerAndSchemeDetailsGen: Gen[CustomerAndSchemeDetails] = for {
     schemeName <- specialCharStringGen
@@ -198,6 +210,16 @@ trait PensionSchemeGenerators {
     establisherDetails <- establisherDetailsGen
     trusteeDetailsType <- Gen.option(trusteeDetailsGen).suchThat(_.nonEmpty)
   } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+
+  val establisherAndTrustDetailsGenNonEmpty : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
+    changeOfEstablisherOrTrustDetails <- booleanGen
+    haveMoreThanTenTrustees <- Gen.option(booleanGen).suchThat(_.nonEmpty)
+    establisherDetails <- establisherDetailsGenNonEmpty
+    trusteeDetailsType <- Gen.option(trusteeDetailsGenNonEmpty).suchThat(_.nonEmpty)
+  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+
+
+  val establisherAndTrustDetailsNonEmpty = Gen.listOf(establisherAndTrustDetailsGenNonEmpty).suchThat(_.nonEmpty)
 
   val pensionSchemeUpdateDeclarationGen: Gen[PensionSchemeUpdateDeclaration] = for {
     declaration1 <- booleanGen

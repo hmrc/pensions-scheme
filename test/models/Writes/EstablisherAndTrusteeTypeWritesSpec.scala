@@ -44,9 +44,10 @@ class EstablisherAndTrusteeTypeWritesSpec extends WordSpec with MustMatchers wit
 
       "invalidate establisherAndTrustDetailsType write with schema for incorrect json" in {
 
-        val element = establisherAndTrustDetailsGen.sample.get
+        val element = establisherAndTrustDetailsNonEmpty.retryUntil(_.nonEmpty).sample.get.head
         val establisher = element._3
-        val invalidEstablisher = establisher.copy(individual = Seq(individualGen.sample.get.copy(utr = Some("12313123213123123123"))))
+        val invalidEstablisher = establisher.copy(individual = Seq(individualGen.suchThat(
+          _.personalDetails.dateOfBirth.nonEmpty).sample.get.copy(utr = Some("12313123213123123123"))))
 
         val mappedEstablisherAndTrustDetails: JsValue = Json.toJson((element._1, element._2, invalidEstablisher, element._4)
         )(PensionsScheme.updateWriteEstablisherAndTrustDetails)
