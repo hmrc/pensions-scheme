@@ -41,7 +41,9 @@ object EstablishersTestJson extends OptionValues {
 
   def establisherCompany(company: CompanyEstablisher, isDeleted: Boolean = false): JsObject = {
     var json = Json.obj(
-      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference, isDeleted),
+      "companyDetails" -> companyDetailsJson(company.organizationName, isDeleted),
+      "companyVat" -> vatJson(company.vatRegistrationNumber),
+      "companyPaye" -> payeJson(company.payeReference),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
@@ -145,7 +147,9 @@ object EstablishersTestJson extends OptionValues {
 
   def trusteeCompanyJson(company: CompanyTrustee, isDeleted: Boolean = true): JsObject =
     Json.obj(
-      "companyDetails" -> companyDetailsJson(company.organizationName, company.vatRegistrationNumber, company.payeReference, isDeleted),
+      "companyDetails" -> companyDetailsJson(company.organizationName, isDeleted),
+      "companyVat" -> vatJson(company.vatRegistrationNumber),
+      "companyPaye" -> payeJson(company.payeReference),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
@@ -197,11 +201,9 @@ object EstablishersTestJson extends OptionValues {
       "phoneNumber" -> contactDetails.telephone
     )
 
-  private def companyDetailsJson(companyName: String, vat: Option[String], paye: Option[String], isDeleted: Boolean = false) =
+  private def companyDetailsJson(companyName: String, isDeleted: Boolean = false) =
     Json.obj(
       "companyName" -> companyName,
-      "vatNumber" -> vat,
-      "payeNumber" -> paye,
       "isDeleted" -> isDeleted
     )
 

@@ -135,8 +135,8 @@ object ReadsEstablisherDetails {
 
   private val companyReads: Reads[Company] = (
     (JsPath \ "companyDetails" \ "companyName").read[String] and
-      (JsPath \ "companyDetails" \ "vatNumber").readNullable[String] and
-      (JsPath \ "companyDetails" \ "payeNumber").readNullable[String] and
+      (JsPath \ "companyVat" \ "vat").readNullable[String] and
+      (JsPath \ "companyPaye" \ "paye").readNullable[String] and
       (JsPath \ "companyUniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "companyUniqueTaxReference" \ "reason").readNullable[String] and
       (JsPath \ "companyRegistrationNumber" \ "crn").readNullable[String] and
