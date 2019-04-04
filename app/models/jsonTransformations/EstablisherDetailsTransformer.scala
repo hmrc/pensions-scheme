@@ -56,6 +56,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
   def userAnswersEstablisherCompanyReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("company")) and
       userAnswersCompanyDetailsReads(desPath) and
+      transformVatToUserAnswersReads(desPath, "companyVat") and
+      userAnswersPayeReads(desPath, "companyPaye") and
       userAnswersCrnReads(desPath) and
       userAnswersUtrReads("companyUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
@@ -74,8 +76,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
   def userAnswersEstablisherPartnershipReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("partnership")) and
       userAnswersPartnershipDetailsReads(desPath) and
-      transformVatToUserAnswersReads(desPath) and
-      userAnswersPayeReads(desPath) and
+      transformVatToUserAnswersReads(desPath, "partnershipVat") and
+      userAnswersPayeReads(desPath, "partnershipPaye") and
       userAnswersUtrReads("partnershipUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and

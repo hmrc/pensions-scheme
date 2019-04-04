@@ -116,8 +116,30 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val result = details.transform(transformer.userAnswersCompanyDetailsReads(desCompanyPath)).get
 
             (result \ "companyDetails" \ "companyName").as[String] mustBe (companyValuePath(details) \ "organisationName").as[String]
-            (result \ "companyDetails" \ "vatNumber").asOpt[String] mustBe (companyValuePath(details) \ "vatRegistrationNumber").asOpt[String]
-            (result \ "companyDetails" \ "payeNumber").asOpt[String] mustBe (companyValuePath(details) \ "payeReference").asOpt[String]
+          }
+        }
+      }
+
+      s"has vat details for company in establishers array" in {
+        forAll(companyJsValueGen(isEstablisher = true)) {
+          companyDetails => {
+            val details = desCompanyJson(companyDetails._1)
+            val result = details.transform(transformer.transformVatToUserAnswersReads(desCompanyPath, "companyVat")).get
+
+            (result \ "companyVat" \ "hasVat").as[Boolean] mustBe (companyValuePath(details) \ "vatRegistrationNumber").isDefined
+            (result \ "companyVat" \ "vat").asOpt[String] mustBe (companyValuePath(details) \ "vatRegistrationNumber").asOpt[String]
+          }
+        }
+      }
+
+      s"has paye details for company in establishers array" in {
+        forAll(companyJsValueGen(isEstablisher = true)) {
+          companyDetails => {
+            val details = desCompanyJson(companyDetails._1)
+            val result = details.transform(transformer.userAnswersPayeReads(desCompanyPath, "companyPaye")).get
+
+            (result \ "companyPaye" \ "hasPaye").as[Boolean] mustBe (companyValuePath(details) \ "payeReference").isDefined
+            (result \ "companyPaye" \ "paye").asOpt[String] mustBe (companyValuePath(details) \ "payeReference").asOpt[String]
           }
         }
       }
@@ -196,7 +218,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val details = desPartnershipJson(partnershipDetails._1)
-            val result = details.transform(transformer.transformVatToUserAnswersReads(desPartnershipPath)).get
+            val result = details.transform(transformer.transformVatToUserAnswersReads(desPartnershipPath, "partnershipVat")).get
 
             (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").isDefined
             (result \ "partnershipVat" \ "vat").asOpt[String] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").asOpt[String]
@@ -208,7 +230,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
         forAll(partnershipJsValueGen(isEstablisher = true)) {
           partnershipDetails => {
             val details = desPartnershipJson(partnershipDetails._1)
-            val result = details.transform(transformer.userAnswersPayeReads(desPartnershipPath)).get
+            val result = details.transform(transformer.userAnswersPayeReads(desPartnershipPath, "partnershipPaye")).get
 
             (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe (partnershipValuePath(details) \ "payeReference").isDefined
             (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (partnershipValuePath(details) \ "payeReference").asOpt[String]
