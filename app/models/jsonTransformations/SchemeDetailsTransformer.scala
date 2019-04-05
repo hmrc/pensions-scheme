@@ -50,7 +50,8 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
 
   private def getPsaIds: Reads[JsObject] = {
     (__ \ 'psaSchemeDetails \ 'psaDetails).readNullable(
-      __.read(Reads.seq((__ \ 'id).json.copyFrom((__ \ 'psaid).json.pick)).map(JsArray(_)))).flatMap { partnership =>
+      __.read(Reads.seq((__ \ 'id).json.copyFrom((__ \ 'psaid).json.pick)).map(JsArray(_))))
+      .flatMap { partnership =>
         (__ \ 'psaDetails).json.put(partnership.getOrElse(JsArray())) orElse doNothing
       }
   }
@@ -71,5 +72,6 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
       membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and
       benefitsReads and
-      schemeTypeReads reduce
+      schemeTypeReads and
+      (__ \ 'schemeStatus).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeStatus).json.pick) reduce
 }

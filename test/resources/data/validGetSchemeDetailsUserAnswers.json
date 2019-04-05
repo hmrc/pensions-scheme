@@ -263,5 +263,6 @@
   "psaDetails" :[
     {"id":"A0000000"},
     {"id":"A0000001"}
-  ]
+  ],
+  "schemeStatus" : "Pending"
 }

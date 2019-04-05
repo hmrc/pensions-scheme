@@ -244,6 +244,8 @@ trait PensionSchemeGenerators {
 
   val boolenGen = Gen.oneOf(Seq(true, false))
 
+  val schemeStatusGen = Gen.oneOf(Seq("Open", "Pending", "Pending Info Required", "Pending Info Received", "Deregistered", "Wound-up", "Rejected Under Appeal"))
+
   val memberGen = Gen.oneOf(Seq("0",
     "1",
     "2 to 11",
