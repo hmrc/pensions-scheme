@@ -173,21 +173,21 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     (
       Json.obj(
         "organisationName" -> orgName,
-        "vatRegistrationNumber" -> vat,
-        "payeReference" -> paye,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> pa
       ) ++ desAddress.as[JsObject] ++ optionalWithReason("utr", utr, "noUtrReason")
         ++ optionalWithReason("crnNumber", crn, "noCrnReason")
         ++ desMoreThanTenDirectors
+        ++ optional("vatRegistrationNumber", vat)
+        ++ optional("payeReference", paye)
         ++ desDirectors,
       Json.obj(
         (if (isEstablisher) "establisherKind" else "trusteeKind") -> "company",
         "companyDetails" -> Json.obj(
-          "companyName" -> orgName,
-          "vatNumber" -> vat,
-          "payeNumber" -> paye
+          "companyName" -> orgName
         ),
+        "companyVat" -> vatJsValue(vat),
+        "companyPaye" -> payeJsValue(paye),
         "companyRegistrationNumber" -> crnJsValue(crn),
         "companyUniqueTaxReference" -> utrJsValue(utr),
         (if (isEstablisher) "companyAddressYears" else "trusteesCompanyAddressYears") -> "under_a_year",

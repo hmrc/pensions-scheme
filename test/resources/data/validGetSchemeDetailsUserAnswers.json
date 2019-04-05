@@ -44,6 +44,12 @@
       "companyDetails": {
         "companyName": "abc organisation"
       },
+      "companyVat": {
+        "hasVat": false
+      },
+      "companyPaye": {
+        "hasPaye": false
+      },
       "isCompanyComplete": true,
       "establisherKind": "company",
       "companyAddress": {
@@ -192,6 +198,12 @@
     {
       "companyDetails": {
         "companyName": "trustee org"
+      },
+      "companyVat": {
+        "hasVat": false
+      },
+      "companyPaye": {
+        "hasPaye": false
       },
       "companyAddress": {
         "country": "GB",

@@ -143,7 +143,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have valid Vat number" in {
-        val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyDetails" -> Json.obj("companyName" -> "test company", "vatNumber" -> "Vat12345"))))
+        val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyVat" -> Json.obj("hasVat" -> true, "vat" -> "Vat12345"))))
         val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).companyTrusteeDetail.head
         result.vatRegistrationNumber mustEqual trusteeCompanyData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
       }
@@ -153,8 +153,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have valid paye number" in {
-        val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson +
-          ("companyDetails" -> Json.obj("companyName" -> "test company", "payeNumber" -> "Paye12345"))))
+        val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyPaye" -> Json.obj("hasPaye" -> true, "paye" -> "Paye12345"))))
         val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).companyTrusteeDetail.head
         result.payeReference mustEqual trusteeCompanyData.copy(payeReference = Some("Paye12345")).payeReference
       }
@@ -319,6 +318,12 @@ object ReadsTrusteeDetailsSpec extends Samples {
     "companyDetails" -> Json.obj(
       "companyName" -> "test company",
       "isDeleted" -> JsBoolean(false)
+    ),
+    "companyVat" -> Json.obj(
+      "hasVat" -> JsBoolean(false)
+    ),
+    "companyPaye" -> Json.obj(
+      "hasVat" -> JsBoolean(false)
     ),
     "companyUniqueTaxReference" -> Json.obj(
       "hasUtr" -> JsBoolean(true),
