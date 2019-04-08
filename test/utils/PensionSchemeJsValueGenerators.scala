@@ -389,12 +389,40 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       Json.obj(
         "psaSchemeDetails" -> Json.obj(
           "schemeDetails" -> schemeDetails,
-                "psaDetails" -> JsArray(Seq(Json.obj("psaid"->"A0000000"),Json.obj("psaid"-> "A0000001")))
+          "psaDetails" -> JsArray(Seq(
+            Json.obj("psaid" -> "A0000000",
+              "firstName" -> "First",
+              "middleName" -> "Middle",
+              "lastName" -> "Last",
+              "relationshipType" -> "Primary",
+              "relationshipDate" -> "2018-07-01"),
+            Json.obj("psaid" -> "A0000001",
+              "organizationOrPartnershipName" -> "Acme Ltd",
+              "relationshipType" -> "Primary",
+              "relationshipDate" -> "2018-07-01"
+            )
+          )
+          )
         )
       ),
       Json.obj(
         "schemeName" -> schemeName,
-        "psaDetails" -> JsArray(Seq(Json.obj("id"->"A0000000"),Json.obj("id"-> "A0000001"))),
+        "psaDetails" -> JsArray(
+          Seq(
+            Json.obj(
+              "id"->"A0000000",
+              "individual" -> Json.obj(
+                "firstName" -> "First",
+                "middleName" -> "Middle",
+                "lastName" -> "Last"
+              )
+            ),
+            Json.obj(
+              "id"-> "A0000001",
+              "organisationOrPartnershipName" -> "Acme Ltd"
+            )
+        )
+        ),
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
         "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
         "membershipFuture" -> SchemeMembers.nameWithValue(futureSchemeMembers),
