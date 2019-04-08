@@ -50,18 +50,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
 
       s"uses request/response json" in {
         val result = desResponse.transform(transformer.transformToUserAnswers).get
-
-        val x1 = (result \ "psaDetails").toOption
-        println( "\n>>" + x1)
-
-
-        val x2 = (userAnswersResponse \ "psaDetails").toOption
-        println( "\n>>" + x2)
-
-        x1 mustBe x2
-
-
-        //result mustBe userAnswersResponse
+        result mustBe userAnswersResponse
       }
     }
   }
