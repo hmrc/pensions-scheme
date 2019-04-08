@@ -163,10 +163,6 @@ class LockMongoRepositoryTest extends MongoUnitSpec
 
   "lock" should{
 
-    val lockNotAvailableForPsa : Boolean = false
-    val lockNotAvailableForSRN : Boolean = false
-    val locked : Boolean = true
-
     "return locked if its new and unique combination for psaId and srn"in {
       await(repository.lock(SchemeVariance("psa1", "srn1"))) shouldBe VarianceLock
     }
@@ -206,6 +202,40 @@ class LockMongoRepositoryTest extends MongoUnitSpec
         options = BSONDocument("expireAfterSeconds" -> 0)).copy(version = index.version)
 
       index shouldBe expected
+    }
+  }
+
+  "isLockByPsaIdOrSchemeId" should{
+
+    "return locked if its new and unique combination for psaId and srn"in {
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) shouldBe None
+    }
+
+    "return locked if exiting lock"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) shouldBe Some(VarianceLock)
+    }
+
+    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) shouldBe Some(PsaLock)
+    }
+
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) shouldBe Some(SchemeLock)
+    }
+
+    "return both locked if its not unique combination for existing psaId2 and srn1"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+      await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) shouldBe Some(BothLock)
+    }
+
+    "return both locked if its not unique combination for existing psaId1 and srn2"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) shouldBe Some(BothLock)
     }
   }
 

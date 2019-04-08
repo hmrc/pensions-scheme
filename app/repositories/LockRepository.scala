@@ -60,6 +60,8 @@ trait LockRepository {
 
   def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]]
 
+  def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]]
+
   def list: Future[List[SchemeVariance]]
 
   def replaceLock(newLock: SchemeVariance): Future[Boolean]
@@ -82,7 +84,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   private case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
 
-  private object JsonDataEntry{
+  private object JsonDataEntry {
     implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
     implicit val format: OFormat[JsonDataEntry] = Json.format[JsonDataEntry]
   }
@@ -110,6 +112,24 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   override def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]] = collection.find(bySrn(srn)).one[SchemeVariance]
 
+  override def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = collection.find(
+    byLock(psaId, srn)).one[SchemeVariance].flatMap[Option[Lock]] {
+    case Some(x) => Future.successful(Some(VarianceLock))
+    case None => for {
+      psaLock <- getExistingLockByPSA(psaId)
+      srnLock <- getExistingLockBySRN(srn)
+    } yield {
+      (psaLock, srnLock) match {
+        case (Some(_), None) => Some(PsaLock)
+        case (None, Some(_)) => Some(SchemeLock)
+        case (Some(SchemeVariance(psaId, _)), Some(SchemeVariance(_, srn))) => Some(BothLock)
+        case (Some(SchemeVariance(_, srn)), Some(SchemeVariance(psaId, _))) => Some(BothLock)
+        case (Some(_), Some(_)) => Some(VarianceLock)
+        case _ => None
+      }
+    }
+  }
+
   override def list: Future[List[SchemeVariance]] = {
     //scalastyle:off magic.number
     val arbitraryLimit = 10000
@@ -120,13 +140,13 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   override def replaceLock(newLock: SchemeVariance): Future[Boolean] = {
     collection.update(
-      byLock(newLock.psaId,newLock.srn), modifier(newLock), upsert = true).map {
+      byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true).map {
       lastError =>
         lastError.writeErrors.isEmpty
     } recoverWith {
       case e: LastError if e.code == documentExistsErrorCode => {
-        getExistingLock(newLock).map{
-          case Some(existingLock) => existingLock.psaId==newLock.psaId && existingLock.srn==newLock.srn
+        getExistingLock(newLock).map {
+          case Some(existingLock) => existingLock.psaId == newLock.psaId && existingLock.srn == newLock.srn
           case None => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
         }
       }
@@ -138,19 +158,23 @@ class LockMongoRepository @Inject()(config: AppConfig,
     collection.update(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
       .map[Lock](_ => VarianceLock) recoverWith {
       case e: LastError if e.code == documentExistsErrorCode => {
-        for{
-          psaLock <- getExistingLockByPSA(newLock.psaId)
-          srnLock <- getExistingLockBySRN(newLock.srn)
-        } yield {
-          (psaLock, srnLock) match {
-            case (Some(_), None) => PsaLock
-            case (None, Some(_)) => SchemeLock
-            case (Some(SchemeVariance(newLock.psaId, _)), Some(SchemeVariance( _, newLock.srn))) => BothLock
-            case (Some(SchemeVariance(_, newLock.srn)), Some(SchemeVariance(newLock.psaId, _))) => BothLock
-            case (Some(_), Some(_)) => VarianceLock
-            case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
-          }
-        }
+        findLock(newLock.psaId, newLock.srn)
+      }
+    }
+  }
+
+  private def findLock(psaId: String, srn: String): Future[Lock] = {
+    for {
+      psaLock <- getExistingLockByPSA(psaId)
+      srnLock <- getExistingLockBySRN(srn)
+    } yield {
+      (psaLock, srnLock) match {
+        case (Some(_), None) => PsaLock
+        case (None, Some(_)) => SchemeLock
+        case (Some(SchemeVariance(psaId, _)), Some(SchemeVariance(_, srn))) => BothLock
+        case (Some(SchemeVariance(_, srn)), Some(SchemeVariance(psaId, _))) => BothLock
+        case (Some(_), Some(_)) => VarianceLock
+        case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${psaId} and srn: ${srn}")
       }
     }
   }
@@ -161,6 +185,6 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   private def byLock(psaId: String, srn: String): BSONDocument = BSONDocument("psaId" -> psaId, "srn" -> srn)
 
-  private def modifier(newLock: SchemeVariance): BSONDocument =  BSONDocument("$set" -> Json.toJson(
-      JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), DateTime.now(DateTimeZone.UTC), getExpireAt)))
+  private def modifier(newLock: SchemeVariance): BSONDocument = BSONDocument("$set" -> Json.toJson(
+    JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), DateTime.now(DateTimeZone.UTC), getExpireAt)))
 }
