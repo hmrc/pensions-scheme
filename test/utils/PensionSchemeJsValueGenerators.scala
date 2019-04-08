@@ -415,11 +415,13 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                 "firstName" -> "First",
                 "middleName" -> "Middle",
                 "lastName" -> "Last"
-              )
+              ),
+              "relationshipDate" -> "2018-07-01"
             ),
             Json.obj(
               "id"-> "A0000001",
-              "organisationOrPartnershipName" -> "Acme Ltd"
+              "organisationOrPartnershipName" -> "Acme Ltd",
+              "relationshipDate" -> "2018-07-01"
             )
         )
         ),

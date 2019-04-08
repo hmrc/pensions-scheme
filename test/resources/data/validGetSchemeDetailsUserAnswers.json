@@ -267,7 +267,8 @@
         "middleName": "Middle",
         "lastName": "Rayon"
       },
-      "organisationOrPartnershipName": "partnetship name"
+      "organisationOrPartnershipName": "partnetship name",
+      "relationshipDate": "1978-03-22"
     },
     {"id":"A0000001",
       "individual": {
@@ -275,7 +276,8 @@
         "middleName": "A",
         "lastName": "Tony"
       },
-      "organisationOrPartnershipName": "partnetship name 1"
+      "organisationOrPartnershipName": "partnetship name 1",
+      "relationshipDate": "1977-03-22"
     }
   ],
   "schemeStatus" : "Pending"

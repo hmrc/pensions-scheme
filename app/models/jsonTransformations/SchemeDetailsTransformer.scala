@@ -49,7 +49,8 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
   }
 
   private def getPsaIds: Reads[JsObject] = {
-    val psaReads = ((__ \ 'id).json.copyFrom((__ \ 'psaid).json.pick) and
+    val psaReads = (
+      (__ \ 'id).json.copyFrom((__ \ 'psaid).json.pick) and
       ((__ \ 'individual \ 'firstName).json.copyFrom((__ \ 'firstName).json.pick)
         orElse doNothing) and
       ((__ \ 'individual \ 'middleName).json.copyFrom((__ \ 'middleName).json.pick)
@@ -57,7 +58,8 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       ((__ \ 'individual \ 'lastName).json.copyFrom((__ \ 'lastName).json.pick)
         orElse doNothing) and
       ((__ \ 'organisationOrPartnershipName).json.copyFrom((__ \ 'organizationOrPartnershipName).json.pick)
-        orElse doNothing)) reduce
+        orElse doNothing) and
+      (__ \ 'relationshipDate).json.copyFrom((__ \ 'relationshipDate).json.pick)) reduce
 
     (__ \ 'psaSchemeDetails \ 'psaDetails).readNullable(
       __.read(Reads.seq(psaReads).map(JsArray(_))))
