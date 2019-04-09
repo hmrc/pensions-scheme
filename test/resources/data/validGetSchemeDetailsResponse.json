@@ -3,6 +3,7 @@
   "psaSchemeDetails": {
     "schemeDetails": {
       "srn": "S9000000000",
+      "pstr": "12345678AB",
       "schemeStatus": "Pending",
       "schemeName": "Benefits Scheme",
       "isSchemeMasterTrust": true,

@@ -352,7 +352,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     moreThanTenTrustees <- Gen.option(booleanGen)
     contactDetails <- contactDetailsJsValueGen
     optionalContact <- Gen.option(contactDetails._1)
+    schemeStatus <- schemeStatusGen
   } yield {
+    val pstr = "12345678AB"
     val schemeTypeName = if (isSchemeMasterTrust.contains(true)) Json.obj("name" -> "master") else
       schemeStructure.map(schemeType => Json.obj("name" -> SchemeType.nameWithValue(schemeType))).getOrElse(Json.obj())
     val otherDetails = optional("schemeTypeDetails", otherPensionSchemeStructure)
@@ -363,8 +365,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val schemeDetails =
       Json.obj(
         "srn" -> "",
-        "pstr" -> "",
-        "schemeStatus" -> "Open",
+        "pstr" -> pstr,
+        "schemeStatus" -> schemeStatus,
         "schemeName" -> schemeName,
         "currentSchemeMembers" -> currentSchemeMembers,
         "futureSchemeMembers" -> futureSchemeMembers,
@@ -388,12 +390,42 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       Json.obj(
         "psaSchemeDetails" -> Json.obj(
           "schemeDetails" -> schemeDetails,
-                "psaDetails" -> JsArray(Seq(Json.obj("psaid"->"A0000000"),Json.obj("psaid"-> "A0000001")))
+          "psaDetails" -> JsArray(Seq(
+            Json.obj("psaid" -> "A0000000",
+              "firstName" -> "First",
+              "middleName" -> "Middle",
+              "lastName" -> "Last",
+              "relationshipType" -> "Primary",
+              "relationshipDate" -> "2018-07-01"),
+            Json.obj("psaid" -> "A0000001",
+              "organizationOrPartnershipName" -> "Acme Ltd",
+              "relationshipType" -> "Primary",
+              "relationshipDate" -> "2018-07-01"
+            )
+          )
+          )
         )
       ),
       Json.obj(
         "schemeName" -> schemeName,
-        "psaDetails" -> JsArray(Seq(Json.obj("id"->"A0000000"),Json.obj("id"-> "A0000001"))),
+        "psaDetails" -> JsArray(
+          Seq(
+            Json.obj(
+              "id"->"A0000000",
+              "individual" -> Json.obj(
+                "firstName" -> "First",
+                "middleName" -> "Middle",
+                "lastName" -> "Last"
+              ),
+              "relationshipDate" -> "2018-07-01"
+            ),
+            Json.obj(
+              "id"-> "A0000001",
+              "organisationOrPartnershipName" -> "Acme Ltd",
+              "relationshipDate" -> "2018-07-01"
+            )
+        )
+        ),
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
         "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
         "membershipFuture" -> SchemeMembers.nameWithValue(futureSchemeMembers),
@@ -404,7 +436,11 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       ) ++ optional("insuranceCompanyName", insuranceCompanyName) ++
         optional("insurancePolicyNumber", policyNumber) ++
         insuranceAddress.map { value => value._2.as[JsObject] }.getOrElse(Json.obj()) ++
-        schemeTypeJs
+        schemeTypeJs ++
+      Json.obj(
+        "schemeStatus" -> schemeStatus,
+        "pstr" -> pstr
+      )
     )
   }
 

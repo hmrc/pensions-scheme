@@ -44,20 +44,33 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
           } getOrElse doNothing
         }
     } and
-    ((__ \ 'schemeType \ 'schemeTypeDetails).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'otherPensionSchemeStructure).json.pick)
-      orElse doNothing) reduce
+      ((__ \ 'schemeType \ 'schemeTypeDetails).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'otherPensionSchemeStructure).json.pick)
+        orElse doNothing) reduce
   }
 
   private def getPsaIds: Reads[JsObject] = {
+    val psaReads = (
+      (__ \ 'id).json.copyFrom((__ \ 'psaid).json.pick) and
+      ((__ \ 'individual \ 'firstName).json.copyFrom((__ \ 'firstName).json.pick)
+        orElse doNothing) and
+      ((__ \ 'individual \ 'middleName).json.copyFrom((__ \ 'middleName).json.pick)
+        orElse doNothing) and
+      ((__ \ 'individual \ 'lastName).json.copyFrom((__ \ 'lastName).json.pick)
+        orElse doNothing) and
+      ((__ \ 'organisationOrPartnershipName).json.copyFrom((__ \ 'organizationOrPartnershipName).json.pick)
+        orElse doNothing) and
+      (__ \ 'relationshipDate).json.copyFrom((__ \ 'relationshipDate).json.pick)) reduce
+
     (__ \ 'psaSchemeDetails \ 'psaDetails).readNullable(
-      __.read(Reads.seq((__ \ 'id).json.copyFrom((__ \ 'psaid).json.pick)).map(JsArray(_)))).flatMap { partnership =>
+      __.read(Reads.seq(psaReads).map(JsArray(_))))
+      .flatMap { partnership =>
         (__ \ 'psaDetails).json.put(partnership.getOrElse(JsArray())) orElse doNothing
       }
   }
 
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
     getPsaIds and
-    (__ \ 'schemeName).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeName).json.pick) and
+      (__ \ 'schemeName).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeName).json.pick) and
       (__ \ 'investmentRegulated).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isReguledSchemeInvestment).json.pick) and
       (__ \ 'occupationalPensionScheme).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'isOccupationalPensionScheme).json.pick) and
       (__ \ 'schemeEstablishedCountry).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeEstablishedCountry).json.pick) and
@@ -71,5 +84,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
       membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and
       benefitsReads and
-      schemeTypeReads reduce
+      schemeTypeReads and
+      (__ \ 'schemeStatus).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeStatus).json.pick) and
+      (__ \ 'pstr).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'pstr).json.pick) reduce
 }

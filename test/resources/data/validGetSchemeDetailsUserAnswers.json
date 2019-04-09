@@ -273,7 +273,25 @@
     "addressLine4": "Telford14"
   },
   "psaDetails" :[
-    {"id":"A0000000"},
-    {"id":"A0000001"}
-  ]
+    {"id":"A0000000",
+        "individual":{
+        "firstName": "Taylor",
+        "middleName": "Middle",
+        "lastName": "Rayon"
+      },
+      "organisationOrPartnershipName": "partnetship name",
+      "relationshipDate": "1978-03-22"
+    },
+    {"id":"A0000001",
+      "individual": {
+        "firstName": "Smith",
+        "middleName": "A",
+        "lastName": "Tony"
+      },
+      "organisationOrPartnershipName": "partnetship name 1",
+      "relationshipDate": "1977-03-22"
+    }
+  ],
+  "schemeStatus" : "Pending",
+  "pstr" : "12345678AB"
 }
