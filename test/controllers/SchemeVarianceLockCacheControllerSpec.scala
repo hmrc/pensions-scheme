@@ -118,7 +118,7 @@ class SchemeVarianceLockCacheControllerSpec extends WordSpec with MustMatchers w
         val result = controller(lockRepo, authConnector).isLockByPsaIdOrSchemeId()(getRequest(FakeRequest("POST", "/")))
 
         status(result) mustEqual OK
-        contentAsString(result) mustEqual Json.toJson("Some(SuccessfulVarianceLock)").toString()
+        contentAsString(result) mustEqual Json.toJson("SuccessfulVarianceLock").toString()
       }
 
       "return 200 when lock is not found" in {
@@ -128,8 +128,7 @@ class SchemeVarianceLockCacheControllerSpec extends WordSpec with MustMatchers w
 
         val result = controller(lockRepo, authConnector).isLockByPsaIdOrSchemeId()(getRequest(FakeRequest("POST", "/")))
 
-        status(result) mustEqual OK
-        contentAsString(result) mustEqual Json.toJson("None").toString()
+        status(result) mustEqual NOT_FOUND
       }
 
       "throw an exception when the repository call fails" in {

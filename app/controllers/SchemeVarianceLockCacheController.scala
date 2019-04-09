@@ -52,7 +52,7 @@ class SchemeVarianceLockCacheController @Inject()(
             repository.isLockByPsaIdOrSchemeId(psaId, srn)
               .map {
                 case Some(lock) =>  Ok(Json.toJson(lock.toString))
-                case _ =>  Ok
+                case None =>  NotFound
               }
         }
       }
