@@ -86,5 +86,5 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       benefitsReads and
       schemeTypeReads and
       (__ \ 'schemeStatus).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeStatus).json.pick) and
-      (__ \ 'schemePstr).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'pstr).json.pick) reduce
+      (__ \ 'pstr).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'pstr).json.pick) reduce
 }

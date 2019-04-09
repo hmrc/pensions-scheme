@@ -354,7 +354,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     optionalContact <- Gen.option(contactDetails._1)
     schemeStatus <- schemeStatusGen
   } yield {
-    val schemePstr = "12345678AB"
+    val pstr = "12345678AB"
     val schemeTypeName = if (isSchemeMasterTrust.contains(true)) Json.obj("name" -> "master") else
       schemeStructure.map(schemeType => Json.obj("name" -> SchemeType.nameWithValue(schemeType))).getOrElse(Json.obj())
     val otherDetails = optional("schemeTypeDetails", otherPensionSchemeStructure)
@@ -365,7 +365,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val schemeDetails =
       Json.obj(
         "srn" -> "",
-        "pstr" -> schemePstr,
+        "pstr" -> pstr,
         "schemeStatus" -> schemeStatus,
         "schemeName" -> schemeName,
         "currentSchemeMembers" -> currentSchemeMembers,
@@ -439,7 +439,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         schemeTypeJs ++
       Json.obj(
         "schemeStatus" -> schemeStatus,
-        "schemePstr" -> schemePstr
+        "pstr" -> pstr
       )
     )
   }
