@@ -85,5 +85,6 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and
       benefitsReads and
       schemeTypeReads and
-      (__ \ 'schemeStatus).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeStatus).json.pick) reduce
+      (__ \ 'schemeStatus).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'schemeStatus).json.pick) and
+      (__ \ 'schemePstr).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'pstr).json.pick) reduce
 }
