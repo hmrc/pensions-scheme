@@ -45,6 +45,19 @@ class SchemeVarianceLockCacheController @Inject()(
       }
   }
 
+  def isLockByPsaIdOrSchemeId(): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised() {
+        withIDs { (psaId, srn) =>
+            repository.isLockByPsaIdOrSchemeId(psaId, srn)
+              .map {
+                case Some(lock) =>  Ok(Json.toJson(lock.toString))
+                case None =>  NotFound
+              }
+        }
+      }
+  }
+
   def getLock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {

@@ -20,6 +20,7 @@ GET           /journey-cache/update-scheme/:id/lastUpdated      controllers.Upda
 
 # scheme details lock caching in protected mongo
 GET           /update-scheme/get-lock                           controllers.SchemeVarianceLockCacheController.getLock()
+GET           /update-scheme/isLockByPsaOrScheme                controllers.SchemeVarianceLockCacheController.isLockByPsaIdOrSchemeId()
 POST          /update-scheme/lock                               controllers.SchemeVarianceLockCacheController.lock()
 DELETE        /update-scheme/release-lock                       controllers.SchemeVarianceLockCacheController.releaseLock()
 

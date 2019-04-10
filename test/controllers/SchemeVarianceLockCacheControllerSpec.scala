@@ -108,6 +108,54 @@ class SchemeVarianceLockCacheControllerSpec extends WordSpec with MustMatchers w
       }
     }
 
+    "isLockByPsaIdOrSchemeId" must {
+
+      "return 200 when lock is found" in {
+
+        when(lockRepo.isLockByPsaIdOrSchemeId(any(), any())).thenReturn(Future.successful(Some(VarianceLock)))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
+
+        val result = controller(lockRepo, authConnector).isLockByPsaIdOrSchemeId()(getRequest(FakeRequest("POST", "/")))
+
+        status(result) mustEqual OK
+        contentAsString(result) mustEqual Json.toJson("SuccessfulVarianceLock").toString()
+      }
+
+      "return 200 when lock is not found" in {
+
+        when(lockRepo.isLockByPsaIdOrSchemeId(any(), any())).thenReturn(Future.successful(None))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
+
+        val result = controller(lockRepo, authConnector).isLockByPsaIdOrSchemeId()(getRequest(FakeRequest("POST", "/")))
+
+        status(result) mustEqual NOT_FOUND
+      }
+
+      "throw an exception when the repository call fails" in {
+        when(lockRepo.isLockByPsaIdOrSchemeId(any(), any())).thenReturn(
+          Future.failed(new Exception()))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+
+        val result = controller(lockRepo, authConnector).isLockByPsaIdOrSchemeId()(FakeRequest())
+
+        an[Exception] must be thrownBy {
+          status(result)
+        }
+      }
+
+      "throw an exception when the call is not authorised" in {
+        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+          new UnauthorizedException("")
+        }
+
+        val result = controller(lockRepo, authConnector).isLockByPsaIdOrSchemeId()(getRequest(FakeRequest("POST", "/")))
+
+        an[UnauthorizedException] must be thrownBy {
+          status(result)
+        }
+      }
+    }
+
     "getLock" when {
 
       "return 200 and the relevant data when it exists" in {
