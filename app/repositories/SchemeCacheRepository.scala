@@ -89,11 +89,10 @@ implicitly
   private val ttl = 0
   private val expireAt = "expireAt"
   private val dataExpiry = "dataExpiry"
-  private val createdIndexName = "userAnswersExpiry"
   private val expireAfterSeconds = "expireAfterSeconds"
 
   (for {
-    _ <- checkIndexTtl(createdIndexName, Some(ttl))
+    _ <- checkIndexTtl(dataExpiry, Some(ttl))
     _ <- ensureIndex(expireAt, dataExpiry, Some(ttl))
   } yield {
     ()
@@ -108,7 +107,7 @@ implicitly
     CollectionDiagnostics.indexInfo(collection)
       .flatMap {seqIndexes =>
         seqIndexes
-          .find(index => index.name == indexName)
+          .find(index => index.name == indexName && index.ttl != ttl)
           .map {
             index =>
               Logger.warn(s"Index $indexName on collection ${collection.name} is not required")
