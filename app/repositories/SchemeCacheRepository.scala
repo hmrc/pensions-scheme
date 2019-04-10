@@ -89,11 +89,11 @@ implicitly
   private val ttl = 0
   private val expireAt = "expireAt"
   private val dataExpiry = "dataExpiry"
-  private val createdIndexName = "userAnswersExpiry"
   private val expireAfterSeconds = "expireAfterSeconds"
 
+  //TODO: Delete the line for check Index ttl once the the index dataExpiry has been corrected
   (for {
-    _ <- checkIndexTtl(createdIndexName, Some(ttl))
+    _ <- checkIndexTtl(expireAt, Some(ttl))
     _ <- ensureIndex(expireAt, dataExpiry, Some(ttl))
   } yield {
     ()
