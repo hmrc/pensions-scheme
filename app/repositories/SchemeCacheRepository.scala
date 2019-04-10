@@ -91,9 +91,8 @@ implicitly
   private val dataExpiry = "dataExpiry"
   private val expireAfterSeconds = "expireAfterSeconds"
 
-  //TODO: Delete the line for check Index ttl once the the index dataExpiry has been corrected
   (for {
-    _ <- checkIndexTtl(expireAt, Some(ttl))
+    _ <- checkIndexTtl(dataExpiry, Some(ttl))
     _ <- ensureIndex(expireAt, dataExpiry, Some(ttl))
   } yield {
     ()
@@ -108,7 +107,7 @@ implicitly
     CollectionDiagnostics.indexInfo(collection)
       .flatMap {seqIndexes =>
         seqIndexes
-          .find(index => index.name == indexName)
+          .find(index => index.name == indexName && index.ttl != ttl)
           .map {
             index =>
               Logger.warn(s"Index $indexName on collection ${collection.name} is not required")
