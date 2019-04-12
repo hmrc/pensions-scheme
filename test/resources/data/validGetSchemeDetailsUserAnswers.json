@@ -50,7 +50,7 @@
       "companyPaye": {
         "hasPaye": false
       },
-      "isCompanyComplete": true,
+      "isEstablisherComplete": true,
       "establisherKind": "company",
       "companyAddress": {
         "country": "GB",
@@ -127,7 +127,7 @@
         }
       ],
       "establisherKind": "partnership",
-      "isPartnershipCompleteId": true,
+      "isEstablisherComplete": true,
       "otherPartners": false,
       "partnershipAddressYears": "under_a_year",
       "partnershipVat": {
@@ -293,5 +293,8 @@
     }
   ],
   "schemeStatus" : "Pending",
-  "pstr" : "12345678AB"
+  "pstr" : "12345678AB",
+  "isAboutBenefitsAndInsuranceComplete": true,
+  "isAboutMembersComplete": true,
+  "isBeforeYouStartComplete": true
 }

@@ -65,7 +65,7 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
       userAnswersContactDetailsReads("companyContactDetails", desPath) and
       ((__ \ 'otherDirectors).json.copyFrom((desPath \ 'haveMoreThanTenDirectors).json.pick) orElse doNothing) and
-      (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) and
+      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) and
       getDirector(desPath) reduce
 
   def getDirector(desPath: JsPath): Reads[JsObject] = (desPath \ 'directorsDetails).readNullable(
@@ -84,7 +84,7 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
       userAnswersContactDetailsReads("partnershipContactDetails", desPath) and
       (__ \ 'otherPartners).json.copyFrom((desPath \ 'areMorethanTenPartners).json.pick) and
-      (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) and
+      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) and
       getPartner(desPath) reduce
 
   def getPartner(desPath: JsPath): Reads[JsObject] = (desPath \ 'partnerDetails).read(
