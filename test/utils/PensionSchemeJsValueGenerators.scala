@@ -192,7 +192,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "companyUniqueTaxReference" -> utrJsValue(utr),
         (if (isEstablisher) "companyAddressYears" else "trusteesCompanyAddressYears") -> "under_a_year",
         "companyContactDetails" -> userAnswersContactDetails,
-        (if (isEstablisher) "isCompanyComplete" else "isTrusteeComplete") -> true
+        (if (isEstablisher) "isEstablisherComplete" else "isTrusteeComplete") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ uaMoreThanTenDirectors
@@ -239,7 +239,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "partnershipUniqueTaxReference" -> utrJsValue(utr),
         "partnershipAddressYears" -> "under_a_year",
         "partnershipContactDetails" -> userAnswersContactDetails,
-        "isPartnershipCompleteId" -> true
+        (if (isEstablisher) "isEstablisherComplete" else "isPartnershipCompleteId") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ uaMoreThanTenPartner
@@ -408,6 +408,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       ),
       Json.obj(
         "schemeName" -> schemeName,
+        "isAboutBenefitsAndInsuranceComplete" -> true,
+        "isAboutMembersComplete" -> true,
+        "isBeforeYouStartComplete" -> true,
         "psaDetails" -> JsArray(
           Seq(
             Json.obj(
