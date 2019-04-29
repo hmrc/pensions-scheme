@@ -204,6 +204,102 @@ class SchemeVarianceLockCacheControllerSpec extends WordSpec with MustMatchers w
       }
     }
 
+    "getLockByPsa" when {
+
+      "return 200 and the relevant data when it exists" in {
+        when(lockRepo.getExistingLockByPSA(eqTo("A2100005"))).thenReturn(
+          Future.successful {Some(SchemeVariance("A2100005", "SR0000001"))})
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
+
+        val result = controller(lockRepo, authConnector).getLockByPsa()(getRequest(FakeRequest("GET", "/")))
+
+        status(result) mustEqual OK
+        contentAsString(result) mustEqual Json.toJson(SchemeVariance("A2100005", "SR0000001")).toString()
+      }
+
+      "return 404 when the data doesn't exist" in {
+        when(lockRepo.getExistingLockByPSA(eqTo("A2100005"))).thenReturn(
+          Future.successful(None))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
+
+        val result = controller(lockRepo, authConnector).getLockByPsa()(getRequest(FakeRequest("GET", "/")))
+
+        status(result) mustEqual NOT_FOUND
+      }
+
+      "throw an exception when the repository call fails" in {
+        when(lockRepo.getExistingLockByPSA(eqTo("A2100005"))).thenReturn(
+          Future.failed(new Exception()))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+
+        val result = controller(lockRepo, authConnector).getLockByPsa()(getRequest(FakeRequest()))
+
+        an[Exception] must be thrownBy {
+          status(result)
+        }
+      }
+
+      "throw an exception when the call is not authorised" in {
+        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+          new UnauthorizedException("")
+        }
+
+        val result = controller(lockRepo, authConnector).getLockByPsa()(getRequest(FakeRequest()))
+
+        an[UnauthorizedException] must be thrownBy {
+          status(result)
+        }
+      }
+    }
+
+    "getLockByScheme" when {
+
+      "return 200 and the relevant data when it exists" in {
+        when(lockRepo.getExistingLockBySRN(eqTo("SR0000001"))).thenReturn(
+          Future.successful {Some(SchemeVariance("A2100005", "SR0000001"))})
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
+
+        val result = controller(lockRepo, authConnector).getLockByScheme()(getRequest(FakeRequest("GET", "/")))
+
+        status(result) mustEqual OK
+        contentAsString(result) mustEqual Json.toJson(SchemeVariance("A2100005", "SR0000001")).toString()
+      }
+
+      "return 404 when the data doesn't exist" in {
+        when(lockRepo.getExistingLockBySRN(eqTo("SR0000001"))).thenReturn(
+          Future.successful(None))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
+
+        val result = controller(lockRepo, authConnector).getLockByScheme()(getRequest(FakeRequest("GET", "/")))
+
+        status(result) mustEqual NOT_FOUND
+      }
+
+      "throw an exception when the repository call fails" in {
+        when(lockRepo.getExistingLockBySRN(eqTo("SR0000001"))).thenReturn(
+          Future.failed(new Exception()))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+
+        val result = controller(lockRepo, authConnector).getLockByScheme()(getRequest(FakeRequest()))
+
+        an[Exception] must be thrownBy {
+          status(result)
+        }
+      }
+
+      "throw an exception when the call is not authorised" in {
+        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+          new UnauthorizedException("")
+        }
+
+        val result = controller(lockRepo, authConnector).getLockByScheme()(getRequest(FakeRequest()))
+
+        an[UnauthorizedException] must be thrownBy {
+          status(result)
+        }
+      }
+    }
+
     "releaseLock" when {
 
       "return 200 and the relevant data when it exists" in {
