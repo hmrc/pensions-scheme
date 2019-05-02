@@ -214,6 +214,15 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 
   "SchemeConnector getSchemeDetails" should "return OK with the details of the scheme" in {
+
+    lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
+      "auditing.enabled" -> false,
+      "metrics.enabled" -> false
+    ).overrides(bind[FeatureSwitchManagementService].toInstance(FakeFeatureSwitchManagementService(false)),
+      bind[AuditService].toInstance(auditService)).build()
+
+    val connector: SchemeConnector = appWithFeatureEnabled.injector.instanceOf[SchemeConnector]
+
     server.stubFor(
       get(urlEqualTo(schemeDetailsUrl))
         .willReturn(
@@ -385,17 +394,29 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 
   it should "send audit event for successful response" in {
+
+    lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
+      "auditing.enabled" -> false,
+      "metrics.enabled" -> false
+    ).overrides(bind[FeatureSwitchManagementService].toInstance(FakeFeatureSwitchManagementService(true)),
+      bind[AuditService].toInstance(auditService)).build()
+
+    val connector: SchemeConnector = appWithFeatureEnabled.injector.instanceOf[SchemeConnector]
+
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
+
     server.stubFor(
       get(urlEqualTo(schemeDetailsUrl))
         .willReturn(
           ok
             .withHeader("Content-Type", "application/json")
-            .withBody(psaSchemeDetails.toString())
+            .withBody(desResponse.toString())
         )
     )
     connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { _ =>
       auditService.verifySent(
-        SchemeDetailsAuditEvent(psaId, 200, Some(Json.toJson(psaSchemeDetailsSample)))
+        SchemeDetailsAuditEvent(psaId, 200, Some(userAnswersResponse))
       ) shouldBe true
     }
   }

@@ -71,6 +71,35 @@ class SchemeVarianceLockCacheController @Inject()(
       }
   }
 
+  def getLockByPsa(): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised() {
+        request.headers.get("psaId") match {
+          case Some(psaId) =>
+          repository.getExistingLockByPSA(psaId).flatMap {
+              case Some(schemeVariance) => Future.successful(Ok(Json.toJson(schemeVariance)))
+              case None => Future.successful(NotFound)
+            }
+          case _ => Future.failed(new BadRequestException("Bad Request without psaId"))
+        }
+      }
+  }
+
+  def getLockByScheme(): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised() {
+        request.headers.get("srn") match {
+          case Some(srn) =>
+          repository.getExistingLockBySRN(srn)
+            .map {
+              case Some(schemeVariance) => Ok(Json.toJson(schemeVariance))
+              case None => NotFound
+            }
+          case _ => Future.failed(new BadRequestException("Bad Request without srn"))
+        }
+      }
+  }
+
   def releaseLock(): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
