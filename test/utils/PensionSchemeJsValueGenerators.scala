@@ -347,7 +347,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     schemeEstablishedCountry <- countryCode
     insuranceCompanyName <- Gen.option(specialCharStringGen)
     policyNumber <- Gen.option(policyNumberGen)
-    insuranceAddress <- Gen.option(addressJsValueGen("insuranceCompanyAddressDetails", "insurerAddress"))
+    insuranceAddress <- Gen.option(addressJsValueGen("insuranceCompanyAddressDetails", "insurerAddress", isDifferent = true))
     otherPensionSchemeStructure <- Gen.option(otherSchemeStructureGen)
     moreThanTenTrustees <- Gen.option(booleanGen)
     contactDetails <- contactDetailsJsValueGen
