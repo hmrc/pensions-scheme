@@ -79,7 +79,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
         orElse doNothing) and
       ((__ \ 'insurancePolicyNumber).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'policyNumber).json.pick)
         orElse doNothing) and
-      (addressTransformer.getAddress(__ \ 'insurerAddress, __ \ 'psaSchemeDetails \ 'schemeDetails \ 'insuranceCompanyAddressDetails)
+      (addressTransformer.getDifferentAddress(__ \ 'insurerAddress, __ \ 'psaSchemeDetails \ 'schemeDetails \ 'insuranceCompanyAddressDetails)
         orElse doNothing) and
       membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
       membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and

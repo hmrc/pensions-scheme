@@ -265,8 +265,8 @@
     }
   ],
   "insurerAddress": {
-    "countryCode": "GB",
-    "postalCode": "TF3 4ER",
+    "country": "GB",
+    "postcode": "TF3 4ER",
     "addressLine1": "Telford1",
     "addressLine2": "Telford2",
     "addressLine3": "Telford13",
