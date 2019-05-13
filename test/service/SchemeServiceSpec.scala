@@ -380,9 +380,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     val f = new UpdateTestFixture() {}
 
     f.schemeConnector.setUpdateSchemeResponse(Future.failed(new BadRequestException("bad request")))
-
-    println("\nyyy1")
-
     f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson)
       .map(_ => fail("Expected failure"))
       .recover {
