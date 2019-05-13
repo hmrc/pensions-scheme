@@ -53,6 +53,8 @@ class AuditServiceImpl @Inject()(
 
     Logger.debug(s"[AuditService][sendEvent] sending ${event.auditType}")
 
+    println( "\n>>>WA:" + event)
+
     val result: Future[AuditResult] = connector.sendEvent(
       DataEvent(
         auditSource = config.appName,
