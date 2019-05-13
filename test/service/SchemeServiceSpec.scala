@@ -362,73 +362,9 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
   it should "send a SchemeUpdate audit event following a successful submission" in {
     val f = new UpdateTestFixture() {}
 
+    f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(responseStatus = Status.OK, responseJson = Some(testResponse))))
     f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
       response =>
-        val expectedUpdateRequestJson = Json.parse(
-          """
-            |{
-            |   "customerAndSchemeDetails":{
-            |      "schemeName":"test-scheme-name",
-            |      "isSchemeMasterTrust":false,
-            |      "schemeStructure":"A single trust under which all of the assets are held for the benefit of all members of the scheme",
-            |      "currentSchemeMembers":"0",
-            |      "futureSchemeMembers":"0",
-            |      "isReguledSchemeInvestment":false,
-            |      "isOccupationalPensionScheme":false,
-            |      "areBenefitsSecuredContractInsuranceCompany":false,
-            |      "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
-            |      "schemeEstablishedCountry":"test-scheme-established-country",
-            |      "haveInvalidBank":false,
-            |      "insuranceCompanyName":"Test insurance company name",
-            |      "policyNumber":"Test insurance policy number"
-            |   },
-            |   "pensionSchemeDeclaration":{
-            |      "declaration1":false
-            |   },
-            |   "establisherDetails":{
-            |      "individual":[
-            |         {
-            |            "personalDetails":{
-            |               "firstName":"test-first-name",
-            |               "lastName":"test-last-name",
-            |               "dateOfBirth":"1969-07-20"
-            |            },
-            |            "correspondenceAddressDetails":{
-            |               "addressDetails":{
-            |                  "line1":"test-address-line-1",
-            |                  "countryCode":"test-country",
-            |                  "addressType":"NON-UK"
-            |               }
-            |            },
-            |            "correspondenceContactDetails":{
-            |               "contactDetails":{
-            |                  "telephone":"test-phone-number",
-            |                  "email":"test-email-address"
-            |               }
-            |            }
-            |         }
-            |      ],
-            |      "companyOrOrganization":[
-            |
-            |      ],
-            |      "partnership":[
-            |
-            |      ]
-            |   },
-            |   "trusteeDetails":{
-            |      "individualTrusteeDetail":[
-            |
-            |      ],
-            |      "companyTrusteeDetail":[
-            |
-            |      ],
-            |      "partnershipTrusteeDetail":[
-            |
-            |      ]
-            |   }
-            |}
-          """.stripMargin)
-
         val expectedAuditEvent =
           SchemeUpdate(psaIdentifier = "test-psa-id",
             schemeType = Some(audit.SchemeType.singleTrust),
@@ -444,28 +380,31 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     }
   }
 
-  //  it should "not send a SchemeUpdate audit event following an unsuccessful submission" in {
-  //
-  //    val fixture = testFixture()
-  //
-  //    fixture.schemeConnector.setRegisterSchemeResponse(Future.failed(new BadRequestException("bad request")))
-  //
-  //    fixture.schemeService.registerScheme(psaId, pensionsSchemeJson)
-  //      .map(_ => fail("Expected failure"))
-  //      .recover {
-  //        case _: BadRequestException =>
-  //          val expected = schemeSubscription.copy(
-  //            hasIndividualEstablisher = true,
-  //            status = Status.BAD_REQUEST,
-  //            request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
-  //            response = None
-  //          )
-  //
-  //          fixture.auditService.lastEvent shouldBe Some(expected)
-  //      }
-  //
-  //  }
+  it should "send a SchemeUpdate audit event following an unsuccessful submission" in {
+    val f = new UpdateTestFixture() {}
 
+    f.schemeConnector.setUpdateSchemeResponse(Future.failed(new BadRequestException("bad request")))
+
+    println("\nyyy1")
+
+    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson)
+      .map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          val expectedAuditEvent =
+            SchemeUpdate(psaIdentifier = "test-psa-id",
+              schemeType = Some(audit.SchemeType.singleTrust),
+              hasIndividualEstablisher = true,
+              hasCompanyEstablisher = false,
+              hasPartnershipEstablisher = false,
+              hasDormantCompany = false,
+              status = Status.BAD_REQUEST,
+              request = expectedUpdateRequestJson,
+              response = None
+            )
+          f.auditService.lastEvent shouldBe Some(expectedAuditEvent)
+      }
+  }
 }
 
 object SchemeServiceSpec extends SpecBase {
@@ -484,12 +423,7 @@ object SchemeServiceSpec extends SpecBase {
   }
 
   trait UpdateTestFixture {
-    val schemeConnector: FakeSchemeConnectorStoreJson = {
-      val fakeConnector = new FakeSchemeConnectorStoreJson()
-      val updateSchemeResponse = Future.successful(HttpResponse.apply(responseStatus = Status.OK, responseJson = Some(testResponse)))
-      fakeConnector.setUpdateSchemeResponse(updateSchemeResponse)
-      fakeConnector
-    }
+    val schemeConnector: FakeSchemeConnectorStoreJson = new FakeSchemeConnectorStoreJson()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
@@ -614,6 +548,71 @@ object SchemeServiceSpec extends SpecBase {
     )
 
   }
+
+  val expectedUpdateRequestJson = Json.parse(
+    """
+      |{
+      |   "customerAndSchemeDetails":{
+      |      "schemeName":"test-scheme-name",
+      |      "isSchemeMasterTrust":false,
+      |      "schemeStructure":"A single trust under which all of the assets are held for the benefit of all members of the scheme",
+      |      "currentSchemeMembers":"0",
+      |      "futureSchemeMembers":"0",
+      |      "isReguledSchemeInvestment":false,
+      |      "isOccupationalPensionScheme":false,
+      |      "areBenefitsSecuredContractInsuranceCompany":false,
+      |      "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
+      |      "schemeEstablishedCountry":"test-scheme-established-country",
+      |      "haveInvalidBank":false,
+      |      "insuranceCompanyName":"Test insurance company name",
+      |      "policyNumber":"Test insurance policy number"
+      |   },
+      |   "pensionSchemeDeclaration":{
+      |      "declaration1":false
+      |   },
+      |   "establisherDetails":{
+      |      "individual":[
+      |         {
+      |            "personalDetails":{
+      |               "firstName":"test-first-name",
+      |               "lastName":"test-last-name",
+      |               "dateOfBirth":"1969-07-20"
+      |            },
+      |            "correspondenceAddressDetails":{
+      |               "addressDetails":{
+      |                  "line1":"test-address-line-1",
+      |                  "countryCode":"test-country",
+      |                  "addressType":"NON-UK"
+      |               }
+      |            },
+      |            "correspondenceContactDetails":{
+      |               "contactDetails":{
+      |                  "telephone":"test-phone-number",
+      |                  "email":"test-email-address"
+      |               }
+      |            }
+      |         }
+      |      ],
+      |      "companyOrOrganization":[
+      |
+      |      ],
+      |      "partnership":[
+      |
+      |      ]
+      |   },
+      |   "trusteeDetails":{
+      |      "individualTrusteeDetail":[
+      |
+      |      ],
+      |      "companyTrusteeDetail":[
+      |
+      |      ],
+      |      "partnershipTrusteeDetail":[
+      |
+      |      ]
+      |   }
+      |}
+    """.stripMargin)
 
   val schemeSubscription = SchemeSubscription(
     psaIdentifier = psaId,
