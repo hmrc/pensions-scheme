@@ -368,10 +368,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
         val expectedAuditEvent =
           SchemeUpdate(psaIdentifier = "test-psa-id",
             schemeType = Some(audit.SchemeType.singleTrust),
-            hasIndividualEstablisher = true,
-            hasCompanyEstablisher = false,
-            hasPartnershipEstablisher = false,
-            hasDormantCompany = false,
             status = Status.OK,
             request = schemeUpdateRequestJson,
             response = Some(testResponse))
@@ -394,10 +390,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
           val expectedAuditEvent =
             SchemeUpdate(psaIdentifier = "test-psa-id",
               schemeType = Some(audit.SchemeType.singleTrust),
-              hasIndividualEstablisher = true,
-              hasCompanyEstablisher = false,
-              hasPartnershipEstablisher = false,
-              hasDormantCompany = false,
               status = Status.BAD_REQUEST,
               request = schemeUpdateRequestJson,
               response = None
@@ -631,10 +623,6 @@ object SchemeServiceSpec extends SpecBase {
   val schemeUpdate = SchemeUpdate(
     psaIdentifier = psaId,
     schemeType = Some(AuditSchemeType.singleTrust),
-    hasIndividualEstablisher = false,
-    hasCompanyEstablisher = false,
-    hasPartnershipEstablisher = false,
-    hasDormantCompany = false,
     status = Status.OK,
     request = Json.obj(),
     response = None

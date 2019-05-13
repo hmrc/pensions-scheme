@@ -21,10 +21,6 @@ import play.api.libs.json.{JsValue, Json}
 case class SchemeUpdate(
                                psaIdentifier: String,
                                schemeType: Option[SchemeType.Value],
-                               hasIndividualEstablisher: Boolean,
-                               hasCompanyEstablisher: Boolean,
-                               hasPartnershipEstablisher: Boolean,
-                               hasDormantCompany: Boolean,
                                status: Int,
                                request: JsValue,
                                response: Option[JsValue]
@@ -34,10 +30,6 @@ case class SchemeUpdate(
   override def details: Map[String, String] = {
     val details = Map(
       "psaIdentifier" -> psaIdentifier,
-      "hasIndividualEstablisher" -> hasIndividualEstablisher.toString,
-      "hasCompanyEstablisher" -> hasCompanyEstablisher.toString,
-      "hasPartnershipEstablisher" -> hasPartnershipEstablisher.toString,
-      "hasDormantCompany" -> hasDormantCompany.toString,
       "status" -> status.toString,
       "request" -> Json.stringify(request),
       "response" -> {

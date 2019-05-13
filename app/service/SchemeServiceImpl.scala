@@ -172,10 +172,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
     SchemeUpdate(
       psaIdentifier = psaId,
       schemeType = translateSchemeType(pensionsScheme),
-      hasIndividualEstablisher = pensionsScheme.establisherDetails.individual.nonEmpty,
-      hasCompanyEstablisher = pensionsScheme.establisherDetails.companyOrOrganization.nonEmpty,
-      hasPartnershipEstablisher = pensionsScheme.establisherDetails.partnership.nonEmpty,
-      hasDormantCompany = pensionsScheme.pensionSchemeDeclaration.box5.getOrElse(false),
       status = status,
       request = Json.toJson(pensionsScheme),
       response = response
