@@ -123,13 +123,16 @@ class FakeSchemeConnector extends SchemeConnector {
   private var registerSchemeResponse = Future.successful(
     HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
 
-  protected var updateSchemeResponse = Future.successful(HttpResponse(Status.OK))
+  protected var updateSchemeResponse = Future.successful(HttpResponse.apply(responseStatus = Status.OK))
 
   private var listOfSchemesResponse =
     Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))
 
   def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit =
     this.registerSchemeResponse = response
+
+  def setUpdateSchemeResponse(response: Future[HttpResponse]): Unit =
+    this.updateSchemeResponse = response
 
   def setListOfSchemesResponse(response: Future[HttpResponse]): Unit =
     this.listOfSchemesResponse = response
@@ -165,6 +168,9 @@ object FakeSchemeConnector extends SchemeDetailsStubData {
     "test-processing-date",
     "test-scheme-reference-number")
   val schemeRegistrationResponseJson: JsValue =
+    Json.toJson(schemeRegistrationResponse)
+
+  val schemeUpdateResponseJson: JsValue =
     Json.toJson(schemeRegistrationResponse)
 
   val listOfSchemes: ListOfSchemes =

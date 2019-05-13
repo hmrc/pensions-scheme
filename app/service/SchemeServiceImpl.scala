@@ -16,7 +16,7 @@
 
 package service
 
-import audit.{AuditService, SchemeList, SchemeSubscription, SchemeType => AuditSchemeType}
+import audit.{AuditService, SchemeList, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
@@ -83,7 +83,12 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
       validPensionsScheme => {
         val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
         Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
-        schemeConnector.updateSchemeDetails(pstr, updatedScheme)
+        schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
+          case Success(httpResponse) =>
+            sendSchemeUpdateEvent(psaId, validPensionsScheme, Status.OK, Some(httpResponse.json))
+          case Failure(error: HttpException) =>
+            sendSchemeUpdateEvent(psaId, validPensionsScheme, error.responseCode, None)
+        }
       })
   }
 
@@ -141,6 +146,39 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
         Future.successful(pensionSchemeHaveInvalidBank.set(pensionsScheme, false))
     }
 
+  }
+
+  private def sendSchemeUpdateEvent(psaId: String, pensionsScheme: PensionsScheme, status: Int, response: Option[JsValue])
+                                         (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
+    auditService.sendEvent(translateSchemeUpdateEvent(psaId, pensionsScheme, status, response))
+  }
+
+  private[service] def translateSchemeUpdateEvent
+  (psaId: String, pensionsScheme: PensionsScheme, status: Int, response: Option[JsValue]): SchemeUpdate = {
+
+    val schemeType = if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
+      Some(AuditSchemeType.masterTrust)
+    }
+    else {
+      pensionsScheme.customerAndSchemeDetails.schemeStructure.map {
+        case SchemeType.single.value => AuditSchemeType.singleTrust
+        case SchemeType.group.value => AuditSchemeType.groupLifeDeath
+        case SchemeType.corp.value => AuditSchemeType.bodyCorporate
+        case _ => AuditSchemeType.other
+      }
+    }
+
+    SchemeUpdate(
+      psaIdentifier = psaId,
+      schemeType = schemeType,
+      hasIndividualEstablisher = pensionsScheme.establisherDetails.individual.nonEmpty,
+      hasCompanyEstablisher = pensionsScheme.establisherDetails.companyOrOrganization.nonEmpty,
+      hasPartnershipEstablisher = pensionsScheme.establisherDetails.partnership.nonEmpty,
+      hasDormantCompany = pensionsScheme.pensionSchemeDeclaration.box5.getOrElse(false),
+      status = status,
+      request = Json.toJson(pensionsScheme),
+      response = response
+    )
   }
 
   private def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue])
