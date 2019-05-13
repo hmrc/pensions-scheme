@@ -372,8 +372,8 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
             hasCompanyEstablisher = false,
             hasPartnershipEstablisher = false,
             hasDormantCompany = false,
-            status = 200,
-            request = expectedUpdateRequestJson,
+            status = Status.OK,
+            request = schemeUpdateRequestJson,
             response = Some(testResponse))
 
         f.auditService.lastEvent shouldBe Some(expectedAuditEvent)
@@ -399,7 +399,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
               hasPartnershipEstablisher = false,
               hasDormantCompany = false,
               status = Status.BAD_REQUEST,
-              request = expectedUpdateRequestJson,
+              request = schemeUpdateRequestJson,
               response = None
             )
           f.auditService.lastEvent shouldBe Some(expectedAuditEvent)
@@ -549,7 +549,7 @@ object SchemeServiceSpec extends SpecBase {
 
   }
 
-  val expectedUpdateRequestJson = Json.parse(
+  val schemeUpdateRequestJson = Json.parse(
     """
       |{
       |   "customerAndSchemeDetails":{
