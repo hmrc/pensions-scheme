@@ -51,6 +51,7 @@
         "hasPaye": false
       },
       "isEstablisherComplete": true,
+      "isCompanyComplete": true,
       "establisherKind": "company",
       "companyAddress": {
         "country": "GB",
@@ -128,6 +129,7 @@
       ],
       "establisherKind": "partnership",
       "isEstablisherComplete": true,
+      "isPartnershipCompleteId": true,
       "otherPartners": false,
       "partnershipAddressYears": "under_a_year",
       "partnershipVat": {
