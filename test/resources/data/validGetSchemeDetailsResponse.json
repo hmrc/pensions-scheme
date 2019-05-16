@@ -9,7 +9,7 @@
       "isSchemeMasterTrust": true,
       "pensionSchemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
       "otherPensionSchemeStructure": " ",
-      "hasMoreThanTenTrustees": true,
+      "moreThanTenTrustees": true,
       "currentSchemeMembers": "0",
       "futureSchemeMembers": "0",
       "isReguledSchemeInvestment": true,
