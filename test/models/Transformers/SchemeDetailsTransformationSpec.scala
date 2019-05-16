@@ -32,9 +32,7 @@ class SchemeDetailsTransformationSpec extends WordSpec with MustMatchers with Op
       forAll(schemeDetailsGen) {
         schemeDetails =>
           val (desSchemeDetails, userAnswersSchemeDetails) = schemeDetails
-
           val result = desSchemeDetails.transform(schemeDetailsTransformer.userAnswersSchemeDetailsReads).get
-
           result mustBe userAnswersSchemeDetails
       }
     }
