@@ -346,11 +346,6 @@ object Individual {
   }
 
   val individualUpdateWrites: Writes[Individual] = (
-    (JsPath \ "personDetails").write[PersonalDetails] and
-      JsPath.write(commonIndividualWrites)
-    ) (getIndividual(_))
-
-  val establisherIndividualUpdateWrites: Writes[Individual] = (
     (JsPath \ "personalDetails").write[PersonalDetails] and
       JsPath.write(commonIndividualWrites)
     ) (getIndividual(_))
@@ -545,7 +540,7 @@ object EstablisherDetails {
   implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
 
   val updateWrites: Writes[EstablisherDetails] = (
-    (JsPath \ "individualDetails").writeNullable(seq(Individual.establisherIndividualUpdateWrites)) and
+    (JsPath \ "individualDetails").writeNullable(seq(Individual.individualUpdateWrites)) and
       (JsPath \ "companyOrOrganisationDetails").writeNullable(seq(CompanyEstablisher.updateWrites)) and
       (JsPath \ "partnershipDetails").writeNullable(seq(Partnership.updateWrites))
     ) (establishers => (
