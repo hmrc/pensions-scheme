@@ -89,5 +89,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       (__ \ 'pstr).json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'pstr).json.pick) and
       (__ \ 'isAboutBenefitsAndInsuranceComplete).json.put(JsBoolean(true)) and
       (__ \ 'isAboutMembersComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isBeforeYouStartComplete).json.put(JsBoolean(true)) reduce
+      (__ \ 'isBeforeYouStartComplete).json.put(JsBoolean(true)) and
+      ((__ \ "moreThanTenTrustees").json.copyFrom((__ \ 'psaSchemeDetails \ 'schemeDetails \ 'hasMoreThanTenTrustees).json.pick)
+        orElse doNothing) reduce
 }

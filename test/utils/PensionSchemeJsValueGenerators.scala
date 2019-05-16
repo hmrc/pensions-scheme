@@ -390,7 +390,6 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         moreThanTenTrustees.map { value => Json.obj("hasMoreThanTenTrustees" -> value) }.getOrElse(Json.obj()) ++
         optional("insuranceCompanyName", insuranceCompanyName)
 
-
     (
       Json.obj(
         "psaSchemeDetails" -> Json.obj(
@@ -448,7 +447,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       Json.obj(
         "schemeStatus" -> schemeStatus,
         "pstr" -> pstr
-      )
+      ) ++ moreThanTenTrustees.fold(Json.obj())( moreThanTenValue => Json.obj( "moreThanTenTrustees" -> moreThanTenValue) )
     )
   }
 
