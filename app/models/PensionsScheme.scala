@@ -551,7 +551,8 @@ object EstablisherDetails {
 }
 
 case class PensionsScheme(customerAndSchemeDetails: CustomerAndSchemeDetails, pensionSchemeDeclaration: Declaration,
-                          establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails, isEstablisherOrTrusteeDetailsChanged: Option[Boolean] = None)
+                          establisherDetails: EstablisherDetails, trusteeDetails: TrusteeDetails,
+                          changeOfEstablisherOrTrustDetails: Option[Boolean] = None)
 
 object PensionsScheme {
 
@@ -592,7 +593,7 @@ object PensionsScheme {
     ) (schemeDetails=> (
     schemeDetails.customerAndSchemeDetails,
     schemeDetails.pensionSchemeDeclaration,
-    (schemeDetails.isEstablisherOrTrusteeDetailsChanged.getOrElse(false),
+    (schemeDetails.changeOfEstablisherOrTrustDetails.getOrElse(false),
       Some(schemeDetails.customerAndSchemeDetails.haveMoreThanTenTrustee.getOrElse(false)),
       schemeDetails.establisherDetails,
       getOptionalTrustee(schemeDetails.trusteeDetails)))
