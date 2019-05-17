@@ -409,7 +409,7 @@
             "items": {
               "type": "object",
               "properties": {
-                "personDetails": {
+                "personalDetails": {
                   "type": "object",
                   "properties": {
                     "title": {
@@ -505,7 +505,7 @@
               },
               "additionalProperties": false,
               "required": [
-                "personDetails",
+                "personalDetails",
                 "correspondenceAddressDetails",
                 "correspondenceContactDetails",
                 "previousAddressDetails"
@@ -597,7 +597,7 @@
             "items": {
               "type": "object",
               "properties": {
-                "personDetails": {
+                "personalDetails": {
                   "type": "object",
                   "properties": {
                     "title": {
@@ -693,7 +693,7 @@
               },
               "additionalProperties": false,
               "required": [
-                "personDetails",
+                "personalDetails",
                 "correspondenceAddressDetails",
                 "correspondenceContactDetails",
                 "previousAddressDetails"
@@ -718,7 +718,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "personDetails": {
+          "personalDetails": {
             "type": "object",
             "properties": {
               "title": {
@@ -814,7 +814,7 @@
         },
         "additionalProperties": false,
         "required": [
-          "personDetails",
+          "personalDetails",
           "correspondenceAddressDetails",
           "correspondenceContactDetails",
           "previousAddressDetails"

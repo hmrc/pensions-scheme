@@ -101,9 +101,9 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
       declaration <- json.validate[A](readsDeclaration)
       establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
-      isEstablisherOrTrusteeDetailsChanged <- json.validate[Option[Boolean]]((JsPath \ "isEstablisherOrTrusteeDetailsChanged").readNullable[Boolean])
+      changeOfEstablisherOrTrustDetails <- json.validate[Option[Boolean]]((JsPath \ "changeOfEstablisherOrTrustDetails").readNullable[Boolean])
     } yield {
-      PensionsScheme(customerAndScheme, declaration, establishers, trustees, isEstablisherOrTrusteeDetailsChanged)
+      PensionsScheme(customerAndScheme, declaration, establishers, trustees, changeOfEstablisherOrTrustDetails)
     }
 
     result.fold(

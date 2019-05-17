@@ -168,6 +168,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       Json.obj("director" -> dd.map(_._2)) else Json.obj()).getOrElse(Json.obj()) else Json.obj()
     val uaMoreThanTenDirectors = if (isEstablisher) haveMoreThanTenDirectors.map(value =>
       Json.obj("otherDirectors" -> value)).getOrElse(Json.obj()) else Json.obj()
+    val isCompanyComplete = if (isEstablisher) Json.obj("isCompanyComplete" -> true) else Json.obj()
     val desMoreThanTenDirectors = if (isEstablisher) haveMoreThanTenDirectors.map(value =>
       Json.obj("haveMoreThanTenDirectors" -> value)).getOrElse(Json.obj()) else Json.obj()
     (
@@ -195,8 +196,10 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         (if (isEstablisher) "isEstablisherComplete" else "isTrusteeComplete") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
+        ++ isCompanyComplete
         ++ uaMoreThanTenDirectors
         ++ uaDirectors
+
     )
   }
 
@@ -219,6 +222,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val uaPartners = if (isEstablisher) Json.obj("partner" -> partnerDetails.map(_._2)) else Json.obj()
     val desMoreThanTenPartner = if (isEstablisher) Json.obj("areMorethanTenPartners" -> areMorethanTenPartners) else Json.obj()
     val uaMoreThanTenPartner = if (isEstablisher) Json.obj("otherPartners" -> areMorethanTenPartners) else Json.obj()
+    val isPartnershipComplete = if (isEstablisher) Json.obj("isPartnershipCompleteId" -> true) else Json.obj()
     (
       Json.obj(
         "partnershipName" -> orgName,
@@ -242,6 +246,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         (if (isEstablisher) "isEstablisherComplete" else "isPartnershipCompleteId") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
+        ++ isPartnershipComplete
         ++ uaMoreThanTenPartner
         ++ uaPartners
     )
@@ -385,7 +390,6 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         moreThanTenTrustees.map { value => Json.obj("hasMoreThanTenTrustees" -> value) }.getOrElse(Json.obj()) ++
         optional("insuranceCompanyName", insuranceCompanyName)
 
-
     (
       Json.obj(
         "psaSchemeDetails" -> Json.obj(
@@ -443,7 +447,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       Json.obj(
         "schemeStatus" -> schemeStatus,
         "pstr" -> pstr
-      )
+      ) ++ moreThanTenTrustees.fold(Json.obj())( moreThanTenValue => Json.obj( "moreThanTenTrustees" -> moreThanTenValue) )
     )
   }
 

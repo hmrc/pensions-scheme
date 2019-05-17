@@ -108,11 +108,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
   }
 
   it should "return a flag that says whether there has been any changes on establishers or trustee details" in {
-    val inputWithUpdatedTrusteesOrEstablishers = pensionsSchemeJson.as[JsObject] ++ Json.obj("isEstablisherOrTrusteeDetailsChanged" -> true)
+    val inputWithUpdatedTrusteesOrEstablishers = pensionsSchemeJson.as[JsObject] ++ Json.obj("changeOfEstablisherOrTrustDetails" -> true)
 
     val result = testFixture().schemeService.transformJsonToModel(inputWithUpdatedTrusteesOrEstablishers, PensionSchemeDeclaration.apiReads)
 
-    result.right.get.isEstablisherOrTrusteeDetailsChanged mustBe Some(true)
+    result.right.get.changeOfEstablisherOrTrustDetails mustBe Some(true)
   }
 
   it should "return a BadRequestException if the JSON is invalid" in {
