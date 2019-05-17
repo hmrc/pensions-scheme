@@ -17,7 +17,7 @@
 package service
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{SchemeSubscription, SchemeType => AuditSchemeType}
+import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
@@ -346,26 +346,9 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   }
 
+
   "updateScheme" should "return the result of submitting the pensions scheme and have the right declaration type" in {
-    class FakeSchemeConnectorStoreJson extends FakeSchemeConnector {
-      var lastUpdateSchemeDetailsdata: JsValue = JsNull
-
-      override def updateSchemeDetails(pstr: String, data: JsValue)(
-        implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-        lastUpdateSchemeDetailsdata = data
-        updateSchemeResponse
-      }
-    }
-
-    trait TestFixture {
-      val schemeConnector: FakeSchemeConnectorStoreJson = new FakeSchemeConnectorStoreJson()
-      val barsConnector: FakeBarsConnector = new FakeBarsConnector()
-      val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-      val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-        schemeConnector, barsConnector, auditService, appConfig)
-    }
-
-    val f = new TestFixture() {}
+    val f = new UpdateTestFixture() {}
 
     f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
       response =>
@@ -375,10 +358,66 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
         declaration1Value.asOpt shouldBe Some(JsBoolean(false))
     }
   }
+
+  it should "send a SchemeUpdate audit event following a successful submission" in {
+    val f = new UpdateTestFixture() {}
+
+    f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(responseStatus = Status.OK, responseJson = Some(testResponse))))
+    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
+      response =>
+        val expectedAuditEvent =
+          SchemeUpdate(psaIdentifier = "test-psa-id",
+            schemeType = Some(audit.SchemeType.singleTrust),
+            status = Status.OK,
+            request = schemeUpdateRequestJson,
+            response = Some(testResponse))
+
+        f.auditService.lastEvent shouldBe Some(expectedAuditEvent)
+    }
+  }
+
+  it should "send a SchemeUpdate audit event following an unsuccessful submission" in {
+    val f = new UpdateTestFixture() {}
+
+    f.schemeConnector.setUpdateSchemeResponse(Future.failed(new BadRequestException("bad request")))
+    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson)
+      .map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          val expectedAuditEvent =
+            SchemeUpdate(psaIdentifier = "test-psa-id",
+              schemeType = Some(audit.SchemeType.singleTrust),
+              status = Status.BAD_REQUEST,
+              request = schemeUpdateRequestJson,
+              response = None
+            )
+          f.auditService.lastEvent shouldBe Some(expectedAuditEvent)
+      }
+  }
 }
 
 object SchemeServiceSpec extends SpecBase {
+  private val testResponse = Json.obj(
+    "testDesResponse" -> "a response"
+  )
 
+  class FakeSchemeConnectorStoreJson extends FakeSchemeConnector {
+    var lastUpdateSchemeDetailsdata: JsValue = JsNull
+
+    override def updateSchemeDetails(pstr: String, data: JsValue)(
+      implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+      lastUpdateSchemeDetailsdata = data
+      updateSchemeResponse
+    }
+  }
+
+  trait UpdateTestFixture {
+    val schemeConnector: FakeSchemeConnectorStoreJson = new FakeSchemeConnectorStoreJson()
+    val barsConnector: FakeBarsConnector = new FakeBarsConnector()
+    val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
+    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
+      schemeConnector, barsConnector, auditService, appConfig)
+  }
 
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
@@ -499,6 +538,71 @@ object SchemeServiceSpec extends SpecBase {
 
   }
 
+  val schemeUpdateRequestJson = Json.parse(
+    """
+      |{
+      |   "customerAndSchemeDetails":{
+      |      "schemeName":"test-scheme-name",
+      |      "isSchemeMasterTrust":false,
+      |      "schemeStructure":"A single trust under which all of the assets are held for the benefit of all members of the scheme",
+      |      "currentSchemeMembers":"0",
+      |      "futureSchemeMembers":"0",
+      |      "isReguledSchemeInvestment":false,
+      |      "isOccupationalPensionScheme":false,
+      |      "areBenefitsSecuredContractInsuranceCompany":false,
+      |      "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
+      |      "schemeEstablishedCountry":"test-scheme-established-country",
+      |      "haveInvalidBank":false,
+      |      "insuranceCompanyName":"Test insurance company name",
+      |      "policyNumber":"Test insurance policy number"
+      |   },
+      |   "pensionSchemeDeclaration":{
+      |      "declaration1":false
+      |   },
+      |   "establisherDetails":{
+      |      "individual":[
+      |         {
+      |            "personalDetails":{
+      |               "firstName":"test-first-name",
+      |               "lastName":"test-last-name",
+      |               "dateOfBirth":"1969-07-20"
+      |            },
+      |            "correspondenceAddressDetails":{
+      |               "addressDetails":{
+      |                  "line1":"test-address-line-1",
+      |                  "countryCode":"test-country",
+      |                  "addressType":"NON-UK"
+      |               }
+      |            },
+      |            "correspondenceContactDetails":{
+      |               "contactDetails":{
+      |                  "telephone":"test-phone-number",
+      |                  "email":"test-email-address"
+      |               }
+      |            }
+      |         }
+      |      ],
+      |      "companyOrOrganization":[
+      |
+      |      ],
+      |      "partnership":[
+      |
+      |      ]
+      |   },
+      |   "trusteeDetails":{
+      |      "individualTrusteeDetail":[
+      |
+      |      ],
+      |      "companyTrusteeDetail":[
+      |
+      |      ],
+      |      "partnershipTrusteeDetail":[
+      |
+      |      ]
+      |   }
+      |}
+    """.stripMargin)
+
   val schemeSubscription = SchemeSubscription(
     psaIdentifier = psaId,
     schemeType = Some(AuditSchemeType.singleTrust),
@@ -508,6 +612,14 @@ object SchemeServiceSpec extends SpecBase {
     hasDormantCompany = false,
     hasBankDetails = false,
     hasValidBankDetails = false,
+    status = Status.OK,
+    request = Json.obj(),
+    response = None
+  )
+
+  val schemeUpdate = SchemeUpdate(
+    psaIdentifier = psaId,
+    schemeType = Some(AuditSchemeType.singleTrust),
     status = Status.OK,
     request = Json.obj(),
     response = None

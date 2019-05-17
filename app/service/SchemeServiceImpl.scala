@@ -16,7 +16,7 @@
 
 package service
 
-import audit.{AuditService, SchemeList, SchemeSubscription, SchemeType => AuditSchemeType}
+import audit.{AuditService, SchemeList, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
@@ -83,7 +83,12 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
       validPensionsScheme => {
         val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
         Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
-        schemeConnector.updateSchemeDetails(pstr, updatedScheme)
+        schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
+          case Success(httpResponse) =>
+            sendSchemeUpdateEvent(psaId, validPensionsScheme, Status.OK, Some(httpResponse.json))
+          case Failure(error: HttpException) =>
+            sendSchemeUpdateEvent(psaId, validPensionsScheme, error.responseCode, None)
+        }
       })
   }
 
@@ -143,15 +148,8 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
   }
 
-  private def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue])
-                                         (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
-    auditService.sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, status, response))
-  }
-
-  private[service] def translateSchemeSubscriptionEvent
-  (psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue]): SchemeSubscription = {
-
-    val schemeType = if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
+  private def translateSchemeType(pensionsScheme:PensionsScheme) = {
+    if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
       Some(AuditSchemeType.masterTrust)
     }
     else {
@@ -162,10 +160,34 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
         case _ => AuditSchemeType.other
       }
     }
+  }
 
+  private def sendSchemeUpdateEvent(psaId: String, pensionsScheme: PensionsScheme, status: Int, response: Option[JsValue])
+                                         (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
+    auditService.sendEvent(translateSchemeUpdateEvent(psaId, pensionsScheme, status, response))
+  }
+
+  private[service] def translateSchemeUpdateEvent
+  (psaId: String, pensionsScheme: PensionsScheme, status: Int, response: Option[JsValue]): SchemeUpdate = {
+    SchemeUpdate(
+      psaIdentifier = psaId,
+      schemeType = translateSchemeType(pensionsScheme),
+      status = status,
+      request = Json.toJson(pensionsScheme),
+      response = response
+    )
+  }
+
+  private def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue])
+                                         (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
+    auditService.sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, status, response))
+  }
+
+  private[service] def translateSchemeSubscriptionEvent
+  (psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue]): SchemeSubscription = {
     SchemeSubscription(
       psaIdentifier = psaId,
-      schemeType = schemeType,
+      schemeType = translateSchemeType(pensionsScheme),
       hasIndividualEstablisher = pensionsScheme.establisherDetails.individual.nonEmpty,
       hasCompanyEstablisher = pensionsScheme.establisherDetails.companyOrOrganization.nonEmpty,
       hasPartnershipEstablisher = pensionsScheme.establisherDetails.partnership.nonEmpty,
