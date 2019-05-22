@@ -358,19 +358,21 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     contactDetails <- contactDetailsJsValueGen
     optionalContact <- Gen.option(contactDetails._1)
     schemeStatus <- schemeStatusGen
+    pstr <- Gen.option("12345678AB")
+    relationshipDate <- Gen.option(dateGenerator)
   } yield {
-    val pstr = "12345678AB"
     val schemeTypeName = if (isSchemeMasterTrust.contains(true)) Json.obj("name" -> "master") else
       schemeStructure.map(schemeType => Json.obj("name" -> SchemeType.nameWithValue(schemeType))).getOrElse(Json.obj())
     val otherDetails = optional("schemeTypeDetails", otherPensionSchemeStructure)
     val schemeType = schemeTypeName ++ otherDetails
     val schemeTypeJs = if (isSchemeMasterTrust.contains(true) | schemeStructure.nonEmpty | otherPensionSchemeStructure.nonEmpty)
       Json.obj("schemeType" -> schemeType) else Json.obj()
+    val statusJs = Json.obj("schemeStatus" -> schemeStatus) ++ optional("pstr", pstr)
+    val date = relationshipDate.map(dt => Json.obj("relationshipDate" -> dt.toString)).getOrElse(Json.obj())
 
     val schemeDetails =
       Json.obj(
         "srn" -> "",
-        "pstr" -> pstr,
         "schemeStatus" -> schemeStatus,
         "schemeName" -> schemeName,
         "currentSchemeMembers" -> currentSchemeMembers,
@@ -381,6 +383,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
         "isSchemeBenefitsInsuranceCompany" -> areBenefitsSecuredContractInsuranceCompany
       ) ++ isSchemeMasterTrust.map { value => Json.obj("isSchemeMasterTrust" -> value) }.getOrElse(Json.obj()) ++
+        optional("pstr", pstr) ++
         optional("insuranceCompanyName", insuranceCompanyName) ++
         optional("policyNumber", policyNumber) ++
         optionalContact.map { value => Json.obj("insuranceCompanyContactDetails" -> value) }.getOrElse(Json.obj()) ++
@@ -399,13 +402,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
               "firstName" -> "First",
               "middleName" -> "Middle",
               "lastName" -> "Last",
-              "relationshipType" -> "Primary",
-              "relationshipDate" -> "2018-07-01"),
+              "relationshipType" -> "Primary")
+              ++ date,
             Json.obj("psaid" -> "A0000001",
               "organizationOrPartnershipName" -> "Acme Ltd",
-              "relationshipType" -> "Primary",
-              "relationshipDate" -> "2018-07-01"
-            )
+              "relationshipType" -> "Primary"
+            ) ++ date
           )
           )
         )
@@ -418,20 +420,18 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "psaDetails" -> JsArray(
           Seq(
             Json.obj(
-              "id"->"A0000000",
+              "id" -> "A0000000",
               "individual" -> Json.obj(
                 "firstName" -> "First",
                 "middleName" -> "Middle",
                 "lastName" -> "Last"
-              ),
-              "relationshipDate" -> "2018-07-01"
-            ),
+              )
+            ) ++ date,
             Json.obj(
-              "id"-> "A0000001",
-              "organisationOrPartnershipName" -> "Acme Ltd",
-              "relationshipDate" -> "2018-07-01"
-            )
-        )
+              "id" -> "A0000001",
+              "organisationOrPartnershipName" -> "Acme Ltd"
+            ) ++ date
+          )
         ),
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
         "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
@@ -444,10 +444,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         optional("insurancePolicyNumber", policyNumber) ++
         insuranceAddress.map { value => value._2.as[JsObject] }.getOrElse(Json.obj()) ++
         schemeTypeJs ++
-      Json.obj(
-        "schemeStatus" -> schemeStatus,
-        "pstr" -> pstr
-      ) ++ moreThanTenTrustees.fold(Json.obj())( moreThanTenValue => Json.obj( "moreThanTenTrustees" -> moreThanTenValue) )
+        statusJs ++
+        moreThanTenTrustees.fold(Json.obj())(moreThanTenValue => Json.obj("moreThanTenTrustees" -> moreThanTenValue))
     )
   }
 
