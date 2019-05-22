@@ -109,7 +109,7 @@ object ReadsEstablisherDetails {
       (JsPath \ "partnerUniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "partnerUniqueTaxReference" \ "reason").readNullable[String] and
       (JsPath \ "partnerAddressYears").read[String] and
-      (JsPath \ "previousAddress").readNullable[Address]
+      (JsPath \ "partnerPreviousAddress").readNullable[Address]
     ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
     Individual(
       personalDetails = personalDetails,
