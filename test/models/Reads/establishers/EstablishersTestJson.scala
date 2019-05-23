@@ -125,7 +125,7 @@ object EstablishersTestJson extends OptionValues {
       "partnerAddressId" -> addressJson(partner.correspondenceAddressDetails.addressDetails),
       "partnerContactDetails" -> contactDetailsJson(partner.correspondenceContactDetails.contactDetails),
       "partnerAddressYears" -> addressYearsJson(partner.previousAddressDetails),
-      "previousAddress" -> previousAddressJson(partner.previousAddressDetails)
+      "partnerPreviousAddress" -> previousAddressJson(partner.previousAddressDetails)
     )
 
   def trusteeIndividualJson(individual: Individual, isDeleted: Boolean = false): JsObject =
