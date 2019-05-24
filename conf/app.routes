@@ -7,10 +7,17 @@ GET           /list-of-schemes                                  controllers.Sche
 GET           /scheme                                           controllers.SchemeDetailsController.getSchemeDetails
 
 # answers caching in protected mongo
-GET           /journey-cache/scheme/:id                         controllers.SchemeJourneyCacheController.get(id: String)
-POST          /journey-cache/scheme/:id                         controllers.SchemeJourneyCacheController.save(id: String)
-DELETE        /journey-cache/scheme/:id                         controllers.SchemeJourneyCacheController.remove(id: String)
-GET           /journey-cache/scheme/:id/lastUpdated             controllers.SchemeJourneyCacheController.lastUpdated(id: String)
+GET           /journey-cache/scheme/:id                         controllers.OldSchemeJourneyCacheController.get(id: String)
+POST          /journey-cache/scheme/:id                         controllers.OldSchemeJourneyCacheController.save(id: String)
+DELETE        /journey-cache/scheme/:id                         controllers.OldSchemeJourneyCacheController.remove(id: String)
+GET           /journey-cache/scheme/:id/lastUpdated             controllers.OldSchemeJourneyCacheController.lastUpdated(id: String)
+
+# answers caching in protected mongo
+GET           /journey-cache/scheme-subscription/:id            controllers.SchemeSubscriptionJourneyCacheController.get(id: String)
+POST          /journey-cache/scheme-subscription/:id            controllers.SchemeSubscriptionJourneyCacheController.save(id: String)
+DELETE        /journey-cache/scheme-subscription/:id            controllers.SchemeSubscriptionJourneyCacheController.remove(id: String)
+GET           /journey-cache/scheme-subscription/:id/lastUpdated    controllers.SchemeSubscriptionJourneyCacheController.lastUpdated(id: String)
+
 
 # answers caching in protected mongo
 GET           /journey-cache/update-scheme/:id                  controllers.UpdateSchemeJourneyCacheController.get(id: String)
