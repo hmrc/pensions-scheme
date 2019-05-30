@@ -31,5 +31,6 @@ class SchemeDetailsCacheRepository @Inject()(
   "scheme.json.encryption",
   Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")),
   config,
-  component
+  component,
+  None
 )
