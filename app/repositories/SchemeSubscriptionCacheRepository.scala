@@ -22,13 +22,14 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 
 import scala.concurrent.ExecutionContext
 
-class SchemeJourneyCacheRepository @Inject()(
-                                              config: Configuration,
-                                              component: ReactiveMongoComponent
-                                            )(implicit val executionContext: ExecutionContext) extends PensionsSchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.scheme-journey.name"),
-  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-journey.timeToLiveInSeconds")),
-  component,
+class SchemeSubscriptionCacheRepository @Inject()(
+                                             config: Configuration,
+                                             component: ReactiveMongoComponent
+                                           )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
+  config.underlying.getString("mongodb.pensions-scheme-cache.register-scheme.name"),
   "scheme.json.encryption",
-  config
+  None,
+  config,
+  component,
+  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-scheme.timeToLiveInDays"))
 )

@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package repositories
+package controllers
 
 import com.google.inject.Inject
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
-
+import play.api.mvc.ControllerComponents
+import repositories.OldSchemeJourneyCacheRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 import scala.concurrent.ExecutionContext
 
-class SchemeDetailsCacheRepository @Inject()(
-                                             config: Configuration,
-                                             component: ReactiveMongoComponent
-                                           )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.scheme-details.name"),
-  "scheme.json.encryption",
-  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")),
-  config,
-  component,
-  None
-)
+class OldSchemeJourneyCacheController @Inject()(
+                                                 config: Configuration,
+                                                 repository: OldSchemeJourneyCacheRepository,
+                                                 authConnector: AuthConnector,
+                                                 cc: ControllerComponents
+                                            )(implicit val ec: ExecutionContext) extends PensionsSchemeCacheController(config, repository, authConnector, cc)

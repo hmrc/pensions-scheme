@@ -37,7 +37,8 @@ class SchemeCacheRepository @Inject()(collectionName: String,
                                       encryptionKey: String,
                                       expireInSeconds: Option[Int],
                                       config: Configuration,
-                                      component: ReactiveMongoComponent
+                                      component: ReactiveMongoComponent,
+                                      expireInDays: Option[Int]
                                             )(implicit ec: ExecutionContext)extends ReactiveRepository[JsValue, BSONObjectID](
 collectionName,
 component.mongoConnector.db,
@@ -46,7 +47,7 @@ implicitly
 
   private def getExpireAt: DateTime = if(expireInSeconds.isEmpty){
     DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(
-      config.underlying.getInt("mongodb.pensions-scheme-cache.update-scheme.timeToLiveInDays") + 1).toDateTimeAtStartOfDay()
+      expireInDays.getOrElse(config.underlying.getInt("defaultDataExpireInDays")) + 1).toDateTimeAtStartOfDay()
   } else {
     DateTime.now(DateTimeZone.UTC).plusSeconds(expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds")))
   }
