@@ -32,7 +32,7 @@ import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LockMongoRepixositoryTest extends MongoUnitSpec
+class LockMongoRepositoryTest extends MongoUnitSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with MongoSpecSupport
