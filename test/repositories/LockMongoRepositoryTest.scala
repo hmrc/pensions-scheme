@@ -32,7 +32,7 @@ import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LockMongoRepositoryTest extends MongoUnitSpec
+class LockMongoRepixositoryTest extends MongoUnitSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with MongoSpecSupport
@@ -54,6 +54,7 @@ class LockMongoRepositoryTest extends MongoUnitSpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.drop)
+    await(repository.ensureIndexes)
   }
 
   override def afterAll(): Unit = {
