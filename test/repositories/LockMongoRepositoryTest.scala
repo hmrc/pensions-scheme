@@ -54,6 +54,7 @@ class LockMongoRepositoryTest extends MongoUnitSpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.drop)
+    await(repository.ensureIndexes)
   }
 
   override def afterAll(): Unit = {
