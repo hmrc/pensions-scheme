@@ -63,7 +63,6 @@ trait ErrorHandler {
     val httpEntity = ex.message match {
       case responseBodyRegex(body) => HttpEntity.Strict(ByteString(body), Some("application/json"))
       case message: String => HttpEntity.Strict(ByteString(message), Some("text/plain"))
-      case _ => HttpEntity.NoEntity
     }
 
     Result(ResponseHeader(ex.responseCode), httpEntity)
