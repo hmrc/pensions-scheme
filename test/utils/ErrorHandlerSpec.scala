@@ -18,16 +18,14 @@ package utils
 
 import akka.util.ByteString
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.HttpEntity
-import play.api.libs.json.{JsResultException, Json, OFormat}
 import play.api.mvc.{ResponseHeader, Result}
 import uk.gov.hmrc.http.{HttpException, NotFoundException, Upstream4xxResponse}
-import utils.validationUtils._
 
-class ErrorHandlerSpec extends WordSpec with MustMatchers with OptionValues {
+class ErrorHandlerSpec extends WordSpec with MustMatchers {
   private val eh = new ErrorHandler {
-    def testResult(ex:HttpException) = {
+    def testResult(ex: HttpException) = {
       result(ex)
     }
   }
@@ -37,8 +35,10 @@ class ErrorHandlerSpec extends WordSpec with MustMatchers with OptionValues {
       val testMessage = "a message"
       val exception = new NotFoundException(testMessage)
 
-       val result = eh.recoverFromError(exception)
-      ScalaFutures.whenReady(result.failed) { _.getMessage mustBe testMessage }
+      val result = eh.recoverFromError(exception)
+      ScalaFutures.whenReady(result.failed) {
+        _.getMessage mustBe testMessage
+      }
     }
 
     "return a 4xx exception when such is passed into" in {
@@ -46,7 +46,9 @@ class ErrorHandlerSpec extends WordSpec with MustMatchers with OptionValues {
       val exception = Upstream4xxResponse(testMessage, 403, 403)
 
       val result = eh.recoverFromError(exception)
-      ScalaFutures.whenReady(result.failed) { _.getMessage mustBe testMessage }
+      ScalaFutures.whenReady(result.failed) {
+        _.getMessage mustBe testMessage
+      }
     }
   }
 
