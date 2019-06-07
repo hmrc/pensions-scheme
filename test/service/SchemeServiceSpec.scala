@@ -85,6 +85,13 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   }
 
+  it should "return bad request exception where uKBankDetails present but account invalid" in {
+    val actual = testFixture().schemeService.readBankAccount(Json.obj("uKBankDetails" -> "invalid"))
+    val expected = new BadRequestException("Invalid bank account details")
+    actual.isLeft shouldBe true
+    actual.left.toOption.map(_.message).getOrElse("") shouldBe expected.message
+  }
+
   "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
 
     testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads) shouldBe a[Right[_, PensionsScheme]]
