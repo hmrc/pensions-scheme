@@ -25,7 +25,7 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     scalacOptions += "-Xlint:-missing-interpolator,_"
   )
   .settings(
-    ScoverageKeys.coverageExcludedFiles := "<empty>;Reverse.*;.*filters.*;.*handlers.*;.*components.*;.*models.*;.*repositories.*;.*modules.*;" +
+    ScoverageKeys.coverageExcludedFiles := "<empty>;Reverse.*;.*filters.*;.*handlers.*;.*components.*;.*models.*;.*repositories.*;.*FeatureSwitchModule.*;" +
       ".*BuildInfo.*;.*javascript.*;.*Routes.*;.*GuiceInjector;.*MongoDiagnosticsController.*",
     ScoverageKeys.coverageMinimum := 80,
     ScoverageKeys.coverageFailOnMinimum := true,
