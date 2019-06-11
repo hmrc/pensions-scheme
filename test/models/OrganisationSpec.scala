@@ -17,7 +17,7 @@
 package models
 
 import base.SpecBase
-import play.api.libs.json.Json
+import play.api.libs.json.{JsResultException, Json}
 
 class OrganisationSpec extends SpecBase {
 
@@ -26,6 +26,22 @@ class OrganisationSpec extends SpecBase {
       val json = Json.obj("organisationName" -> "Test Ltd", "organisationType" -> "Corporate Body")
 
       json.as[Organisation] mustEqual Organisation("Test Ltd", OrganisationTypeEnum.CorporateBody)
+    }
+
+    "give jsresult  exception if json string value but invalid" in {
+      val json = Json.obj("organisationName" -> "Test Ltd", "organisationType" -> "Incorporeal Body")
+
+      a[JsResultException] mustBe thrownBy {
+        json.as[Organisation]
+      }
+    }
+
+    "give jsresult  exception if json numeric value invalid" in {
+      val json = Json.obj("organisationName" -> "Test Ltd", "organisationType" -> 334)
+
+      a[JsResultException] mustBe thrownBy {
+        json.as[Organisation]
+      }
     }
   }
 
@@ -37,4 +53,5 @@ class OrganisationSpec extends SpecBase {
       Json.toJson[Organisation](org) mustEqual jsonResult
     }
   }
+
 }

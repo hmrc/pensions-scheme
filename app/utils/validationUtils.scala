@@ -50,19 +50,6 @@ package object validationUtils {
         }
       )
     }
-
-    implicit def convertTo[A](implicit rds: Reads[A]): A = {
-      jsLookupResult.validate[A].fold(
-        invalid = {
-          errors =>
-            Logger.warn(s"Json contains bad data $errors")
-            throw JsResultException(errors)
-        },
-        valid = { response =>
-          response
-        }
-      )
-    }
   }
 
 }

@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package utils
+package audit
 
-import play.api.libs.json.{JsObject, JsPath, JsResult, JsValue}
+import models.Sent
+import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.domain.PsaId
 
-object JsonUtils {
-
-  def renameElement(json: JsValue, from: String, to: String): JsResult[JsObject] = {
-
-    val transformer =
-      JsPath.json.update(
-        (JsPath \ to).json.copyFrom(
-          (JsPath \ from).json.pick
-        )
-      ) andThen
-        (JsPath \ from).json.prune
-
-    json.transform(transformer)
-
+class EmailAuditEventSpec extends WordSpec with MustMatchers {
+  val psaId = "A0000000"
+  "EmailAuditEvent" must {
+    "have correct audit type and details" in {
+      val eae = EmailAuditEvent(psaId = PsaId(psaId), event = Sent)
+      eae.auditType mustBe "SchemeEmailEvent"
+      eae.details mustBe Map("psaId" -> psaId, "event" -> Sent.toString)
+    }
   }
 
 }
