@@ -17,11 +17,12 @@
 package models.jsonTransformations
 
 import com.google.inject.Inject
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{__, _}
 
-class AddressTransformer @Inject()() extends JsonTransformer {
+class AddressTransformer @Inject()(override val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   private def getCommonAddressElements(userAnswersPath: JsPath, desAddressPath: JsPath): Reads[JsObject] = {
     (userAnswersPath \ 'addressLine1).json.copyFrom((desAddressPath \ 'line1).json.pick) and

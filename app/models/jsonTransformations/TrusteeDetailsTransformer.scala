@@ -17,11 +17,13 @@
 package models.jsonTransformations
 
 import com.google.inject.Inject
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
-class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
+class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
+                                          override val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   val userAnswersTrusteesReads: Reads[JsObject] = {
     (__ \ 'psaSchemeDetails \ 'trusteeDetails).readNullable(__.read(

@@ -29,7 +29,7 @@ import play.api.libs.json.{__, _}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
-import utils.Lens
+import utils.{FakeFeatureSwitchManagementService, Lens}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -422,7 +422,7 @@ object SchemeServiceSpec extends SpecBase {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig)
+      schemeConnector, barsConnector, auditService, appConfig, FakeFeatureSwitchManagementService(false))
   }
 
   trait TestFixture {
@@ -430,7 +430,7 @@ object SchemeServiceSpec extends SpecBase {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig)
+      schemeConnector, barsConnector, auditService, appConfig, FakeFeatureSwitchManagementService(false))
   }
 
   def testFixture(): TestFixture = new TestFixture() {}

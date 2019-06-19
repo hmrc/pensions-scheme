@@ -44,6 +44,9 @@
       "companyDetails": {
         "companyName": "abc organisation"
       },
+      "companyVat": {
+        "hasVat": false
+      },
       "companyPaye": {
         "hasPaye": false
       },
@@ -129,6 +132,9 @@
       "isPartnershipCompleteId": true,
       "otherPartners": false,
       "partnershipAddressYears": "under_a_year",
+      "partnershipVat": {
+        "hasVat": false
+      },
       "partnershipContactDetails": {
         "emailAddress": "abcfe@hmrc.gsi.gov.uk",
         "phoneNumber": "0044-09876542312"
@@ -195,6 +201,9 @@
       "companyDetails": {
         "companyName": "trustee org"
       },
+      "companyVat": {
+        "hasVat": false
+      },
       "companyPaye": {
         "hasPaye": false
       },
@@ -236,6 +245,9 @@
       },
       "isPartnershipCompleteId": true,
       "partnershipAddressYears": "under_a_year",
+      "partnershipVat": {
+        "hasVat": false
+      },
       "partnershipContactDetails": {
         "emailAddress": "aaa@trusteepart.com",
         "phoneNumber": "0044-09876542334"
@@ -264,7 +276,7 @@
   },
   "psaDetails" :[
     {"id":"A0000000",
-        "individual":{
+      "individual":{
         "firstName": "Taylor",
         "middleName": "Middle",
         "lastName": "Rayon"

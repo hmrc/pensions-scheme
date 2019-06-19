@@ -21,14 +21,14 @@ import models.jsonTransformations.{AddressTransformer, TrusteeDetailsTransformer
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.PensionSchemeJsValueGenerators
+import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators}
 
 class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
 
   import TrusteeDetailsTransformerSpec._
 
-  private val addressTransformer = new AddressTransformer()
-  private val transformer = new TrusteeDetailsTransformer(addressTransformer)
+  private val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
+  private val transformer = new TrusteeDetailsTransformer(addressTransformer, FakeFeatureSwitchManagementService(false))
 
   "A DES payload containing trustee details" must {
     "have the individual details transformed correctly to valid user answers format" that {

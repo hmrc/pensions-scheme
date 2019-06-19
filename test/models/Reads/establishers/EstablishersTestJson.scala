@@ -22,7 +22,7 @@ import play.api.libs.json._
 
 object EstablishersTestJson extends OptionValues {
 
-  def establisherIndividualJson(individual: Individual, isDeleted: Boolean = false): JsObject =
+  def establisherIndividualJson(individual: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
       "establisherDetails" -> Json.obj(
         "firstName" -> individual.personalDetails.firstName,
@@ -39,10 +39,10 @@ object EstablishersTestJson extends OptionValues {
       "previousAddress" -> previousAddressJson(individual.previousAddressDetails)
     )
 
-  def establisherCompany(company: CompanyEstablisher, isDeleted: Boolean = false): JsObject = {
+  def establisherCompany(company: CompanyEstablisher, isDeleted: Boolean = false, isToggleOn: Boolean = false): JsObject = {
     var json = Json.obj(
       "companyDetails" -> companyDetailsJson(company.organizationName, isDeleted),
-      "companyVat" -> vatJson(company.vatRegistrationNumber),
+      "companyVat" -> vatJson(company.vatRegistrationNumber, isToggleOn),
       "companyPaye" -> payeJson(company.payeReference),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
@@ -61,13 +61,13 @@ object EstablishersTestJson extends OptionValues {
 
     if (company.directorDetails.nonEmpty) {
       json = json +
-        (("director", company.directorDetails.foldLeft(Json.arr())((json, director) => json :+ companyDirectorJson(director))))
+        (("director", company.directorDetails.foldLeft(Json.arr())((json, director) => json :+ companyDirectorJson(director, isToggleOn = isToggleOn))))
     }
 
     json
   }
 
-  def companyDirectorJson(director: Individual, isDeleted: Boolean = false): JsObject =
+  def companyDirectorJson(director: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
       "directorDetails" -> Json.obj(
         "firstName" -> director.personalDetails.firstName,
@@ -84,10 +84,10 @@ object EstablishersTestJson extends OptionValues {
       "previousAddress" -> previousAddressJson(director.previousAddressDetails)
     )
 
-  def partnership(partnership: Partnership, isDeleted: Boolean = false): JsObject = {
+  def partnership(partnership: Partnership, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject = {
     var json = Json.obj(
       "partnershipDetails" -> partnershipDetailsJson(partnership.organizationName, isDeleted),
-      "partnershipVat" -> vatJson(partnership.vatRegistrationNumber),
+      "partnershipVat" -> vatJson(partnership.vatRegistrationNumber, isToggleOn),
       "partnershipPaye" -> payeJson(partnership.payeReference),
       "partnershipAddress" -> addressJson(partnership.correspondenceAddressDetails.addressDetails),
       "partnershipContactDetails" -> contactDetailsJson(partnership.correspondenceContactDetails.contactDetails),
@@ -105,13 +105,13 @@ object EstablishersTestJson extends OptionValues {
 
     if (partnership.partnerDetails.nonEmpty) {
       json = json +
-        (("partner", partnership.partnerDetails.foldLeft(Json.arr())((json, partner) => json :+ partnerJson(partner))))
+        (("partner", partnership.partnerDetails.foldLeft(Json.arr())((json, partner) => json :+ partnerJson(partner, isToggleOn = isToggleOn))))
     }
 
     json
   }
 
-  def partnerJson(partner: Individual, isDeleted: Boolean = false): JsObject =
+  def partnerJson(partner: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
       "partnerDetails" -> Json.obj(
         "firstName" -> partner.personalDetails.firstName,
@@ -128,7 +128,7 @@ object EstablishersTestJson extends OptionValues {
       "partnerPreviousAddress" -> previousAddressJson(partner.previousAddressDetails)
     )
 
-  def trusteeIndividualJson(individual: Individual, isDeleted: Boolean = false): JsObject =
+  def trusteeIndividualJson(individual: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
       "trusteeDetails" -> Json.obj(
         "firstName" -> individual.personalDetails.firstName,
@@ -145,10 +145,10 @@ object EstablishersTestJson extends OptionValues {
       "trusteePreviousAddress" -> previousAddressJson(individual.previousAddressDetails)
     )
 
-  def trusteeCompanyJson(company: CompanyTrustee, isDeleted: Boolean = true): JsObject =
+  def trusteeCompanyJson(company: CompanyTrustee, isDeleted: Boolean = true, isToggleOn: Boolean): JsObject =
     Json.obj(
       "companyDetails" -> companyDetailsJson(company.organizationName, isDeleted),
-      "companyVat" -> vatJson(company.vatRegistrationNumber),
+      "companyVat" -> vatJson(company.vatRegistrationNumber, isToggleOn),
       "companyPaye" -> payeJson(company.payeReference),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
@@ -216,9 +216,9 @@ object EstablishersTestJson extends OptionValues {
   private def ninoJson(nino: Option[String], noNinoReason: Option[String]) =
     valueOrReason(nino, noNinoReason, "hasNino", "nino")
 
-  private def vatJson(vat: Option[String]) =
+  private def vatJson(vat: Option[String], isToggleOn: Boolean) =
     vat match {
-      case Some(vat) => Json.obj("vat" -> vat)
+      case Some(vat) => if(isToggleOn) Json.obj("value" -> vat) else Json.obj("vat" -> vat)
       case _ => JsNull
     }
 

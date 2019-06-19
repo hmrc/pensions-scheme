@@ -16,11 +16,15 @@
 
 package models.jsonTransformations
 
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
+import utils.Toggles
 
 trait JsonTransformer {
+  def fs: FeatureSwitchManagementService
+
   val doNothing: Reads[JsObject] = {
     __.json.put(Json.obj())
   }
@@ -83,13 +87,18 @@ trait JsonTransformer {
   def userAnswersPartnershipDetailsReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'partnershipDetails \ 'name).json.copyFrom((desPath \ 'partnershipName).json.pick)
 
-  def transformVatToUserAnswersReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
-    (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
-    (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(true)) and
-      (__ \ userAnswersBase \ 'vat).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
+  def transformVatToUserAnswersReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] = {
+    if(fs.get(Toggles.isSeparateRefCollectionEnabled)){
+      (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) orElse doNothing
+    } else {
+      (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
+        (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(true)) and
+          (__ \ userAnswersBase \ 'vat).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
 
-  } orElse {
-    (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(false))
+      } orElse {
+        (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(false))
+      }
+    }
   }
 
   def userAnswersPayeReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] = (desPath \ "payeReference").read[String].flatMap { _ =>

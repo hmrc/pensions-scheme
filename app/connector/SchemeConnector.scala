@@ -159,13 +159,6 @@ class SchemeConnectorImpl @Inject()(
 
     response.status match {
       case OK =>
-        val temporaryMappingTest = response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers)
-
-        if (temporaryMappingTest.isSuccess)
-          Logger.warn("PensionsSchemeSuccessfulMapToUserAnswers")
-        else {
-          Logger.warn(s"PensionsSchemeFailedMapToUserAnswers - [$temporaryMappingTest]")
-        }
 
         response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
           _ => {

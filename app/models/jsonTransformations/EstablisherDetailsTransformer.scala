@@ -17,12 +17,14 @@
 package models.jsonTransformations
 
 import com.google.inject.Inject
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
-                                              directorsOrPartnersTransformer: DirectorsOrPartnersTransformer) extends JsonTransformer {
+                                              directorsOrPartnersTransformer: DirectorsOrPartnersTransformer,
+                                              override val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
 
   val userAnswersEstablishersReads: Reads[JsObject] = {
