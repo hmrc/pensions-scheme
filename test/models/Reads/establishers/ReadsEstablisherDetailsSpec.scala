@@ -80,13 +80,24 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a company with a CRN" in {
+  it should "read a company with a CRN when toggle(separate-ref-collection) off" in {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withCrn()
         .build(), false, false),
       false
+    )
+
+  }
+
+  it should "read a company with a CRN when toggle(separate-ref-collection) on" in {
+
+    establisherCompanyTest(
+      (CompanyEstablisherBuilder()
+        .withCrn()
+        .build(), false, true),
+      true
     )
 
   }
@@ -111,7 +122,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     )
   }
 
-  it should "read a company with a PAYE reference" in {
+  it should "read a company with a PAYE reference when toggle(separate-ref-collection) off" in {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
@@ -119,7 +130,16 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
         .build(), false, false),
       false
     )
+  }
 
+  it should "read a company with a PAYE reference when toggle(separate-ref-collection) on" in {
+
+    establisherCompanyTest(
+      (CompanyEstablisherBuilder()
+        .withPaye()
+        .build(), false, true),
+      true
+    )
   }
 
   it should "read a company with Other Directors true" in {
@@ -154,7 +174,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a company wth a director with a Nino" in {
+  it should "read a company wth a director with a Nino when toggle(separate-ref-collection) off" in {
 
     companyDirectorTest(
       IndividualBuilder()
@@ -162,7 +182,16 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
         .build(),
       false
     )
+  }
 
+  it should "read a company wth a director with a Nino when toggle(separate-ref-collection) on" in {
+
+    companyDirectorTest(
+      IndividualBuilder()
+        .withNino()
+        .build(),
+      true
+    )
   }
 
   it should "read a company wth a director with a UTR" in {
@@ -336,14 +365,22 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a partnership wth a partner with a Nino" in {
+  it should "read a partnership wth a partner with a Nino when toggle(separate-ref-collection) off" in {
 
     partnerTest(
       IndividualBuilder()
         .withNino()
         .build()
     )
+  }
 
+  it should "read a partnership wth a partner with a Nino when toggle(separate-ref-collection) on" in {
+
+    partnerTest(
+      IndividualBuilder()
+        .withNino()
+        .build()
+    )
   }
 
   it should "read a partnership wth a partner with a UTR" in {
@@ -437,13 +474,24 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read an individual with a Nino" in {
+  it should "read an individual with a Nino when toggle(separate-ref-collection) off" in {
 
     establisherIndividualTest(
       (IndividualBuilder()
         .withNino()
         .build(), false, false),
       false
+    )
+
+  }
+
+  it should "read an individual with a Nino when toggle(separate-ref-collection) on" in {
+
+    establisherIndividualTest(
+      (IndividualBuilder()
+        .withNino()
+        .build(), false, true),
+      true
     )
 
   }
@@ -545,7 +593,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a trustee company with a CRN" in {
+  it should "read a trustee company with a CRN when toggle(separate-ref-collection) off" in {
 
     trusteeCompanyTest(
       (CompanyTrusteeBuilder()
@@ -553,7 +601,16 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
         .build(), false, false),
       false
     )
+  }
 
+  it should "read a trustee company with a CRN when toggle(separate-ref-collection) on" in {
+
+    trusteeCompanyTest(
+      (CompanyTrusteeBuilder()
+        .withCrn()
+        .build(), false, true),
+      true
+    )
   }
 
   it should "read a trustee company with a VAT number when toggle(separate-ref-collection) off" in {
@@ -576,13 +633,23 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     )
   }
 
-  it should "read a trustee company with a PAYE reference" in {
+  it should "read a trustee company with a PAYE reference when toggle(separate-ref-collection) off" in {
 
     trusteeCompanyTest(
       (CompanyTrusteeBuilder()
         .withPaye()
         .build(), false, false),
       false
+    )
+  }
+
+  it should "read a trustee company with a PAYE reference when toggle(separate-ref-collection) on" in {
+
+    trusteeCompanyTest(
+      (CompanyTrusteeBuilder()
+        .withPaye()
+        .build(), false, true),
+      true
     )
 
   }
@@ -625,13 +692,24 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a trustee individual with a Nino" in {
+  it should "read a trustee individual with a Nino when toggle(separate-ref-collection) off" in {
 
     trusteeIndividualTest(
       (IndividualBuilder()
         .withNino()
         .build(), false, false),
       false
+    )
+
+  }
+
+  it should "read a trustee individual with a Nino when toggle(separate-ref-collection) on" in {
+
+    trusteeIndividualTest(
+      (IndividualBuilder()
+        .withNino()
+        .build(), false, true),
+      true
     )
 
   }

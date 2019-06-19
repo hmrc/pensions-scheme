@@ -31,7 +31,7 @@ object EstablishersTestJson extends OptionValues {
         "date" -> individual.personalDetails.dateOfBirth,
         "isDeleted" -> isDeleted
       ),
-      "establisherNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
+      "establisherNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason, isToggleOn),
       "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
       "address" -> addressJson(individual.correspondenceAddressDetails.addressDetails),
       "contactDetails" -> contactDetailsJson(individual.correspondenceContactDetails.contactDetails),
@@ -43,11 +43,11 @@ object EstablishersTestJson extends OptionValues {
     var json = Json.obj(
       "companyDetails" -> companyDetailsJson(company.organizationName, isDeleted),
       "companyVat" -> vatJson(company.vatRegistrationNumber, isToggleOn),
-      "companyPaye" -> payeJson(company.payeReference),
+      "companyPaye" -> payeJson(company.payeReference, isToggleOn),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
-      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason),
+      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason, isToggleOn),
       "companyAddressYears" -> addressYearsJson(company.previousAddressDetails),
       "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
     )
@@ -76,7 +76,7 @@ object EstablishersTestJson extends OptionValues {
         "date" -> director.personalDetails.dateOfBirth,
         "isDeleted" -> isDeleted
       ),
-      "directorNino" -> ninoJson(director.referenceOrNino, director.noNinoReason),
+      "directorNino" -> ninoJson(director.referenceOrNino, director.noNinoReason, isToggleOn),
       "directorUniqueTaxReference" -> utrJson(director.utr, director.noUtrReason),
       "directorAddressId" -> addressJson(director.correspondenceAddressDetails.addressDetails),
       "directorContactDetails" -> contactDetailsJson(director.correspondenceContactDetails.contactDetails),
@@ -88,7 +88,7 @@ object EstablishersTestJson extends OptionValues {
     var json = Json.obj(
       "partnershipDetails" -> partnershipDetailsJson(partnership.organizationName, isDeleted),
       "partnershipVat" -> vatJson(partnership.vatRegistrationNumber, isToggleOn),
-      "partnershipPaye" -> payeJson(partnership.payeReference),
+      "partnershipPaye" -> payeJson(partnership.payeReference, isToggleOn),
       "partnershipAddress" -> addressJson(partnership.correspondenceAddressDetails.addressDetails),
       "partnershipContactDetails" -> contactDetailsJson(partnership.correspondenceContactDetails.contactDetails),
       "partnershipUniqueTaxReference" -> utrJson(partnership.utr, partnership.noUtrReason),
@@ -120,7 +120,7 @@ object EstablishersTestJson extends OptionValues {
         "date" -> partner.personalDetails.dateOfBirth,
         "isDeleted" -> isDeleted
       ),
-      "partnerNino" -> ninoJson(partner.referenceOrNino, partner.noNinoReason),
+      "partnerNino" -> ninoJson(partner.referenceOrNino, partner.noNinoReason, isToggleOn),
       "partnerUniqueTaxReference" -> utrJson(partner.utr, partner.noUtrReason),
       "partnerAddressId" -> addressJson(partner.correspondenceAddressDetails.addressDetails),
       "partnerContactDetails" -> contactDetailsJson(partner.correspondenceContactDetails.contactDetails),
@@ -137,7 +137,7 @@ object EstablishersTestJson extends OptionValues {
         "date" -> individual.personalDetails.dateOfBirth,
         "isDeleted" -> isDeleted
       ),
-      "trusteeNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
+      "trusteeNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason, isToggleOn),
       "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
       "trusteeAddressId" -> addressJson(individual.correspondenceAddressDetails.addressDetails),
       "trusteeContactDetails" -> contactDetailsJson(individual.correspondenceContactDetails.contactDetails),
@@ -149,11 +149,11 @@ object EstablishersTestJson extends OptionValues {
     Json.obj(
       "companyDetails" -> companyDetailsJson(company.organizationName, isDeleted),
       "companyVat" -> vatJson(company.vatRegistrationNumber, isToggleOn),
-      "companyPaye" -> payeJson(company.payeReference),
+      "companyPaye" -> payeJson(company.payeReference, isToggleOn),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
-      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason),
+      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason, isToggleOn),
       "trusteesCompanyAddressYears" -> addressYearsJson(company.previousAddressDetails),
       "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
     )
@@ -213,8 +213,20 @@ object EstablishersTestJson extends OptionValues {
       "isDeleted" -> isDeleted
     )
 
-  private def ninoJson(nino: Option[String], noNinoReason: Option[String]) =
-    valueOrReason(nino, noNinoReason, "hasNino", "nino")
+  private def ninoJson(nino: Option[String], noNinoReason: Option[String], isToggleOn: Boolean) ={
+    if(isToggleOn) {
+      nino match {
+        case Some(no) => Json.obj("value" -> no)
+        case _ =>
+          Json.obj(
+            "hasNino" -> false,
+            "reason" -> noNinoReason
+          )
+      }
+    } else {
+      valueOrReason(nino, noNinoReason, "hasNino", "nino")
+    }
+  }
 
   private def vatJson(vat: Option[String], isToggleOn: Boolean) =
     vat match {
@@ -222,17 +234,29 @@ object EstablishersTestJson extends OptionValues {
       case _ => JsNull
     }
 
-  private def payeJson(paye: Option[String]) =
+  private def payeJson(paye: Option[String], isToggleOn: Boolean) =
     paye match {
-      case Some(vat) => Json.obj("paye" -> paye)
+      case Some(paye) => if(isToggleOn)  Json.obj("value" -> paye) else Json.obj("paye" -> paye)
       case _ => JsNull
     }
 
   private def utrJson(utr: Option[String], noUtrReason: Option[String]) =
     valueOrReason(utr, noUtrReason, "hasUtr", "utr")
 
-  private def crnJson(crn: Option[String], noCrnReason: Option[String]) =
-    valueOrReason(crn, noCrnReason, "hasCrn", "crn")
+  private def crnJson(crn: Option[String], noCrnReason: Option[String], isToggleOn: Boolean) ={
+    if(isToggleOn) {
+      crn match {
+        case Some(regNo) => Json.obj("value" -> regNo)
+        case _ =>
+          Json.obj(
+            "hasCrn" -> false,
+            "reason" -> noCrnReason
+          )
+      }
+    } else {
+      valueOrReason(crn, noCrnReason, "hasCrn", "crn")
+    }
+  }
 
   private def valueOrReason(value: Option[String], reason: Option[String], hasField: String, valueField: String) =
     value match {

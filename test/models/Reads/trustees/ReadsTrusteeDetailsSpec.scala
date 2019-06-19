@@ -27,7 +27,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
   "ReadsTrusteeDetails" must {
 
     "read one trustee individual details" when {
-      val result = trusteeInputJson(Seq(trusteeIndividualJson)).as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).individualTrusteeDetail.head
+      val result = trusteeInputJson(Seq(trusteeIndividualJson())).as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).individualTrusteeDetail.head
 
       "we have valid person details" in {
         result.personalDetails mustEqual trusteeIndividualData.personalDetails
@@ -38,7 +38,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we don't have nino but a valid no nino reason" in {
-        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson + ("trusteeNino" ->
+        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson() + ("trusteeNino" ->
           Json.obj("hasNino" -> JsBoolean(false), "reason" -> "No Nino"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).individualTrusteeDetail.head
         result.referenceOrNino mustBe None
@@ -50,7 +50,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we don't have utr but a valid no utr reason" in {
-        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson + ("uniqueTaxReference" ->
+        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson() + ("uniqueTaxReference" ->
           Json.obj("hasUtr" -> JsBoolean(false), "reason" -> "No Utr"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).individualTrusteeDetail.head
         result.utr mustBe None
@@ -66,7 +66,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have address years more than 12 months without UK previous address" in {
-        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson + ("trusteeAddressYears" -> JsString("over_a_year"))))
+        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson() + ("trusteeAddressYears" -> JsString("over_a_year"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).individualTrusteeDetail.head
         result.previousAddressDetails mustBe None
       }
@@ -83,19 +83,9 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         result.organizationName mustEqual trusteePartnershipData.organizationName
       }
 
-      "we have valid Vat number" in {
-        val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("hasVat" -> JsBoolean(true), "vat" -> "123456789"))))
-        val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
-        result.vatRegistrationNumber mustEqual trusteePartnershipData.copy(vatRegistrationNumber = Some("123456789")).vatRegistrationNumber
-      }
-
-      "we don't have vat number" in {
-        result.vatRegistrationNumber mustBe None
-      }
-
       "toggle(separate-ref-collection) is off " must {
         "have valid Vat number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("hasVat" -> JsBoolean(true), "vat" -> "123456789"))))
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipVat" -> Json.obj("hasVat" -> JsBoolean(true), "vat" -> "123456789"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustEqual trusteePartnershipData.copy(vatRegistrationNumber = Some("123456789")).vatRegistrationNumber
         }
@@ -107,39 +97,69 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
 
       "toggle(separate-ref-collection) is on " must {
         "have valid Vat number for variations" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("value" -> "Vat12345"))))
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipVat" -> Json.obj("value" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustEqual trusteePartnershipData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
         }
 
         "have valid Vat number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("vat" -> "Vat12345"))))
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipVat" -> Json.obj("vat" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustEqual trusteePartnershipData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
         }
 
         "not have vat number for variations" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson - "partnershipVat"))
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() - "partnershipVat"))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustBe None
         }
 
         "not have vat number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("hasVat" -> false))))
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipVat" -> Json.obj("hasVat" -> false))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustBe None
         }
       }
 
-      "we have valid paye number" in {
-        val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipPaye" ->
-          Json.obj("hasPaye" -> JsBoolean(true), "paye" -> "123AB56789"))))
-        val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
-        result.payeReference mustEqual trusteePartnershipData.copy(payeReference = Some("123AB56789")).payeReference
+      "toggle(separate-ref-collection) is off " must {
+        "have valid paye number" in {
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipPaye" ->
+            Json.obj("hasPaye" -> JsBoolean(true), "paye" -> "123AB56789"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
+          result.payeReference mustEqual trusteePartnershipData.copy(payeReference = Some("123AB56789")).payeReference
+        }
+
+        "not have paye number" in {
+          result.payeReference mustBe None
+        }
       }
 
-      "we don't have paye number" in {
-        result.payeReference mustBe None
+      "toggle(separate-ref-collection) is on " must {
+        "have valid paye number for variations" in {
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipPaye" ->
+            Json.obj("value" -> "123AB56789"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
+          result.payeReference mustEqual trusteePartnershipData.copy(payeReference = Some("123AB56789")).payeReference
+        }
+
+        "have valid paye number for subscription" in {
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipPaye" ->
+            Json.obj("hasPaye" -> JsBoolean(true), "paye" -> "123AB56789"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
+          result.payeReference mustEqual trusteePartnershipData.copy(payeReference = Some("123AB56789")).payeReference
+        }
+
+        "not have paye number for variations" in {
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() - "partnershipPaye"))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
+          result.payeReference mustBe None
+        }
+
+        "not have paye number for subscription" in {
+          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipPaye" -> Json.obj("hasPaye" -> false))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
+          result.payeReference mustBe None
+        }
       }
 
       "we have valid utr" in {
@@ -147,7 +167,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we don't have utr but a valid no utr reason" in {
-        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipUniqueTaxReference" ->
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipUniqueTaxReference" ->
           Json.obj("hasUtr" -> JsBoolean(false), "reason" -> "No Utr"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
         result.utr mustBe None
@@ -163,7 +183,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have address years more than 12 months without UK previous address" in {
-        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipAddressYears" -> JsString("over_a_year"))))
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipAddressYears" -> JsString("over_a_year"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
         result.previousAddressDetails mustBe None
       }
@@ -174,7 +194,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
     }
 
     "read one trustee company details" when {
-      val result = trusteeInputJson(Seq(trusteeCompanyJson)).as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
+      val result = trusteeInputJson(Seq(trusteeCompanyJson())).as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
 
       "we have valid organisation name" in {
         result.organizationName mustEqual trusteeCompanyData.organizationName
@@ -182,7 +202,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
 
       "toggle(separate-ref-collection) is off " must {
         "have valid Vat number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyVat" -> Json.obj("hasVat" -> true, "vat" -> "Vat12345"))))
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyVat" -> Json.obj("hasVat" -> true, "vat" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
           result.vatRegistrationNumber mustEqual trusteeCompanyData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
         }
@@ -190,42 +210,98 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         "not have vat number" in {
           result.vatRegistrationNumber mustBe None
         }
+
+        "have valid paye number" in {
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyPaye" -> Json.obj("hasPaye" -> true, "paye" -> "Paye12345"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
+          result.payeReference mustEqual trusteeCompanyData.copy(payeReference = Some("Paye12345")).payeReference
+        }
+
+        "don't have paye number" in {
+          result.payeReference mustBe None
+        }
+
+        "have valid crn" in {
+          result.crnNumber mustEqual trusteeCompanyData.crnNumber
+        }
+
+        "don't have crn but a valid no crn reason" in {
+          val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyRegistrationNumber" ->
+            Json.obj("hasCrn" -> JsBoolean(false), "reason" -> "No Crn"))))
+          val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
+          result.crnNumber mustBe None
+          result.noCrnReason.value mustEqual "No Crn"
+        }
       }
 
       "toggle(separate-ref-collection) is on " must {
         "have valid Vat number for variations" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyVat" -> Json.obj("value" -> "Vat12345"))))
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyVat" -> Json.obj("value" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
           result.vatRegistrationNumber mustEqual trusteeCompanyData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
+        }
+
+        "have valid Paye number for variations" in {
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyPaye" -> Json.obj("value" -> "Paye12345"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          result.payeReference mustEqual trusteeCompanyData.copy(payeReference = Some("Paye12345")).payeReference
+        }
+
+        "have valid crn for variations" in {
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyRegistrationNumber" -> Json.obj("value" -> "Crn12345"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          result.crnNumber mustEqual trusteeCompanyData.copy(crnNumber = Some("Crn12345")).crnNumber
         }
 
         "have valid Vat number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyVat" -> Json.obj("vat" -> "Vat12345"))))
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyVat" -> Json.obj("vat" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
           result.vatRegistrationNumber mustEqual trusteeCompanyData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
         }
 
+        "have valid Paye number for subscription" in {
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyPaye" -> Json.obj("paye" -> "Paye12345"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          result.payeReference mustEqual trusteeCompanyData.copy(payeReference = Some("Paye12345")).payeReference
+        }
+
+        "have valid Crn number for subscription" in {
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyRegistrationNumber" -> Json.obj("crn" -> "Crn12345"))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          result.crnNumber mustEqual trusteeCompanyData.copy(crnNumber = Some("Crn12345")).crnNumber
+        }
+
         "not have vat number for variations" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson - "companyVat"))
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyVat"))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
           result.vatRegistrationNumber mustBe None
+        }
+
+        "don't have crn but a valid no crn reason for variations/subscription" in {
+          val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyRegistrationNumber" ->
+            Json.obj("hasCrn" -> JsBoolean(false), "reason" -> "No Crn"))))
+          val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          result.crnNumber mustBe None
+          result.noCrnReason.value mustEqual "No Crn"
+        }
+
+        "not have paye number for variations" in {
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyPaye"))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          result.payeReference mustBe None
         }
 
         "not have vat number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyVat" -> Json.obj("hasVat" -> false))))
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyVat" -> Json.obj("hasVat" -> false))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
           result.vatRegistrationNumber mustBe None
         }
-      }
 
-      "we have valid paye number" in {
-        val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyPaye" -> Json.obj("hasPaye" -> true, "paye" -> "Paye12345"))))
-        val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
-        result.payeReference mustEqual trusteeCompanyData.copy(payeReference = Some("Paye12345")).payeReference
-      }
-
-      "we don't have paye number" in {
-        result.payeReference mustBe None
+        "not have paye number for subscription" in {
+          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyPaye" -> Json.obj("hasPaye" -> false))))
+          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          result.payeReference mustBe None
+        }
       }
 
       "we have valid utr" in {
@@ -233,23 +309,11 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we don't have utr but a valid no utr reason" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyUniqueTaxReference" ->
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyUniqueTaxReference" ->
           Json.obj("hasUtr" -> JsBoolean(false), "reason" -> "No Utr"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
         result.utr mustBe None
         result.noUtrReason.value mustEqual "No Utr"
-      }
-
-      "we have valid crn" in {
-        result.crnNumber mustEqual trusteeCompanyData.crnNumber
-      }
-
-      "we don't have crn but a valid no crn reason" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyRegistrationNumber" ->
-          Json.obj("hasCrn" -> JsBoolean(false), "reason" -> "No Crn"))))
-        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
-        result.crnNumber mustBe None
-        result.noCrnReason.value mustEqual "No Crn"
       }
 
       "we have valid UK address" in {
@@ -261,7 +325,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have address years more than 12 months without UK previous address" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson + ("trusteesCompanyAddressYears" -> JsString("over_a_year"))))
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("trusteesCompanyAddressYears" -> JsString("over_a_year"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
         result.previousAddressDetails mustBe None
       }
@@ -274,21 +338,21 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
     "read multiple trustees " when {
 
       "we have two trustee partnerships" in {
-        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson, trusteePartnershipJson ++ Json.obj("partnershipDetails" -> Json.obj(
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson(), trusteePartnershipJson() ++ Json.obj("partnershipDetails" -> Json.obj(
           "name" -> "test partnership two", "isDeleted" -> JsBoolean(false)))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail
         result mustEqual Seq(trusteePartnershipData, trusteePartnershipData.copy(organizationName = "test partnership two"))
       }
 
       "we have two trustee partnerships one of them is deleted" in {
-        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson, trusteePartnershipJson ++ Json.obj("partnershipDetails" -> Json.obj(
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson(), trusteePartnershipJson() ++ Json.obj("partnershipDetails" -> Json.obj(
           "name" -> "test partnership two", "isDeleted" -> JsBoolean(true)))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail
         result mustEqual Seq(trusteePartnershipData)
       }
 
       "we have two trustee individuals" in {
-        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson, trusteeIndividualJson ++ Json.obj("trusteeDetails" -> Json.obj(
+        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson(), trusteeIndividualJson() ++ Json.obj("trusteeDetails" -> Json.obj(
           "firstName" -> "second",
           "lastName" -> "trustee",
           "date" -> JsString("2019-01-31"), "isDeleted" -> JsBoolean(false)))))
@@ -298,7 +362,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have two trustee individuals one of them is deleted" in {
-        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson, trusteeIndividualJson ++ Json.obj("trusteeDetails" -> Json.obj(
+        val inputJson = trusteeInputJson(Seq(trusteeIndividualJson(), trusteeIndividualJson() ++ Json.obj("trusteeDetails" -> Json.obj(
           "firstName" -> "second",
           "lastName" -> "trustee",
           "date" -> JsString("2019-01-31"), "isDeleted" -> JsBoolean(true)))))
@@ -307,28 +371,34 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
 
       "we have two trustee companies" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson, trusteeCompanyJson ++ Json.obj("companyDetails" -> Json.obj(
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson(), trusteeCompanyJson() ++ Json.obj("companyDetails" -> Json.obj(
           "companyName" -> "test company two", "isDeleted" -> JsBoolean(false)))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail
         result mustEqual Seq(trusteeCompanyData, trusteeCompanyData.copy(organizationName = "test company two"))
       }
 
       "we have two trustee companies one of them is deleted" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson, trusteeCompanyJson ++ Json.obj("companyDetails" -> Json.obj(
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson(), trusteeCompanyJson() ++ Json.obj("companyDetails" -> Json.obj(
           "companyName" -> "test company two", "isDeleted" -> JsBoolean(true)))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail
         result mustEqual Seq(trusteeCompanyData)
       }
 
-      "we have one trustee individual, one company and one partnership" in {
-        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson, trusteeIndividualJson, trusteeCompanyJson))
+      "we have one trustee individual, one company and one partnership when toggle(separate-ref-collection) is off" in {
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson(), trusteeIndividualJson(), trusteeCompanyJson()))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails())
         result mustEqual TrusteeDetails(Seq(trusteeIndividualData), Seq(trusteeCompanyData), Seq(trusteePartnershipData))
       }
 
+      "we have one trustee individual, one company and one partnership when toggle(separate-ref-collection) is on" in {
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson(true), trusteeIndividualJson(true), trusteeCompanyJson(true)))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true))
+        result mustEqual TrusteeDetails(Seq(trusteeIndividualData), Seq(trusteeCompanyData), Seq(trusteePartnershipData))
+      }
+
       "we have one trustee individual, one company and one partnership but partnership is deleted" in {
-        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson ++ Json.obj("partnershipDetails" -> Json.obj(
-          "name" -> "test partnership two", "isDeleted" -> JsBoolean(true))), trusteeIndividualJson, trusteeCompanyJson))
+        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson() ++ Json.obj("partnershipDetails" -> Json.obj(
+          "name" -> "test partnership two", "isDeleted" -> JsBoolean(true))), trusteeIndividualJson(), trusteeCompanyJson()))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails())
         result mustEqual TrusteeDetails(Seq(trusteeIndividualData), Seq(trusteeCompanyData), Nil)
       }
@@ -338,126 +408,146 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
 
 object ReadsTrusteeDetailsSpec extends Samples {
 
-  private def trusteeInputJson(trusteesJson: Seq[JsObject] = Seq(trusteePartnershipJson)) = Json.obj(
+  private def trusteeInputJson(trusteesJson: Seq[JsObject] = Seq(trusteePartnershipJson())) = Json.obj(
     "trustees" -> trusteesJson.foldLeft(JsArray())((acc, x) => acc ++ Json.arr(x))
   )
 
-  private val trusteePartnershipJson = Json.obj(
-    "partnershipDetails" -> Json.obj(
-      "name" -> "test partnership",
-      "isDeleted" -> JsBoolean(false)
-    ),
-    "partnershipVat" -> Json.obj(
-      "hasVat" -> JsBoolean(false)
-    ),
-    "partnershipPaye" -> Json.obj(
-      "hasPaye" -> JsBoolean(false)
-    ),
-    "partnershipUniqueTaxReference" -> Json.obj(
-      "hasUtr" -> JsBoolean(true),
-      "utr" -> "1111111111"
-    ),
-    "partnershipAddress" -> Json.obj(
-      "addressLine1" -> "line1",
-      "addressLine2" -> "line2",
-      "addressLine3" -> "line3",
-      "addressLine4" -> "line4",
-      "postcode" -> "NE1",
-      "country" -> "GB"
-    ),
-    "partnershipAddressYears" -> "under_a_year",
-    "partnershipPreviousAddress" -> Json.obj(
-      "addressLine1" -> "line1",
-      "addressLine2" -> "line2",
-      "addressLine3" -> "line3",
-      "addressLine4" -> "line4",
-      "postcode" -> "NE1",
-      "country" -> "GB"
-    ),
-    "partnershipContactDetails" -> Json.obj(
-      "phoneNumber" -> "07592113",
-      "emailAddress" -> "test@test.com"
+  private def trusteePartnershipJson(isToggleOn: Boolean = false) = {
+    val trusteeJson = Json.obj(
+      "partnershipDetails" -> Json.obj(
+        "name" -> "test partnership",
+        "isDeleted" -> JsBoolean(false)
+      ),
+      "partnershipUniqueTaxReference" -> Json.obj(
+        "hasUtr" -> JsBoolean(true),
+        "utr" -> "1111111111"
+      ),
+      "partnershipAddress" -> Json.obj(
+        "addressLine1" -> "line1",
+        "addressLine2" -> "line2",
+        "addressLine3" -> "line3",
+        "addressLine4" -> "line4",
+        "postcode" -> "NE1",
+        "country" -> "GB"
+      ),
+      "partnershipAddressYears" -> "under_a_year",
+      "partnershipPreviousAddress" -> Json.obj(
+        "addressLine1" -> "line1",
+        "addressLine2" -> "line2",
+        "addressLine3" -> "line3",
+        "addressLine4" -> "line4",
+        "postcode" -> "NE1",
+        "country" -> "GB"
+      ),
+      "partnershipContactDetails" -> Json.obj(
+        "phoneNumber" -> "07592113",
+        "emailAddress" -> "test@test.com"
+      )
     )
-  )
+    trusteeJson ++
+      (
+        if (isToggleOn) Json.obj() else
+          (Json.obj("partnershipVat" -> Json.obj(
+            "hasVat" -> JsBoolean(false))))
+        ) ++
+      (
+        if (isToggleOn) Json.obj() else
+          (Json.obj("partnershipPaye" -> Json.obj(
+            "hasPaye" -> JsBoolean(false))))
+        )
+  }
 
-  private val trusteeCompanyJson = Json.obj(
-    "companyDetails" -> Json.obj(
-      "companyName" -> "test company",
-      "isDeleted" -> JsBoolean(false)
-    ),
-    "companyVat" -> Json.obj(
-      "hasVat" -> JsBoolean(false)
-    ),
-    "companyPaye" -> Json.obj(
-      "hasVat" -> JsBoolean(false)
-    ),
-    "companyUniqueTaxReference" -> Json.obj(
-      "hasUtr" -> JsBoolean(true),
-      "utr" -> "1111111111"
-    ),
-    "companyRegistrationNumber" -> Json.obj(
-      "hasCrn" -> JsBoolean(true),
-      "crn" -> "crn1234"
-    ),
-    "companyAddress" -> Json.obj(
-      "addressLine1" -> "line1",
-      "addressLine2" -> "line2",
-      "addressLine3" -> "line3",
-      "addressLine4" -> "line4",
-      "postcode" -> "NE1",
-      "country" -> "GB"
-    ),
-    "trusteesCompanyAddressYears" -> "under_a_year",
-    "companyPreviousAddress" -> Json.obj(
-      "addressLine1" -> "line1",
-      "addressLine2" -> "line2",
-      "addressLine3" -> "line3",
-      "addressLine4" -> "line4",
-      "postcode" -> "NE1",
-      "country" -> "GB"
-    ),
-    "companyContactDetails" -> Json.obj(
-      "phoneNumber" -> "07592113",
-      "emailAddress" -> "test@test.com"
+  private def trusteeCompanyJson(isToggleOn: Boolean = false) = {
+   val trusteeJson = Json.obj(
+      "companyDetails" -> Json.obj(
+        "companyName" -> "test company",
+        "isDeleted" -> JsBoolean(false)
+      ),
+      "companyUniqueTaxReference" -> Json.obj(
+        "hasUtr" -> JsBoolean(true),
+        "utr" -> "1111111111"
+      ),
+      "companyAddress" -> Json.obj(
+        "addressLine1" -> "line1",
+        "addressLine2" -> "line2",
+        "addressLine3" -> "line3",
+        "addressLine4" -> "line4",
+        "postcode" -> "NE1",
+        "country" -> "GB"
+      ),
+      "trusteesCompanyAddressYears" -> "under_a_year",
+      "companyPreviousAddress" -> Json.obj(
+        "addressLine1" -> "line1",
+        "addressLine2" -> "line2",
+        "addressLine3" -> "line3",
+        "addressLine4" -> "line4",
+        "postcode" -> "NE1",
+        "country" -> "GB"
+      ),
+      "companyContactDetails" -> Json.obj(
+        "phoneNumber" -> "07592113",
+        "emailAddress" -> "test@test.com"
+      )
     )
-  )
+    trusteeJson ++
+      (
+        if (isToggleOn) Json.obj() else
+          (Json.obj("companyVat" -> Json.obj(
+            "hasVat" -> JsBoolean(false))))
+        ) ++
+      (
+        if (isToggleOn) Json.obj() else
+          (Json.obj("companyPaye" -> Json.obj(
+            "hasPaye" -> JsBoolean(false))))
+        ) ++
+      (
+        if (isToggleOn) Json.obj("companyRegistrationNumber" -> Json.obj("value" -> "crn1234")) else
+          (Json.obj("companyRegistrationNumber" -> Json.obj(
+            "hasCrn" -> JsBoolean(true), "crn" -> "crn1234")))
+        )
 
-  private val trusteeIndividualJson = Json.obj(
-    "trusteeDetails" -> Json.obj(
-      "firstName" -> "John",
-      "middleName" -> "William",
-      "lastName" -> "Doe",
-      "date" -> JsString("2019-01-31"),
-      "isDeleted" -> JsBoolean(false)
-    ),
-    "uniqueTaxReference" -> Json.obj(
-      "hasUtr" -> JsBoolean(true),
-      "utr" -> "1111111111"
-    ),
-    "trusteeNino" -> Json.obj(
-      "hasNino" -> JsBoolean(true),
-      "nino" -> "nino1234"
-    ),
-    "trusteeAddressId" -> Json.obj(
-      "addressLine1" -> "line1",
-      "addressLine2" -> "line2",
-      "addressLine3" -> "line3",
-      "addressLine4" -> "line4",
-      "postcode" -> "NE1",
-      "country" -> "GB"
-    ),
-    "trusteeAddressYears" -> "under_a_year",
-    "trusteePreviousAddress" -> Json.obj(
-      "addressLine1" -> "line1",
-      "addressLine2" -> "line2",
-      "addressLine3" -> "line3",
-      "addressLine4" -> "line4",
-      "postcode" -> "NE1",
-      "country" -> "GB"
-    ),
-    "trusteeContactDetails" -> Json.obj(
-      "phoneNumber" -> "07592113",
-      "emailAddress" -> "test@test.com"
+  }
+
+  private def trusteeIndividualJson(isToggleOn: Boolean = false) = {
+    val trusteeJson = Json.obj(
+      "trusteeDetails" -> Json.obj(
+        "firstName" -> "John",
+        "middleName" -> "William",
+        "lastName" -> "Doe",
+        "date" -> JsString("2019-01-31"),
+        "isDeleted" -> JsBoolean(false)
+      ),
+      "uniqueTaxReference" -> Json.obj(
+        "hasUtr" -> JsBoolean(true),
+        "utr" -> "1111111111"
+      ),
+      "trusteeAddressId" -> Json.obj(
+        "addressLine1" -> "line1",
+        "addressLine2" -> "line2",
+        "addressLine3" -> "line3",
+        "addressLine4" -> "line4",
+        "postcode" -> "NE1",
+        "country" -> "GB"
+      ),
+      "trusteeAddressYears" -> "under_a_year",
+      "trusteePreviousAddress" -> Json.obj(
+        "addressLine1" -> "line1",
+        "addressLine2" -> "line2",
+        "addressLine3" -> "line3",
+        "addressLine4" -> "line4",
+        "postcode" -> "NE1",
+        "country" -> "GB"
+      ),
+      "trusteeContactDetails" -> Json.obj(
+        "phoneNumber" -> "07592113",
+        "emailAddress" -> "test@test.com"
+      )
     )
-  )
+    trusteeJson ++
+      (
+        if (isToggleOn) Json.obj("trusteeNino" -> Json.obj("value" -> "nino1234")) else
+          (Json.obj("trusteeNino" -> Json.obj(
+            "hasNino" -> JsBoolean(true), "nino" -> "nino1234")))
+        )
+  }
 }
