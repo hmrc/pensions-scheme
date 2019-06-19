@@ -28,7 +28,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
     new AddressTransformer(FakeFeatureSwitchManagementService(isToggleOn))
 
   private def directorOrPartnerTransformer(isToggleOn: Boolean) =
-    new DirectorsOrPartnersTransformer(addressTransformer(isToggleOn), FakeFeatureSwitchManagementService(false))
+    new DirectorsOrPartnersTransformer(addressTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
 
   private def schemeDetailsTransformer(isToggleOn: Boolean) =
     new SchemeDetailsTransformer(addressTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
@@ -50,8 +50,19 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
   "A DES payload with full scheme subscription details " must {
     "have the details transformed correctly to valid user answers format" which {
 
-      s"uses generators " in {
-        forAll(getSchemeDetailsGen) {
+      s"uses generators when toggle(separate-ref-collection) is on" in {
+        forAll(getSchemeDetailsGen(isToggleOn = true)) {
+          schemeDetails => {
+            val (desScheme, uaScheme) = schemeDetails
+
+            val result = desScheme.transform(transformer(isToggleOn = true).transformToUserAnswers).get
+            result mustBe uaScheme
+          }
+        }
+      }
+
+      s"uses generators when toggle(separate-ref-collection) is off" in {
+        forAll(getSchemeDetailsGen()) {
           schemeDetails => {
             val (desScheme, uaScheme) = schemeDetails
 

@@ -31,8 +31,7 @@
       "establisherKind": "individual",
       "addressYears": "under_a_year",
       "establisherNino": {
-        "hasNino": true,
-        "nino": "AA999999A"
+        "value": "AA999999A"
       },
       "contactDetails": {
         "emailAddress": "aaa@gmail.com",
@@ -43,9 +42,6 @@
     {
       "companyDetails": {
         "companyName": "abc organisation"
-      },
-      "companyPaye": {
-        "hasPaye": false
       },
       "isEstablisherComplete": true,
       "isCompanyComplete": true,
@@ -73,9 +69,6 @@
       }
     },
     {
-      "partnershipPaye": {
-        "hasPaye": false
-      },
       "partnershipAddress": {
         "country": "GB",
         "postcode": "LE45RT",
@@ -86,10 +79,6 @@
       },
       "partner": [
         {
-          "partnerNino": {
-            "hasNino": false,
-            "reason": "no Nino"
-          },
           "partnerPreviousAddress": {
             "country": "AD",
             "postcode": "ST36TR",
@@ -105,6 +94,10 @@
           "partnerUniqueTaxReference": {
             "utr": "1234567890",
             "hasUtr": true
+          },
+          "partnerNino": {
+            "hasNino": false,
+            "reason": "no Nino"
           },
           "partnerDetails": {
             "date": "2001-03-29",
@@ -195,9 +188,6 @@
       "companyDetails": {
         "companyName": "trustee org"
       },
-      "companyPaye": {
-        "hasPaye": false
-      },
       "companyAddress": {
         "country": "GB",
         "postcode": "TF3 5TR",
@@ -223,9 +213,6 @@
       }
     },
     {
-      "partnershipPaye": {
-        "hasPaye": false
-      },
       "partnershipAddress": {
         "country": "GB",
         "postcode": "TF3 5TR",
