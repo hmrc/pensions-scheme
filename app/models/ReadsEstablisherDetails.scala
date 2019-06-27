@@ -54,11 +54,17 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private val readsEstablisherIndividual: Reads[Individual] = (
+  private def readsEstablisherIndividual(isToggleOn: Boolean): Reads[Individual] = (
     (JsPath \ "establisherDetails").read[PersonalDetails] and
       (JsPath \ "address").read[Address] and
       (JsPath \ "contactDetails").read[ContactDetails] and
-      (JsPath \ "establisherNino" \ "nino").readNullable[String] and
+      (
+        if (isToggleOn)
+          (JsPath \ "establisherNino").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "establisherNino" \ "nino").readNullable[String])
+        else
+          (JsPath \ "establisherNino" \ "nino").readNullable[String]
+        ) and
       (JsPath \ "establisherNino" \ "reason").readNullable[String] and
       (JsPath \ "uniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "uniqueTaxReference" \ "reason").readNullable[String] and
@@ -77,11 +83,17 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private val readsCompanyDirector: Reads[Individual] = (
+  private def readsCompanyDirector(isToggleOn: Boolean): Reads[Individual] = (
     (JsPath \ "directorDetails").read[PersonalDetails] and
       (JsPath \ "directorAddressId").read[Address] and
       (JsPath \ "directorContactDetails").read[ContactDetails] and
-      (JsPath \ "directorNino" \ "nino").readNullable[String] and
+      (
+        if (isToggleOn)
+          (JsPath \ "directorNino").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "directorNino" \ "nino").readNullable[String])
+        else
+          (JsPath \ "directorNino" \ "nino").readNullable[String]
+        ) and
       (JsPath \ "directorNino" \ "reason").readNullable[String] and
       (JsPath \ "directorUniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "directorUniqueTaxReference" \ "reason").readNullable[String] and
@@ -100,11 +112,17 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private val readsPartner: Reads[Individual] = (
+  private def readsPartner(isToggleOn: Boolean): Reads[Individual] = (
     (JsPath \ "partnerDetails").read[PersonalDetails] and
       (JsPath \ "partnerAddressId").read[Address] and
       (JsPath \ "partnerContactDetails").read[ContactDetails] and
-      (JsPath \ "partnerNino" \ "nino").readNullable[String] and
+      (
+        if (isToggleOn)
+          (JsPath \ "partnerNino").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "partnerNino" \ "nino").readNullable[String])
+        else
+          (JsPath \ "partnerNino" \ "nino").readNullable[String]
+        ) and
       (JsPath \ "partnerNino" \ "reason").readNullable[String] and
       (JsPath \ "partnerUniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "partnerUniqueTaxReference" \ "reason").readNullable[String] and
@@ -123,23 +141,41 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private val readsCompanyDirectors: Reads[Seq[Individual]] =
-    readsFiltered(_ \ "directorDetails", readsCompanyDirector, "directorDetails")
+  private def readsCompanyDirectors(isToggleOn: Boolean): Reads[Seq[Individual]] =
+    readsFiltered(_ \ "directorDetails", readsCompanyDirector(isToggleOn), "directorDetails")
 
-  private val readsPartners: Reads[Seq[Individual]] =
-    readsFiltered(_ \ "partnerDetails", readsPartner, "partnerDetails")
+  private def readsPartners(isToggleOn: Boolean): Reads[Seq[Individual]] =
+    readsFiltered(_ \ "partnerDetails", readsPartner(isToggleOn), "partnerDetails")
 
   case class Company(name: String, vatNumber: Option[String], payeNumber: Option[String], utr: Option[String],
                      noUtrReason: Option[String], crn: Option[String], noCrnReason: Option[String], address: Address,
                      contactDetails: ContactDetails, previousAddress: Option[Address], addressYears: String)
 
-  private val companyReads: Reads[Company] = (
+  private def companyReads(isToggleOn: Boolean): Reads[Company] = (
     (JsPath \ "companyDetails" \ "companyName").read[String] and
-      (JsPath \ "companyVat" \ "vat").readNullable[String] and
-      (JsPath \ "companyPaye" \ "paye").readNullable[String] and
+      (
+        if (isToggleOn)
+          (JsPath \ "companyVat").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "companyVat" \ "vat").readNullable[String])
+        else
+          (JsPath \ "companyVat" \ "vat").readNullable[String]
+        ) and
+      (
+        if (isToggleOn)
+          (JsPath \ "companyPaye").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "companyPaye" \ "paye").readNullable[String])
+        else
+          (JsPath \ "companyPaye" \ "paye").readNullable[String]
+        ) and
       (JsPath \ "companyUniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "companyUniqueTaxReference" \ "reason").readNullable[String] and
-      (JsPath \ "companyRegistrationNumber" \ "crn").readNullable[String] and
+      (
+        if (isToggleOn)
+          (JsPath \ "companyRegistrationNumber").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "companyRegistrationNumber" \ "crn").readNullable[String])
+        else
+          (JsPath \ "companyRegistrationNumber" \ "crn").readNullable[String]
+        ) and
       (JsPath \ "companyRegistrationNumber" \ "reason").readNullable[String] and
       (JsPath \ "companyAddress").read[Address] and
       (JsPath \ "companyContactDetails").read[ContactDetails] and
@@ -147,10 +183,10 @@ object ReadsEstablisherDetails {
       ((JsPath \ "companyAddressYears").read[String] orElse (JsPath \ "trusteesCompanyAddressYears").read[String])
     ) (Company.apply _)
 
-  private val readsEstablisherCompany: Reads[CompanyEstablisher] = (
-    JsPath.read(companyReads) and
+  private def readsEstablisherCompany(isToggleOn: Boolean): Reads[CompanyEstablisher] = (
+    JsPath.read(companyReads(isToggleOn)) and
       (JsPath \ "otherDirectors").readNullable[Boolean] and
-      (JsPath \ "director").readNullable(readsCompanyDirectors)
+      (JsPath \ "director").readNullable(readsCompanyDirectors(isToggleOn))
     ) ((company, otherDirectors, directors) =>
     CompanyEstablisher(
       organizationName = company.name,
@@ -171,10 +207,22 @@ object ReadsEstablisherDetails {
   case class PartnershipDetail(name: String, vat: Option[String], paye: Option[String], utr: Option[String], utrReason: Option[String],
                                address: Address, contact: ContactDetails, addressYears: String, previousAddress: Option[Address])
 
-  private val partnershipDetailReads: Reads[PartnershipDetail] = (
+  private def partnershipDetailReads(isToggleOn: Boolean): Reads[PartnershipDetail] = (
     (JsPath \ "partnershipDetails" \ "name").read[String] and
-      (JsPath \ "partnershipVat" \ "vat").readNullable[String] and
-      (JsPath \ "partnershipPaye" \ "paye").readNullable[String] and
+      (
+        if (isToggleOn)
+        (JsPath \ "partnershipVat").readNullable[String]((__ \ "value").read[String]).
+          orElse((JsPath \ "partnershipVat" \ "vat").readNullable[String])
+      else
+        (JsPath \ "partnershipVat" \ "vat").readNullable[String]
+        ) and
+      (
+        if (isToggleOn)
+          (JsPath \ "partnershipPaye").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "partnershipPaye" \ "paye").readNullable[String])
+        else
+          (JsPath \ "partnershipPaye" \ "paye").readNullable[String]
+        ) and
       (JsPath \ "partnershipUniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "partnershipUniqueTaxReference" \ "reason").readNullable[String] and
       (JsPath \ "partnershipAddress").read[Address] and
@@ -183,10 +231,10 @@ object ReadsEstablisherDetails {
       (JsPath \ "partnershipPreviousAddress").readNullable[Address]
     ) (PartnershipDetail.apply _)
 
-  private val readsEstablisherPartnership: Reads[Partnership] = (
-    JsPath.read(partnershipDetailReads) and
+  private def readsEstablisherPartnership(isToggleOn: Boolean): Reads[Partnership] = (
+    JsPath.read(partnershipDetailReads(isToggleOn)) and
       (JsPath \ "otherPartners").readNullable[Boolean] and
-      (JsPath \ "partner").readNullable(readsPartners)
+      (JsPath \ "partner").readNullable(readsPartners(isToggleOn))
     ) ((partnership, otherPartners, partners) =>
     Partnership(
       organizationName = partnership.name,
@@ -202,11 +250,17 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private val readsTrusteeIndividual: Reads[Individual] = (
+  private def readsTrusteeIndividual(isToggleOn: Boolean): Reads[Individual] = (
     (JsPath \ "trusteeDetails").read[PersonalDetails] and
       (JsPath \ "trusteeAddressId").read[Address] and
       (JsPath \ "trusteeContactDetails").read[ContactDetails] and
-      (JsPath \ "trusteeNino" \ "nino").readNullable[String] and
+      (
+        if (isToggleOn)
+          (JsPath \ "trusteeNino").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "trusteeNino" \ "nino").readNullable[String])
+        else
+          (JsPath \ "trusteeNino" \ "nino").readNullable[String]
+        ) and
       (JsPath \ "trusteeNino" \ "reason").readNullable[String] and
       (JsPath \ "uniqueTaxReference" \ "utr").readNullable[String] and
       (JsPath \ "uniqueTaxReference" \ "reason").readNullable[String] and
@@ -225,7 +279,7 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private val readsTrusteeCompany: Reads[CompanyTrustee] = JsPath.read(companyReads).map(test => CompanyTrustee(
+  private def readsTrusteeCompany(isToggleOn: Boolean): Reads[CompanyTrustee] = JsPath.read(companyReads(isToggleOn)).map(test => CompanyTrustee(
     organizationName = test.name,
     utr = test.utr,
     noUtrReason = test.noUtrReason,
@@ -237,36 +291,37 @@ object ReadsEstablisherDetails {
     correspondenceContactDetails = CorrespondenceContactDetails(test.contactDetails),
     previousAddressDetails = previousAddressDetails(test.addressYears, test.previousAddress)))
 
-  private val readsTrusteePartnership: Reads[PartnershipTrustee] = JsPath.read(partnershipDetailReads).map(partnership =>
-    PartnershipTrustee(
-      organizationName = partnership.name,
-      utr = partnership.utr,
-      noUtrReason = partnership.utrReason,
-      vatRegistrationNumber = partnership.vat,
-      payeReference = partnership.paye,
-      correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
-      correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
-      previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress)
+  private def readsTrusteePartnership(isToggleOn: Boolean): Reads[PartnershipTrustee] =
+    JsPath.read(partnershipDetailReads(isToggleOn)).map(partnership =>
+      PartnershipTrustee(
+        organizationName = partnership.name,
+        utr = partnership.utr,
+        noUtrReason = partnership.utrReason,
+        vatRegistrationNumber = partnership.vat,
+        payeReference = partnership.paye,
+        correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
+        correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
+        previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress)
+      )
     )
-  )
 
-  private val readsEstablisherIndividuals: Reads[Seq[Individual]] =
-    readsFiltered(_ \ "establisherDetails", readsEstablisherIndividual, "establisherDetails")
+  private def readsEstablisherIndividuals(isToggleOn: Boolean): Reads[Seq[Individual]] =
+    readsFiltered(_ \ "establisherDetails", readsEstablisherIndividual(isToggleOn), "establisherDetails")
 
-  private val readsEstablisherCompanies: Reads[Seq[CompanyEstablisher]] =
-    readsFiltered(_ \ "companyDetails", readsEstablisherCompany, "companyDetails")
+  private def readsEstablisherCompanies(isToggleOn: Boolean): Reads[Seq[CompanyEstablisher]] =
+    readsFiltered(_ \ "companyDetails", readsEstablisherCompany(isToggleOn), "companyDetails")
 
-  private val readsEstablisherPartnerships: Reads[Seq[Partnership]] =
-    readsFiltered(_ \ "partnershipDetails", readsEstablisherPartnership, "partnershipDetails")
+  private def readsEstablisherPartnerships(isToggleOn: Boolean): Reads[Seq[Partnership]] =
+    readsFiltered(_ \ "partnershipDetails", readsEstablisherPartnership(isToggleOn), "partnershipDetails")
 
-  private val readsTrusteeIndividuals: Reads[Seq[Individual]] =
-    readsFiltered(_ \ "trusteeDetails", readsTrusteeIndividual, "trusteeDetails")
+  private def readsTrusteeIndividuals(isToggleOn: Boolean): Reads[Seq[Individual]] =
+    readsFiltered(_ \ "trusteeDetails", readsTrusteeIndividual(isToggleOn), "trusteeDetails")
 
-  private val readsTrusteeCompanies: Reads[Seq[CompanyTrustee]] =
-    readsFiltered(_ \ "companyDetails", readsTrusteeCompany, "companyDetails")
+  private def readsTrusteeCompanies(isToggleOn: Boolean): Reads[Seq[CompanyTrustee]] =
+    readsFiltered(_ \ "companyDetails", readsTrusteeCompany(isToggleOn), "companyDetails")
 
-  private val readsTrusteePartnerships: Reads[Seq[PartnershipTrustee]] =
-    readsFiltered(_ \ "partnershipDetails", readsTrusteePartnership, "partnershipDetails")
+  private def readsTrusteePartnerships(isToggleOn: Boolean): Reads[Seq[PartnershipTrustee]] =
+    readsFiltered(_ \ "partnershipDetails", readsTrusteePartnership(isToggleOn), "partnershipDetails")
 
   //noinspection ConvertExpressionToSAM
   private def readsFiltered[T](isA: JsValue => JsLookupResult, readsA: Reads[T], detailsType: String): Reads[Seq[T]] = new Reads[Seq[T]] {
@@ -304,10 +359,10 @@ object ReadsEstablisherDetails {
     }
   }
 
-  val readsEstablisherDetails: Reads[EstablisherDetails] = (
-    (JsPath \ "establishers").readNullable(readsEstablisherIndividuals) and
-      (JsPath \ "establishers").readNullable(readsEstablisherCompanies) and
-      (JsPath \ "establishers").readNullable(readsEstablisherPartnerships)
+  def readsEstablisherDetails(isToggleOn: Boolean = false): Reads[EstablisherDetails] = (
+    (JsPath \ "establishers").readNullable(readsEstablisherIndividuals(isToggleOn)) and
+      (JsPath \ "establishers").readNullable(readsEstablisherCompanies(isToggleOn)) and
+      (JsPath \ "establishers").readNullable(readsEstablisherPartnerships(isToggleOn))
     ) ((establisherIndividuals, establisherCompanies, establisherPartnerships) =>
     EstablisherDetails(
       individual = establisherIndividuals.getOrElse(Nil),
@@ -316,10 +371,10 @@ object ReadsEstablisherDetails {
     )
   )
 
-  val readsTrusteeDetails: Reads[TrusteeDetails] = (
-    (JsPath \ "trustees").readNullable(readsTrusteeIndividuals) and
-      (JsPath \ "trustees").readNullable(readsTrusteeCompanies) and
-      (JsPath \ "trustees").readNullable(readsTrusteePartnerships)
+  def readsTrusteeDetails(isToggleOn: Boolean = false): Reads[TrusteeDetails] = (
+    (JsPath \ "trustees").readNullable(readsTrusteeIndividuals(isToggleOn)) and
+      (JsPath \ "trustees").readNullable(readsTrusteeCompanies(isToggleOn)) and
+      (JsPath \ "trustees").readNullable(readsTrusteePartnerships(isToggleOn))
     ) ((trusteeIndividuals, trusteeCompanies, trusteePartnerships) =>
     TrusteeDetails(
       individualTrusteeDetail = trusteeIndividuals.getOrElse(Nil),

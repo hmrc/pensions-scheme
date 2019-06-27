@@ -19,12 +19,12 @@ package models.Transformers
 import models.jsonTransformations.{AddressTransformer, SchemeDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import utils.PensionSchemeJsValueGenerators
+import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators}
 
 class SchemeDetailsTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
 
-  val addressTransformer = new AddressTransformer
-  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer)
+  val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
+  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer, FakeFeatureSwitchManagementService(false))
 
   "A DES payload with Scheme details" must {
     "have the scheme details transformed correctly to valid user answers format" in {

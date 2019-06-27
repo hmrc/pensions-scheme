@@ -17,14 +17,15 @@
 package models.jsonTransformations
 
 import com.google.inject.Inject
-import models.enumeration.{Benefits, SchemeMembers, SchemeType}
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 class SchemeSubscriptionDetailsTransformer @Inject()(schemeDetailsTransformer: SchemeDetailsTransformer,
                                                      establisherDetailsTransformer: EstablisherDetailsTransformer,
-                                                     trusteeDetailsTransformer: TrusteeDetailsTransformer
+                                                     trusteeDetailsTransformer: TrusteeDetailsTransformer,
+                                                     override val fs: FeatureSwitchManagementService
                                                     ) extends JsonTransformer {
 
   val transformToUserAnswers: Reads[JsObject] =

@@ -20,13 +20,13 @@ import models.jsonTransformations.AddressTransformer
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.PensionSchemeJsValueGenerators
+import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators}
 
 class AddressTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
 
   import AddressTransformationSpec._
 
-  val addressTransformer = new AddressTransformer
+  val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
 
   "DES payload containing an address" when {
     "transformed using getAddress" must {
