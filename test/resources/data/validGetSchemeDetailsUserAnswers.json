@@ -45,6 +45,9 @@
       },
       "isEstablisherComplete": true,
       "isCompanyComplete": true,
+      "isDetailsComplete": true,
+      "isAddressComplete": true,
+      "isContactDetailsComplete": true,
       "establisherKind": "company",
       "companyAddress": {
         "country": "GB",
