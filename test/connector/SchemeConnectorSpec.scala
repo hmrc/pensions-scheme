@@ -16,26 +16,25 @@
 
 package connector
 
-import audit.{AuditService, SchemeDetailsAuditEvent}
 import audit.testdoubles.StubSuccessfulAuditService
+import audit.{AuditService, SchemeDetailsAuditEvent}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import config.FeatureSwitchManagementService
-import models.Reads.schemes.{SchemeDetailsStubData, SchemeDetailsStubJsonData}
 import org.joda.time.LocalDate
 import org.scalatest._
 import org.slf4j.event.Level
-import play.api.{Application, LoggerLike}
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
+import play.api.libs.json.JodaWrites._
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
+import play.api.{Application, LoggerLike}
 import uk.gov.hmrc.http._
 import utils.{FakeFeatureSwitchManagementService, StubLogger, WireMockHelper}
-import play.api.libs.json.JodaWrites._
 
 class SchemeConnectorSpec extends AsyncFlatSpec
   with Matchers
@@ -43,7 +42,6 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   with OptionValues
   with RecoverMethods
   with EitherValues
-  with SchemeDetailsStubData
   with ConnectorBehaviours with JsonFileReader{
 
   import SchemeConnectorSpec._
@@ -213,30 +211,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     }
   }
 
-  "SchemeConnector getSchemeDetails" should "return OK with the details of the scheme" in {
-
-    lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
-      "auditing.enabled" -> false,
-      "metrics.enabled" -> false
-    ).overrides(bind[FeatureSwitchManagementService].toInstance(FakeFeatureSwitchManagementService(false)),
-      bind[AuditService].toInstance(auditService)).build()
-
-    val connector: SchemeConnector = appWithFeatureEnabled.injector.instanceOf[SchemeConnector]
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsUrl))
-        .willReturn(
-          ok
-            .withHeader("Content-Type", "application/json")
-            .withBody(psaSchemeDetails.toString())
-        )
-    )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe Json.toJson(psaSchemeDetailsSample)
-    }
-  }
-
-  it should "return user answer json if scheme variation is enabled" in {
+  "SchemeConnector getSchemeDetails" should "return user answer json" in {
 
     lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
       "auditing.enabled" -> false,
@@ -558,7 +533,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 }
 
-object SchemeConnectorSpec extends JsonFileReader with SchemeDetailsStubJsonData {
+object SchemeConnectorSpec extends JsonFileReader {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
   val psaId = "test"

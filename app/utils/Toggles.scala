@@ -17,6 +17,5 @@
 package utils
 
 object Toggles {
-  val IsVariationsEnabled: String = "is-variations-enabled"
   val isSeparateRefCollectionEnabled: String = "separate-ref-collection"
 }
