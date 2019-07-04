@@ -23,8 +23,9 @@ import scala.annotation.tailrec
 
 object ReadsEstablisherDetails {
 
-  private def previousAddressDetails(addressYears: String, previousAddress: Option[Address]): Option[PreviousAddressDetails] = {
-    if (addressYears == "under_a_year") {
+  def previousAddressDetails(addressYears: String, previousAddress: Option[Address],
+                                     tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
+    if (addressYears == "under_a_year" && tradingTime!=Some(false)) {
       Some(
         PreviousAddressDetails(isPreviousAddressLast12Month = true, previousAddress)
       )
@@ -149,7 +150,7 @@ object ReadsEstablisherDetails {
 
   case class Company(name: String, vatNumber: Option[String], payeNumber: Option[String], utr: Option[String],
                      noUtrReason: Option[String], crn: Option[String], noCrnReason: Option[String], address: Address,
-                     contactDetails: ContactDetails, previousAddress: Option[Address], addressYears: String)
+                     contactDetails: ContactDetails, tradingTime: Option[Boolean], previousAddress: Option[Address], addressYears: String)
 
   private def companyReads(isToggleOn: Boolean): Reads[Company] = (
     (JsPath \ "companyDetails" \ "companyName").read[String] and
@@ -179,6 +180,7 @@ object ReadsEstablisherDetails {
       (JsPath \ "companyRegistrationNumber" \ "reason").readNullable[String] and
       (JsPath \ "companyAddress").read[Address] and
       (JsPath \ "companyContactDetails").read[ContactDetails] and
+      (JsPath \ "hasBeenTrading").readNullable[Boolean] and
       (JsPath \ "companyPreviousAddress").readNullable[Address] and
       ((JsPath \ "companyAddressYears").read[String] orElse (JsPath \ "trusteesCompanyAddressYears").read[String])
     ) (Company.apply _)
@@ -199,7 +201,7 @@ object ReadsEstablisherDetails {
       haveMoreThanTenDirectorOrPartner = otherDirectors.getOrElse(false),
       correspondenceAddressDetails = CorrespondenceAddressDetails(company.address),
       correspondenceContactDetails = CorrespondenceContactDetails(company.contactDetails),
-      previousAddressDetails = previousAddressDetails(company.addressYears, company.previousAddress),
+      previousAddressDetails = previousAddressDetails(company.addressYears, company.previousAddress, company.tradingTime),
       directorDetails = directors.getOrElse(Nil)
     )
   )
