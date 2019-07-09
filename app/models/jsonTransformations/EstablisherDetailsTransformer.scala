@@ -69,6 +69,9 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       ((__ \ 'otherDirectors).json.copyFrom((desPath \ 'haveMoreThanTenDirectors).json.pick) orElse doNothing) and
       (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) and
       (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) and
+      (__ \ 'isDetailsComplete).json.put(JsBoolean(true)) and
+      (__ \ 'isAddressComplete).json.put(JsBoolean(true)) and
+      (__ \ 'isContactDetailsComplete).json.put(JsBoolean(true)) and
       getDirector(desPath) reduce
 
   def getDirector(desPath: JsPath): Reads[JsObject] = (desPath \ 'directorsDetails).readNullable(

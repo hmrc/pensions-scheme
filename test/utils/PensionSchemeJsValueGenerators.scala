@@ -184,6 +184,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val uaMoreThanTenDirectors = if (isEstablisher) haveMoreThanTenDirectors.map(value =>
       Json.obj("otherDirectors" -> value)).getOrElse(Json.obj()) else Json.obj()
     val isCompanyComplete = if (isEstablisher) Json.obj("isCompanyComplete" -> true) else Json.obj()
+    val isDetailsComplete = if (isEstablisher) Json.obj("isDetailsComplete" -> true) else Json.obj()
+    val isAddressComplete = if (isEstablisher) Json.obj("isAddressComplete" -> true) else Json.obj()
+    val isContactDetailsComplete = if (isEstablisher) Json.obj("isContactDetailsComplete" -> true) else Json.obj()
     val desMoreThanTenDirectors = if (isEstablisher) haveMoreThanTenDirectors.map(value =>
       Json.obj("haveMoreThanTenDirectors" -> value)).getOrElse(Json.obj()) else Json.obj()
     (
@@ -209,6 +212,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ isCompanyComplete
+        ++ isDetailsComplete
+        ++ isAddressComplete
+        ++ isContactDetailsComplete
         ++ vatJsValue(vat, isToggleOn, "companyVat")
         ++ payeJsValue(paye, isToggleOn, "companyPaye")
         ++ crnJsValue(crn, isToggleOn, "companyRegistrationNumber")
