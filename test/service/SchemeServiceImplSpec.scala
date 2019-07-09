@@ -18,11 +18,9 @@ package service
 
 import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
-import base.SpecBase
+import base.{JsonFileReader, SpecBase}
 import connector.{BarsConnector, SchemeConnector}
-import models.Reads.schemes.SchemeDetailsStubData
 import models._
-import models.schemes.PsaSchemeDetails
 import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
@@ -150,7 +148,7 @@ class FakeSchemeConnector extends SchemeConnector {
     implicit headerCarrier: HeaderCarrier,
     ec: ExecutionContext,
     request: RequestHeader): Future[Either[HttpException, JsValue]] =
-    validSchemeDetailsResponse
+    Future.successful(Right(userAnswersResponse))
 
   override def getCorrelationId(requestId: Option[String]): String =
     "4725c81192514c069b8ff1d84659b2df"
@@ -159,7 +157,7 @@ class FakeSchemeConnector extends SchemeConnector {
     implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = updateSchemeResponse
 }
 
-object FakeSchemeConnector extends SchemeDetailsStubData {
+object FakeSchemeConnector extends JsonFileReader {
 
   val schemeRegistrationResponse = SchemeRegistrationResponse(
     "test-processing-date",
@@ -178,9 +176,8 @@ object FakeSchemeConnector extends SchemeDetailsStubData {
     )
 
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
+  val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
-  private val validSchemeDetailsResponse =
-    Future.successful(Right(Json.toJson(psaSchemeDetailsSample)))
 }
 
 class FakeBarsConnector extends BarsConnector {

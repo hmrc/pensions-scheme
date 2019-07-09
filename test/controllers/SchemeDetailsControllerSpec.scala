@@ -18,24 +18,23 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeConnector
-import models.Reads.schemes.SchemeDetailsStubData
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import service.SchemeService
 import uk.gov.hmrc.http._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration with SchemeDetailsStubData {
+class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
   val mockSchemeService: SchemeService = mock[SchemeService]
   val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeService, stubControllerComponents())
@@ -43,6 +42,7 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
   private val idNumber = "00000000AA"
   private val psaId = "000"
   val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+  val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
   private val listOfSchemesResponse = Json.parse("""
     {
@@ -72,7 +72,7 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "return OK when the scheme is registered successfully" in {
 
-      val successResponse = Json.toJson(psaSchemeDetailsSample)
+      val successResponse = userAnswersResponse
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq("pstr"), Matchers.eq("10000678RE"))(any(), any(), any())).thenReturn(
         Future.successful(Right(successResponse)))
       when(mockSchemeService.listOfSchemes(Matchers.eq(psaId))(any(), any(), any())).thenReturn(Future.successful(

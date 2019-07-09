@@ -22,15 +22,13 @@ import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.{AppConfig, FeatureSwitchManagementService}
 import models.jsonTransformations.SchemeSubscriptionDetailsTransformer
-import models.schemes.PsaSchemeDetails
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{JsValue, Writes}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.InvalidPayloadHandler
-import utils.Toggles._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
@@ -159,22 +157,10 @@ class SchemeConnectorImpl @Inject()(
 
     response.status match {
       case OK =>
-
-        response.json.validate[PsaSchemeDetails](PsaSchemeDetails.apiReads).fold(
-          _ => {
-            invalidPayloadHandler.logFailures("/resources/schemas/schemeDetailsReponse.json", response.json)
-            Left(new BadRequestException("INVALID PAYLOAD"))
-          },
-          psaDetails => {
-            if (fs.get(IsVariationsEnabled)) {
-              val userAnswersJson = response.json.transform(
-                schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
-              Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
-              Right(userAnswersJson)
-            } else {
-              Right(Json.toJson(psaDetails))
-            }
-          })
+         val userAnswersJson = response.json.transform(
+         schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
+         Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
+         Right(userAnswersJson)
       case FORBIDDEN if response.body.contains("INVALID_BUSINESS_PARTNER") => Left(new ForbiddenException(response.body))
       case _ => Left(handleErrorResponse("getSchemeDetails", url, response, badResponseSeq))
     }

@@ -18,7 +18,6 @@ package controllers
 
 import base.{JsonFileReader, SpecBase}
 import connector.SchemeConnector
-import models.Reads.schemes.{SchemeDetailsStubData, SchemeDetailsStubJsonData}
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{never, reset, verify, when}
@@ -35,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration
-  with SchemeDetailsStubData with JsonFileReader{
+  with JsonFileReader{
 
   val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
   val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
@@ -44,7 +43,6 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
   val srnRequest = "srn"
   val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
   val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
-  val psaSchemeDetails = Json.toJson(psaSchemeDetailsSample)
 
   before {
     reset(mockSchemeConnector)
@@ -56,41 +54,8 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
       FakeRequest("GET", "/").withHeaders(("psaId", psaIdNumber), ("schemeReferenceNumber", schemeReferenceNumber))
 
     "return OK" when {
-      "we retrieve whether if the psa is associated or not" in {
-        when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
-          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
-          Future.successful(Right(psaSchemeDetails)))
-
-        val result = associatedPsaController.isPsaAssociated()(fakeRequest)
-
-        status(result) mustBe OK
-      }
-
-      "the psa we retrieve does not exist within the list of PSAs we receive from getSchemeDetails" in {
-        when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaIdNumber),
-          Matchers.eq("srn"), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
-          Future.successful(Right(psaSchemeDetails)))
-
-        val result = associatedPsaController.isPsaAssociated()(fakeRequest)
-
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.toJson(false)
-      }
 
       "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails" in {
-        val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
-
-        when(mockSchemeConnector.getSchemeDetails(Matchers.any(),
-          Matchers.eq(srnRequest), Matchers.eq(schemeReferenceNumber))(any(), any(), any())).thenReturn(
-          Future.successful(Right(psaSchemeDetails)))
-
-        val result = associatedPsaController.isPsaAssociated()(request)
-
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.toJson(true)
-      }
-
-      "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails if variation enabled" in {
         val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
 
         val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
@@ -105,7 +70,7 @@ class AssociatedPsaControllerSpec extends SpecBase with MockitoSugar with Before
         contentAsJson(result) mustBe Json.toJson(true)
       }
 
-      "the psa we retrieve dont exists in the list of PSAs we receive from getSchemeDetails as its empty if variation enabled" in {
+      "the psa we retrieve dont exists in the list of PSAs we receive from getSchemeDetails as its empty" in {
         val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
 
         val request = FakeRequest("GET", "/").withHeaders(("psaId", "A0000001"), ("schemeReferenceNumber", schemeReferenceNumber))
