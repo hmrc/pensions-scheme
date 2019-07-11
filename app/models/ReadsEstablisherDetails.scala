@@ -25,7 +25,9 @@ object ReadsEstablisherDetails {
 
   def previousAddressDetails(addressYears: String, previousAddress: Option[Address],
                                      tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
-    if (addressYears == "under_a_year" && tradingTime!=Some(false)) {
+
+    val tradingTimeAnswer = tradingTime.getOrElse(false)
+    if (addressYears == "under_a_year" && tradingTimeAnswer) {
       Some(
         PreviousAddressDetails(isPreviousAddressLast12Month = true, previousAddress)
       )
