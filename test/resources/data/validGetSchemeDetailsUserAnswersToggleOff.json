@@ -31,8 +31,7 @@
       "establisherKind": "individual",
       "addressYears": "under_a_year",
       "establisherNino": {
-        "hasNino": true,
-        "nino": "AA999999A"
+        "value": "AA999999A"
       },
       "contactDetails": {
         "emailAddress": "aaa@gmail.com",
@@ -43,12 +42,6 @@
     {
       "companyDetails": {
         "companyName": "abc organisation"
-      },
-      "companyVat": {
-        "hasVat": false
-      },
-      "companyPaye": {
-        "hasPaye": false
       },
       "isEstablisherComplete": true,
       "isCompanyComplete": true,
@@ -79,10 +72,7 @@
       }
     },
     {
-      "partnershipPaye": {
-        "hasPaye": false
-      },
-      "partnershipAddress": {
+     "partnershipAddress": {
         "country": "GB",
         "postcode": "LE45RT",
         "addressLine1": "line1",
@@ -135,9 +125,6 @@
       "isPartnershipCompleteId": true,
       "otherPartners": false,
       "partnershipAddressYears": "under_a_year",
-      "partnershipVat": {
-        "hasVat": false
-      },
       "partnershipContactDetails": {
         "emailAddress": "abcfe@hmrc.gsi.gov.uk",
         "phoneNumber": "0044-09876542312"
@@ -204,12 +191,6 @@
       "companyDetails": {
         "companyName": "trustee org"
       },
-      "companyVat": {
-        "hasVat": false
-      },
-      "companyPaye": {
-        "hasPaye": false
-      },
       "companyAddress": {
         "country": "GB",
         "postcode": "TF3 5TR",
@@ -235,9 +216,6 @@
       }
     },
     {
-      "partnershipPaye": {
-        "hasPaye": false
-      },
       "partnershipAddress": {
         "country": "GB",
         "postcode": "TF3 5TR",
@@ -248,9 +226,6 @@
       },
       "isPartnershipCompleteId": true,
       "partnershipAddressYears": "under_a_year",
-      "partnershipVat": {
-        "hasVat": false
-      },
       "partnershipContactDetails": {
         "emailAddress": "aaa@trusteepart.com",
         "phoneNumber": "0044-09876542334"
