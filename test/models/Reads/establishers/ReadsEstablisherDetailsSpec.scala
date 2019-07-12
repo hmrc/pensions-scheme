@@ -788,9 +788,19 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
+  "PreviousAddressDetails" should "return an appropriate value for different combinations of address years, trading time and previous address" in {
+
+    previousAddressDetails("over_a_year", None, None) shouldBe None
+    previousAddressDetails("under_a_year", None, Some(false)) shouldBe None
+    previousAddressDetails("under_a_year", Some(previousAddress), None) shouldBe Some(PreviousAddressDetails(true, Some(previousAddress)))
+    previousAddressDetails("under_a_year", Some(previousAddress), Some(true)) shouldBe Some(PreviousAddressDetails(true, Some(previousAddress)))
+  }
+
 }
 
 object ReadsEstablisherDetailsSpec extends Matchers {
+
+  val previousAddress: Address = UkAddress("addressLine 1", Some("addressLine2"), None, None, "GB", "ZZ11ZZ")
 
   import EstablishersTestJson._
 
