@@ -35,22 +35,53 @@ trait JsonTransformer {
       (__ \ userAnswersPath \ 'lastName).json.copyFrom((desPath \ 'personDetails \ 'lastName).json.pick) and
       (__ \ userAnswersPath \ 'date).json.copyFrom((desPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
 
+  def userAnswersIndividualDetailsReadsHnS(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
+    (__ \ userAnswersPath \ 'firstName).json.copyFrom((desPath \ 'personDetails \ 'firstName).json.pick) and
+      (__ \ userAnswersPath \ 'lastName).json.copyFrom((desPath \ 'personDetails \ 'lastName).json.pick) and
+      (__ \ 'dateOfBirth).json.copyFrom((desPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
+
   def userAnswersNinoReads(userAnswersPath: String, desPath: JsPath): Reads[JsObject] = {
       (desPath \ "nino").read[String].flatMap { _ =>
         (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) orElse doNothing
       } orElse {
-        if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
-          (__ \ 'noNinoReason).json.copyFrom((desPath \ 'noNinoReason).json.pick)
-        } else {
           (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
             (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
-        }
+
       }  orElse {
         doNothing
       }
   }
 
+  def userAnswersNinoReadsHnS(userAnswersPath: String, desPath: JsPath): Reads[JsObject] = {
+    (desPath \ "nino").read[String].flatMap { _ =>
+      (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) orElse doNothing
+    } orElse {
+      if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
+        (__ \ 'noNinoReason).json.copyFrom((desPath \ 'noNinoReason).json.pick)
+      } else {
+        (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
+          (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
+      }
+    }  orElse {
+      doNothing
+    }
+  }
+
   def userAnswersUtrReads(userAnswersBase: String, desPath: JsPath): Reads[JsObject] = {
+      (desPath \ "utr").read[String].flatMap { _ =>
+        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
+          (__ \ userAnswersBase \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) reduce
+
+      } orElse {
+
+        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
+          (__ \ userAnswersBase \ 'reason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
+      } orElse {
+        doNothing
+      }
+    }
+
+  def userAnswersUtrReadsHnS(userAnswersBase: String, desPath: JsPath): Reads[JsObject] = {
     if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
 
       ((__ \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) orElse doNothing) and
@@ -82,18 +113,31 @@ trait JsonTransformer {
 
 
   def userAnswersCrnReads(desPath: JsPath): Reads[JsObject] = {
-      (desPath \ "crnNumber").read[String].flatMap { _ =>
-        (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) orElse doNothing
-      } orElse {
-        if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
-          (__ \ 'noCrnReason).json.copyFrom((desPath \ 'noCrnReason).json.pick)
-        } else {
-          (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
-            (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
-        }
-      } orElse {
-        doNothing
+    (desPath \ "crnNumber").read[String].flatMap { _ =>
+      (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) orElse doNothing
+    } orElse {
+
+      (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
+        (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
+    } orElse {
+      doNothing
+    }
+  }
+
+
+  def userAnswersCrnReadsHnS(desPath: JsPath): Reads[JsObject] = {
+    (desPath \ "crnNumber").read[String].flatMap { _ =>
+      (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) orElse doNothing
+    } orElse {
+      if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
+        (__ \ 'noCrnReason).json.copyFrom((desPath \ 'noCrnReason).json.pick)
+      } else {
+        (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
+          (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
       }
+    } orElse {
+      doNothing
+    }
 
   }
 

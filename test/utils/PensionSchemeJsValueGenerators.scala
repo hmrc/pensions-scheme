@@ -17,6 +17,7 @@
 package utils
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
+import org.joda.time.LocalDate
 import org.scalacheck.Gen
 import org.scalacheck.Gen.const
 import play.api.libs.json.Reads._
@@ -286,10 +287,10 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         ++ isContactDetailsComplete
         ++ vatJsValue(vat, isToggleOn, "companyVat")
         ++ payeJsValue(paye, isToggleOn, "companyPaye")
-        ++ crnJsValue(crn, isToggleOn, "companyRegistrationNumber")
+        ++ (if(isEstablisher) crnJsValueHnS(crn, isToggleOn, "companyRegistrationNumber") else crnJsValue(crn, isToggleOn, "companyRegistrationNumber"))
         ++ uaMoreThanTenDirectors
         ++ uaDirectors
-        ++ utrJsValue(utr, isToggleOn, "companyUniqueTaxReference")
+        ++ (if(isEstablisher) utrJsValueHnS(utr, isToggleOn, "companyUniqueTaxReference") else utrJsValue(utr, isToggleOn, "companyUniqueTaxReference"))
 
     )
   }
@@ -415,21 +416,46 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       ) ++ desAddress.as[JsObject] ++ optionalWithReason("nino", referenceOrNino, "noNinoReason")
         ++ optionalWithReason("utr", utr, "noUtrReason"),
       Json.obj(
-        s"${directorOrPartner}Details" -> Json.obj(
-          "firstName" -> firstName,
-          "middleName" -> middleName,
-          "lastName" -> lastName,
-          "date" -> date.toString
-        ),
         s"${addressYearsKey}AddressYears" -> "under_a_year",
         s"${directorOrPartner}ContactDetails" -> userAnswersContactDetails
-      ) ++ userAnswersAddress.as[JsObject]
-        ++ ninoJsValue(referenceOrNino, isToggleOn, s"${directorOrPartner}Nino")
+      ) ++ personDetailsExpectedJsonHnS(directorOrPartner, firstName, middleName, lastName, date, isToggleOn)
+        ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ userAnswersIsComplete
-        ++ utrJsValue(utr, isToggleOn, s"${directorOrPartner}UniqueTaxReference")
+        ++ (if (directorOrPartner.contains("partner"))
+              ninoJsValue(referenceOrNino, isToggleOn, s"${directorOrPartner}Nino")
+                ++ utrJsValue(utr, isToggleOn, s"${directorOrPartner}UniqueTaxReference")
+            else
+              ninoJsValueHnS(referenceOrNino, isToggleOn, s"${directorOrPartner}Nino")
+                ++ utrJsValueHnS(utr, isToggleOn, s"${directorOrPartner}UniqueTaxReference"))
+
     )
   }
+
+  def personDetailsExpectedJsonHnS(directorOrPartner: String,
+                                   firstName: String,
+                                   middleName: Option[String],
+                                   lastName: String,
+                                   date: LocalDate,
+                                   isToggleOn: Boolean): JsObject = {
+    if(directorOrPartner.contains("director") && isToggleOn)
+      Json.obj(
+        s"${directorOrPartner}Name" -> Json.obj(
+          "firstName" -> firstName,
+          "lastName" -> lastName
+        ),
+        "dateOfBirth" -> date.toString)
+      else
+      Json.obj(
+        s"${directorOrPartner}Details" -> Json.obj(
+      "firstName" -> firstName,
+      "middleName" -> middleName,
+      "lastName" -> lastName,
+      "date" -> date.toString
+    ))
+
+  }
+
 
   def getSchemeDetailsGen(isToggleOn: Boolean = false): Gen[(JsObject, JsObject)] = for {
     schemeDetails <- schemeDetailsGen
@@ -457,6 +483,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
   }
 
   private def utrJsValue(utr: Option[String], isToggleOn: Boolean = false, wrapper: String) =
+      utr.fold(
+        Json.obj(wrapper -> Json.obj("reason" -> "noUtrReason", "hasUtr" -> false)))(
+        utr => Json.obj(wrapper -> Json.obj("hasUtr" -> true, "utr" -> utr))
+      )
+
+  private def utrJsValueHnS(utr: Option[String], isToggleOn: Boolean = false, wrapper: String) =
     if (isToggleOn) {
       utr.fold(
         Json.obj("noUtrReason" -> "noUtrReason"))(
@@ -471,6 +503,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
   private def crnJsValue(crn: Option[String], isToggleOn: Boolean = false, wrapper: String) = {
     crn.fold(
+        Json.obj(wrapper -> Json.obj("reason" -> "noCrnReason", "hasCrn" -> false)))(crn =>
+      Json.obj(wrapper -> Json.obj("value" -> crn)))
+  }
+
+  private def crnJsValueHnS(crn: Option[String], isToggleOn: Boolean = false, wrapper: String) = {
+    crn.fold(
       if (isToggleOn)
         Json.obj("noCrnReason" -> "noCrnReason")
       else
@@ -479,6 +517,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
   }
 
   private def ninoJsValue(nino: Option[String], isToggleOn: Boolean = false, wrapper: String) = {
+    nino.fold(
+     Json.obj(wrapper -> Json.obj("reason" -> "noNinoReason", "hasNino" -> false)))(nino =>
+      Json.obj(wrapper -> Json.obj("value" -> nino)))
+  }
+
+  private def ninoJsValueHnS(nino: Option[String], isToggleOn: Boolean = false, wrapper: String) = {
     nino.fold(
       if (isToggleOn)
         Json.obj("noNinoReason" -> "noNinoReason")

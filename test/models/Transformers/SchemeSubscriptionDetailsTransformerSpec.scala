@@ -50,7 +50,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
   "A DES payload with full scheme subscription details " must {
     "have the details transformed correctly to valid user answers format" which {
 
-      s"uses generators when toggle(separate-ref-collection) is on" in {
+      s"uses generators when HnS toggle is on" in {
         forAll(getSchemeDetailsGen(isToggleOn = true)) {
           schemeDetails => {
             val (desScheme, uaScheme) = schemeDetails
@@ -61,7 +61,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
         }
       }
 
-      s"uses generators when toggle(separate-ref-collection) is off" in {
+      s"uses generators when HnS toggle is off" in {
         forAll(getSchemeDetailsGen()) {
           schemeDetails => {
             val (desScheme, uaScheme) = schemeDetails
@@ -72,12 +72,12 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
         }
       }
 
-      s"uses request/response json when toggle(separate-ref-collection) is on" in {
+      s"uses request/response json when HnS toggle is on" in {
         val result = desResponse.transform(transformer(true).transformToUserAnswers).get
         result mustBe userAnswersResponse
       }
 
-      s"uses request/response json when toggle(separate-ref-collection) is off" in {
+      s"uses request/response json" in {
         val result = desResponse.transform(transformer().transformToUserAnswers).get
         result mustBe userAnswersResponseToggleOff
       }

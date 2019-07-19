@@ -83,19 +83,6 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         result.organizationName mustEqual trusteePartnershipData.organizationName
       }
 
-      "toggle(separate-ref-collection) is off " must {
-        "have valid Vat number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipVat" -> Json.obj("hasVat" -> JsBoolean(true), "vat" -> "123456789"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
-          result.vatRegistrationNumber mustEqual trusteePartnershipData.copy(vatRegistrationNumber = Some("123456789")).vatRegistrationNumber
-        }
-
-        "not have vat number" in {
-          result.vatRegistrationNumber mustBe None
-        }
-      }
-
-      "toggle(separate-ref-collection) is on " must {
         "have valid Vat number for variations" in {
           val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipVat" -> Json.obj("value" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
@@ -119,22 +106,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustBe None
         }
-      }
 
-      "toggle(separate-ref-collection) is off " must {
-        "have valid paye number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipPaye" ->
-            Json.obj("hasPaye" -> JsBoolean(true), "paye" -> "123AB56789"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).partnershipTrusteeDetail.head
-          result.payeReference mustEqual trusteePartnershipData.copy(payeReference = Some("123AB56789")).payeReference
-        }
-
-        "not have paye number" in {
-          result.payeReference mustBe None
-        }
-      }
-
-      "toggle(separate-ref-collection) is on " must {
         "have valid paye number for variations" in {
           val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson() + ("partnershipPaye" ->
             Json.obj("value" -> "123AB56789"))))
@@ -160,7 +132,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).partnershipTrusteeDetail.head
           result.payeReference mustBe None
         }
-      }
+
 
       "we have valid utr" in {
         result.utr mustEqual trusteePartnershipData.utr
@@ -200,41 +172,6 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         result.organizationName mustEqual trusteeCompanyData.organizationName
       }
 
-      "toggle(separate-ref-collection) is off " must {
-        "have valid Vat number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyVat" -> Json.obj("hasVat" -> true, "vat" -> "Vat12345"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
-          result.vatRegistrationNumber mustEqual trusteeCompanyData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
-        }
-
-        "not have vat number" in {
-          result.vatRegistrationNumber mustBe None
-        }
-
-        "have valid paye number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyPaye" -> Json.obj("hasPaye" -> true, "paye" -> "Paye12345"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
-          result.payeReference mustEqual trusteeCompanyData.copy(payeReference = Some("Paye12345")).payeReference
-        }
-
-        "don't have paye number" in {
-          result.payeReference mustBe None
-        }
-
-        "have valid crn" in {
-          result.crnNumber mustEqual trusteeCompanyData.crnNumber
-        }
-
-        "don't have crn but a valid no crn reason" in {
-          val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyRegistrationNumber" ->
-            Json.obj("hasCrn" -> JsBoolean(false), "reason" -> "No Crn"))))
-          val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
-          result.crnNumber mustBe None
-          result.noCrnReason.value mustEqual "No Crn"
-        }
-      }
-
-      "toggle(separate-ref-collection) is on " must {
         "have valid Vat number for variations" in {
           val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyVat" -> Json.obj("value" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
@@ -302,7 +239,6 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
           result.payeReference mustBe None
         }
-      }
 
       "we have valid utr" in {
         result.utr mustEqual trusteeCompanyData.utr
@@ -384,13 +320,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         result mustEqual Seq(trusteeCompanyData)
       }
 
-      "we have one trustee individual, one company and one partnership when toggle(separate-ref-collection) is off" in {
-        val inputJson = trusteeInputJson(Seq(trusteePartnershipJson(), trusteeIndividualJson(), trusteeCompanyJson()))
-        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails())
-        result mustEqual TrusteeDetails(Seq(trusteeIndividualData), Seq(trusteeCompanyData), Seq(trusteePartnershipData))
-      }
-
-      "we have one trustee individual, one company and one partnership when toggle(separate-ref-collection) is on" in {
+      "we have one trustee individual, one company and one partnership" in {
         val inputJson = trusteeInputJson(Seq(trusteePartnershipJson(true), trusteeIndividualJson(true), trusteeCompanyJson(true)))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true))
         result mustEqual TrusteeDetails(Seq(trusteeIndividualData), Seq(trusteeCompanyData), Seq(trusteePartnershipData))

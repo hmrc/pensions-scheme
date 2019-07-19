@@ -8,8 +8,10 @@
         "lastName": "dfgfdgdfg",
         "middleName": "fdgdgfggfdg"
       },
-      "utr": "1234567892",
-      "noUtrReason": "asdgdgdsg",
+      "uniqueTaxReference": {
+        "hasUtr": true,
+        "utr": "1234567892"
+      },
       "address": {
         "country": "GB",
         "postcode": "TF3 5TR",
@@ -92,8 +94,14 @@
             "emailAddress": "abcfe@hmrc.gsi.gov.uk",
             "phoneNumber": "0044-09876542312"
           },
-          "utr": "1234567890",
-          "noNinoReason": "no Nino",
+          "partnerUniqueTaxReference": {
+            "hasUtr": true,
+            "utr": "1234567890"
+          },
+          "partnerNino": {
+            "hasNino": false,
+            "reason": "no Nino"
+          },
           "partnerDetails": {
             "date": "2001-03-29",
             "firstName": "abcdef partner",
