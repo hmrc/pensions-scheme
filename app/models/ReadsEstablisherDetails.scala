@@ -114,10 +114,11 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private def readsDirectorDetailsHnS(isToggleOn: Boolean): Reads[PersonalDetails] = if(isToggleOn) {
+  private def readsDirectorDetailsHnS(isToggleOn: Boolean): Reads[PersonalDetails] =
+    if(isToggleOn) {
     (
-      (JsPath \ "directorName" \ "firstName").read[String] and
-        (JsPath \ "directorName" \ "lastName").read[String] and
+      (JsPath \ "directorDetails" \ "firstName").read[String] and
+        (JsPath \ "directorDetails" \ "lastName").read[String] and
         (JsPath \ "dateOfBirth").read[String]
       ) ((firstName, lastName, date) => PersonalDetails(None, firstName, None, lastName, date))
   }
@@ -150,9 +151,6 @@ object ReadsEstablisherDetails {
   )
 
   private def readsCompanyDirectors(isToggleOn: Boolean): Reads[Seq[Individual]] =
-    if(isToggleOn)
-    readsFiltered(_ \ "directorName", readsCompanyDirector(isToggleOn), "directorName")
-  else
     readsFiltered(_ \ "directorDetails", readsCompanyDirector(isToggleOn), "directorDetails")
 
   private def readsPartners(isToggleOn: Boolean): Reads[Seq[Individual]] =

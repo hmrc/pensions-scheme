@@ -440,7 +440,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                                    isToggleOn: Boolean): JsObject = {
     if(directorOrPartner.contains("director") && isToggleOn)
       Json.obj(
-        s"${directorOrPartner}Name" -> Json.obj(
+        s"${directorOrPartner}Details" -> Json.obj(
           "firstName" -> firstName,
           "lastName" -> lastName
         ),

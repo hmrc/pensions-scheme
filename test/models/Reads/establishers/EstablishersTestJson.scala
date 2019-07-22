@@ -74,7 +74,7 @@ object EstablishersTestJson extends OptionValues {
       "directorContactDetails" -> contactDetailsJson(director.correspondenceContactDetails.contactDetails),
       "companyDirectorAddressYears" -> addressYearsJson(director.previousAddressDetails),
       "previousAddress" -> previousAddressJson(director.previousAddressDetails)
-    ) ++ personJsonHnS(director, isDeleted, "directorDetails", "directorName", isToggleOn) ++
+    ) ++ personJsonHnS(director, isDeleted, "directorDetails", isToggleOn) ++
       utrJsonHnS(director.utr, director.noUtrReason, "directorUniqueTaxReference", isToggleOn) ++
       ninoJsonHnS(director.referenceOrNino, director.noNinoReason, "directorNino", isToggleOn)
 
@@ -300,16 +300,16 @@ object EstablishersTestJson extends OptionValues {
         )
     }
 
-  private def personJsonHnS(person: Individual, isDeleted: Boolean, oldUserAnswersBase: String, newUserAnswersBase: String, isToggleOn: Boolean) = {
+  private def personJsonHnS(person: Individual, isDeleted: Boolean, userAnswersBase: String, isToggleOn: Boolean) = {
     if(isToggleOn)
-      Json.obj(newUserAnswersBase -> Json.obj(
+      Json.obj(userAnswersBase -> Json.obj(
         "firstName" -> person.personalDetails.firstName,
         "lastName" -> person.personalDetails.lastName,
         "isDeleted" -> isDeleted
       ),
       "dateOfBirth" -> person.personalDetails.dateOfBirth)
       else
-    Json.obj(oldUserAnswersBase -> Json.obj(
+    Json.obj(userAnswersBase -> Json.obj(
       "firstName" -> person.personalDetails.firstName,
       "middleName" -> person.personalDetails.middleName,
       "lastName" -> person.personalDetails.lastName,

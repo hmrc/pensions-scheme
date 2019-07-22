@@ -28,7 +28,7 @@ class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransf
 
   def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
     (if(fs.get(Toggles.isEstablisherCompanyHnSEnabled))
-      userAnswersIndividualDetailsReadsHnS("directorName", desPath)
+      userAnswersIndividualDetailsReadsHnS("directorDetails", desPath)
     else
       userAnswersIndividualDetailsReads("directorDetails", desPath)) and
       userAnswersNinoReadsHnS("directorNino", desPath) and
