@@ -907,8 +907,6 @@ object ReadsEstablisherDetailsSpec extends Matchers {
       "trustees" -> trustees
     )
 
-    println(">>>>>>>>>>>> "+json)
-
     establisherTest(establisherIndividuals.filterNot(_._2).map(_._1),
       establisherCompanies.filterNot(_._2).map(_._1),
       establisherPartnerships.filterNot(_._2).map(_._1),
@@ -935,9 +933,6 @@ object ReadsEstablisherDetailsSpec extends Matchers {
       partnership = establisherPartnerships
     )
 
-
-    println("HERE HERE")
-    json.validate(readsEstablisherDetails(isToggleOn)).map(println)
     json.validate(readsEstablisherDetails(isToggleOn)).fold(
       errors => fail(s"JSON errors: $errors"),
       actual => actual shouldBe expectedEstablishers

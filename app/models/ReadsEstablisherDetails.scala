@@ -236,27 +236,17 @@ object ReadsEstablisherDetails {
 
   private def partnershipDetailReads(isToggleOn: Boolean): Reads[PartnershipDetail] = (
     (JsPath \ "partnershipDetails" \ "name").read[String] and
-      (
-        if (isToggleOn)
-        (JsPath \ "partnershipVat").readNullable[String]((__ \ "value").read[String]).
-          orElse((JsPath \ "partnershipVat" \ "vat").readNullable[String])
-      else
-        (JsPath \ "partnershipVat" \ "vat").readNullable[String]
-        ) and
-      (
-        if (isToggleOn)
-          (JsPath \ "partnershipPaye").readNullable[String]((__ \ "value").read[String]).
-            orElse((JsPath \ "partnershipPaye" \ "paye").readNullable[String])
-        else
-          (JsPath \ "partnershipPaye" \ "paye").readNullable[String]
-        ) and
-      (JsPath \ "partnershipUniqueTaxReference" \ "utr").readNullable[String] and
-      (JsPath \ "partnershipUniqueTaxReference" \ "reason").readNullable[String] and
-      (JsPath \ "partnershipAddress").read[Address] and
-      (JsPath \ "partnershipContactDetails").read[ContactDetails] and
-      (JsPath \ "partnershipAddressYears").read[String] and
-      (JsPath \ "partnershipPreviousAddress").readNullable[Address]
-    ) (PartnershipDetail.apply _)
+    (JsPath \ "partnershipVat").readNullable[String]((__ \ "value").read[String]).
+          orElse((JsPath \ "partnershipVat" \ "vat").readNullable[String]) and
+    (JsPath \ "partnershipPaye").readNullable[String]((__ \ "value").read[String]).
+            orElse((JsPath \ "partnershipPaye" \ "paye").readNullable[String]) and
+    (JsPath \ "partnershipUniqueTaxReference" \ "utr").readNullable[String] and
+    (JsPath \ "partnershipUniqueTaxReference" \ "reason").readNullable[String] and
+    (JsPath \ "partnershipAddress").read[Address] and
+    (JsPath \ "partnershipContactDetails").read[ContactDetails] and
+    (JsPath \ "partnershipAddressYears").read[String] and
+    (JsPath \ "partnershipPreviousAddress").readNullable[Address]
+  ) (PartnershipDetail.apply _)
 
   private def readsEstablisherPartnership(isToggleOn: Boolean): Reads[Partnership] = (
     JsPath.read(partnershipDetailReads(isToggleOn)) and
