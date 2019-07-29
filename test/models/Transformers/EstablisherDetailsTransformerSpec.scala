@@ -58,8 +58,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val details = desIndividualJson(individualDetails._1)
             val result = details.transform(transformer.userAnswersNinoReads("establisherNino", desEstablisherIndividualPath)).get
 
-            (result \ "establisherNino" \ "hasNino").as[Boolean] mustBe (individualValuePath(details) \ "nino").isDefined
-            (result \ "establisherNino" \ "nino").asOpt[String] mustBe (individualValuePath(details) \ "nino").asOpt[String]
+            (result \ "establisherNino" \ "value").asOpt[String] mustBe (individualValuePath(details) \ "nino").asOpt[String]
             (result \ "establisherNino" \ "reason").asOpt[String] mustBe (individualValuePath(details) \ "noNinoReason").asOpt[String]
           }
         }
@@ -126,8 +125,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val details = desCompanyJson(companyDetails._1)
             val result = details.transform(transformer.transformVatToUserAnswersReads(desCompanyPath, "companyVat")).get
 
-            (result \ "companyVat" \ "hasVat").as[Boolean] mustBe (companyValuePath(details) \ "vatRegistrationNumber").isDefined
-            (result \ "companyVat" \ "vat").asOpt[String] mustBe (companyValuePath(details) \ "vatRegistrationNumber").asOpt[String]
+            (result \ "companyVat" \ "value").asOpt[String] mustBe (companyValuePath(details) \ "vatRegistrationNumber").asOpt[String]
           }
         }
       }
@@ -138,8 +136,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val details = desCompanyJson(companyDetails._1)
             val result = details.transform(transformer.userAnswersPayeReads(desCompanyPath, "companyPaye")).get
 
-            (result \ "companyPaye" \ "hasPaye").as[Boolean] mustBe (companyValuePath(details) \ "payeReference").isDefined
-            (result \ "companyPaye" \ "paye").asOpt[String] mustBe (companyValuePath(details) \ "payeReference").asOpt[String]
+            (result \ "companyPaye" \ "value").asOpt[String] mustBe (companyValuePath(details) \ "payeReference").asOpt[String]
           }
         }
       }
@@ -150,8 +147,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val details = desCompanyJson(companyDetails._1)
             val result = details.transform(transformer.userAnswersCrnReads(desCompanyPath)).get
 
-            (result \ "companyRegistrationNumber" \ "hasCrn").as[Boolean] mustBe (companyValuePath(details) \ "crnNumber").isDefined
-            (result \ "companyRegistrationNumber" \ "crn").asOpt[String] mustBe (companyValuePath(details) \ "crnNumber").asOpt[String]
+            (result \ "companyRegistrationNumber" \ "value").asOpt[String] mustBe (companyValuePath(details) \ "crnNumber").asOpt[String]
             (result \ "companyRegistrationNumber" \ "reason").asOpt[String] mustBe (companyValuePath(details) \ "noCrnReason").asOpt[String]
           }
         }
@@ -220,8 +216,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val details = desPartnershipJson(partnershipDetails._1)
             val result = details.transform(transformer.transformVatToUserAnswersReads(desPartnershipPath, "partnershipVat")).get
 
-            (result \ "partnershipVat" \ "hasVat").as[Boolean] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").isDefined
-            (result \ "partnershipVat" \ "vat").asOpt[String] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").asOpt[String]
+            (result \ "partnershipVat" \ "value").asOpt[String] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").asOpt[String]
           }
         }
       }
@@ -232,8 +227,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
             val details = desPartnershipJson(partnershipDetails._1)
             val result = details.transform(transformer.userAnswersPayeReads(desPartnershipPath, "partnershipPaye")).get
 
-            (result \ "partnershipPaye" \ "hasPaye").as[Boolean] mustBe (partnershipValuePath(details) \ "payeReference").isDefined
-            (result \ "partnershipPaye" \ "paye").asOpt[String] mustBe (partnershipValuePath(details) \ "payeReference").asOpt[String]
+            (result \ "partnershipPaye" \ "value").asOpt[String] mustBe (partnershipValuePath(details) \ "payeReference").asOpt[String]
           }
         }
       }

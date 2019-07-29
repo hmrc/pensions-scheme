@@ -211,7 +211,33 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     }
   }
 
-  "SchemeConnector getSchemeDetails" should "return user answer json" in {
+  "SchemeConnector getSchemeDetails" should "return user answer json when HnS toggle is off" in {
+
+    lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
+      "auditing.enabled" -> false,
+      "metrics.enabled" -> false
+    ).overrides(bind[FeatureSwitchManagementService].toInstance(FakeFeatureSwitchManagementService(false)),
+      bind[AuditService].toInstance(auditService)).build()
+
+    val connector: SchemeConnector = appWithFeatureEnabled.injector.instanceOf[SchemeConnector]
+
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswersToggleOff.json")
+
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(desResponse.toString())
+        )
+    )
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+      response.right.value shouldBe userAnswersResponse
+    }
+  }
+
+  it should "return user answer json when HnS toggle is on" in {
 
     lazy val appWithFeatureEnabled: Application = new GuiceApplicationBuilder().configure(portConfigKey -> server.port().toString,
       "auditing.enabled" -> false,

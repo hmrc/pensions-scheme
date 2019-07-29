@@ -60,8 +60,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       userAnswersCompanyDetailsReads(desPath) and
       transformVatToUserAnswersReads(desPath, "companyVat") and
       userAnswersPayeReads(desPath, "companyPaye") and
-      userAnswersCrnReads(desPath) and
-      userAnswersUtrReads("companyUniqueTaxReference", desPath) and
+      userAnswersCrnReadsHnS(desPath) and
+      userAnswersUtrReadsHnS("companyUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'companyAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and

@@ -17,5 +17,5 @@
 package utils
 
 object Toggles {
-  val isSeparateRefCollectionEnabled: String = "separate-ref-collection"
+  val isEstablisherCompanyHnSEnabled: String = "is-establisher-company-hns"
 }

@@ -35,40 +35,71 @@ trait JsonTransformer {
       (__ \ userAnswersPath \ 'lastName).json.copyFrom((desPath \ 'personDetails \ 'lastName).json.pick) and
       (__ \ userAnswersPath \ 'date).json.copyFrom((desPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
 
+  def userAnswersIndividualDetailsReadsHnS(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
+    (__ \ userAnswersPath \ 'firstName).json.copyFrom((desPath \ 'personDetails \ 'firstName).json.pick) and
+      (__ \ userAnswersPath \ 'lastName).json.copyFrom((desPath \ 'personDetails \ 'lastName).json.pick) and
+      (__ \ 'dateOfBirth).json.copyFrom((desPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
+
   def userAnswersNinoReads(userAnswersPath: String, desPath: JsPath): Reads[JsObject] = {
-    if (fs.get(Toggles.isSeparateRefCollectionEnabled)) {
       (desPath \ "nino").read[String].flatMap { _ =>
         (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) orElse doNothing
       } orElse {
-        (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
-          (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
-      } orElse {
-        doNothing
-      }
-    } else {
-      (desPath \ "nino").read[String].flatMap { _ =>
-        (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(true)) and
-          (__ \ userAnswersPath \ 'nino).json.copyFrom((desPath \ 'nino).json.pick) reduce
+          (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
+            (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
 
-      } orElse {
-        (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
-          (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
-      } orElse {
+      }  orElse {
         doNothing
       }
+  }
+
+  def userAnswersNinoReadsHnS(userAnswersPath: String, desPath: JsPath): Reads[JsObject] = {
+    (desPath \ "nino").read[String].flatMap { _ =>
+      (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) orElse doNothing
+    } orElse {
+      if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
+        (__ \ 'noNinoReason).json.copyFrom((desPath \ 'noNinoReason).json.pick)
+      } else {
+        (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
+          (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
+      }
+    }  orElse {
+      doNothing
     }
   }
 
   def userAnswersUtrReads(userAnswersBase: String, desPath: JsPath): Reads[JsObject] = {
-    (desPath \ "utr").read[String].flatMap { _ =>
-      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
-        (__ \ userAnswersBase \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) reduce
+      (desPath \ "utr").read[String].flatMap { _ =>
+        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
+          (__ \ userAnswersBase \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) reduce
 
-    } orElse {
-      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
-        (__ \ userAnswersBase \ 'reason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
-    } orElse {
-      doNothing
+      } orElse {
+
+        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
+          (__ \ userAnswersBase \ 'reason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
+      } orElse {
+        doNothing
+      }
+    }
+
+  def userAnswersUtrReadsHnS(userAnswersBase: String, desPath: JsPath): Reads[JsObject] = {
+    if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
+
+      ((__ \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) orElse doNothing) and
+        ((__ \ 'noUtrReason).json.copyFrom((desPath \ 'noUtrReason).json.pick) orElse doNothing) reduce
+
+    } else {
+
+      (desPath \ "utr").read[String].flatMap { _ =>
+        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
+          (__ \ userAnswersBase \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) reduce
+
+      } orElse {
+
+        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
+          (__ \ userAnswersBase \ 'reason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
+      } orElse {
+        doNothing
+      }
     }
   }
 
@@ -82,67 +113,51 @@ trait JsonTransformer {
 
 
   def userAnswersCrnReads(desPath: JsPath): Reads[JsObject] = {
-    if (fs.get(Toggles.isSeparateRefCollectionEnabled)) {
-      (desPath \ "crnNumber").read[String].flatMap { _ =>
-        (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) orElse doNothing
-      } orElse {
-        (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
-          (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
-      } orElse {
-        doNothing
-      }
-    } else {
-      (desPath \ "crnNumber").read[String].flatMap { _ =>
-        (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(true)) and
-          (__ \ 'companyRegistrationNumber \ 'crn).json.copyFrom((desPath \ 'crnNumber).json.pick) reduce
+    (desPath \ "crnNumber").read[String].flatMap { _ =>
+      (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) orElse doNothing
+    } orElse {
 
-      } orElse {
-        (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
-          (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
-
-      } orElse {
-        doNothing
-      }
+      (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
+        (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
+    } orElse {
+      doNothing
     }
+  }
+
+
+  def userAnswersCrnReadsHnS(desPath: JsPath): Reads[JsObject] = {
+    (desPath \ "crnNumber").read[String].flatMap { _ =>
+      (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) orElse doNothing
+    } orElse {
+      if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
+        (__ \ 'noCrnReason).json.copyFrom((desPath \ 'noCrnReason).json.pick)
+      } else {
+        (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
+          (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
+      }
+    } orElse {
+      doNothing
+    }
+
   }
 
   def userAnswersPartnershipDetailsReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'partnershipDetails \ 'name).json.copyFrom((desPath \ 'partnershipName).json.pick)
 
   def transformVatToUserAnswersReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] = {
-    if (fs.get(Toggles.isSeparateRefCollectionEnabled)) {
       (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
         (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) orElse doNothing
       } orElse {
         doNothing
       }
-    } else {
-      (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
-        (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(true)) and
-          (__ \ userAnswersBase \ 'vat).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
 
-      } orElse {
-        (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(false))
-      }
-    }
   }
 
   def userAnswersPayeReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] = {
-    if (fs.get(Toggles.isSeparateRefCollectionEnabled)) {
       (desPath \ "payeReference").read[String].flatMap { _ =>
         (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) orElse doNothing
       } orElse {
         doNothing
       }
-    } else {
-      (desPath \ "payeReference").read[String].flatMap { _ =>
-        (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(true)) and
-          (__ \ userAnswersBase \ 'paye).json.copyFrom((desPath \ 'payeReference).json.pick) reduce
-
-      } orElse {
-        (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(false))
-
-      }
-    }
   }
 }

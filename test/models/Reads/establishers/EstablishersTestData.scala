@@ -69,6 +69,8 @@ object EstablishersTestData {
   private def testEmail =
     alphanumeric(20) + "@test.net"
 
+
+  //TODO
   def testIndividual(
                       hasNino: Boolean,
                       hasUtr: Boolean,
@@ -78,7 +80,6 @@ object EstablishersTestData {
       personalDetails =
         PersonalDetails(
           firstName = alphanumeric(35),
-          middleName = Some(alphanumeric(35)),
           lastName = alphanumeric(35),
           dateOfBirth = date
         ),
@@ -250,7 +251,7 @@ case class IndividualBuilder(
 
 object IndividualBuilder {
 
-  def apply(): IndividualBuilder =
+  def apply(isToggleOn: Boolean = false): IndividualBuilder =
     IndividualBuilder(false, false, false)
 
 }

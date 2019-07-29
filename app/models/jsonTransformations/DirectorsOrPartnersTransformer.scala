@@ -21,14 +21,18 @@ import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
+import utils.Toggles
 
 class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer,
                                                override val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
-    userAnswersIndividualDetailsReads("directorDetails", desPath) and
-      userAnswersNinoReads("directorNino", desPath) and
-      userAnswersUtrReads("directorUniqueTaxReference", desPath) and
+    (if(fs.get(Toggles.isEstablisherCompanyHnSEnabled))
+      userAnswersIndividualDetailsReadsHnS("directorDetails", desPath)
+    else
+      userAnswersIndividualDetailsReads("directorDetails", desPath)) and
+      userAnswersNinoReadsHnS("directorNino", desPath) and
+      userAnswersUtrReadsHnS("directorUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'directorAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'companyDirectorAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'previousAddress) and

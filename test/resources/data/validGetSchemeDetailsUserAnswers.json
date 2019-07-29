@@ -9,8 +9,8 @@
         "middleName": "fdgdgfggfdg"
       },
       "uniqueTaxReference": {
-        "utr": "1234567892",
-        "hasUtr": true
+        "hasUtr": true,
+        "utr": "1234567892"
       },
       "address": {
         "country": "GB",
@@ -95,8 +95,8 @@
             "phoneNumber": "0044-09876542312"
           },
           "partnerUniqueTaxReference": {
-            "utr": "1234567890",
-            "hasUtr": true
+            "hasUtr": true,
+            "utr": "1234567890"
           },
           "partnerNino": {
             "hasNino": false,
