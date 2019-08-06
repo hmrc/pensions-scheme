@@ -55,10 +55,10 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
   def userAnswersTrusteeCompanyReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
       userAnswersCompanyDetailsReads(desPath) and
-      transformVatToUserAnswersReads(desPath, "companyVat") and
-      userAnswersPayeReads(desPath, "companyPaye") and
-      userAnswersCrnReads(desPath) and
-      userAnswersUtrReads("companyUniqueTaxReference", desPath) and
+      transformVatToUserAnswersReadsHnS(desPath, "companyVat") and
+      userAnswersPayeReadsHnS(desPath, "companyPaye") and
+      userAnswersCrnReadsHnS(desPath) and
+      userAnswersUtrReadsHnS("companyUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'trusteesCompanyAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
