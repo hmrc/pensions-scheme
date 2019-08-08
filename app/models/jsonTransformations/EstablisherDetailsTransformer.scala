@@ -58,8 +58,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
   def userAnswersEstablisherCompanyReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("company")) and
       userAnswersCompanyDetailsReads(desPath) and
-      transformVatToUserAnswersReads(desPath, "companyVat") and
-      userAnswersPayeReads(desPath, "companyPaye") and
+      transformVatToUserAnswersReadsHnS(desPath, "companyVat") and
+      userAnswersPayeReadsHnS(desPath, "companyPaye") and
       userAnswersCrnReadsHnS(desPath) and
       userAnswersUtrReadsHnS("companyUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
@@ -67,11 +67,6 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
       userAnswersContactDetailsReads("companyContactDetails", desPath) and
       ((__ \ 'otherDirectors).json.copyFrom((desPath \ 'haveMoreThanTenDirectors).json.pick) orElse doNothing) and
-      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isCompanyComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isDetailsComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isAddressComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isContactDetailsComplete).json.put(JsBoolean(true)) and
       getDirector(desPath) reduce
 
   def getDirector(desPath: JsPath): Reads[JsObject] = (desPath \ 'directorsDetails).readNullable(
