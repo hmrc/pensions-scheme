@@ -173,12 +173,11 @@
         "addressLine4": "sfdsfsdf trustee"
       },
       "trusteeKind": "individual",
-      "trusteeDetails": {
-        "date": "2001-03-29",
+      "trusteeName": {
         "firstName": "abcdef trustee",
-        "lastName": "dfgfdgdfg trustee",
-        "middleName": "fdgdgfggfdg trustee"
+        "lastName": "dfgfdgdfg trustee"
       },
+      "dateOfBirth": "2001-03-29",
       "trusteeContactDetails": {
         "emailAddress": "aaa@trustee.com",
         "phoneNumber": "0044-09876542334"

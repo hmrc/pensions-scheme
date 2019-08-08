@@ -89,20 +89,40 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
         }
       }
 
-      "has complete individual details" in {
-        forAll(individualJsValueGen(isEstablisher = false)) {
-          individualDetails => {
-            val (desIndividualDetails, userAnswersIndividualDetails) = individualDetails
-            val desIndvTrusteeDetails = Json.obj(
-              "psaSchemeDetails" -> Json.obj(
-                "trusteeDetails" -> Json.obj(
-                  "individualTrusteeDetails" -> desIndividualDetails
+      "has complete individual details" when {
+        "toggle is off" in {
+          forAll(individualJsValueGen(isEstablisher = false)) {
+            individualDetails => {
+              val (desIndividualDetails, userAnswersIndividualDetails) = individualDetails
+              val desIndvTrusteeDetails = Json.obj(
+                "psaSchemeDetails" -> Json.obj(
+                  "trusteeDetails" -> Json.obj(
+                    "individualTrusteeDetails" -> desIndividualDetails
+                  )
                 )
               )
-            )
-            val result = desIndvTrusteeDetails.transform(transformer().userAnswersTrusteeIndividualReads(desTrusteeIndividualPath)).get
+              val result = desIndvTrusteeDetails.transform(transformer().userAnswersTrusteeIndividualReads(desTrusteeIndividualPath)).get
 
-            result mustBe userAnswersIndividualDetails
+              result mustBe userAnswersIndividualDetails
+            }
+          }
+        }
+
+        "toggle is on" in {
+          forAll(individualJsValueGen(isEstablisher = false, isToggleOn = true)) {
+            individualDetails => {
+              val (desIndividualDetails, userAnswersIndividualDetails) = individualDetails
+              val desIndvTrusteeDetails = Json.obj(
+                "psaSchemeDetails" -> Json.obj(
+                  "trusteeDetails" -> Json.obj(
+                    "individualTrusteeDetails" -> desIndividualDetails
+                  )
+                )
+              )
+              val result = desIndvTrusteeDetails.transform(transformer(isToggleOn = true).userAnswersTrusteeIndividualReads(desTrusteeIndividualPath)).get
+
+              result mustBe userAnswersIndividualDetails
+            }
           }
         }
       }
