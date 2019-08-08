@@ -21,6 +21,7 @@ import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
+import utils.Toggles
 
 class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
                                           override val fs: FeatureSwitchManagementService) extends JsonTransformer {
@@ -43,7 +44,11 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
 
   def userAnswersTrusteeIndividualReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("trusteeDetails", desPath) and
+      (
+        if(fs.get(Toggles.isEstablisherCompanyHnSEnabled))
+          userAnswersIndividualDetailsReadsHnS("trusteeName", desPath)
+        else
+          userAnswersIndividualDetailsReads("trusteeDetails", desPath)) and
       userAnswersNinoReads("trusteeNino", desPath) and
       userAnswersUtrReads("uniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, desPath \ 'correspondenceAddressDetails) and

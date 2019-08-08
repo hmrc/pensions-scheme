@@ -213,20 +213,37 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         ++ optionalWithReason("utr", utr, "noUtrReason"),
       Json.obj(
         (if (isEstablisher) "establisherKind" else "trusteeKind") -> "individual",
-        (if (isEstablisher) "establisherDetails" else "trusteeDetails") -> Json.obj(
-          "firstName" -> firstName,
-          "middleName" -> middleName,
-          "lastName" -> lastName,
-          "date" -> date.toString
-        ),
         (if (isEstablisher) "addressYears" else "trusteeAddressYears") -> "under_a_year",
         (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails,
         (if (isEstablisher) "isEstablisherComplete" else "isTrusteeComplete") -> true
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
-        ++ (ninoJsValue(referenceOrNino, isToggleOn, if (isEstablisher) "establisherNino" else "trusteeNino"))
-        ++ utrJsValue(utr, isToggleOn, "uniqueTaxReference")
+        ++ ninoJsValue(referenceOrNino, isToggleOn, if (isEstablisher) "establisherNino" else "trusteeNino")
+        ++ utrJsValue(utr, isToggleOn, "uniqueTaxReference") ++
+        (if(isToggleOn && !isEstablisher) getPersonName(firstName, lastName, date, "trusteeName")
+        else if(isEstablisher)
+          Json.obj(
+          "establisherDetails" -> getPersonalDetails(firstName, lastName, middleName, date)
+        ) else
+          Json.obj(
+            "trusteeDetails" -> getPersonalDetails(firstName, lastName, middleName, date)))
     )
+  }
+
+  private def getPersonalDetails(firstName: String, lastName: String, middleName: Option[String], date: LocalDate) = Json.obj(
+    "firstName" -> firstName,
+    "middleName" -> middleName,
+    "lastName" -> lastName,
+    "date" -> date.toString
+  )
+
+  private def getPersonName(firstName: String, lastName: String, date: LocalDate, element: String) = {
+    Json.obj(
+      element -> Json.obj(
+        "firstName" -> firstName,
+        "lastName" -> lastName
+      ),
+      "dateOfBirth" -> date.toString)
   }
 
   // scalastyle:off method.length
@@ -432,21 +449,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                                    date: LocalDate,
                                    isToggleOn: Boolean): JsObject = {
     if(directorOrPartner.contains("director") && isToggleOn)
-      Json.obj(
-        s"${directorOrPartner}Details" -> Json.obj(
-          "firstName" -> firstName,
-          "lastName" -> lastName
-        ),
-        "dateOfBirth" -> date.toString)
+      getPersonName(firstName, lastName, date, s"${directorOrPartner}Details")
       else
       Json.obj(
-        s"${directorOrPartner}Details" -> Json.obj(
-      "firstName" -> firstName,
-      "middleName" -> middleName,
-      "lastName" -> lastName,
-      "date" -> date.toString
-    ))
-
+        s"${directorOrPartner}Details" ->
+          getPersonalDetails(firstName, lastName, middleName, date)
+    )
   }
 
 
