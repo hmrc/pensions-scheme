@@ -43,11 +43,6 @@
       "companyDetails": {
         "companyName": "abc organisation"
       },
-      "isEstablisherComplete": true,
-      "isCompanyComplete": true,
-      "isDetailsComplete": true,
-      "isAddressComplete": true,
-      "isContactDetailsComplete": true,
       "establisherKind": "company",
       "companyAddress": {
         "country": "GB",
@@ -69,7 +64,9 @@
         "addressLine2": "addline2",
         "addressLine3": "addline3",
         "addressLine4": "addline4"
-      }
+      },
+      "hasPaye": false,
+      "hasVat": false
     },
     {
       "partnershipAddress": {
