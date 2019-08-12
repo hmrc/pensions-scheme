@@ -50,7 +50,7 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
         else
           userAnswersIndividualDetailsReads("trusteeDetails", desPath)) and
       userAnswersNinoReads("trusteeNino", desPath) and
-      userAnswersUtrReads("uniqueTaxReference", desPath) and
+      userAnswersUtrReadsHnS("uniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'trusteeAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'trusteePreviousAddress) and
