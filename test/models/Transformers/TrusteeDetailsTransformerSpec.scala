@@ -61,11 +61,12 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
           }
       }
 
-      s"has utr details in trustees array" in {
-        forAll(individualJsValueGen(isEstablisher = false)) {
-          individualDetails => {
-            val details = desIndividualJson(individualDetails._1)
-            val result = details.transform(transformer().userAnswersUtrReads("uniqueTaxReference", desTrusteeIndividualPath)).get
+      s"has utr details in trustees array" when {
+        "toggle is off" in {
+          forAll(individualJsValueGen(isEstablisher = false)) {
+            individualDetails => {
+              val details = desIndividualJson(individualDetails._1)
+              val result = details.transform(transformer().userAnswersUtrReadsHnS(userAnswersBase = "uniqueTaxReference", desTrusteeIndividualPath)).get
 
               (result \ "uniqueTaxReference" \ "hasUtr").as[Boolean] mustBe (individualValuePath(details) \ "utr").isDefined
               (result \ "uniqueTaxReference" \ "utr").asOpt[String] mustBe (individualValuePath(details) \ "utr").asOpt[String]
@@ -73,6 +74,21 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
 
             }
           }
+        }
+
+        "toggle is on" in {
+          forAll(individualJsValueGen(isEstablisher = false, isToggleOn = true)) {
+            individualDetails => {
+              val details = desIndividualJson(individualDetails._1)
+              val result = details.transform(transformer(isToggleOn = true).
+                userAnswersUtrReadsHnS(userAnswersBase = "uniqueTaxReference", desTrusteeIndividualPath)).get
+
+              (result \ "utr").asOpt[String] mustBe (individualValuePath(details) \ "utr").asOpt[String]
+              (result \ "noUtrReason").asOpt[String] mustBe (individualValuePath(details) \ "noUtrReason").asOpt[String]
+
+            }
+          }
+        }
       }
 
       s"has contact details in trustees array" in {
