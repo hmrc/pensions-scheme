@@ -146,11 +146,10 @@ object EstablishersTestJson extends OptionValues {
       "companyPaye" -> payeJson(company.payeReference, isToggleOn),
       "companyAddress" -> addressJson(company.correspondenceAddressDetails.addressDetails),
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
-      "companyUniqueTaxReference" -> utrJson(company.utr, company.noUtrReason),
-      "companyRegistrationNumber" -> crnJson(company.crnNumber, company.noCrnReason),
       "trusteesCompanyAddressYears" -> addressYearsJson(company.previousAddressDetails),
       "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
-    )
+    ) ++ utrJsonHnS(company.utr, company.noUtrReason, "companyUniqueTaxReference", isToggleOn) ++
+      crnJsonHnS(company.crnNumber, company.noCrnReason, "companyRegistrationNumber", isToggleOn)
 
   private def addressJson(address: Address) = {
     address match {
@@ -254,6 +253,7 @@ object EstablishersTestJson extends OptionValues {
       (utr, noUtrReason) match {
         case (Some(utrValue), _) => Json.obj("utr" -> utrValue)
         case (_, Some(reason)) => Json.obj("noUtrReason" -> reason)
+        case _ => Json.obj()
       }
     } else {
       Json.obj(userAnswerBase -> valueOrReason(utr, noUtrReason, "hasUtr", "utr"))

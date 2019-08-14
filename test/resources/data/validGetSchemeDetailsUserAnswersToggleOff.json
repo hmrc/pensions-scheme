@@ -192,6 +192,12 @@
       "companyDetails": {
         "companyName": "trustee org"
       },
+      "companyPaye": {
+        "hasPaye": false
+      },
+      "companyVat": {
+        "hasVat": false
+      },
       "companyAddress": {
         "country": "GB",
         "postcode": "TF3 5TR",

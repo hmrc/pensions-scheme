@@ -214,13 +214,21 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
           result.vatRegistrationNumber mustBe None
         }
 
-        "don't have crn but a valid no crn reason for variations/subscription" in {
+        "don't have crn but a valid no crn reason for variations/subscription when toggle is off" in {
           val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyRegistrationNumber" ->
             Json.obj("hasCrn" -> JsBoolean(false), "reason" -> "No Crn"))))
-          val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+          val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(false)).companyTrusteeDetail.head
           result.crnNumber mustBe None
           result.noCrnReason.value mustEqual "No Crn"
         }
+
+      "don't have crn but a valid no crn reason for variations/subscription when toggle is on" in {
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyRegistrationNumber" +
+          ("hasCrn" -> JsBoolean(false)) + ("noCrnReason" -> JsString("No Crn"))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+        result.crnNumber mustBe None
+        result.noCrnReason.value mustEqual "No Crn"
+      }
 
         "not have paye number for variations" in {
           val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyPaye"))
@@ -240,11 +248,24 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
           result.payeReference mustBe None
         }
 
-      "we have valid utr" in {
-        result.utr mustEqual trusteeCompanyData.utr
+      "we have a valid utr when toggle is on" in {
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyUniqueTaxReference" + ("utr" -> JsString("1234567890"))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+        result.utr mustBe Some("1234567890")
       }
 
-      "we don't have utr but a valid no utr reason" in {
+      "we have a valid utr when toggle is off" in {
+        result.utr mustBe trusteeCompanyData.utr
+      }
+
+      "we don't have utr but a valid no utr reason when toggle is on" in {
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyUniqueTaxReference" + ("noUtrReason" -> JsString("No Utr"))))
+        val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
+        result.utr mustBe None
+        result.noUtrReason.value mustEqual "No Utr"
+      }
+
+      "we don't have utr but a valid no utr reason when toggle is off" in {
         val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() + ("companyUniqueTaxReference" ->
           Json.obj("hasUtr" -> JsBoolean(false), "reason" -> "No Utr"))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).companyTrusteeDetail.head
@@ -352,23 +373,9 @@ object ReadsTrusteeDetailsSpec extends Samples {
         "hasUtr" -> JsBoolean(true),
         "utr" -> "1111111111"
       ),
-      "partnershipAddress" -> Json.obj(
-        "addressLine1" -> "line1",
-        "addressLine2" -> "line2",
-        "addressLine3" -> "line3",
-        "addressLine4" -> "line4",
-        "postcode" -> "NE1",
-        "country" -> "GB"
-      ),
+      "partnershipAddress" -> address,
       "partnershipAddressYears" -> "under_a_year",
-      "partnershipPreviousAddress" -> Json.obj(
-        "addressLine1" -> "line1",
-        "addressLine2" -> "line2",
-        "addressLine3" -> "line3",
-        "addressLine4" -> "line4",
-        "postcode" -> "NE1",
-        "country" -> "GB"
-      ),
+      "partnershipPreviousAddress" -> address,
       "partnershipContactDetails" -> Json.obj(
         "phoneNumber" -> "07592113",
         "emailAddress" -> "test@test.com"
@@ -393,27 +400,9 @@ object ReadsTrusteeDetailsSpec extends Samples {
         "companyName" -> "test company",
         "isDeleted" -> JsBoolean(false)
       ),
-      "companyUniqueTaxReference" -> Json.obj(
-        "hasUtr" -> JsBoolean(true),
-        "utr" -> "1111111111"
-      ),
-      "companyAddress" -> Json.obj(
-        "addressLine1" -> "line1",
-        "addressLine2" -> "line2",
-        "addressLine3" -> "line3",
-        "addressLine4" -> "line4",
-        "postcode" -> "NE1",
-        "country" -> "GB"
-      ),
+      "companyAddress" -> address,
       "trusteesCompanyAddressYears" -> "under_a_year",
-      "companyPreviousAddress" -> Json.obj(
-        "addressLine1" -> "line1",
-        "addressLine2" -> "line2",
-        "addressLine3" -> "line3",
-        "addressLine4" -> "line4",
-        "postcode" -> "NE1",
-        "country" -> "GB"
-      ),
+      "companyPreviousAddress" -> address,
       "companyContactDetails" -> Json.obj(
         "phoneNumber" -> "07592113",
         "emailAddress" -> "test@test.com"
@@ -434,8 +423,9 @@ object ReadsTrusteeDetailsSpec extends Samples {
         if (isToggleOn) Json.obj("companyRegistrationNumber" -> Json.obj("value" -> "crn1234")) else
           (Json.obj("companyRegistrationNumber" -> Json.obj(
             "hasCrn" -> JsBoolean(true), "crn" -> "crn1234")))
-        )
-
+        ) ++
+      (if (isToggleOn) Json.obj("hasUtr" -> JsBoolean(true), "utr" -> "1111111111") else
+        Json.obj("companyUniqueTaxReference" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> "1111111111")))
   }
 
   private def trusteeIndividualJson(isToggleOn: Boolean = false) = {
@@ -460,14 +450,7 @@ object ReadsTrusteeDetailsSpec extends Samples {
         "country" -> "GB"
       ),
       "trusteeAddressYears" -> "under_a_year",
-      "trusteePreviousAddress" -> Json.obj(
-        "addressLine1" -> "line1",
-        "addressLine2" -> "line2",
-        "addressLine3" -> "line3",
-        "addressLine4" -> "line4",
-        "postcode" -> "NE1",
-        "country" -> "GB"
-      ),
+      "trusteePreviousAddress" -> address,
       "trusteeContactDetails" -> Json.obj(
         "phoneNumber" -> "07592113",
         "emailAddress" -> "test@test.com"
@@ -480,4 +463,13 @@ object ReadsTrusteeDetailsSpec extends Samples {
             "hasNino" -> JsBoolean(true), "nino" -> "nino1234")))
         )
   }
+
+  val address: JsObject = Json.obj(
+    "addressLine1" -> "line1",
+    "addressLine2" -> "line2",
+    "addressLine3" -> "line3",
+    "addressLine4" -> "line4",
+    "postcode" -> "NE1",
+    "country" -> "GB"
+  )
 }

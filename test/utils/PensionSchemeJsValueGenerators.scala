@@ -296,13 +296,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       ) ++ isComplete(isEstablisher)
         ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
-        ++ (if(isEstablisher) vatJsValueHnS(vat, isToggleOn, "companyVat") else vatJsValue(vat, isToggleOn, "companyVat"))
-        ++ (if(isEstablisher) payeJsValueHnS(paye, isToggleOn, "companyPaye") else payeJsValue(paye, isToggleOn, "companyPaye"))
-        ++ (if(isEstablisher) crnJsValueHnS(crn, isToggleOn, "companyRegistrationNumber") else crnJsValue(crn, isToggleOn, "companyRegistrationNumber"))
+        ++ vatJsValueHnS(vat, isToggleOn, "companyVat")
+        ++ payeJsValueHnS(paye, isToggleOn, "companyPaye")
+        ++ crnJsValueHnS(crn, isToggleOn, "companyRegistrationNumber")
         ++ uaMoreThanTenDirectors
         ++ uaDirectors
-        ++ (if(isEstablisher) utrJsValueHnS(utr, isToggleOn, "companyUniqueTaxReference") else utrJsValue(utr, isToggleOn, "companyUniqueTaxReference"))
-
+        ++ utrJsValueHnS(utr, isToggleOn, "companyUniqueTaxReference")
     )
   }
 
