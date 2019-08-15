@@ -83,7 +83,7 @@ object ReadsEstablisherDetails {
   )
 
   private def readsCompanyDirector(isToggleOn: Boolean): Reads[Individual] = (
-    readsDirectorDetailsHnS(isToggleOn) and
+    readsPersonDetailsHnS(isToggleOn, "directorDetails") and
       (JsPath \ "directorAddressId").read[Address] and
       (JsPath \ "directorContactDetails").read[ContactDetails] and
       (JsPath \ "directorNino").readNullable[String]((__ \ "value").read[String]).
@@ -117,16 +117,16 @@ object ReadsEstablisherDetails {
     )
   )
 
-  private def readsDirectorDetailsHnS(isToggleOn: Boolean): Reads[PersonalDetails] =
+  private def readsPersonDetailsHnS(isToggleOn: Boolean, userAnswersBase: String): Reads[PersonalDetails] =
     if(isToggleOn) {
     (
-      (JsPath \ "directorDetails" \ "firstName").read[String] and
-        (JsPath \ "directorDetails" \ "lastName").read[String] and
+      (JsPath \ userAnswersBase \ "firstName").read[String] and
+        (JsPath \ userAnswersBase \ "lastName").read[String] and
         (JsPath \ "dateOfBirth").read[String]
       ) ((firstName, lastName, date) => PersonalDetails(None, firstName, None, lastName, date))
   }
   else{
-    (JsPath \ "directorDetails").read[PersonalDetails]
+    (JsPath \ userAnswersBase).read[PersonalDetails]
   }
 
   private def readsPartner(isToggleOn: Boolean): Reads[Individual] = (
@@ -250,14 +250,23 @@ object ReadsEstablisherDetails {
   )
 
   private def readsTrusteeIndividual(isToggleOn: Boolean): Reads[Individual] = (
-    (JsPath \ "trusteeDetails").read[PersonalDetails] and
+    readsPersonDetailsHnS(isToggleOn, "trusteeDetails") and
       (JsPath \ "trusteeAddressId").read[Address] and
       (JsPath \ "trusteeContactDetails").read[ContactDetails] and
       (JsPath \ "trusteeNino").readNullable[String]((__ \ "value").read[String]).
-         orElse((JsPath \ "trusteeNino" \ "nino").readNullable[String]) and
-      (JsPath \ "trusteeNino" \ "reason").readNullable[String] and
-      (JsPath \ "uniqueTaxReference" \ "utr").readNullable[String] and
-      (JsPath \ "uniqueTaxReference" \ "reason").readNullable[String] and
+        orElse((JsPath \ "trusteeNino" \ "nino").readNullable[String]) and
+      (if(isToggleOn)
+        (JsPath \ "noNinoReason").readNullable[String]
+        else
+      (JsPath \ "trusteeNino" \ "reason").readNullable[String]) and
+      (if(isToggleOn)
+        (JsPath \ "utr").readNullable[String]
+      else
+      (JsPath \ "uniqueTaxReference" \ "utr").readNullable[String]) and
+      (if(isToggleOn)
+        (JsPath \ "noUtrReason").readNullable[String]
+      else
+      (JsPath \ "uniqueTaxReference" \ "reason").readNullable[String]) and
       (JsPath \ "trusteeAddressYears").read[String] and
       (JsPath \ "trusteePreviousAddress").readNullable[Address]
     ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>

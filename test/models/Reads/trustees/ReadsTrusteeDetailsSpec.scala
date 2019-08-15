@@ -16,6 +16,7 @@
 
 package models.Reads.trustees
 
+import models.Reads.establishers.EstablishersTestJson.{ninoJsonHnS, personJsonHnS, utrJsonHnS}
 import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
@@ -26,7 +27,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
 
   "ReadsTrusteeDetails" must {
 
-    "read one trustee individual details" when {
+    "read one trustee individual details with hns toggle off" when {
       val result = trusteeInputJson(Seq(trusteeIndividualJson())).as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails()).individualTrusteeDetail.head
 
       "we have valid person details" in {
@@ -430,17 +431,6 @@ object ReadsTrusteeDetailsSpec extends Samples {
 
   private def trusteeIndividualJson(isToggleOn: Boolean = false) = {
     val trusteeJson = Json.obj(
-      "trusteeDetails" -> Json.obj(
-        "firstName" -> "John",
-        "middleName" -> "William",
-        "lastName" -> "Doe",
-        "date" -> JsString("2019-01-31"),
-        "isDeleted" -> JsBoolean(false)
-      ),
-      "uniqueTaxReference" -> Json.obj(
-        "hasUtr" -> JsBoolean(true),
-        "utr" -> "1111111111"
-      ),
       "trusteeAddressId" -> Json.obj(
         "addressLine1" -> "line1",
         "addressLine2" -> "line2",
@@ -457,11 +447,26 @@ object ReadsTrusteeDetailsSpec extends Samples {
       )
     )
     trusteeJson ++
-      (
-        if (isToggleOn) Json.obj("trusteeNino" -> Json.obj("value" -> "nino1234")) else
-          (Json.obj("trusteeNino" -> Json.obj(
-            "hasNino" -> JsBoolean(true), "nino" -> "nino1234")))
-        )
+      trusteeDetailsHnS(isToggleOn) ++
+      utrJsonHnS(Some("1111111111"), None, "uniqueTaxReference", isToggleOn) ++
+      ninoJsonHnS(Some("nino1234"), None, "trusteeNino", isToggleOn)
+  }
+
+  private def trusteeDetailsHnS(isToggleOn: Boolean) = {
+    if(isToggleOn)
+      Json.obj("trusteeDetails" -> Json.obj(
+        "firstName" -> "John",
+        "lastName" -> "Doe",
+        "isDeleted" -> JsBoolean(false)
+      ),
+        "dateOfBirth" -> JsString("2019-01-31"))
+    else
+      Json.obj("trusteeDetails" -> Json.obj(
+        "firstName" -> "John",
+        "lastName" -> "Doe",
+        "date" -> JsString("2019-01-31"),
+        "isDeleted" -> JsBoolean(false)
+      ))
   }
 
   val address: JsObject = Json.obj(

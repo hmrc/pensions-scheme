@@ -124,20 +124,13 @@ object EstablishersTestJson extends OptionValues {
 
   def trusteeIndividualJson(individual: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
-      "trusteeDetails" -> Json.obj(
-        "firstName" -> individual.personalDetails.firstName,
-        "middleName" -> individual.personalDetails.middleName,
-        "lastName" -> individual.personalDetails.lastName,
-        "date" -> individual.personalDetails.dateOfBirth,
-        "isDeleted" -> isDeleted
-      ),
-      "trusteeNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
-      "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
       "trusteeAddressId" -> addressJson(individual.correspondenceAddressDetails.addressDetails),
       "trusteeContactDetails" -> contactDetailsJson(individual.correspondenceContactDetails.contactDetails),
       "trusteeAddressYears" -> addressYearsJson(individual.previousAddressDetails),
       "trusteePreviousAddress" -> previousAddressJson(individual.previousAddressDetails)
-    )
+    ) ++ personJsonHnS(individual, isDeleted, "trusteeDetails", isToggleOn) ++
+      ninoJsonHnS(individual.referenceOrNino, individual.noNinoReason, "trusteeNino", isToggleOn) ++
+      utrJsonHnS(individual.utr, individual.noUtrReason, "uniqueTaxReference", isToggleOn)
 
   def trusteeCompanyJson(company: CompanyTrustee, isDeleted: Boolean = true, isToggleOn: Boolean): JsObject =
     Json.obj(
@@ -216,7 +209,7 @@ object EstablishersTestJson extends OptionValues {
           )
       }
 
-  private def ninoJsonHnS(nino: Option[String], noNinoReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
+  def ninoJsonHnS(nino: Option[String], noNinoReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
     if(isToggleOn) {
       nino match {
         case Some(no) => Json.obj(userAnswerBase -> Json.obj("value" -> no))
@@ -248,7 +241,7 @@ object EstablishersTestJson extends OptionValues {
   private def utrJson(utr: Option[String], noUtrReason: Option[String]) =
     valueOrReason(utr, noUtrReason, "hasUtr", "utr")
 
-  private def utrJsonHnS(utr: Option[String], noUtrReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
+  def utrJsonHnS(utr: Option[String], noUtrReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
     if(isToggleOn) {
       (utr, noUtrReason) match {
         case (Some(utrValue), _) => Json.obj("utr" -> utrValue)
