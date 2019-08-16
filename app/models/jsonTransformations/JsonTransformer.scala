@@ -164,21 +164,26 @@ trait JsonTransformer {
   def userAnswersPartnershipDetailsReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'partnershipDetails \ 'name).json.copyFrom((desPath \ 'partnershipName).json.pick)
 
-  def transformVatToUserAnswersReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] = {
-      (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
-        (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) orElse doNothing
-      } orElse {
+  def transformVatToUserAnswersReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
+    (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
+      (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(true)) and
+        (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
+    } orElse {
+      (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(false))
+    } orElse {
         doNothing
       }
-  }
 
-  def userAnswersPayeReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] = {
-      (desPath \ "payeReference").read[String].flatMap { _ =>
-        (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) orElse doNothing
-      } orElse {
-        doNothing
-      }
-  }
+  def userAnswersPayeReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
+    (desPath \ "payeReference").read[String].flatMap { _ =>
+      (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(true)) and
+        (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) reduce
+    } orElse {
+      (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(false))
+    } orElse {
+      doNothing
+    }
+
 
   def transformVatToUserAnswersReadsHnS(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
     if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
