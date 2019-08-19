@@ -52,7 +52,7 @@ trait Samples {
 
   val trusteeIndividualData = Individual(
     personalDetails = PersonalDetails(firstName = "John",
-      middleName = Some("William"),
+      middleName = None,
       lastName = "Doe",
       dateOfBirth = "2019-01-31"),
     referenceOrNino = Some("nino1234"),

@@ -178,7 +178,7 @@
         "addressLine4": "sfdsfsdf trustee"
       },
       "trusteeKind": "individual",
-      "trusteeName": {
+      "trusteeDetails": {
         "firstName": "abcdef trustee",
         "lastName": "dfgfdgdfg trustee"
       },

@@ -217,10 +217,11 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
-        ++ ninoJsValue(referenceOrNino, isToggleOn, if (isEstablisher) "establisherNino" else "trusteeNino")
+        ++ (if(isEstablisher) ninoJsValue(referenceOrNino, isToggleOn, "establisherNino") else
+            ninoJsValueHnS(referenceOrNino, isToggleOn, "trusteeNino"))
         ++ (if(isEstablisher) utrJsValue(utr, isToggleOn, "uniqueTaxReference") else
         utrJsValueHnS(utr, isToggleOn, "uniqueTaxReference")) ++
-        (if(isToggleOn && !isEstablisher) getPersonName(firstName, lastName, date, "trusteeName")
+        (if(isToggleOn && !isEstablisher) getPersonName(firstName, lastName, date, "trusteeDetails")
         else if(isEstablisher)
           Json.obj(
           "establisherDetails" -> getPersonalDetails(firstName, lastName, middleName, date)

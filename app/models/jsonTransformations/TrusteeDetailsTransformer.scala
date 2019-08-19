@@ -46,10 +46,10 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
       (
         if(fs.get(Toggles.isEstablisherCompanyHnSEnabled))
-          userAnswersIndividualDetailsReadsHnS("trusteeName", desPath)
+          userAnswersIndividualDetailsReadsHnS("trusteeDetails", desPath)
         else
           userAnswersIndividualDetailsReads("trusteeDetails", desPath)) and
-      userAnswersNinoReads("trusteeNino", desPath) and
+      userAnswersNinoReadsHnS("trusteeNino", desPath) and
       userAnswersUtrReadsHnS("uniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'trusteeAddressYears) and
