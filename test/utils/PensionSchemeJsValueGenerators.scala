@@ -214,8 +214,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       Json.obj(
         (if (isEstablisher) "establisherKind" else "trusteeKind") -> "individual",
         (if (isEstablisher) "addressYears" else "trusteeAddressYears") -> "under_a_year",
-        (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails,
-        (if (isEstablisher) "isEstablisherComplete" else "isTrusteeComplete") -> true
+        (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ ninoJsValue(referenceOrNino, isToggleOn, if (isEstablisher) "establisherNino" else "trusteeNino")
@@ -227,7 +226,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "establisherDetails" -> getPersonalDetails(firstName, lastName, middleName, date)
         ) else
           Json.obj(
-            "trusteeDetails" -> getPersonalDetails(firstName, lastName, middleName, date)))
+            "trusteeDetails" -> getPersonalDetails(firstName, lastName, middleName, date))) ++
+        (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
     )
   }
 
@@ -293,8 +293,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         (if (isEstablisher) "companyAddressYears" else "trusteesCompanyAddressYears") -> "under_a_year",
         "companyContactDetails" -> userAnswersContactDetails
 
-      ) ++ isComplete(isEstablisher)
-        ++ userAnswersAddress.as[JsObject]
+      ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ vatJsValueHnS(vat, isToggleOn, "companyVat")
         ++ payeJsValueHnS(paye, isToggleOn, "companyPaye")
@@ -342,8 +341,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
           "name" -> orgName
         ),
         "partnershipAddressYears" -> "under_a_year",
-        "partnershipContactDetails" -> userAnswersContactDetails,
-        (if (isEstablisher) "isEstablisherComplete" else "isPartnershipCompleteId") -> true
+        "partnershipContactDetails" -> userAnswersContactDetails
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ vatJsValue(vat, isToggleOn, "partnershipVat")
@@ -352,6 +350,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         ++ uaMoreThanTenPartner
         ++ uaPartners
         ++ utrJsValue(utr, isToggleOn, "partnershipUniqueTaxReference")
+      ++ (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
     )
   }
 
@@ -531,11 +530,11 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         Json.obj(wrapper -> Json.obj("hasNino" -> true,"value" -> nino)))
 
   private def vatJsValue(vat: Option[String], isToggleOn: Boolean = false, wrapper: String) = {
-    vat.fold(Json.obj())(vat => Json.obj(wrapper -> Json.obj("value" -> vat)))
+    vat.fold(Json.obj(wrapper -> Json.obj("hasVat" -> false)))(vat => Json.obj(wrapper -> Json.obj("hasVat" -> true, "value" -> vat)))
   }
 
   private def payeJsValue(paye: Option[String], isToggleOn: Boolean = false, wrapper: String) = {
-    paye.fold(Json.obj())(paye => Json.obj(wrapper -> Json.obj("value" -> paye)))
+    paye.fold(Json.obj(wrapper -> Json.obj("hasPaye" -> false)))(paye => Json.obj(wrapper -> Json.obj("hasPaye" -> true, "value" -> paye)))
   }
 
   private def vatJsValueHnS(vat: Option[String], isToggleOn: Boolean = false, wrapper: String) =
@@ -554,6 +553,4 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     paye.fold(Json.obj(wrapper -> Json.obj("hasPaye" -> false)))(paye =>
       Json.obj(wrapper -> Json.obj("hasPaye" -> true, "value" -> paye)))
 
-  private def isComplete(isEstablisher: Boolean) =
-    if (isEstablisher) Json.obj() else Json.obj("isTrusteeComplete" -> true)
 }
