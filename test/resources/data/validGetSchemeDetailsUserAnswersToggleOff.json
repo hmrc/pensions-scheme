@@ -133,6 +133,12 @@
       "partnershipDetails": {
         "name": "test partnership"
       },
+      "partnershipPaye": {
+        "hasPaye": false
+      },
+      "partnershipVat": {
+        "hasVat": false
+      },
       "partnershipPreviousAddress": {
         "country": "AD",
         "postcode": "ST36TR",
@@ -159,7 +165,6 @@
   "trustees": [
     {
       "trusteeAddressYears": "under_a_year",
-      "isTrusteeComplete": true,
       "trusteeAddressId": {
         "country": "GB",
         "postcode": "TF3 5TR",
@@ -211,7 +216,6 @@
         "phoneNumber": "0044-09876542334"
       },
       "trusteesCompanyAddressYears": "under_a_year",
-      "isTrusteeComplete": true,
       "trusteeKind": "company",
       "companyPreviousAddress": {
         "country": "AD",
@@ -231,7 +235,6 @@
         "addressLine3": "addressline3 trustee part",
         "addressLine4": "addressline4 trustee part"
       },
-      "isPartnershipCompleteId": true,
       "partnershipAddressYears": "under_a_year",
       "partnershipContactDetails": {
         "emailAddress": "aaa@trusteepart.com",
@@ -239,6 +242,12 @@
       },
       "partnershipDetails": {
         "name": "test partnership"
+      },
+      "partnershipPaye": {
+        "hasPaye": false
+      },
+      "partnershipVat": {
+        "hasVat": false
       },
       "partnershipPreviousAddress": {
         "country": "AD",

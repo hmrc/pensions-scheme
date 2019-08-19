@@ -54,8 +54,7 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'trusteeAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'trusteePreviousAddress) and
-      userAnswersContactDetailsReads("trusteeContactDetails", desPath) and
-      (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
+      userAnswersContactDetailsReads("trusteeContactDetails", desPath) reduce
 
   def userAnswersTrusteeCompanyReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
@@ -67,8 +66,7 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'trusteesCompanyAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
-      userAnswersContactDetailsReads("companyContactDetails", desPath) and
-      (__ \ 'isTrusteeComplete).json.put(JsBoolean(true)) reduce
+      userAnswersContactDetailsReads("companyContactDetails", desPath) reduce
 
   def userAnswersTrusteePartnershipReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and
@@ -79,6 +77,5 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
-      userAnswersContactDetailsReads("partnershipContactDetails", desPath) and
-      (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) reduce
+      userAnswersContactDetailsReads("partnershipContactDetails", desPath) reduce
 }
