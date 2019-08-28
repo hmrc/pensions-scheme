@@ -73,7 +73,7 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
       userAnswersPartnershipDetailsReads(desPath) and
       transformVatToUserAnswersReads(desPath, "partnershipVat") and
       userAnswersPayeReads(desPath, "partnershipPaye") and
-      userAnswersUtrReads("partnershipUniqueTaxReference", desPath) and
+      userAnswersUtrReadsHnS("partnershipUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and

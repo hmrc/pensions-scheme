@@ -350,7 +350,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         ++ isPartnershipComplete
         ++ uaMoreThanTenPartner
         ++ uaPartners
-        ++ utrJsValue(utr, isToggleOn, "partnershipUniqueTaxReference")
+        ++ (if (isEstablisher) utrJsValue(utr, isToggleOn, "partnershipUniqueTaxReference")
+      else utrJsValueHnS(utr, isToggleOn, "partnershipUniqueTaxReference"))
       ++ (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
     )
   }

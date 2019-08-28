@@ -370,10 +370,6 @@ object ReadsTrusteeDetailsSpec extends Samples {
         "name" -> "test partnership",
         "isDeleted" -> JsBoolean(false)
       ),
-      "partnershipUniqueTaxReference" -> Json.obj(
-        "hasUtr" -> JsBoolean(true),
-        "utr" -> "1111111111"
-      ),
       "partnershipAddress" -> address,
       "partnershipAddressYears" -> "under_a_year",
       "partnershipPreviousAddress" -> address,
@@ -392,7 +388,15 @@ object ReadsTrusteeDetailsSpec extends Samples {
         if (isToggleOn) Json.obj() else
           (Json.obj("partnershipPaye" -> Json.obj(
             "hasPaye" -> JsBoolean(false))))
+        ) ++
+      (
+        if (isToggleOn) Json.obj("hasUtr" -> JsBoolean(true), "utr" -> Json.obj("value" -> "1111111111")) else
+          Json.obj("partnershipUniqueTaxReference" -> Json.obj(
+            "hasUtr" -> JsBoolean(true),
+            "utr" -> "1111111111"
+          )
         )
+      )
   }
 
   private def trusteeCompanyJson(isToggleOn: Boolean = false) = {
