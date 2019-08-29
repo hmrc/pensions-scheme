@@ -230,6 +230,26 @@ object ReadsEstablisherDetails {
     (JsPath \ "partnershipPreviousAddress").readNullable[Address]
   ) (PartnershipDetail.apply _)
 
+  private def partnershipHnSReads(isToggleOn: Boolean): Reads[PartnershipDetail] = (
+    (JsPath \ "partnershipDetails" \ "name").read[String] and
+      (JsPath \ "partnershipVat").readNullable[String]((__ \ "value").read[String]).
+        orElse((JsPath \ "partnershipVat" \ "vat").readNullable[String]) and
+      (JsPath \ "partnershipPaye").readNullable[String]((__ \ "value").read[String]).
+        orElse((JsPath \ "partnershipPaye" \ "paye").readNullable[String]) and
+      (if (isToggleOn)
+        (JsPath \ "utr").readNullable[String]((__ \ "value").read[String])
+      else
+        (JsPath \ "partnershipUniqueTaxReference" \ "utr").readNullable[String]) and
+      (if (isToggleOn)
+        (JsPath \ "noUtrReason").readNullable[String]
+      else
+        (JsPath \ "partnershipUniqueTaxReference" \ "reason").readNullable[String]) and
+      (JsPath \ "partnershipAddress").read[Address] and
+      (JsPath \ "partnershipContactDetails").read[ContactDetails] and
+      (JsPath \ "partnershipAddressYears").read[String] and
+      (JsPath \ "partnershipPreviousAddress").readNullable[Address]
+    ) (PartnershipDetail.apply _)
+
   private def readsEstablisherPartnership(isToggleOn: Boolean): Reads[Partnership] = (
     JsPath.read(partnershipDetailReads(isToggleOn)) and
       (JsPath \ "otherPartners").readNullable[Boolean] and
@@ -295,7 +315,7 @@ object ReadsEstablisherDetails {
     previousAddressDetails = previousAddressDetails(test.addressYears, test.previousAddress)))
 
   private def readsTrusteePartnership(isToggleOn: Boolean): Reads[PartnershipTrustee] =
-    JsPath.read(partnershipDetailReads(isToggleOn)).map(partnership =>
+    JsPath.read(partnershipHnSReads(isToggleOn)).map(partnership =>
       PartnershipTrustee(
         organizationName = partnership.name,
         utr = partnership.utr,
