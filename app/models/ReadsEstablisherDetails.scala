@@ -93,7 +93,7 @@ object ReadsEstablisherDetails {
         else
       (JsPath \ "directorNino" \ "reason").readNullable[String]) and
       (if(isToggleOn)
-      (JsPath \ "utr").readNullable[String]
+      (JsPath \ "utr").readNullable[String]((__ \ "value").read[String])
       else
         (JsPath \ "directorUniqueTaxReference" \ "utr").readNullable[String]
       ) and
@@ -170,7 +170,7 @@ object ReadsEstablisherDetails {
     (JsPath \ "companyPaye").readNullable[String]((__ \ "value").read[String]).
       orElse((JsPath \ "companyPaye" \ "paye").readNullable[String]) and
       (if (isToggleOn)
-          (JsPath \ "utr").readNullable[String]
+          (JsPath \ "utr").readNullable[String]((__ \ "value").read[String])
         else
         (JsPath \ "companyUniqueTaxReference" \ "utr").readNullable[String]) and
       (if (isToggleOn)
@@ -280,7 +280,7 @@ object ReadsEstablisherDetails {
         else
       (JsPath \ "trusteeNino" \ "reason").readNullable[String]) and
       (if(isToggleOn)
-        (JsPath \ "utr").readNullable[String]
+        (JsPath \ "utr").readNullable[String]((__ \ "value").read[String])
       else
       (JsPath \ "uniqueTaxReference" \ "utr").readNullable[String]) and
       (if(isToggleOn)
