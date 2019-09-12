@@ -244,7 +244,7 @@ object EstablishersTestJson extends OptionValues {
   def utrJsonHnS(utr: Option[String], noUtrReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
     if(isToggleOn) {
       (utr, noUtrReason) match {
-        case (Some(utrValue), _) => Json.obj("utr" -> utrValue)
+        case (Some(utrValue), _) => Json.obj("utr" -> Json.obj("value" -> utrValue))
         case (_, Some(reason)) => Json.obj("noUtrReason" -> reason)
         case _ => Json.obj()
       }

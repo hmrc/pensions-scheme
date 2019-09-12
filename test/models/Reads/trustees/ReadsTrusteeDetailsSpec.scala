@@ -250,7 +250,7 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         }
 
       "we have a valid utr when toggle is on" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyUniqueTaxReference" + ("utr" -> JsString("1234567890"))))
+        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson() - "companyUniqueTaxReference" + ("utr" -> Json.obj("value" -> JsString("1234567890")))))
         val result = inputJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails(true)).companyTrusteeDetail.head
         result.utr mustBe Some("1234567890")
       }
@@ -429,7 +429,7 @@ object ReadsTrusteeDetailsSpec extends Samples {
           (Json.obj("companyRegistrationNumber" -> Json.obj(
             "hasCrn" -> JsBoolean(true), "crn" -> "crn1234")))
         ) ++
-      (if (isToggleOn) Json.obj("hasUtr" -> JsBoolean(true), "utr" -> "1111111111") else
+      (if (isToggleOn) Json.obj("utr" -> Json.obj("value" -> "1111111111")) else
         Json.obj("companyUniqueTaxReference" -> Json.obj("hasUtr" -> JsBoolean(true), "utr" -> "1111111111")))
   }
 
