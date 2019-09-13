@@ -234,12 +234,8 @@
       "partnershipDetails": {
         "name": "test partnership"
       },
-      "partnershipVat": {
-        "hasVat": false
-      },
-      "partnershipPaye": {
-        "hasPaye": false
-      },
+      "hasVat": false,
+      "hasPaye": false,
       "partnershipPreviousAddress": {
         "country": "AD",
         "postcode": "4565465467",

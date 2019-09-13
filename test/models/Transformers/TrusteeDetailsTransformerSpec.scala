@@ -83,7 +83,7 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
               val result = details.transform(transformer(isToggleOn = true).
                 userAnswersUtrReadsHnS(userAnswersBase = "uniqueTaxReference", desTrusteeIndividualPath)).get
 
-              (result \ "utr").asOpt[String] mustBe (individualValuePath(details) \ "utr").asOpt[String]
+              (result \ "utr" \ "value").asOpt[String] mustBe (individualValuePath(details) \ "utr").asOpt[String]
               (result \ "noUtrReason").asOpt[String] mustBe (individualValuePath(details) \ "noUtrReason").asOpt[String]
 
             }
