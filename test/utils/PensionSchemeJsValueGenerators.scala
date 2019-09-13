@@ -345,8 +345,8 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "partnershipContactDetails" -> userAnswersContactDetails
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
-        ++ vatJsValue(vat, isToggleOn, "partnershipVat")
-        ++ payeJsValue(paye, isToggleOn, "partnershipPaye")
+        ++ (if (isEstablisher) vatJsValue(vat, isToggleOn, "partnershipVat") else vatJsValueHnS(vat, isToggleOn, "partnershipVat"))
+        ++ (if (isEstablisher) payeJsValue(paye, isToggleOn, "partnershipPaye") else payeJsValueHnS(paye, isToggleOn, "partnershipPaye"))
         ++ isPartnershipComplete
         ++ uaMoreThanTenPartner
         ++ uaPartners
@@ -494,7 +494,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     if (isToggleOn) {
       utr.fold(
         Json.obj("hasUtr" -> false, "noUtrReason" -> "noUtrReason"))(
-        utr => Json.obj("hasUtr" -> true, "utr" -> utr)
+        utr => Json.obj("hasUtr" -> true, "utr" -> Json.obj("value" -> utr))
       )
     } else {
       utr.fold(
