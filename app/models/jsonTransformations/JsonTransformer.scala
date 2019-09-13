@@ -94,7 +94,7 @@ trait JsonTransformer {
     if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
       (desPath \ "utr").read[String].flatMap { _ =>
         (__ \ 'hasUtr).json.put(JsBoolean(true)) and
-          (__ \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) reduce
+          (__ \ 'utr \ 'value).json.copyFrom((desPath \ 'utr).json.pick) reduce
       } orElse {
           (__ \ 'hasUtr).json.put(JsBoolean(false)) and
             (__ \ 'noUtrReason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
