@@ -27,10 +27,7 @@ class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransf
                                                override val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
-    (if(fs.get(Toggles.isEstablisherCompanyHnSEnabled))
-      userAnswersIndividualDetailsReadsHnS("directorDetails", desPath)
-    else
-      userAnswersIndividualDetailsReads("directorDetails", desPath)) and
+      userAnswersIndividualDetailsReadsHnS("directorDetails", desPath) and
       userAnswersNinoReadsHnS("directorNino", desPath) and
       userAnswersUtrReadsHnS("directorUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'directorAddressId, desPath \ 'correspondenceAddressDetails) and
