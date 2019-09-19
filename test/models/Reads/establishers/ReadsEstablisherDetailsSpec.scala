@@ -80,18 +80,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a company with a CRN when HnS toggle off" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withCrn()
-        .build(), false, false),
-      false
-    )
-
-  }
-
-  it should "read a company with a CRN when Hns toggle on" in {
+  it should "read a company with a CRN" in {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
@@ -102,17 +91,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a company with a VAT number when HnS toggle off" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withVat()
-        .build(), false, false),
-      false
-    )
-  }
-
-  it should "read a company with a VAT number when HnS toggle on" in {
+  it should "read a company with a VAT number" in {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
@@ -122,17 +101,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     )
   }
 
-  it should "read a company with a PAYE reference when HnS toggle off" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withPaye()
-        .build(), false, false),
-      false
-    )
-  }
-
-  it should "read a company with a PAYE reference when HnS toggle on" in {
+  it should "read a company with a PAYE reference" in {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
@@ -174,17 +143,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a company wth a director with a Nino when HnS toggle off" in {
-
-    companyDirectorTest(
-      IndividualBuilder()
-        .withNino()
-        .build(),
-      false
-    )
-  }
-
-  it should "read a company wth a director with a Nino when HnS toggle on" in {
+  it should "read a company wth a director with a Nino" in {
 
     companyDirectorTest(
       IndividualBuilder(true)
@@ -593,17 +552,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a trustee company with a CRN when HnS toggle off" in {
-
-    trusteeCompanyTest(
-      (CompanyTrusteeBuilder()
-        .withCrn()
-        .build(), false, false),
-      false
-    )
-  }
-
-  it should "read a trustee company with a CRN when HnS toggle on" in {
+  it should "read a trustee company with a CRN" in {
 
     trusteeCompanyTest(
       (CompanyTrusteeBuilder()
@@ -613,17 +562,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     )
   }
 
-  it should "read a trustee company with a VAT number when HnS toggle off" in {
-
-    trusteeCompanyTest(
-      (CompanyTrusteeBuilder()
-        .withVat()
-        .build(), false, false),
-      false
-    )
-  }
-
-  it should "read a trustee company with a VAT number when HnS toggle on" in {
+  it should "read a trustee company with a VAT number" in {
 
     trusteeCompanyTest(
       (CompanyTrusteeBuilder()
@@ -633,17 +572,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     )
   }
 
-  it should "read a trustee company with a PAYE reference when HnS toggle off" in {
-
-    trusteeCompanyTest(
-      (CompanyTrusteeBuilder()
-        .withPaye()
-        .build(), false, false),
-      false
-    )
-  }
-
-  it should "read a trustee company with a PAYE reference when HnS toggle on" in {
+  it should "read a trustee company with a PAYE reference" in {
 
     trusteeCompanyTest(
       (CompanyTrusteeBuilder()
@@ -692,18 +621,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a trustee individual with a Nino when HnS toggle off" in {
-
-    trusteeIndividualTest(
-      (IndividualBuilder()
-        .withNino()
-        .build(), false, false),
-      false
-    )
-
-  }
-
-  it should "read a trustee individual with a Nino when HnS toggle on" in {
+  it should "read a trustee individual with a Nino" in {
 
     trusteeIndividualTest(
       (IndividualBuilder()
@@ -944,7 +862,7 @@ object ReadsEstablisherDetailsSpec extends Matchers {
       partnershipTrusteeDetail = trusteePartnerships
     )
 
-    json.validate(readsTrusteeDetails(isToggleOn)).fold(
+    json.validate(readsTrusteeDetails).fold(
       errors => fail(s"JSON errors: $errors"),
       actual => actual shouldBe expectedTrustees
     )

@@ -63,9 +63,16 @@ object ReadsEstablisherDetails {
       (JsPath \ "contactDetails").read[ContactDetails] and
       (JsPath \ "establisherNino").readNullable[String]((__ \ "value").read[String]).
             orElse((JsPath \ "establisherNino" \ "nino").readNullable[String]) and
-      (JsPath \ "establisherNino" \ "reason").readNullable[String] and
-      (JsPath \ "uniqueTaxReference" \ "utr").readNullable[String] and
-      (JsPath \ "uniqueTaxReference" \ "reason").readNullable[String] and
+
+      (if(isToggleOn) (JsPath \ "noNinoReason").readNullable[String]
+      else (JsPath \ "establisherNino" \ "reason").readNullable[String]) and
+
+      (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]).
+        orElse((JsPath \ "uniqueTaxReference" \ "utr").readNullable[String]) and
+
+      (if(isToggleOn) (JsPath \ "noUtrReason").readNullable[String]
+       else (JsPath \ "uniqueTaxReference" \ "reason").readNullable[String]) and
+
       (JsPath \ "addressYears").read[String] and
       (JsPath \ "previousAddress").readNullable[Address]
     ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
@@ -122,9 +129,14 @@ object ReadsEstablisherDetails {
       (JsPath \ "partnerContactDetails").read[ContactDetails] and
       (JsPath \ "partnerNino").readNullable[String]((__ \ "value").read[String]).
             orElse((JsPath \ "partnerNino" \ "nino").readNullable[String]) and
-      (JsPath \ "partnerNino" \ "reason").readNullable[String] and
-      (JsPath \ "partnerUniqueTaxReference" \ "utr").readNullable[String] and
-      (JsPath \ "partnerUniqueTaxReference" \ "reason").readNullable[String] and
+
+      (if(isToggleOn) (JsPath \ "noNinoReason").readNullable[String]
+      else (JsPath \ "partnerNino" \ "reason").readNullable[String]) and
+      (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]).
+        orElse((JsPath \ "partnerUniqueTaxReference" \ "utr").readNullable[String]) and
+
+      (if(isToggleOn) (JsPath \ "noUtrReason").readNullable[String]
+      else (JsPath \ "partnerUniqueTaxReference" \ "reason").readNullable[String]) and
       (JsPath \ "partnerAddressYears").read[String] and
       (JsPath \ "partnerPreviousAddress").readNullable[Address]
     ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
