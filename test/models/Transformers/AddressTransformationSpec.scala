@@ -26,7 +26,7 @@ class AddressTransformationSpec extends WordSpec with MustMatchers with OptionVa
 
   import AddressTransformationSpec._
 
-  val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
+  val addressTransformer = new AddressTransformer
 
   "DES payload containing an address" when {
     "transformed using getAddress" must {

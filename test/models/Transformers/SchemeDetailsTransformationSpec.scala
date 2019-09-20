@@ -23,8 +23,8 @@ import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators
 
 class SchemeDetailsTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
 
-  val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
-  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer, FakeFeatureSwitchManagementService(false))
+  val addressTransformer = new AddressTransformer
+  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer)
 
   "A DES payload with Scheme details" must {
     "have the scheme details transformed correctly to valid user answers format" in {

@@ -101,8 +101,8 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
       declaration <- json.validate[A](readsDeclaration)
-      establishers <- json.validate[EstablisherDetails](readsEstablisherDetails(fs.get(Toggles.isEstablisherCompanyHnSEnabled)))
-      trustees <- json.validate[TrusteeDetails](readsTrusteeDetails(fs.get(Toggles.isEstablisherCompanyHnSEnabled)))
+      establishers <- json.validate[EstablisherDetails](readsEstablisherDetails(fs.get(Toggles.isHnSEnabled)))
+      trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
       changeOfEstablisherOrTrustDetails <- json.validate[Option[Boolean]]((JsPath \ "changeOfEstablisherOrTrustDetails").readNullable[Boolean])
     } yield {
       PensionsScheme(customerAndScheme, declaration, establishers, trustees, changeOfEstablisherOrTrustDetails)

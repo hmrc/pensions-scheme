@@ -23,7 +23,6 @@ import play.api.libs.json._
 import utils.Toggles
 
 trait JsonTransformer {
-  def fs: FeatureSwitchManagementService
 
   val doNothing: Reads[JsObject] = {
     __.json.put(Json.obj())
@@ -53,8 +52,6 @@ trait JsonTransformer {
   }
 
   def userAnswersNinoReadsHnS(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
-    if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
-
       (desPath \ "nino").read[String].flatMap { _ =>
         (__ \ 'hasNino).json.put(JsBoolean(true)) and
           (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) reduce
@@ -64,17 +61,6 @@ trait JsonTransformer {
       } orElse {
         doNothing
       }
-    } else {
-      (desPath \ "nino").read[String].flatMap { _ =>
-        (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(true)) and
-          (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) reduce
-      } orElse {
-        (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
-          (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
-      } orElse {
-        doNothing
-      }
-    }
 
   def userAnswersUtrReads(userAnswersBase: String, desPath: JsPath): Reads[JsObject] = {
     (desPath \ "utr").read[String].flatMap { _ =>
@@ -91,7 +77,6 @@ trait JsonTransformer {
   }
 
   def userAnswersUtrReadsHnS(userAnswersBase: String, desPath: JsPath): Reads[JsObject] =
-    if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
       (desPath \ "utr").read[String].flatMap { _ =>
         (__ \ 'hasUtr).json.put(JsBoolean(true)) and
           (__ \ 'utr \ 'value).json.copyFrom((desPath \ 'utr).json.pick) reduce
@@ -100,19 +85,6 @@ trait JsonTransformer {
             (__ \ 'noUtrReason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
       } orElse {
       doNothing
-    }
-    } else {
-      (desPath \ "utr").read[String].flatMap { _ =>
-        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
-          (__ \ userAnswersBase \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) reduce
-
-      } orElse {
-
-        (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
-          (__ \ userAnswersBase \ 'reason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
-      } orElse {
-        doNothing
-      }
     }
 
   def userAnswersContactDetailsReads(userAnswersBase: String, desPath: JsPath): Reads[JsObject] =
@@ -137,8 +109,6 @@ trait JsonTransformer {
   }
 
   def userAnswersCrnReadsHnS(desPath: JsPath): Reads[JsObject] =
-    if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
-
       (desPath \ "crnNumber").read[String].flatMap { _ =>
         (__ \ 'hasCrn).json.put(JsBoolean(true)) and
           (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) reduce
@@ -148,17 +118,6 @@ trait JsonTransformer {
       } orElse {
       doNothing
       }
-    } else {
-      (desPath \ "crnNumber").read[String].flatMap { _ =>
-        (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(true)) and
-          (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) reduce
-      } orElse {
-        (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
-          (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
-      } orElse {
-        doNothing
-      }
-    }
 
 
   def userAnswersPartnershipDetailsReads(desPath: JsPath): Reads[JsObject] =
@@ -186,36 +145,18 @@ trait JsonTransformer {
 
 
   def transformVatToUserAnswersReadsHnS(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
-    if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
       (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
         (__ \ 'hasVat).json.put(JsBoolean(true)) and
           (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
       } orElse {
         (__ \ 'hasVat).json.put(JsBoolean(false))
       }
-    } else {
-      (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
-        (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(true)) and
-          (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
-      } orElse {
-        (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(false))
-      }
-    }
 
   def userAnswersPayeReadsHnS(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
-    if (fs.get(Toggles.isEstablisherCompanyHnSEnabled)) {
       (desPath \ "payeReference").read[String].flatMap { _ =>
         (__ \ 'hasPaye).json.put(JsBoolean(true)) and
           (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) reduce
       } orElse {
         (__ \ 'hasPaye).json.put(JsBoolean(false))
       }
-    } else {
-      (desPath \ "payeReference").read[String].flatMap { _ =>
-        (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(true)) and
-          (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) reduce
-      } orElse {
-        (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(false))
-      }
-    }
 }

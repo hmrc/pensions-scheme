@@ -24,8 +24,7 @@ import play.api.libs.json._
 
 class SchemeSubscriptionDetailsTransformer @Inject()(schemeDetailsTransformer: SchemeDetailsTransformer,
                                                      establisherDetailsTransformer: EstablisherDetailsTransformer,
-                                                     trusteeDetailsTransformer: TrusteeDetailsTransformer,
-                                                     override val fs: FeatureSwitchManagementService
+                                                     trusteeDetailsTransformer: TrusteeDetailsTransformer
                                                     ) extends JsonTransformer {
 
   val transformToUserAnswers: Reads[JsObject] =

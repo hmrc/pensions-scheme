@@ -21,10 +21,11 @@ import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
+import utils.Toggles
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
                                               directorsOrPartnersTransformer: DirectorsOrPartnersTransformer,
-                                              override val fs: FeatureSwitchManagementService) extends JsonTransformer {
+                                              fs: FeatureSwitchManagementService) extends JsonTransformer {
 
 
   val userAnswersEstablishersReads: Reads[JsObject] = {
@@ -45,9 +46,18 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
 
   def userAnswersEstablisherIndividualReads(desPath: JsPath): Reads[JsObject] = {
     (__ \ 'establisherKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("establisherDetails", desPath) and
-      userAnswersNinoReads("establisherNino", desPath) and
-      userAnswersUtrReads("uniqueTaxReference", desPath) and
+      (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersIndividualDetailsReadsHnS("establisherDetails", desPath)
+        else
+      userAnswersIndividualDetailsReads("establisherDetails", desPath)) and
+      (if(fs.get(Toggles.isHnSEnabled))
+        userAnswersNinoReadsHnS("establisherNino", desPath)
+      else
+        userAnswersNinoReads("establisherNino", desPath)) and
+      (if(fs.get(Toggles.isHnSEnabled))
+        userAnswersUtrReadsHnS("uniqueTaxReference", desPath)
+      else
+        userAnswersUtrReads("uniqueTaxReference", desPath)) and
       addressTransformer.getDifferentAddress(__ \ 'address, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'addressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'previousAddress) and
@@ -77,16 +87,24 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
   def userAnswersEstablisherPartnershipReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("partnership")) and
       userAnswersPartnershipDetailsReads(desPath) and
-      transformVatToUserAnswersReads(desPath, "partnershipVat") and
-      userAnswersPayeReads(desPath, "partnershipPaye") and
-      userAnswersUtrReads("partnershipUniqueTaxReference", desPath) and
+      (if(fs.get(Toggles.isHnSEnabled))
+      transformVatToUserAnswersReadsHnS(desPath, "partnershipVat")
+        else
+      transformVatToUserAnswersReads(desPath, "partnershipVat")) and
+        (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersPayeReadsHnS(desPath, "partnershipPaye")
+        else
+      userAnswersPayeReads(desPath, "partnershipPaye")) and
+        (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersUtrReadsHnS("partnershipUniqueTaxReference", desPath)
+        else
+      userAnswersUtrReads("partnershipUniqueTaxReference", desPath)) and
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
       userAnswersContactDetailsReads("partnershipContactDetails", desPath) and
       (__ \ 'otherPartners).json.copyFrom((desPath \ 'areMorethanTenPartners).json.pick) and
       (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isPartnershipCompleteId).json.put(JsBoolean(true)) and
       getPartner(desPath) reduce
 
   def getPartner(desPath: JsPath): Reads[JsObject] = (desPath \ 'partnerDetails).read(

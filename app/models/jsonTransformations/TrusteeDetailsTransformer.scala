@@ -23,8 +23,7 @@ import play.api.libs.json.Reads._
 import play.api.libs.json._
 import utils.Toggles
 
-class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
-                                          override val fs: FeatureSwitchManagementService) extends JsonTransformer {
+class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
   val userAnswersTrusteesReads: Reads[JsObject] = {
     (__ \ 'psaSchemeDetails \ 'trusteeDetails).readNullable(__.read(
@@ -44,11 +43,7 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
 
   def userAnswersTrusteeIndividualReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      (
-        if(fs.get(Toggles.isEstablisherCompanyHnSEnabled))
-          userAnswersIndividualDetailsReadsHnS("trusteeDetails", desPath)
-        else
-          userAnswersIndividualDetailsReads("trusteeDetails", desPath)) and
+      userAnswersIndividualDetailsReadsHnS("trusteeDetails", desPath)and
       userAnswersNinoReadsHnS("trusteeNino", desPath) and
       userAnswersUtrReadsHnS("uniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, desPath \ 'correspondenceAddressDetails) and

@@ -24,13 +24,10 @@ import play.api.libs.json._
 import utils.Toggles
 
 class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer,
-                                               override val fs: FeatureSwitchManagementService) extends JsonTransformer {
+                                               fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
-    (if(fs.get(Toggles.isEstablisherCompanyHnSEnabled))
-      userAnswersIndividualDetailsReadsHnS("directorDetails", desPath)
-    else
-      userAnswersIndividualDetailsReads("directorDetails", desPath)) and
+      userAnswersIndividualDetailsReadsHnS("directorDetails", desPath) and
       userAnswersNinoReadsHnS("directorNino", desPath) and
       userAnswersUtrReadsHnS("directorUniqueTaxReference", desPath) and
       addressTransformer.getDifferentAddress(__ \ 'directorAddressId, desPath \ 'correspondenceAddressDetails) and
@@ -41,9 +38,18 @@ class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransf
   }
 
   def userAnswersPartnerReads(desPath: JsPath): Reads[JsObject] =
-      userAnswersIndividualDetailsReads("partnerDetails", desPath) and
-      userAnswersNinoReads("partnerNino", desPath) and
-      userAnswersUtrReads("partnerUniqueTaxReference", desPath) and
+    (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersIndividualDetailsReadsHnS("partnerDetails", desPath)
+    else
+      userAnswersIndividualDetailsReads("partnerDetails", desPath)) and
+    (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersNinoReadsHnS("partnerNino", desPath)
+    else
+      userAnswersNinoReads("partnerNino", desPath)) and
+    (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersUtrReadsHnS("partnerUniqueTaxReference", desPath)
+    else
+      userAnswersUtrReads("partnerUniqueTaxReference", desPath)) and
       addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnerAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnerPreviousAddress) and

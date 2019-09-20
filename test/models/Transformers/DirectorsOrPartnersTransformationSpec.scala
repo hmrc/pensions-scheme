@@ -24,7 +24,7 @@ import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators
 
 class DirectorsOrPartnersTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
 
-  val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
+  val addressTransformer = new AddressTransformer
   val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer, FakeFeatureSwitchManagementService(false))
 
   "A DES payload with Partner or director" must {
