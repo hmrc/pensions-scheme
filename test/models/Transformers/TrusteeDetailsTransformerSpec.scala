@@ -27,8 +27,8 @@ class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with Opti
 
   import TrusteeDetailsTransformerSpec._
 
-  private val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
-  private def transformer(isToggleOn: Boolean = false) = new TrusteeDetailsTransformer(addressTransformer, FakeFeatureSwitchManagementService(isToggleOn))
+  private val addressTransformer = new AddressTransformer
+  private def transformer(isToggleOn: Boolean = false) = new TrusteeDetailsTransformer(addressTransformer)
 
   "A DES payload containing trustee details" must {
     "have the individual details transformed correctly to valid user answers format" that {

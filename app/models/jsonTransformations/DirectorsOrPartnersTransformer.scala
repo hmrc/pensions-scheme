@@ -24,7 +24,7 @@ import play.api.libs.json._
 import utils.Toggles
 
 class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer,
-                                               override val fs: FeatureSwitchManagementService) extends JsonTransformer {
+                                               fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
       userAnswersIndividualDetailsReadsHnS("directorDetails", desPath) and

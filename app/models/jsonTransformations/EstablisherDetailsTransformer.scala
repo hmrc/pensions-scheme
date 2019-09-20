@@ -25,7 +25,7 @@ import utils.Toggles
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
                                               directorsOrPartnersTransformer: DirectorsOrPartnersTransformer,
-                                              override val fs: FeatureSwitchManagementService) extends JsonTransformer {
+                                              fs: FeatureSwitchManagementService) extends JsonTransformer {
 
 
   val userAnswersEstablishersReads: Reads[JsObject] = {

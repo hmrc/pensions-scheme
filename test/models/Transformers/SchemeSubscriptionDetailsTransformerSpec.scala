@@ -25,23 +25,23 @@ import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators
 
 class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
   private def addressTransformer(isToggleOn: Boolean) =
-    new AddressTransformer(FakeFeatureSwitchManagementService(isToggleOn))
+    new AddressTransformer
 
   private def directorOrPartnerTransformer(isToggleOn: Boolean) =
     new DirectorsOrPartnersTransformer(addressTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
 
   private def schemeDetailsTransformer(isToggleOn: Boolean) =
-    new SchemeDetailsTransformer(addressTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
+    new SchemeDetailsTransformer(addressTransformer(isToggleOn))
 
   private def establisherTransformer(isToggleOn: Boolean) =
     new EstablisherDetailsTransformer(addressTransformer(isToggleOn), directorOrPartnerTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
 
   private def trusteesTransformer(isToggleOn: Boolean) =
-    new TrusteeDetailsTransformer(addressTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
+    new TrusteeDetailsTransformer(addressTransformer(isToggleOn))
 
   private def transformer(isToggleOn: Boolean = false) = new SchemeSubscriptionDetailsTransformer(
     schemeDetailsTransformer(isToggleOn), establisherTransformer(isToggleOn),
-    trusteesTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
+    trusteesTransformer(isToggleOn))
 
   private val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
   private val userAnswersResponseToggleOff: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswersToggleOff.json")

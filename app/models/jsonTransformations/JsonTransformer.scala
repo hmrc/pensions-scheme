@@ -23,7 +23,6 @@ import play.api.libs.json._
 import utils.Toggles
 
 trait JsonTransformer {
-  def fs: FeatureSwitchManagementService
 
   val doNothing: Reads[JsObject] = {
     __.json.put(Json.obj())

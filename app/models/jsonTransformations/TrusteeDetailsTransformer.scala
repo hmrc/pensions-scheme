@@ -23,8 +23,7 @@ import play.api.libs.json.Reads._
 import play.api.libs.json._
 import utils.Toggles
 
-class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
-                                          override val fs: FeatureSwitchManagementService) extends JsonTransformer {
+class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
   val userAnswersTrusteesReads: Reads[JsObject] = {
     (__ \ 'psaSchemeDetails \ 'trusteeDetails).readNullable(__.read(

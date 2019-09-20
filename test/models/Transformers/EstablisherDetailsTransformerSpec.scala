@@ -27,7 +27,7 @@ class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with 
 
   import EstablisherDetailsTransformerSpec._
 
-  private val addressTransformer = new AddressTransformer(FakeFeatureSwitchManagementService(false))
+  private val addressTransformer = new AddressTransformer
   private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer, FakeFeatureSwitchManagementService(false))
   private val transformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer, FakeFeatureSwitchManagementService(false))
 
