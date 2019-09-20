@@ -38,9 +38,18 @@ class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransf
   }
 
   def userAnswersPartnerReads(desPath: JsPath): Reads[JsObject] =
-      userAnswersIndividualDetailsReads("partnerDetails", desPath) and
-      userAnswersNinoReads("partnerNino", desPath) and
-      userAnswersUtrReads("partnerUniqueTaxReference", desPath) and
+    (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersIndividualDetailsReadsHnS("partnerDetails", desPath)
+    else
+      userAnswersIndividualDetailsReads("partnerDetails", desPath)) and
+    (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersNinoReadsHnS("partnerNino", desPath)
+    else
+      userAnswersNinoReads("partnerNino", desPath)) and
+    (if(fs.get(Toggles.isHnSEnabled))
+      userAnswersUtrReadsHnS("partnerUniqueTaxReference", desPath)
+    else
+      userAnswersUtrReads("partnerUniqueTaxReference", desPath)) and
       addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnerAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnerPreviousAddress) and

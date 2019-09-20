@@ -16,7 +16,6 @@
 
 package models.Reads.establishers
 
-import models.Reads.establishers.EstablishersTestJson.{ninoJsonHnS, utrJsonHnS}
 import models._
 import org.scalatest.OptionValues
 import play.api.libs.json._
@@ -25,20 +24,13 @@ object EstablishersTestJson extends OptionValues {
 
   def establisherIndividualJson(individual: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
-      "establisherDetails" -> Json.obj(
-        "firstName" -> individual.personalDetails.firstName,
-        "middleName" -> individual.personalDetails.middleName,
-        "lastName" -> individual.personalDetails.lastName,
-        "date" -> individual.personalDetails.dateOfBirth,
-        "isDeleted" -> isDeleted
-      ),
-      "establisherNino" -> ninoJson(individual.referenceOrNino, individual.noNinoReason),
-      "uniqueTaxReference" -> utrJson(individual.utr, individual.noUtrReason),
       "address" -> addressJson(individual.correspondenceAddressDetails.addressDetails),
       "contactDetails" -> contactDetailsJson(individual.correspondenceContactDetails.contactDetails),
       "addressYears" -> addressYearsJson(individual.previousAddressDetails),
-      "previousAddress" -> previousAddressJson(individual.previousAddressDetails)
-    )
+      "previousAddress" -> previousAddressJson(individual.previousAddressDetails)) ++
+        personJsonToggled(individual, isDeleted, "establisherDetails", isToggleOn) ++
+        ninoJsonToggled(individual.referenceOrNino, individual.noNinoReason, "establisherNino", isToggleOn) ++
+        utrJsonToggled(individual.utr, individual.noUtrReason, "uniqueTaxReference", isToggleOn)
 
   def establisherCompany(company: CompanyEstablisher, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject = {
 
@@ -50,8 +42,8 @@ object EstablishersTestJson extends OptionValues {
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "companyAddressYears" -> addressYearsJson(company.previousAddressDetails),
       "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
-    ) ++ utrJsonHnS(company.utr, company.noUtrReason, "companyUniqueTaxReference", isToggleOn) ++
-      crnJsonHnS(company.crnNumber, company.noCrnReason, "companyRegistrationNumber", isToggleOn)
+    ) ++ utrJsonHnS(company.utr, company.noUtrReason, "companyUniqueTaxReference") ++
+      crnJsonHnS(company.crnNumber, company.noCrnReason, "companyRegistrationNumber")
 
     //scalastyle:off magic.number
     if (company.haveMoreThanTenDirectorOrPartner || company.directorDetails.lengthCompare(10) >= 0) {
@@ -74,9 +66,9 @@ object EstablishersTestJson extends OptionValues {
       "directorContactDetails" -> contactDetailsJson(director.correspondenceContactDetails.contactDetails),
       "companyDirectorAddressYears" -> addressYearsJson(director.previousAddressDetails),
       "previousAddress" -> previousAddressJson(director.previousAddressDetails)
-    ) ++ personJsonHnS(director, isDeleted, "directorDetails", isToggleOn) ++
-      utrJsonHnS(director.utr, director.noUtrReason, "directorUniqueTaxReference", isToggleOn) ++
-      ninoJsonHnS(director.referenceOrNino, director.noNinoReason, "directorNino", isToggleOn)
+    ) ++ personJsonHnS(director, isDeleted, "directorDetails") ++
+      utrJsonHnS(director.utr, director.noUtrReason, "directorUniqueTaxReference") ++
+      ninoJsonHnS(director.referenceOrNino, director.noNinoReason, "directorNino")
 
   def partnership(partnership: Partnership, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject = {
     var json = Json.obj(
@@ -85,10 +77,10 @@ object EstablishersTestJson extends OptionValues {
       "partnershipPaye" -> payeJson(partnership.payeReference, isToggleOn),
       "partnershipAddress" -> addressJson(partnership.correspondenceAddressDetails.addressDetails),
       "partnershipContactDetails" -> contactDetailsJson(partnership.correspondenceContactDetails.contactDetails),
-      "partnershipUniqueTaxReference" -> utrJson(partnership.utr, partnership.noUtrReason),
       "partnershipAddressYears" -> addressYearsJson(partnership.previousAddressDetails),
       "partnershipPreviousAddress" -> previousAddressJson(partnership.previousAddressDetails)
-    )
+    ) ++
+    utrJsonToggled(partnership.utr, partnership.noUtrReason, "partnershipUniqueTaxReference", isToggleOn)
 
     //scalastyle:off magic.number
     if (partnership.haveMoreThanTenDirectorOrPartner || partnership.partnerDetails.lengthCompare(10) >= 0) {
@@ -107,20 +99,13 @@ object EstablishersTestJson extends OptionValues {
 
   def partnerJson(partner: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
-      "partnerDetails" -> Json.obj(
-        "firstName" -> partner.personalDetails.firstName,
-        "middleName" -> partner.personalDetails.middleName,
-        "lastName" -> partner.personalDetails.lastName,
-        "date" -> partner.personalDetails.dateOfBirth,
-        "isDeleted" -> isDeleted
-      ),
-      "partnerNino" -> ninoJson(partner.referenceOrNino, partner.noNinoReason),
-      "partnerUniqueTaxReference" -> utrJson(partner.utr, partner.noUtrReason),
       "partnerAddressId" -> addressJson(partner.correspondenceAddressDetails.addressDetails),
       "partnerContactDetails" -> contactDetailsJson(partner.correspondenceContactDetails.contactDetails),
       "partnerAddressYears" -> addressYearsJson(partner.previousAddressDetails),
-      "partnerPreviousAddress" -> previousAddressJson(partner.previousAddressDetails)
-    )
+      "partnerPreviousAddress" -> previousAddressJson(partner.previousAddressDetails)) ++
+      personJsonToggled(partner, isDeleted, "partnerDetails", isToggleOn) ++
+      ninoJsonToggled(partner.referenceOrNino, partner.noNinoReason, "partnerNino", isToggleOn) ++
+      utrJsonToggled(partner.utr, partner.noUtrReason, "partnerUniqueTaxReference", isToggleOn)
 
   def trusteeIndividualJson(individual: Individual, isDeleted: Boolean = false, isToggleOn: Boolean): JsObject =
     Json.obj(
@@ -128,9 +113,9 @@ object EstablishersTestJson extends OptionValues {
       "trusteeContactDetails" -> contactDetailsJson(individual.correspondenceContactDetails.contactDetails),
       "trusteeAddressYears" -> addressYearsJson(individual.previousAddressDetails),
       "trusteePreviousAddress" -> previousAddressJson(individual.previousAddressDetails)
-    ) ++ personJsonHnS(individual, isDeleted, "trusteeDetails", isToggleOn) ++
-      ninoJsonHnS(individual.referenceOrNino, individual.noNinoReason, "trusteeNino", isToggleOn) ++
-      utrJsonHnS(individual.utr, individual.noUtrReason, "uniqueTaxReference", isToggleOn)
+    ) ++ personJsonHnS(individual, isDeleted, "trusteeDetails") ++
+      ninoJsonHnS(individual.referenceOrNino, individual.noNinoReason, "trusteeNino") ++
+      utrJsonHnS(individual.utr, individual.noUtrReason, "uniqueTaxReference")
 
   def trusteeCompanyJson(company: CompanyTrustee, isDeleted: Boolean = true, isToggleOn: Boolean): JsObject =
     Json.obj(
@@ -141,8 +126,8 @@ object EstablishersTestJson extends OptionValues {
       "companyContactDetails" -> contactDetailsJson(company.correspondenceContactDetails.contactDetails),
       "trusteesCompanyAddressYears" -> addressYearsJson(company.previousAddressDetails),
       "companyPreviousAddress" -> previousAddressJson(company.previousAddressDetails)
-    ) ++ utrJsonHnS(company.utr, company.noUtrReason, "companyUniqueTaxReference", isToggleOn) ++
-      crnJsonHnS(company.crnNumber, company.noCrnReason, "companyRegistrationNumber", isToggleOn)
+    ) ++ utrJsonHnS(company.utr, company.noUtrReason, "companyUniqueTaxReference") ++
+      crnJsonHnS(company.crnNumber, company.noCrnReason, "companyRegistrationNumber")
 
   private def addressJson(address: Address) = {
     address match {
@@ -199,17 +184,7 @@ object EstablishersTestJson extends OptionValues {
       "isDeleted" -> isDeleted
     )
 
-  private def ninoJson(nino: Option[String], noNinoReason: Option[String]) =
-      nino match {
-        case Some(no) => Json.obj("value" -> no)
-        case _ =>
-          Json.obj(
-            "hasNino" -> false,
-            "reason" -> noNinoReason
-          )
-      }
-
-  def ninoJsonHnS(nino: Option[String], noNinoReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
+  private def ninoJsonToggled(nino: Option[String], noNinoReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
     if(isToggleOn) {
       nino match {
         case Some(no) => Json.obj(userAnswerBase -> Json.obj("value" -> no))
@@ -226,6 +201,12 @@ object EstablishersTestJson extends OptionValues {
       }
     }
 
+  def ninoJsonHnS(nino: Option[String], noNinoReason: Option[String], userAnswerBase: String): JsObject =
+      nino match {
+        case Some(no) => Json.obj(userAnswerBase -> Json.obj("value" -> no))
+        case _ => Json.obj("noNinoReason" -> noNinoReason)
+      }
+
   private def vatJson(vat: Option[String], isToggleOn: Boolean) =
     vat match {
       case Some(vat) => if(isToggleOn) Json.obj("value" -> vat) else Json.obj("vat" -> vat)
@@ -238,10 +219,7 @@ object EstablishersTestJson extends OptionValues {
       case _ => JsNull
     }
 
-  private def utrJson(utr: Option[String], noUtrReason: Option[String]) =
-    valueOrReason(utr, noUtrReason, "hasUtr", "utr")
-
-  def utrJsonHnS(utr: Option[String], noUtrReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
+  private def utrJsonToggled(utr: Option[String], noUtrReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
     if(isToggleOn) {
       (utr, noUtrReason) match {
         case (Some(utrValue), _) => Json.obj("utr" -> Json.obj("value" -> utrValue))
@@ -252,34 +230,21 @@ object EstablishersTestJson extends OptionValues {
       Json.obj(userAnswerBase -> valueOrReason(utr, noUtrReason, "hasUtr", "utr"))
     }
 
-  private def crnJson(crn: Option[String], noCrnReason: Option[String]) =
-      crn match {
-        case Some(regNo) => Json.obj("value" -> regNo)
-        case _ =>
-          Json.obj(
-            "hasCrn" -> false,
-            "reason" -> noCrnReason
-          )
+  def utrJsonHnS(utr: Option[String], noUtrReason: Option[String], userAnswerBase: String): JsObject =
+      (utr, noUtrReason) match {
+        case (Some(utrValue), _) => Json.obj("utr" -> Json.obj("value" -> utrValue))
+        case (_, Some(reason)) => Json.obj("noUtrReason" -> reason)
+        case _ => Json.obj()
       }
 
-  private def crnJsonHnS(crn: Option[String], noCrnReason: Option[String], userAnswerBase: String, isToggleOn: Boolean) =
-    if(isToggleOn)
+  private def crnJsonHnS(crn: Option[String], noCrnReason: Option[String], userAnswerBase: String): JsObject =
       crn match {
         case Some(regNo) => Json.obj(userAnswerBase -> Json.obj("value" -> regNo))
         case _ => Json.obj("noCrnReason" -> noCrnReason)
       }
-     else
-      crn match {
-        case Some(regNo) => Json.obj(userAnswerBase -> Json.obj("value" -> regNo))
-        case _ =>
-          Json.obj(userAnswerBase -> Json.obj(
-            "hasCrn" -> false,
-            "reason" -> noCrnReason
-          ))
-      }
 
 
-  private def valueOrReason(value: Option[String], reason: Option[String], hasField: String, valueField: String) =
+  private def valueOrReason(value: Option[String], reason: Option[String], hasField: String, valueField: String): JsObject =
     value match {
       case Some(v) =>
         Json.obj(
@@ -293,22 +258,30 @@ object EstablishersTestJson extends OptionValues {
         )
     }
 
-  private def personJsonHnS(person: Individual, isDeleted: Boolean, userAnswersBase: String, isToggleOn: Boolean) = {
-    if(isToggleOn)
+  private def personJsonHnS(person: Individual, isDeleted: Boolean, userAnswersBase: String) =
       Json.obj(userAnswersBase -> Json.obj(
         "firstName" -> person.personalDetails.firstName,
         "lastName" -> person.personalDetails.lastName,
         "isDeleted" -> isDeleted
       ),
       "dateOfBirth" -> person.personalDetails.dateOfBirth)
-      else
-    Json.obj(userAnswersBase -> Json.obj(
-      "firstName" -> person.personalDetails.firstName,
-      "middleName" -> person.personalDetails.middleName,
-      "lastName" -> person.personalDetails.lastName,
-      "date" -> person.personalDetails.dateOfBirth,
-      "isDeleted" -> isDeleted
-    ))
+
+  private def personJsonToggled(person: Individual, isDeleted: Boolean, userAnswersBase: String, isToggleOn: Boolean) = {
+    if(isToggleOn)
+      Json.obj(userAnswersBase -> Json.obj(
+        "firstName" -> person.personalDetails.firstName,
+        "lastName" -> person.personalDetails.lastName,
+        "isDeleted" -> isDeleted
+      ),
+        "dateOfBirth" -> person.personalDetails.dateOfBirth)
+    else
+      Json.obj(userAnswersBase -> Json.obj(
+        "firstName" -> person.personalDetails.firstName,
+        "middleName" -> person.personalDetails.middleName,
+        "lastName" -> person.personalDetails.lastName,
+        "date" -> person.personalDetails.dateOfBirth,
+        "isDeleted" -> isDeleted
+      ))
   }
 
 }

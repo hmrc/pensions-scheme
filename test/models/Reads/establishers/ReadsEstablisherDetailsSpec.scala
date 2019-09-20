@@ -29,8 +29,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
-        .build(), true, false),
-      false)
+        .build(), true, false))
 
   }
 
@@ -74,8 +73,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withUtr()
-        .build(), false, false),
-      false
+        .build(), false, false)
     )
 
   }
@@ -85,8 +83,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withCrn()
-        .build(), false, true),
-      true
+        .build(), false, true)
     )
 
   }
@@ -96,8 +93,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withVat()
-        .build(), false, true),
-      true
+        .build(), false, true)
     )
   }
 
@@ -106,8 +102,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withPaye()
-        .build(), false, true),
-      true
+        .build(), false, true)
     )
   }
 
@@ -116,8 +111,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withOtherDirectors(true)
-        .build(), false, false),
-      false
+        .build(), false, false)
     )
 
   }
@@ -127,8 +121,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withPreviousAddress()
-        .build(), false, false),
-      false
+        .build(), false, false)
     )
 
   }
@@ -137,8 +130,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
     companyDirectorTest(
       IndividualBuilder()
-        .build(),
-      false
+        .build()
     )
 
   }
@@ -148,8 +140,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     companyDirectorTest(
       IndividualBuilder(true)
         .withNino()
-        .build(),
-      true
+        .build()
     )
   }
 
@@ -158,8 +149,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     companyDirectorTest(
       IndividualBuilder()
         .withUtr()
-        .build(),
-      false
+        .build()
     )
 
   }
@@ -169,8 +159,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     companyDirectorTest(
       IndividualBuilder()
         .withPreviousAddress()
-        .build(),
-      false
+        .build()
     )
 
   }
@@ -315,13 +304,22 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "read a partnership wth a partner with minimal details" in {
+  it should "read a partnership wth a partner with minimal details with HnS toggle off" in {
 
     partnerTest(
       IndividualBuilder()
-        .build()
+        .build(),
+      false
     )
+  }
 
+  it should "read a partnership wth a partner with minimal details with HnS toggle on" in {
+
+    partnerTest(
+      IndividualBuilder()
+        .build(),
+      true
+    )
   }
 
   it should "read a partnership wth a partner with a Nino when HnS toggle off" in {
@@ -329,7 +327,8 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     partnerTest(
       IndividualBuilder()
         .withNino()
-        .build()
+        .build(),
+      false
     )
   }
 
@@ -338,16 +337,29 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     partnerTest(
       IndividualBuilder()
         .withNino()
-        .build()
+        .build(),
+      true
     )
   }
 
-  it should "read a partnership wth a partner with a UTR" in {
+  it should "read a partnership wth a partner with a UTR with the HnS toggle off" in {
 
     partnerTest(
       IndividualBuilder()
         .withUtr()
-        .build()
+        .build(),
+      false
+    )
+
+  }
+
+  it should "read a partnership wth a partner with a UTR with the HnS toggle on" in {
+
+    partnerTest(
+      IndividualBuilder()
+        .withUtr()
+        .build(),
+      true
     )
 
   }
@@ -357,7 +369,8 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
     partnerTest(
       IndividualBuilder()
         .withPreviousAddress()
-        .build()
+        .build(),
+      true
     )
 
   }
@@ -725,30 +738,29 @@ object ReadsEstablisherDetailsSpec extends Matchers {
   def establisherIndividualTest(establisher: (Individual, Boolean, Boolean), isToggleOn: Boolean): Assertion =
     establisherTest(Seq(establisher), Nil, Nil, Nil, Nil, isToggleOn)
 
-  def establisherCompanyTest(establisher: (CompanyEstablisher, Boolean, Boolean), isToggleOn: Boolean): Assertion =
-    establisherTest(Nil, Seq(establisher), Nil, Nil, Nil, isToggleOn)
+  def establisherCompanyTest(establisher: (CompanyEstablisher, Boolean, Boolean)): Assertion =
+    establisherTest(Nil, Seq(establisher), Nil, Nil, Nil, true)
 
   def establisherPartnershipTest(establisher: (Partnership, Boolean, Boolean), isToggleOn: Boolean): Assertion =
     establisherTest(Nil, Nil, Seq(establisher), Nil, Nil, isToggleOn)
 
-  def companyDirectorTest(director: Individual, isToggleOn: Boolean): Assertion = {
+  def companyDirectorTest(director: Individual): Assertion = {
 
     establisherCompanyTest(
       (CompanyEstablisherBuilder()
         .withDirectors(Seq(director))
-        .build(), false, isToggleOn)
-      , isToggleOn
+        .build(), false, true)
     )
 
   }
 
-  def partnerTest(partner: Individual): Assertion = {
+  def partnerTest(partner: Individual, isToggleOn: Boolean): Assertion = {
 
     establisherPartnershipTest(
       (PartnershipBuilder()
         .withPartners(Seq(partner))
-        .build(), false, false),
-      false
+        .build(), false, isToggleOn),
+      isToggleOn
     )
 
   }

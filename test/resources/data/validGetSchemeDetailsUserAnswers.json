@@ -3,14 +3,12 @@
   "establishers": [
     {
       "establisherDetails": {
-        "date": "1955-03-29",
         "firstName": "abcdef",
-        "lastName": "dfgfdgdfg",
-        "middleName": "fdgdgfggfdg"
+        "lastName": "dfgfdgdfg"
       },
-      "uniqueTaxReference": {
-        "hasUtr": true,
-        "utr": "1234567892"
+      "dateOfBirth": "1955-03-29",
+      "utr": {
+        "value": "1234567892"
       },
       "address": {
         "country": "GB",
@@ -30,6 +28,8 @@
       },
       "establisherKind": "individual",
       "addressYears": "under_a_year",
+      "hasNino": true,
+      "hasUtr": true,
       "establisherNino": {
         "value": "AA999999A"
       },
@@ -91,20 +91,18 @@
             "emailAddress": "abcfe@hmrc.gsi.gov.uk",
             "phoneNumber": "0044-09876542312"
           },
-          "partnerUniqueTaxReference": {
-            "hasUtr": true,
-            "utr": "1234567890"
+          "hasUtr": true,
+          "utr": {
+            "value": "1234567890"
           },
-          "partnerNino": {
+
             "hasNino": false,
-            "reason": "no Nino"
-          },
+            "noNinoReason": "no Nino",
           "partnerDetails": {
-            "date": "2001-03-29",
             "firstName": "abcdef partner",
-            "lastName": "dfgfdgdfg partner",
-            "middleName": "fdgdgfggfdg partner"
+            "lastName": "dfgfdgdfg partner"
           },
+          "dateOfBirth": "2001-03-29",
           "partnerAddressId": {
             "country": "GB",
             "postcode": "LE45RT",
@@ -119,15 +117,10 @@
       ],
       "establisherKind": "partnership",
       "isEstablisherComplete": true,
-      "isPartnershipCompleteId": true,
       "otherPartners": false,
       "partnershipAddressYears": "under_a_year",
-      "partnershipPaye": {
-        "hasPaye": false
-      },
-      "partnershipVat": {
-        "hasVat": false
-      },
+      "hasPaye": false,
+      "hasVat": false,
       "partnershipContactDetails": {
         "emailAddress": "abcfe@hmrc.gsi.gov.uk",
         "phoneNumber": "0044-09876542312"

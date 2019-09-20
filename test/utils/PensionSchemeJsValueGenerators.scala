@@ -217,12 +217,13 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
-        ++ (if(isEstablisher && !isToggleOn) ninoJsValue(referenceOrNino, "establisherNino") else
-            ninoJsValueHnS(referenceOrNino, "trusteeNino"))
+        ++ (if(isEstablisher && !isToggleOn) ninoJsValue(referenceOrNino, "establisherNino")
+            else if(isEstablisher) ninoJsValueHnS(referenceOrNino, "establisherNino")
+            else ninoJsValueHnS(referenceOrNino, "trusteeNino"))
         ++ (if(isEstablisher && !isToggleOn) utrJsValue(utr, "uniqueTaxReference") else
         utrJsValueHnS(utr, "uniqueTaxReference")) ++
         (if(!isEstablisher) getPersonName(firstName, lastName, date, "trusteeDetails")
-        else if(isEstablisher && isToggleOn)
+          else if(isEstablisher && isToggleOn)
           getPersonName(firstName, lastName, date, "establisherDetails")
         else
           Json.obj(
@@ -325,7 +326,6 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val uaPartners = if (isEstablisher) Json.obj("partner" -> partnerDetails.map(_._2)) else Json.obj()
     val desMoreThanTenPartner = if (isEstablisher) Json.obj("areMorethanTenPartners" -> areMorethanTenPartners) else Json.obj()
     val uaMoreThanTenPartner = if (isEstablisher) Json.obj("otherPartners" -> areMorethanTenPartners) else Json.obj()
-    val isPartnershipComplete = if (isEstablisher && !isToggleOn) Json.obj("isPartnershipCompleteId" -> true) else Json.obj()
     (
       Json.obj(
         "partnershipName" -> orgName,
@@ -347,12 +347,11 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         ++ userAnswersPreviousAddress.as[JsObject]
         ++ (if (isEstablisher && !isToggleOn) vatJsValue(vat, "partnershipVat") else vatJsValueHnS(vat, "partnershipVat"))
         ++ (if (isEstablisher && !isToggleOn) payeJsValue(paye, "partnershipPaye") else payeJsValueHnS(paye, "partnershipPaye"))
-        ++ isPartnershipComplete
         ++ uaMoreThanTenPartner
         ++ uaPartners
         ++ (if (isEstablisher && !isToggleOn) utrJsValue(utr, "partnershipUniqueTaxReference")
       else utrJsValueHnS(utr, "partnershipUniqueTaxReference"))
-      ++ (if (isEstablisher && !isToggleOn) Json.obj("isEstablisherComplete" -> true) else Json.obj())
+      ++ (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
     )
   }
 
@@ -449,13 +448,10 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                                    lastName: String,
                                    date: LocalDate,
                                    isToggleOn: Boolean): JsObject = {
-    if(directorOrPartner.contains("director") && isToggleOn)
+    if(directorOrPartner.contains("partner") && !isToggleOn)
+      Json.obj(s"${directorOrPartner}Details" -> getPersonalDetails(firstName, lastName, middleName, date))
+    else
       getPersonName(firstName, lastName, date, s"${directorOrPartner}Details")
-      else
-      Json.obj(
-        s"${directorOrPartner}Details" ->
-          getPersonalDetails(firstName, lastName, middleName, date)
-    )
   }
 
 
