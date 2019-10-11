@@ -19,7 +19,7 @@ package toggles
 class TogglesSpec extends FeatureToggleBehaviours {
 
   "is-hns-enabled new feature toggle" should {
-    behave like featureToggle("is-hns-enabled", false)
+    behave like featureToggle("is-hns-enabled", true)
   }
 
 }
