@@ -27,7 +27,6 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
-import utils.FakeFeatureSwitchManagementService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -90,8 +89,7 @@ object SchemeServiceImplSpec extends SpecBase {
       schemeConnector,
       barsConnector,
       auditService,
-      appConfig,
-      FakeFeatureSwitchManagementService(false)) {
+      appConfig) {
       override def registerScheme(psaId: String, json: JsValue)(
         implicit headerCarrier: HeaderCarrier,
         ec: ExecutionContext,

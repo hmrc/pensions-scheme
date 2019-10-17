@@ -18,7 +18,7 @@ package service
 
 import audit.{AuditService, SchemeList, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
-import config.{AppConfig, FeatureSwitchManagementService}
+import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
 import models.PensionsScheme.pensionSchemeHaveInvalidBank
 import models.ReadsEstablisherDetails._
@@ -29,14 +29,12 @@ import play.api.http.Status
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
-import utils.Toggles
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector,
-                                  auditService: AuditService, appConfig: AppConfig,
-                                  fs: FeatureSwitchManagementService) extends SchemeService {
+                                  auditService: AuditService, appConfig: AppConfig) extends SchemeService {
 
   override def listOfSchemes(psaId: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
@@ -101,7 +99,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
       declaration <- json.validate[A](readsDeclaration)
-      establishers <- json.validate[EstablisherDetails](readsEstablisherDetails(fs.get(Toggles.isHnSEnabled)))
+      establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
       trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
       changeOfEstablisherOrTrustDetails <- json.validate[Option[Boolean]]((JsPath \ "changeOfEstablisherOrTrustDetails").readNullable[Boolean])
     } yield {

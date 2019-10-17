@@ -19,7 +19,7 @@ package models.Transformers
 import models.jsonTransformations.{AddressTransformer, SchemeDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators}
+import utils.PensionSchemeJsValueGenerators
 
 class SchemeDetailsTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
 

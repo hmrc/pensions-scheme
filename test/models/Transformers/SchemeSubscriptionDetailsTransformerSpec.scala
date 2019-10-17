@@ -21,65 +21,48 @@ import models.jsonTransformations._
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.JsValue
-import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators}
+import utils.PensionSchemeJsValueGenerators
 
 class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
-  private def addressTransformer(isToggleOn: Boolean) =
+  private def addressTransformer =
     new AddressTransformer
 
-  private def directorOrPartnerTransformer(isToggleOn: Boolean) =
-    new DirectorsOrPartnersTransformer(addressTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
+  private def directorOrPartnerTransformer =
+    new DirectorsOrPartnersTransformer(addressTransformer)
 
-  private def schemeDetailsTransformer(isToggleOn: Boolean) =
-    new SchemeDetailsTransformer(addressTransformer(isToggleOn))
+  private def schemeDetailsTransformer =
+    new SchemeDetailsTransformer(addressTransformer)
 
-  private def establisherTransformer(isToggleOn: Boolean) =
-    new EstablisherDetailsTransformer(addressTransformer(isToggleOn), directorOrPartnerTransformer(isToggleOn), FakeFeatureSwitchManagementService(isToggleOn))
+  private def establisherTransformer =
+    new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
 
-  private def trusteesTransformer(isToggleOn: Boolean) =
-    new TrusteeDetailsTransformer(addressTransformer(isToggleOn))
+  private def trusteesTransformer =
+    new TrusteeDetailsTransformer(addressTransformer)
 
-  private def transformer(isToggleOn: Boolean = false) = new SchemeSubscriptionDetailsTransformer(
-    schemeDetailsTransformer(isToggleOn), establisherTransformer(isToggleOn),
-    trusteesTransformer(isToggleOn))
+  private def transformer = new SchemeSubscriptionDetailsTransformer(
+    schemeDetailsTransformer, establisherTransformer,
+    trusteesTransformer)
 
   private val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
-  private val userAnswersResponseToggleOff: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswersToggleOff.json")
   private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
   "A DES payload with full scheme subscription details " must {
     "have the details transformed correctly to valid user answers format" which {
 
-      s"uses generators when HnS toggle is on" in {
-        forAll(getSchemeDetailsGen(isToggleOn = true)) {
+      s"uses generators" in {
+        forAll(getSchemeDetailsGen) {
           schemeDetails => {
             val (desScheme, uaScheme) = schemeDetails
 
-            val result = desScheme.transform(transformer(isToggleOn = true).transformToUserAnswers).get
+            val result = desScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
           }
         }
-      }
-
-      s"uses generators when HnS toggle is off" in {
-        forAll(getSchemeDetailsGen()) {
-          schemeDetails => {
-            val (desScheme, uaScheme) = schemeDetails
-
-            val result = desScheme.transform(transformer().transformToUserAnswers).get
-            result mustBe uaScheme
-          }
-        }
-      }
-
-      s"uses request/response json when HnS toggle is on" in {
-        val result = desResponse.transform(transformer(true).transformToUserAnswers).get
-        result mustBe userAnswersResponse
       }
 
       s"uses request/response json" in {
-        val result = desResponse.transform(transformer().transformToUserAnswers).get
-        result mustBe userAnswersResponseToggleOff
+        val result = desResponse.transform(transformer.transformToUserAnswers).get
+        result mustBe userAnswersResponse
       }
     }
   }

@@ -16,11 +16,9 @@
 
 package models.jsonTransformations
 
-import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
-import utils.Toggles
 
 trait JsonTransformer {
 
@@ -30,28 +28,10 @@ trait JsonTransformer {
 
   def userAnswersIndividualDetailsReads(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
     (__ \ userAnswersPath \ 'firstName).json.copyFrom((desPath \ 'personDetails \ 'firstName).json.pick) and
-      ((__ \ userAnswersPath \ 'middleName).json.copyFrom((desPath \ 'personDetails \ 'middleName).json.pick) orElse doNothing) and
-      (__ \ userAnswersPath \ 'lastName).json.copyFrom((desPath \ 'personDetails \ 'lastName).json.pick) and
-      (__ \ userAnswersPath \ 'date).json.copyFrom((desPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
-
-  def userAnswersIndividualDetailsReadsHnS(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
-    (__ \ userAnswersPath \ 'firstName).json.copyFrom((desPath \ 'personDetails \ 'firstName).json.pick) and
       (__ \ userAnswersPath \ 'lastName).json.copyFrom((desPath \ 'personDetails \ 'lastName).json.pick) and
       (__ \ 'dateOfBirth).json.copyFrom((desPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
 
-  def userAnswersNinoReads(userAnswersPath: String, desPath: JsPath): Reads[JsObject] = {
-    (desPath \ "nino").read[String].flatMap { _ =>
-      (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) orElse doNothing
-    } orElse {
-      (__ \ userAnswersPath \ 'hasNino).json.put(JsBoolean(false)) and
-        (__ \ userAnswersPath \ 'reason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
-
-    } orElse {
-      doNothing
-    }
-  }
-
-  def userAnswersNinoReadsHnS(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
+  def userAnswersNinoReads(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
       (desPath \ "nino").read[String].flatMap { _ =>
         (__ \ 'hasNino).json.put(JsBoolean(true)) and
           (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) reduce
@@ -62,21 +42,7 @@ trait JsonTransformer {
         doNothing
       }
 
-  def userAnswersUtrReads(userAnswersBase: String, desPath: JsPath): Reads[JsObject] = {
-    (desPath \ "utr").read[String].flatMap { _ =>
-      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(true)) and
-        (__ \ userAnswersBase \ 'utr).json.copyFrom((desPath \ 'utr).json.pick) reduce
-
-    } orElse {
-
-      (__ \ userAnswersBase \ 'hasUtr).json.put(JsBoolean(false)) and
-        (__ \ userAnswersBase \ 'reason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
-    } orElse {
-      doNothing
-    }
-  }
-
-  def userAnswersUtrReadsHnS(userAnswersBase: String, desPath: JsPath): Reads[JsObject] =
+  def userAnswersUtrReads(desPath: JsPath): Reads[JsObject] =
       (desPath \ "utr").read[String].flatMap { _ =>
         (__ \ 'hasUtr).json.put(JsBoolean(true)) and
           (__ \ 'utr \ 'value).json.copyFrom((desPath \ 'utr).json.pick) reduce
@@ -95,20 +61,7 @@ trait JsonTransformer {
   def userAnswersCompanyDetailsReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'companyDetails \ 'companyName).json.copyFrom((desPath \ 'organisationName).json.pick)
 
-
-  def userAnswersCrnReads(desPath: JsPath): Reads[JsObject] = {
-    (desPath \ "crnNumber").read[String].flatMap { _ =>
-      (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) orElse doNothing
-    } orElse {
-
-      (__ \ 'companyRegistrationNumber \ 'hasCrn).json.put(JsBoolean(false)) and
-        (__ \ 'companyRegistrationNumber \ 'reason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
-    } orElse {
-      doNothing
-    }
-  }
-
-  def userAnswersCrnReadsHnS(desPath: JsPath): Reads[JsObject] =
+  def userAnswersCrnReads(desPath: JsPath): Reads[JsObject] =
       (desPath \ "crnNumber").read[String].flatMap { _ =>
         (__ \ 'hasCrn).json.put(JsBoolean(true)) and
           (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) reduce
@@ -124,27 +77,6 @@ trait JsonTransformer {
     (__ \ 'partnershipDetails \ 'name).json.copyFrom((desPath \ 'partnershipName).json.pick)
 
   def transformVatToUserAnswersReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
-    (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
-      (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(true)) and
-        (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
-    } orElse {
-      (__ \ userAnswersBase \ 'hasVat).json.put(JsBoolean(false))
-    } orElse {
-        doNothing
-      }
-
-  def userAnswersPayeReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
-    (desPath \ "payeReference").read[String].flatMap { _ =>
-      (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(true)) and
-        (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) reduce
-    } orElse {
-      (__ \ userAnswersBase \ 'hasPaye).json.put(JsBoolean(false))
-    } orElse {
-      doNothing
-    }
-
-
-  def transformVatToUserAnswersReadsHnS(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
       (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
         (__ \ 'hasVat).json.put(JsBoolean(true)) and
           (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
@@ -152,7 +84,7 @@ trait JsonTransformer {
         (__ \ 'hasVat).json.put(JsBoolean(false))
       }
 
-  def userAnswersPayeReadsHnS(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
+  def userAnswersPayeReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
       (desPath \ "payeReference").read[String].flatMap { _ =>
         (__ \ 'hasPaye).json.put(JsBoolean(true)) and
           (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) reduce

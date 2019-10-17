@@ -17,19 +17,16 @@
 package models.jsonTransformations
 
 import com.google.inject.Inject
-import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
-import utils.Toggles
 
-class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer,
-                                               fs: FeatureSwitchManagementService) extends JsonTransformer {
+class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
   def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
-      userAnswersIndividualDetailsReadsHnS("directorDetails", desPath) and
-      userAnswersNinoReadsHnS("directorNino", desPath) and
-      userAnswersUtrReadsHnS("directorUniqueTaxReference", desPath) and
+    userAnswersIndividualDetailsReads("directorDetails", desPath) and
+      userAnswersNinoReads("directorNino", desPath) and
+      userAnswersUtrReads(desPath) and
       addressTransformer.getDifferentAddress(__ \ 'directorAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'companyDirectorAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'previousAddress) and
@@ -38,18 +35,9 @@ class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransf
   }
 
   def userAnswersPartnerReads(desPath: JsPath): Reads[JsObject] =
-    (if(fs.get(Toggles.isHnSEnabled))
-      userAnswersIndividualDetailsReadsHnS("partnerDetails", desPath)
-    else
-      userAnswersIndividualDetailsReads("partnerDetails", desPath)) and
-    (if(fs.get(Toggles.isHnSEnabled))
-      userAnswersNinoReadsHnS("partnerNino", desPath)
-    else
-      userAnswersNinoReads("partnerNino", desPath)) and
-    (if(fs.get(Toggles.isHnSEnabled))
-      userAnswersUtrReadsHnS("partnerUniqueTaxReference", desPath)
-    else
-      userAnswersUtrReads("partnerUniqueTaxReference", desPath)) and
+    userAnswersIndividualDetailsReads("partnerDetails", desPath) and
+      userAnswersNinoReads("partnerNino", desPath) and
+      userAnswersUtrReads(desPath) and
       addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnerAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnerPreviousAddress) and

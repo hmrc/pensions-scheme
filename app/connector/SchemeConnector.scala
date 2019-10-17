@@ -20,7 +20,7 @@ import java.util.UUID.randomUUID
 
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
-import config.{AppConfig, FeatureSwitchManagementService}
+import config.AppConfig
 import models.jsonTransformations.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
@@ -64,7 +64,6 @@ class SchemeConnectorImpl @Inject()(
                                      auditService: AuditService,
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
-                                     fs: FeatureSwitchManagementService,
                                      schemeAuditService: SchemeAuditService
                                    ) extends SchemeConnector with HttpErrorFunctions {
 

@@ -16,7 +16,7 @@
 
 package models.Reads.trustees
 
-import models.Reads.establishers.EstablishersTestJson.{ninoJsonHnS, utrJsonHnS}
+import models.Reads.establishers.EstablishersTestJson.{ninoJson, utrJson}
 import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
@@ -366,12 +366,12 @@ object ReadsTrusteeDetailsSpec extends Samples {
       )
     )
     trusteeJson ++
-      trusteeDetailsHnS ++
-      utrJsonHnS(Some("1111111111"), None, "uniqueTaxReference") ++
-      ninoJsonHnS(Some("nino1234"), None, "trusteeNino")
+      trusteeDetails ++
+      utrJson(Some("1111111111"), None, "uniqueTaxReference") ++
+      ninoJson(Some("nino1234"), None, "trusteeNino")
   }
 
-  private def trusteeDetailsHnS =
+  private def trusteeDetails =
       Json.obj("trusteeDetails" -> Json.obj(
         "firstName" -> "John",
         "lastName" -> "Doe",
