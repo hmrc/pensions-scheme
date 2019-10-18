@@ -61,8 +61,7 @@ object ReadsEstablisherDetails {
     readsPersonDetails("establisherDetails") and
       (JsPath \ "address").read[Address] and
       (JsPath \ "contactDetails").read[ContactDetails] and
-      (JsPath \ "establisherNino").readNullable[String]((__ \ "value").read[String]).
-        orElse((JsPath \ "establisherNino" \ "nino").readNullable[String]) and
+      (JsPath \ "establisherNino").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "noNinoReason").readNullable[String] and
       (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "noUtrReason").readNullable[String] and
@@ -116,8 +115,7 @@ object ReadsEstablisherDetails {
     readsPersonDetails(userAnswersBase = "partnerDetails") and
       (JsPath \ "partnerAddressId").read[Address] and
       (JsPath \ "partnerContactDetails").read[ContactDetails] and
-      (JsPath \ "partnerNino").readNullable[String]((__ \ "value").read[String]).
-        orElse((JsPath \ "partnerNino" \ "nino").readNullable[String]) and
+      (JsPath \ "partnerNino").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "noNinoReason").readNullable[String] and
       (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "noUtrReason").readNullable[String] and
@@ -187,10 +185,8 @@ object ReadsEstablisherDetails {
 
   private def partnershipReads: Reads[PartnershipDetail] = (
     (JsPath \ "partnershipDetails" \ "name").read[String] and
-      (JsPath \ "partnershipVat").readNullable[String]((__ \ "value").read[String]).
-        orElse((JsPath \ "partnershipVat" \ "vat").readNullable[String]) and
-      (JsPath \ "partnershipPaye").readNullable[String]((__ \ "value").read[String]).
-        orElse((JsPath \ "partnershipPaye" \ "paye").readNullable[String]) and
+      (JsPath \ "partnershipVat").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "partnershipPaye").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "noUtrReason").readNullable[String] and
       (JsPath \ "partnershipAddress").read[Address] and

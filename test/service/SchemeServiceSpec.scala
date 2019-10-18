@@ -524,13 +524,11 @@ object SchemeServiceSpec extends SpecBase {
           "emailAddress" -> "test-email-address",
           "phoneNumber" -> "test-phone-number"
         ),
-        "uniqueTaxReference" -> Json.obj(),
         "address" -> Json.obj(
           "addressLine1" -> "test-address-line-1",
           "country" -> "test-country"
         ),
-        "addressYears" -> "test-address-years",
-        "establisherNino" -> Json.obj()
+        "addressYears" -> "test-address-years"
       )
     )
   )
