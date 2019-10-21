@@ -17,11 +17,9 @@
 package models.jsonTransformations
 
 import com.google.inject.Inject
-import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
-import utils.Toggles
 
 class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
@@ -43,9 +41,9 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
 
   def userAnswersTrusteeIndividualReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReadsHnS("trusteeDetails", desPath)and
-      userAnswersNinoReadsHnS("trusteeNino", desPath) and
-      userAnswersUtrReadsHnS("uniqueTaxReference", desPath) and
+      userAnswersIndividualDetailsReads("trusteeDetails", desPath)and
+      userAnswersNinoReads("trusteeNino", desPath) and
+      userAnswersUtrReads(desPath) and
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'trusteeAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'trusteePreviousAddress) and
@@ -54,10 +52,10 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
   def userAnswersTrusteeCompanyReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
       userAnswersCompanyDetailsReads(desPath) and
-      transformVatToUserAnswersReadsHnS(desPath, "companyVat") and
-      userAnswersPayeReadsHnS(desPath, "companyPaye") and
-      userAnswersCrnReadsHnS(desPath) and
-      userAnswersUtrReadsHnS("companyUniqueTaxReference", desPath) and
+      transformVatToUserAnswersReads(desPath, "companyVat") and
+      userAnswersPayeReads(desPath, "companyPaye") and
+      userAnswersCrnReads(desPath) and
+      userAnswersUtrReads(desPath) and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'trusteesCompanyAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
@@ -66,9 +64,9 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
   def userAnswersTrusteePartnershipReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and
       userAnswersPartnershipDetailsReads(desPath) and
-      transformVatToUserAnswersReadsHnS(desPath, "partnershipVat") and
-      userAnswersPayeReadsHnS(desPath, "partnershipPaye") and
-      userAnswersUtrReadsHnS("partnershipUniqueTaxReference", desPath) and
+      transformVatToUserAnswersReads(desPath, "partnershipVat") and
+      userAnswersPayeReads(desPath, "partnershipPaye") and
+      userAnswersUtrReads(desPath) and
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
       addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and

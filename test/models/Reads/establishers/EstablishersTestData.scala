@@ -251,7 +251,7 @@ case class IndividualBuilder(
 
 object IndividualBuilder {
 
-  def apply(isToggleOn: Boolean = false): IndividualBuilder =
+  def apply(): IndividualBuilder =
     IndividualBuilder(false, false, false)
 
 }

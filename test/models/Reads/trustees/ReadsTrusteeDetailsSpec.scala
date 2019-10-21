@@ -16,7 +16,7 @@
 
 package models.Reads.trustees
 
-import models.Reads.establishers.EstablishersTestJson.{ninoJsonHnS, utrJsonHnS}
+import models.Reads.establishers.EstablishersTestJson.{ninoJson, utrJson}
 import models._
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
@@ -82,56 +82,30 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
         result.organizationName mustEqual trusteePartnershipData.organizationName
       }
 
-        "have valid Vat number for variations" in {
+        "have valid Vat number" in {
           val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("value" -> "Vat12345"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustEqual trusteePartnershipData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
         }
 
-        "have valid Vat number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("vat" -> "Vat12345"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
-          result.vatRegistrationNumber mustEqual trusteePartnershipData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
-        }
-
-        "not have vat number for variations" in {
+        "not have vat number" in {
           val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson - "partnershipVat"))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
           result.vatRegistrationNumber mustBe None
         }
 
-        "not have vat number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipVat" -> Json.obj("hasVat" -> false))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
-          result.vatRegistrationNumber mustBe None
-        }
-
-        "have valid paye number for variations" in {
+        "have valid paye number" in {
           val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipPaye" ->
             Json.obj("value" -> "123AB56789"))))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
           result.payeReference mustEqual trusteePartnershipData.copy(payeReference = Some("123AB56789")).payeReference
         }
 
-        "have valid paye number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipPaye" ->
-            Json.obj("hasPaye" -> JsBoolean(true), "paye" -> "123AB56789"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
-          result.payeReference mustEqual trusteePartnershipData.copy(payeReference = Some("123AB56789")).payeReference
-        }
-
-        "not have paye number for variations" in {
+        "not have paye number" in {
           val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson - "partnershipPaye"))
           val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
           result.payeReference mustBe None
         }
-
-        "not have paye number for subscription" in {
-          val updatedJson = trusteeInputJson(Seq(trusteePartnershipJson + ("partnershipPaye" -> Json.obj("hasPaye" -> false))))
-          val result = updatedJson.as[TrusteeDetails](ReadsEstablisherDetails.readsTrusteeDetails).partnershipTrusteeDetail.head
-          result.payeReference mustBe None
-        }
-
 
       "we have valid utr" in {
         result.utr mustEqual trusteePartnershipData.utr
@@ -366,12 +340,12 @@ object ReadsTrusteeDetailsSpec extends Samples {
       )
     )
     trusteeJson ++
-      trusteeDetailsHnS ++
-      utrJsonHnS(Some("1111111111"), None, "uniqueTaxReference") ++
-      ninoJsonHnS(Some("nino1234"), None, "trusteeNino")
+      trusteeDetails ++
+      utrJson(Some("1111111111"), None, "uniqueTaxReference") ++
+      ninoJson(Some("nino1234"), None, "trusteeNino")
   }
 
-  private def trusteeDetailsHnS =
+  private def trusteeDetails =
       Json.obj("trusteeDetails" -> Json.obj(
         "firstName" -> "John",
         "lastName" -> "Doe",

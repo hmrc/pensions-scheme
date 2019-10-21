@@ -422,7 +422,7 @@ object SchemeServiceSpec extends SpecBase {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, FakeFeatureSwitchManagementService(false))
+      schemeConnector, barsConnector, auditService, appConfig)
   }
 
   trait TestFixture {
@@ -430,7 +430,7 @@ object SchemeServiceSpec extends SpecBase {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, FakeFeatureSwitchManagementService(false))
+      schemeConnector, barsConnector, auditService, appConfig)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
@@ -517,20 +517,18 @@ object SchemeServiceSpec extends SpecBase {
       Json.obj(
         "establisherDetails" -> Json.obj(
           "firstName" -> "test-first-name",
-          "lastName" -> "test-last-name",
-          "date" -> "1969-07-20"
+          "lastName" -> "test-last-name"
         ),
+        "dateOfBirth" -> "1969-07-20",
         "contactDetails" -> Json.obj(
           "emailAddress" -> "test-email-address",
           "phoneNumber" -> "test-phone-number"
         ),
-        "uniqueTaxReference" -> Json.obj(),
         "address" -> Json.obj(
           "addressLine1" -> "test-address-line-1",
           "country" -> "test-country"
         ),
-        "addressYears" -> "test-address-years",
-        "establisherNino" -> Json.obj()
+        "addressYears" -> "test-address-years"
       )
     )
   )
