@@ -162,7 +162,7 @@ implicitly
 
   def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
     if (encrypted) {
-      collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
+      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[DataEntry].map {
         _.map {
           dataEntry =>
             val dataAsString = new String(dataEntry.data.byteArray, StandardCharsets.UTF_8)
@@ -171,7 +171,7 @@ implicitly
         }
       }
     } else {
-      collection.find(BSONDocument("id" -> id)).one[JsonDataEntry].map {
+      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[JsonDataEntry].map {
         _.map {
           dataEntry =>
             dataEntry.data
@@ -182,14 +182,14 @@ implicitly
 
   def getLastUpdated(id: String)(implicit ec: ExecutionContext): Future[Option[DateTime]] = {
     if (encrypted) {
-      collection.find(BSONDocument("id" -> id)).one[DataEntry].map {
+      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[DataEntry].map {
         _.map {
           dataEntry =>
             dataEntry.lastUpdated
         }
       }
     } else {
-      collection.find(BSONDocument("id" -> id)).one[JsonDataEntry].map {
+      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[JsonDataEntry].map {
         _.map {
           dataEntry =>
             dataEntry.lastUpdated
