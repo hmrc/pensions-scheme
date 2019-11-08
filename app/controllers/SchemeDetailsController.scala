@@ -40,40 +40,14 @@ class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector,
       val id = request.headers.get("idNumber")
       val idPsa = request.headers.get("PSAId")
 
-      (idType, id, idPsa) match {
+      (idType,id, idPsa) match {
         case (Some(schemeIdType),Some(idNumber), Some(psaId)) =>
-
-          getSchemeIdentifiers(psaId, schemeIdType, idNumber).flatMap{
-            case (identifierType, identifierNumber) =>
-              schemeConnector.getSchemeDetails(psaId, identifierType, identifierNumber).map {
-                case Right(psaSchemeDetails) =>  Ok(psaSchemeDetails)
-                case Left(e) => result(e)
-              }
+          schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
+            case Right(psaSchemeDetails) =>  Ok(psaSchemeDetails)
+            case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }
-
-  private def getSchemeIdentifiers(psaId: String, schemeIdType: String, idNumber: String)
-                                  (implicit hc: HeaderCarrier, ec: ExecutionContext,
-                                   request: RequestHeader): Future[(String, String)] =
-    schemeService.listOfSchemes(psaId).map { httpResponse =>
-
-    val currentScheme = httpResponse.json.convertTo[ListOfSchemes]
-      .schemeDetail.map(_.filter(_.referenceNumber == idNumber))
-      .flatMap(_.headOption)
-
-    currentScheme match {
-      case Some(scheme) =>
-      val seqStatuses = Seq("Open", "Wound-up")
-      if (seqStatuses.contains(scheme.schemeStatus))
-        scheme.pstr.fold((schemeIdType, idNumber))(("pstr", _))
-      else
-        (schemeIdType, idNumber)
-
-      case _ =>  (schemeIdType, idNumber)
-    }
-  }
-
 }
