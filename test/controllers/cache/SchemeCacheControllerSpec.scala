@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.cache
 
 import akka.stream.Materializer
 import akka.util.ByteString
@@ -26,19 +26,18 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
-import play.api.libs.json.JodaWrites._
 import play.api.libs.json.Json
 import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.PensionsSchemeCacheRepository
+import repositories.SchemeCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.UnauthorizedException
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with GuiceOneAppPerSuite {
+class SchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with GuiceOneAppPerSuite {
 
   implicit lazy val mat: Materializer = app.materializer
 
@@ -47,18 +46,18 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
     "encrypted" -> encrypted
   )
 
-  val repo = mock[PensionsSchemeCacheRepository]
+  val repo = mock[SchemeCacheRepository]
   val authConnector = mock[AuthConnector]
   val cc = app.injector.instanceOf[ControllerComponents]
 
-  private class PensionsSchemeCacheControllerImpl(
-                                                   repo: PensionsSchemeCacheRepository,
+  private class SchemeCacheControllerImpl(
+                                                   repo: SchemeCacheRepository,
                                                    authConnector: AuthConnector,
                                                    encrypted: Boolean
-                                                 ) extends PensionsSchemeCacheController(configuration(encrypted), repo, authConnector, cc)
+                                                 ) extends SchemeCacheController(configuration(encrypted), repo, authConnector, cc)
 
-  def controller(repo: PensionsSchemeCacheRepository, authConnector: AuthConnector, encrypted: Boolean): PensionsSchemeCacheController = {
-    new PensionsSchemeCacheControllerImpl(repo, authConnector, encrypted)
+  def controller(repo: SchemeCacheRepository, authConnector: AuthConnector, encrypted: Boolean): SchemeCacheController = {
+    new SchemeCacheControllerImpl(repo, authConnector, encrypted)
   }
 
   // scalastyle:off method.length
@@ -226,7 +225,7 @@ class PensionsSchemeCacheControllerSpec extends WordSpec with MustMatchers with 
   }
   // scalastyle:on method.length
 
-  "PensionsSchemeCacheController" must {
+  "SchemeCacheController" must {
     behave like validCacheController(encrypted = false)
     behave like validCacheController(encrypted = true)
 

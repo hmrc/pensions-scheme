@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.cache
 
 import org.joda.time.DateTime
 import play.api.libs.json.JodaWrites._

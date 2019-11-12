@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.cache
 
 import akka.stream.Materializer
 import models.{SchemeLock, SchemeVariance, VarianceLock}
