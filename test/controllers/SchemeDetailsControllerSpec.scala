@@ -35,31 +35,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
-  val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  val mockSchemeService: SchemeService = mock[SchemeService]
-  val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeService, stubControllerComponents())
+  private val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
+  private val mockSchemeService: SchemeService = mock[SchemeService]
+  private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeService, stubControllerComponents())
   private val schemeIdType = "srn"
   private val idNumber = "00000000AA"
   private val psaId = "000"
-  val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
-  val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
-
-  private val listOfSchemesResponse = Json.parse("""
-    {
-      "processingDate": "2001-12-17T09:30:47Z",
-      "totalSchemesRegistered": "1",
-      "schemeDetail": [
-      {
-        "name": "abcdefghi",
-        "referenceNumber": "00000000AA",
-        "schemeStatus": "Open",
-        "pstr": "10000678RE",
-        "relationShip": "Primary",
-        "underAppeal": "Yes"
-      }
-      ]
-    }"""
-  )
+  private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
   before {
     reset(mockSchemeConnector)
@@ -73,10 +55,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
     "return OK when the scheme is registered successfully" in {
 
       val successResponse = userAnswersResponse
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq("pstr"), Matchers.eq("10000678RE"))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq("srn"), Matchers.eq("00000000AA"))(any(), any(), any())).thenReturn(
         Future.successful(Right(successResponse)))
-      when(mockSchemeService.listOfSchemes(Matchers.eq(psaId))(any(), any(), any())).thenReturn(Future.successful(
-        HttpResponse(OK, Some(listOfSchemesResponse))))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
 
@@ -118,9 +98,6 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
 
     "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
-
-      when(mockSchemeService.listOfSchemes(Matchers.eq(psaId))(any(), any(), any())).thenReturn(Future.successful(
-        HttpResponse(OK, Some(validResponse))))
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
