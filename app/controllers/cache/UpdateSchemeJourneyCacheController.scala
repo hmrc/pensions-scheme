@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.cache
 
 import com.google.inject.Inject
 import play.api.Configuration
 import play.api.mvc.ControllerComponents
-import repositories.PSAJourneyCacheRepository
+import repositories.UpdateSchemeCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
+
 import scala.concurrent.ExecutionContext
 
-class PSAJourneyCacheController @Inject()(
-                                           config: Configuration,
-                                           repository: PSAJourneyCacheRepository,
-                                           authConnector: AuthConnector,
-                                           cc: ControllerComponents
-                                         )(implicit ec: ExecutionContext) extends PensionsSchemeCacheController(config, repository, authConnector, cc)
+class UpdateSchemeJourneyCacheController @Inject()(
+                                                    config: Configuration,
+                                                    repository: UpdateSchemeCacheRepository,
+                                                    authConnector: AuthConnector,
+                                                    cc: ControllerComponents
+                                            )(implicit val ec: ExecutionContext) extends SchemeCacheController(config, repository, authConnector, cc)
