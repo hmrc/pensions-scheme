@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ implicitly
     }
     val selector = BSONDocument("id" -> id)
     val modifier = BSONDocument("$set" -> document)
-    collection.update(selector, modifier, upsert = true)
+    collection.update(ordered = false).one(selector, modifier, upsert = true)
       .map(_.ok)
   }
 
@@ -205,7 +205,7 @@ implicitly
   }
 
   def dropCollection()(implicit ec: ExecutionContext): Future[Unit] = {
-    collection.drop(false).map(_ => ())
+    collection.drop(failIfNotFound = false).map(_ => ())
   }
 
 }
