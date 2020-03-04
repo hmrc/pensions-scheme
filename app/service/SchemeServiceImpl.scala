@@ -21,7 +21,8 @@ import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
 import models.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.ReadsEstablisherDetails._
+import models.userAnswersToEtmp.ReadsEstablishers.readsEstablisherDetails
+import models.userAnswersToEtmp.ReadsTrustees.readsTrusteeDetails
 import models._
 import models.enumeration.SchemeType
 import play.api.Logger
