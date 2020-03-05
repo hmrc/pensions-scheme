@@ -14,109 +14,171 @@
  * limitations under the License.
  */
 
-package utils
+package models.userAnswersToEtmp
 
-import models.userAnswersToEtmp.ReadsEstablisherPartnership
+import models._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json._
 
 class ReadsEstablisherPartnershipSpec extends FreeSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
+  private def nullToNone(o: Option[JsValue]): Option[JsValue] = o.flatMap(jsValue => if (jsValue == JsNull) None else Some(jsValue))
 
-  implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
+  private def nonEmptyString: Gen[String] = Gen.alphaStr.suchThat(!_.isEmpty)
 
-  val partnershipGenerator: Gen[JsObject] =
-    for {
-      firstName <- arbitrary[String]
-      lastName <- arbitrary[String]
-      dateOfBirth <- arbitrary[String]
-      referenceOrNino <- arbitrary[Option[String]]
-      noNinoReason <- arbitrary[Option[String]]
-      utr <- arbitrary[Option[String]]
-      noUtrReason <- arbitrary[Option[String]]
-      correspondenceAddressDetails <- addressGen
-      addressYears <- arbitrary[String]
-      previousAddressDetails <- Gen.option(addressGen)
-      mobileNumber <- arbitrary[String]
-      emailAddress <- arbitrary[String]
-    } yield Json.obj(
-      "trusteeDetails" -> Json.obj(
-        "firstName" -> firstName,
-        "lastName" -> lastName
-      ),
-      "dateOfBirth" -> dateOfBirth,
-      "trusteeNino" -> Json.obj(
-        "value" -> referenceOrNino
-      ),
-      "noNinoReason" -> noNinoReason,
-      "utr" ->  Json.obj(
-        "value" -> utr
-      ),
-      "noUtrReason" -> noUtrReason,
-      "trusteeAddressId" -> correspondenceAddressDetails,
-      "trusteeAddressYears" -> addressYears,
-      "trusteePreviousAddress" -> previousAddressDetails,
-      "trusteeContactDetails" -> Json.obj(
-        "emailAddress" -> emailAddress,
-        "phoneNumber" -> mobileNumber
-      )
-    )
-
-
-  lazy val addressGen: Gen[JsObject] = Gen.oneOf(ukAddressGen, internationalAddressGen)
-
-  lazy val ukAddressGen: Gen[JsObject] = for {
-    line1 <- arbitrary[String]
-    line2 <- arbitrary[String]
-    line3 <- arbitrary[Option[String]]
-    line4 <- arbitrary[Option[String]]
-    postalCode <- arbitrary[String]
-  } yield Json.obj("addressLine1" -> line1, "addressLine2" -> line2, "addressLine3" ->line3,
+  private val ukAddressGen: Gen[JsObject] = for {
+    line1 <- nonEmptyString
+    line2 <- nonEmptyString
+    line3 <- Gen.option(nonEmptyString)
+    line4 <- Gen.option(nonEmptyString)
+    postalCode <- nonEmptyString
+  } yield Json.obj("addressLine1" -> line1, "addressLine2" -> line2, "addressLine3" -> line3,
     "addressLine4" -> line4, "country" -> "GB", "postalCode" -> postalCode)
 
-  lazy val internationalAddressGen: Gen[JsObject] = for {
-    line1 <- arbitrary[String]
-    line2 <- arbitrary[String]
-    line3 <- arbitrary[Option[String]]
-    line4 <- arbitrary[Option[String]]
-    countryCode <- arbitrary[String]
-  } yield Json.obj("addressLine1" -> line1, "addressLine2" -> line2, "addressLine3" ->line3,
+  private val internationalAddressGen: Gen[JsObject] = for {
+    line1 <- nonEmptyString
+    line2 <- nonEmptyString
+    line3 <- Gen.option(nonEmptyString)
+    line4 <- Gen.option(nonEmptyString)
+    countryCode <- nonEmptyString
+  } yield Json.obj("addressLine1" -> line1, "addressLine2" -> line2, "addressLine3" -> line3,
     "addressLine4" -> line4, "country" -> countryCode)
 
-  /** Going from UA to ETMP **/
+  private val addressGen: Gen[JsObject] = Gen.oneOf(ukAddressGen, internationalAddressGen)
+  private val addressYearsGen: Gen[String] = Gen.oneOf("over_a_year", "under_a_year")
+
+  private def codeJson(code: String, hasCode: Boolean): JsValue =
+    (code, hasCode) match {
+      case (_, true) => Json.obj("value" -> code)
+      case _ => JsNull
+    }
+
+  private def noCodeReasonJson(reason: String, hasCode: Boolean): JsValue =
+    (reason, hasCode) match {
+      case (_, false) => JsString(reason)
+      case _ => JsNull
+    }
+
+  private implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
+
+  private val partnershipGenerator: Gen[JsObject] =
+    for {
+      hasVat <- arbitrary[Boolean]
+      vat <- nonEmptyString
+      hasUtr <- arbitrary[Boolean]
+      utr <- nonEmptyString
+      noUtrReason <- nonEmptyString
+      hasPaye <- arbitrary[Boolean]
+      paye <- nonEmptyString
+      emailAddress <- nonEmptyString
+      phoneNumber <- nonEmptyString
+      hasBeenTrading <- arbitrary[Boolean]
+      addressDetails <- addressGen
+      previousAddressDetails <- addressGen
+      name <- nonEmptyString
+      addressYears <- addressYearsGen
+    } yield {
+      Json.obj(
+        "isEstablisherNew" -> true,
+        "hasVat" -> hasVat,
+        "partnershipVat" -> codeJson(vat, hasVat),
+        "hasUtr" -> hasUtr,
+        "utr" -> codeJson(utr, hasUtr),
+        "noUtrReason" -> noCodeReasonJson(noUtrReason, hasUtr),
+        "hasPaye" -> hasPaye,
+        "partnershipPaye" -> codeJson(paye, hasPaye),
+        "partnershipContactDetails" -> Json.obj(
+          "emailAddress" -> emailAddress,
+          "phoneNumber" -> phoneNumber
+        ),
+        "hasBeenTrading" -> hasBeenTrading,
+        "partnershipPreviousAddress" -> (if(hasBeenTrading && addressYears == "under_a_year") previousAddressDetails else JsNull),
+        "partnershipAddress" -> addressDetails,
+        "establisherKind" -> "partnership",
+        "partnershipDetails" -> Json.obj(
+          "name" -> name,
+          "isDeleted" -> false
+        ),
+        "partnershipAddressYears" -> addressYears
+      )
+    }
 
   "An establisher partnership" - {
     "must be read from valid data" in {
-      forAll(partnershipGenerator){
-        json =>
-          val model = json.as[Seq[Partnership]](ReadsEstablisherPartnership.readsEstablisherPartnerships)
+      forAll(partnershipGenerator) { json =>
+        val model = JsArray(Seq(json)).as[Seq[Partnership]](ReadsEstablisherPartnership.readsEstablisherPartnerships)
+        model.head.organizationName mustBe (json \ "partnershipDetails" \ "name").as[String]
+        if ((json \ "hasUtr").as[Boolean]) {
+          model.head.utr mustBe Option((json \ "utr" \ "value").as[String])
+          model.head.noUtrReason mustBe None
+        } else {
+          model.head.utr mustBe None
+          model.head.noUtrReason mustBe Option((json \ "noUtrReason").as[String])
+        }
 
-//          model.personalDetails.firstName mustBe (json \ "trusteeDetails" \ "firstName").as[String]
-//          model.personalDetails.lastName mustBe (json \ "trusteeDetails" \ "lastName").as[String]
-//          model.personalDetails.dateOfBirth mustBe (json \ "dateOfBirth").as[String]
+        if ((json \ "hasVat").as[Boolean]) {
+          model.head.vatRegistrationNumber mustBe Option((json \ "partnershipVat" \ "value").as[String])
+        } else {
+          model.head.vatRegistrationNumber mustBe None
+        }
+
+        if ((json \ "hasPaye").as[Boolean]) {
+          model.head.payeReference mustBe Option((json \ "partnershipPaye" \ "value").as[String])
+        } else {
+          model.head.payeReference mustBe None
+        }
+
+        if ((json \ "partnershipAddress" \ "country").as[String] == "GB") {
+          model.head.correspondenceAddressDetails.addressDetails mustBe UkAddress(
+            addressLine1 = (json \ "partnershipAddress" \ "addressLine1").as[String],
+            addressLine2 = nullToNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
+            addressLine3 = nullToNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
+            addressLine4 = nullToNone((json \ "partnershipAddress" \ "addressLine4").toOption).map(_.as[String]),
+            countryCode = "GB",
+            postalCode = (json \ "partnershipAddress" \ "postalCode").as[String]
+          )
+        } else {
+          model.head.correspondenceAddressDetails.addressDetails mustBe InternationalAddress(
+            addressLine1 = (json \ "partnershipAddress" \ "addressLine1").as[String],
+            addressLine2 = nullToNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
+            addressLine3 = nullToNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
+            addressLine4 = nullToNone((json \ "partnershipAddress" \ "addressLine4").toOption).map(_.as[String]),
+            countryCode = (json \ "partnershipAddress" \ "country").as[String],
+            postalCode = None
+          )
+        }
+
+        model.head.correspondenceContactDetails mustBe CorrespondenceContactDetails(ContactDetails(
+          telephone = (json \ "partnershipContactDetails" \ "phoneNumber").as[String],
+          email = (json \ "partnershipContactDetails" \ "emailAddress").as[String]
+        ))
+
+        if ((json \ "hasBeenTrading").as[Boolean] && (json \ "partnershipAddressYears").as[String] == "under_a_year") {
+          if ((json \ "partnershipPreviousAddress" \ "country").as[String] == "GB") {
+            model.head.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(UkAddress(
+              addressLine1 = (json \ "partnershipPreviousAddress" \ "addressLine1").as[String],
+              addressLine2 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
+              addressLine3 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
+              addressLine4 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine4").toOption).map(_.as[String]),
+              countryCode = "GB",
+              postalCode = (json \ "partnershipPreviousAddress" \ "postalCode").as[String]
+            ))
+          } else {
+            model.head.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(InternationalAddress(
+              addressLine1 = (json \ "partnershipPreviousAddress" \ "addressLine1").as[String],
+              addressLine2 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
+              addressLine3 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
+              addressLine4 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine4").toOption).map(_.as[String]),
+              countryCode = (json \ "partnershipPreviousAddress" \ "country").as[String],
+              postalCode = None
+            ))
+          }
+        } else {
+          model.head.previousAddressDetails mustBe None
+        }
       }
     }
-
-//    "must read nino when it is present" in {
-//      forAll(partnershipGenerator, arbitrary[String]){
-//        (json, nino) =>
-//          val newJson  = json + ("trusteeNino" -> Json.obj("value" -> nino))
-//          val model = newJson.as[Individual](ReadsEstablisherDetails.readsTrusteeIndividual)
-//          model.referenceOrNino.value mustBe (newJson \ "trusteeNino" \ "value").as[String]
-//      }
-//    }
-//
-//    "must read utr when it is present" in {
-//      forAll(partnershipGenerator, arbitrary[String]){
-//        (json, utr) =>
-//          val newJson  = json + ("utr" -> Json.obj("value" -> utr))
-//          val model = newJson.as[Individual](ReadsEstablisherDetails.readsTrusteeIndividual)
-//          model.utr.value mustBe (newJson \ "utr" \ "value").as[String]
-//      }
-//    }
   }
-
-
 }
