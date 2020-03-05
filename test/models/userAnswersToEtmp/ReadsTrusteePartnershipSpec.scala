@@ -109,7 +109,9 @@ class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with Genera
     "must be read from valid data" in {
       forAll(partnershipGenerator) { json =>
         val model = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships)
+
         model.head.organizationName mustBe (json \ "partnershipDetails" \ "name").as[String]
+
         if ((json \ "hasUtr").as[Boolean]) {
           model.head.utr mustBe Option((json \ "utr" \ "value").as[String])
           model.head.noUtrReason mustBe None
