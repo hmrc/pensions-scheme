@@ -36,7 +36,7 @@ object ReadsTrusteePartnership {
         payeReference = partnership.paye,
         correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
         correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
-        previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress)
+        previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress, partnership.tradingTime)
       )
     )
 
