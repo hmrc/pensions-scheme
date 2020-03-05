@@ -19,8 +19,8 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
-import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
+import models.userAnswersToEtmp.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.userAnswersToEtmp.establisher.EstablisherDetails
 import models.userAnswersToEtmp.trustee.TrusteeDetails
 import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
