@@ -17,10 +17,8 @@
 package models.userAnswersToEtmp
 
 import models._
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import ReadsEstablisherIndividual.readsEstablisherIndividuals
 
 import scala.annotation.tailrec
 
@@ -30,6 +28,7 @@ object ReadsCommon {
                              tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
 
     val tradingTimeAnswer = tradingTime.getOrElse(true)
+
     if (addressYears == "under_a_year" && tradingTimeAnswer) {
       Some(
         PreviousAddressDetails(isPreviousAddressLast12Month = true, previousAddress)
@@ -80,7 +79,7 @@ object ReadsCommon {
       (JsPath \ "companyRegistrationNumber").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "noCrnReason").readNullable[String] and
       (JsPath \ "companyAddress").read[Address] and
-      (JsPath \ "companyContactDetails").read[ContactDetails] and
+      (JsPath \ "companyContactDetails").read[ContactDetails](readsContactDetails) and
       (JsPath \ "hasBeenTrading").readNullable[Boolean] and
       (JsPath \ "companyPreviousAddress").readNullable[Address] and
       ((JsPath \ "companyAddressYears").read[String] orElse (JsPath \ "trusteesCompanyAddressYears").read[String])
@@ -89,7 +88,7 @@ object ReadsCommon {
 
 
   case class PartnershipDetail(name: String, vat: Option[String], paye: Option[String], utr: Option[String], utrReason: Option[String],
-                               address: Address, contact: ContactDetails, addressYears: String, previousAddress: Option[Address])
+                               address: Address, contact: ContactDetails, tradingTime: Option[Boolean], addressYears: String, previousAddress: Option[Address])
 
   def partnershipReads: Reads[PartnershipDetail] = (
     (JsPath \ "partnershipDetails" \ "name").read[String] and
@@ -99,6 +98,7 @@ object ReadsCommon {
       (JsPath \ "noUtrReason").readNullable[String] and
       (JsPath \ "partnershipAddress").read[Address] and
       (JsPath \ "partnershipContactDetails").read[ContactDetails] and
+      (JsPath \ "hasBeenTrading").readNullable[Boolean] and
       (JsPath \ "partnershipAddressYears").read[String] and
       (JsPath \ "partnershipPreviousAddress").readNullable[Address]
     ) (PartnershipDetail.apply _)
