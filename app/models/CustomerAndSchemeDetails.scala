@@ -17,8 +17,8 @@
 package models
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: Option[String],
                                     otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,
@@ -31,18 +31,12 @@ case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boo
 object CustomerAndSchemeDetails {
   implicit val formats: Format[CustomerAndSchemeDetails] = Json.format[CustomerAndSchemeDetails]
 
-  def insurerReads: Reads[(Option[String], Option[String])] = (
-    ((JsPath \ "companyName").readNullable[String] and
-      (JsPath \ "policyNumber").readNullable[String])
-      ((companyName, policyNumber) => (companyName, policyNumber))
-    )
-
-  def schemeTypeReads: Reads[(String, Option[String])] = (
+  private val schemeTypeReads: Reads[(String, Option[String])] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "schemeTypeDetails").readNullable[String]
     ) ((name, schemeDetails) => (name, schemeDetails))
 
-  def apiReads: Reads[CustomerAndSchemeDetails] = (
+  val apiReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeName").read[String] and
       (JsPath \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
@@ -60,16 +54,16 @@ object CustomerAndSchemeDetails {
     ) (
     (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
      occupationalPension, securedBenefits, benefits, country, insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged) => {
+      val (schemeName, otherScheme) = schemeType
+      val isMasterTrust = schemeName == "master"
 
-      val isMasterTrust = schemeType._1 == "master"
-
-      val schemeTypeName = if (isMasterTrust) None else Some(SchemeType.valueWithName(schemeType._1))
+      val schemeTypeName = if (isMasterTrust) None else Some(SchemeType.valueWithName(schemeName))
 
       CustomerAndSchemeDetails(
         schemeName = name,
         isSchemeMasterTrust = isMasterTrust,
         schemeStructure = schemeTypeName,
-        otherSchemeStructure = schemeType._2,
+        otherSchemeStructure = otherScheme,
         haveMoreThanTenTrustee = moreThanTenTrustees,
         currentSchemeMembers = SchemeMembers.valueWithName(membership),
         futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),

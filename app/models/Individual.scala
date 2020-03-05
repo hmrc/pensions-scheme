@@ -16,7 +16,9 @@
 
 package models
 
-import play.api.libs.json.{Format, JsPath, Json, Writes}
+import models.userAnswersToEtmp.ReadsCommon
+import models.userAnswersToEtmp.ReadsCommon.{readsContactDetails, readsPersonDetails}
+import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 case class Individual(
@@ -32,6 +34,29 @@ case class Individual(
 
 object Individual {
   implicit val formats: Format[Individual] = Json.format[Individual]
+
+  val readsEstablisherIndividual: Reads[Individual] = (
+    readsPersonDetails("establisherDetails") and
+      (JsPath \ "address").read[Address] and
+      (JsPath \ "contactDetails").read[ContactDetails](readsContactDetails) and
+      (JsPath \ "establisherNino").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noNinoReason").readNullable[String] and
+      (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noUtrReason").readNullable[String] and
+      (JsPath \ "addressYears").read[String] and
+      (JsPath \ "previousAddress").readNullable[Address]
+    ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
+    Individual(
+      personalDetails = personalDetails,
+      referenceOrNino = nino,
+      noNinoReason = noNinoReason,
+      utr = utr,
+      noUtrReason = noUtrReason,
+      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
+      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
+      previousAddressDetails = ReadsCommon.previousAddressDetails(addressYears, previousAddress)
+    )
+  )
 
   private val commonIndividualWrites: Writes[(Option[String], Option[String], Option[String],
     Option[String], CorrespondenceAddressDetails, CorrespondenceContactDetails, PreviousAddressDetails)] = (

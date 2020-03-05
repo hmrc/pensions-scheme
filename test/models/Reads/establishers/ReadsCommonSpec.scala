@@ -16,12 +16,10 @@
 
 package models.Reads.establishers
 
-import models.userAnswersToEtmp.ReadsCommon._
 import models._
+import models.userAnswersToEtmp.ReadsCommon._
 import org.scalatest.{Assertion, FlatSpec, Matchers}
 import play.api.libs.json._
-import models.userAnswersToEtmp.ReadsEstablishers.readsEstablisherDetails
-import models.userAnswersToEtmp.ReadsTrustees.readsTrusteeDetails
 
 class ReadsCommonSpec extends FlatSpec with Matchers {
 
@@ -693,7 +691,7 @@ object ReadsCommonSpec extends Matchers {
       companyOrOrganization = companyEstablisher.map(_._1),
       partnership = Nil
     )
-    json.validate(readsEstablisherDetails).fold(
+    json.validate(EstablisherDetails.readsEstablisherDetails).fold(
       errors => fail(s"JSON errors: $errors"),
       actual => actual shouldBe expectedEstablishers
     )
@@ -715,7 +713,7 @@ object ReadsCommonSpec extends Matchers {
       companyOrOrganization = Nil,
       partnership = partnershipEstablisher.map(_._1)
     )
-    json.validate(readsEstablisherDetails).fold(
+    json.validate(EstablisherDetails.readsEstablisherDetails).fold(
       errors => fail(s"JSON errors: $errors"),
       actual => actual shouldBe expectedEstablishers
     )
@@ -772,7 +770,7 @@ object ReadsCommonSpec extends Matchers {
       partnership = establisherPartnerships
     )
 
-    json.validate(readsEstablisherDetails).fold(
+    json.validate(EstablisherDetails.readsEstablisherDetails).fold(
       errors => fail(s"JSON errors: $errors"),
       actual => actual shouldBe expectedEstablishers
     )
@@ -783,7 +781,7 @@ object ReadsCommonSpec extends Matchers {
       partnershipTrusteeDetail = trusteePartnerships
     )
 
-    json.validate(readsTrusteeDetails).fold(
+    json.validate(TrusteeDetails.readsTrusteeDetails).fold(
       errors => fail(s"JSON errors: $errors"),
       actual => actual shouldBe expectedTrustees
     )

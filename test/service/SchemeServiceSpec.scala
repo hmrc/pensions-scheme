@@ -29,7 +29,7 @@ import play.api.libs.json.{__, _}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
-import utils.{FakeFeatureSwitchManagementService, Lens}
+import utils.Lens
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -91,7 +91,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     actual.left.toOption.map(_.message).getOrElse("") shouldBe "Invalid bank account details"
   }
 
-  "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
+/*  "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
 
     testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads) shouldBe a[Right[_, PensionsScheme]]
 
@@ -125,7 +125,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
     testFixture().schemeService.transformJsonToModel(Json.obj(), PensionSchemeDeclaration.apiReads) shouldBe a[Left[BadRequestException, _]]
 
-  }
+  }*/
 
   "registerScheme" should "return the result of submitting the pensions scheme" in {
 
@@ -535,11 +535,10 @@ object SchemeServiceSpec extends SpecBase {
 
   def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
 
-    service.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads).fold(
-      ex => throw ex,
+    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.apiReads).fold(
+      error => throw new BadRequestException(""),
       scheme => Json.toJson(scheme)
     )
-
   }
 
   val schemeUpdateRequestJson = Json.parse(

@@ -21,8 +21,6 @@ import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
 import models.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.ReadsEstablishers.readsEstablisherDetails
-import models.userAnswersToEtmp.ReadsTrustees.readsTrusteeDetails
 import models._
 import models.enumeration.SchemeType
 import play.api.Logger
@@ -58,9 +56,14 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
-    transformJsonToModel(json, PensionSchemeDeclaration.apiReads).fold(
-      error => Future.failed(error),
-      validPensionsScheme =>
+    json.validate[PensionsScheme](PensionsScheme.apiReads).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          Logger.warn("Invalid pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid pension scheme"))
+      },
+      valid = { validPensionsScheme =>
         readBankAccount(json).fold(
           error => Future.failed(error),
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
@@ -73,15 +76,20 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
               }
           }
         )
+      }
     )
-
   }
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
                                                          ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-    transformJsonToModel(json, PensionSchemeUpdateDeclaration.reads).fold(
-      error => Future.failed(error),
-      validPensionsScheme => {
+    json.validate[PensionsScheme](PensionsScheme.apiReads).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          Logger.warn("Invalid pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid pension scheme"))
+      },
+      valid = { validPensionsScheme =>
         val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
         Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
         schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
@@ -92,6 +100,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
         }
       })
   }
+/*
 
   private[service] def transformJsonToModel[A<:Declaration](json: JsValue, readsDeclaration: Reads[A]): Either[BadRequestException, PensionsScheme] = {
 
@@ -116,6 +125,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
       scheme => Right(scheme)
     )
   }
+*/
 
   private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {
 

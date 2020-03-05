@@ -16,7 +16,10 @@
 
 package models
 
-import play.api.libs.json.{Format, JsPath, Json, Writes}
+import models.userAnswersToEtmp.ReadsEstablisherCompany.readsEstablisherCompanies
+import models.userAnswersToEtmp.ReadsEstablisherIndividual.readsEstablisherIndividuals
+import models.userAnswersToEtmp.ReadsEstablisherPartnership.readsEstablisherPartnerships
+import play.api.libs.json._
 import play.api.libs.json.Writes.seq
 import play.api.libs.functional.syntax._
 
@@ -28,6 +31,18 @@ case class EstablisherDetails(
 
 object EstablisherDetails {
   implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
+
+  val readsEstablisherDetails: Reads[EstablisherDetails] = (
+    (JsPath \ "establishers").readNullable(readsEstablisherIndividuals) and
+      (JsPath \ "establishers").readNullable(readsEstablisherCompanies) and
+      (JsPath \ "establishers").readNullable(readsEstablisherPartnerships)
+    ) ((establisherIndividuals, establisherCompanies, establisherPartnerships) =>
+    EstablisherDetails(
+      individual = establisherIndividuals.getOrElse(Nil),
+      companyOrOrganization = establisherCompanies.getOrElse(Nil),
+      partnership = establisherPartnerships.getOrElse(Nil)
+    )
+  )
 
   val updateWrites: Writes[EstablisherDetails] = (
     (JsPath \ "individualDetails").writeNullable(seq(Individual.individualUpdateWrites)) and

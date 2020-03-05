@@ -16,8 +16,8 @@
 
 package models.userAnswersToEtmp
 
-import models.userAnswersToEtmp.ReadsCommon.{previousAddressDetails, readsContactDetails, readsFiltered, readsPersonDetails}
 import models._
+import models.userAnswersToEtmp.ReadsCommon.{previousAddressDetails, readsFiltered, readsPersonDetails, readsContactDetails}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Reads, __}
 

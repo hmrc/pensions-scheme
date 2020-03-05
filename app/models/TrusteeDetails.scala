@@ -16,7 +16,10 @@
 
 package models
 
-import play.api.libs.json.{Format, JsPath, Json, Writes}
+import models.userAnswersToEtmp.ReadsTrusteeCompany.readsTrusteeCompanies
+import models.userAnswersToEtmp.ReadsTrusteeIndividual.readsTrusteeIndividuals
+import models.userAnswersToEtmp.ReadsTrusteePartnership.readsTrusteePartnerships
+import play.api.libs.json._
 import play.api.libs.json.Writes.seq
 import play.api.libs.functional.syntax._
 
@@ -27,6 +30,18 @@ case class TrusteeDetails(
                          )
 object TrusteeDetails {
   implicit val formats : Format[TrusteeDetails] = Json.format[TrusteeDetails]
+
+  val readsTrusteeDetails: Reads[TrusteeDetails] = (
+    (JsPath \ "trustees").readNullable(readsTrusteeIndividuals) and
+      (JsPath \ "trustees").readNullable(readsTrusteeCompanies) and
+      (JsPath \ "trustees").readNullable(readsTrusteePartnerships)
+    ) ((trusteeIndividuals, trusteeCompanies, trusteePartnerships) =>
+    TrusteeDetails(
+      individualTrusteeDetail = trusteeIndividuals.getOrElse(Nil),
+      companyTrusteeDetail = trusteeCompanies.getOrElse(Nil),
+      partnershipTrusteeDetail = trusteePartnerships.getOrElse(Nil)
+    )
+  )
 
   val updateWrites : Writes[TrusteeDetails] = (
     (JsPath \ "individualDetails").writeNullable(seq(Individual.individualUpdateWrites)) and
