@@ -80,7 +80,7 @@ object ReadsCommon {
       (JsPath \ "companyRegistrationNumber").readNullable[String]((__ \ "value").read[String]) and
       (JsPath \ "noCrnReason").readNullable[String] and
       (JsPath \ "companyAddress").read[Address] and
-      (JsPath \ "companyContactDetails").read[ContactDetails] and
+      (JsPath \ "companyContactDetails").read[ContactDetails](readsContactDetails) and
       (JsPath \ "hasBeenTrading").readNullable[Boolean] and
       (JsPath \ "companyPreviousAddress").readNullable[Address] and
       ((JsPath \ "companyAddressYears").read[String] orElse (JsPath \ "trusteesCompanyAddressYears").read[String])
