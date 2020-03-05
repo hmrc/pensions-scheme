@@ -138,83 +138,6 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
       }
     }
 
-    "read one trustee company details" when {
-      val result = trusteeInputJson(Seq(trusteeCompanyJson)).as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-
-      "we have valid organisation name" in {
-        result.organizationName mustEqual trusteeCompanyData.organizationName
-      }
-
-        "have valid Vat number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyVat" -> Json.obj("value" -> "Vat12345"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-          result.vatRegistrationNumber mustEqual trusteeCompanyData.copy(vatRegistrationNumber = Some("Vat12345")).vatRegistrationNumber
-        }
-
-        "have valid Paye number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyPaye" -> Json.obj("value" -> "Paye12345"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-          result.payeReference mustEqual trusteeCompanyData.copy(payeReference = Some("Paye12345")).payeReference
-        }
-
-        "have valid crn" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson + ("companyRegistrationNumber" -> Json.obj("value" -> "Crn12345"))))
-          val result = updatedJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-          result.crnNumber mustEqual trusteeCompanyData.copy(crnNumber = Some("Crn12345")).crnNumber
-        }
-
-        "not have vat number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson - "companyVat"))
-          val result = updatedJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-          result.vatRegistrationNumber mustBe None
-        }
-
-        "don't have crn but a valid no crn reason for variations/subscription" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson - "companyRegistrationNumber" +
-          ("hasCrn" -> JsBoolean(false)) + ("noCrnReason" -> JsString("No Crn"))))
-        val result = inputJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-        result.crnNumber mustBe None
-        result.noCrnReason.value mustEqual "No Crn"
-      }
-
-        "not have paye number" in {
-          val updatedJson = trusteeInputJson(Seq(trusteeCompanyJson - "companyPaye"))
-          val result = updatedJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-          result.payeReference mustBe None
-        }
-
-      "we have a valid utr" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson - "companyUniqueTaxReference" + ("utr" -> Json.obj("value" -> JsString("1234567890")))))
-        val result = inputJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-        result.utr mustBe Some("1234567890")
-      }
-
-      "we don't have utr but a valid no utr reason" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson - "utr" + ("noUtrReason" -> JsString("No Utr"))))
-        val result = inputJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-        result.utr mustBe None
-        result.noUtrReason.value mustEqual "No Utr"
-      }
-
-      "we have valid UK address" in {
-        result.correspondenceAddressDetails mustEqual trusteeCompanyData.correspondenceAddressDetails
-      }
-
-      "we have address years less than 12 months with previous address" in {
-        result.previousAddressDetails mustEqual trusteeCompanyData.previousAddressDetails
-      }
-
-      "we have address years more than 12 months without UK previous address" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson + ("trusteesCompanyAddressYears" -> JsString("over_a_year"))))
-        val result = inputJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail.head
-        result.previousAddressDetails mustBe None
-      }
-
-      "we have valid contact details" in {
-        result.correspondenceContactDetails mustEqual trusteeCompanyData.correspondenceContactDetails
-      }
-    }
-
     "read multiple trustees " when {
 
       "we have two trustee partnerships" in {
@@ -248,20 +171,6 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
           "date" -> JsString("2019-01-31"), "isDeleted" -> JsBoolean(true)))))
         val result = inputJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).individualTrusteeDetail
         result mustEqual Seq(trusteeIndividualData)
-      }
-
-      "we have two trustee companies" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson, trusteeCompanyJson ++ Json.obj("companyDetails" -> Json.obj(
-          "companyName" -> "test company two", "isDeleted" -> JsBoolean(false)))))
-        val result = inputJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail
-        result mustEqual Seq(trusteeCompanyData, trusteeCompanyData.copy(organizationName = "test company two"))
-      }
-
-      "we have two trustee companies one of them is deleted" in {
-        val inputJson = trusteeInputJson(Seq(trusteeCompanyJson, trusteeCompanyJson ++ Json.obj("companyDetails" -> Json.obj(
-          "companyName" -> "test company two", "isDeleted" -> JsBoolean(true)))))
-        val result = inputJson.as[TrusteeDetails](ReadsTrustees.readsTrusteeDetails).companyTrusteeDetail
-        result mustEqual Seq(trusteeCompanyData)
       }
 
       "we have one trustee individual, one company and one partnership" in {
