@@ -24,7 +24,7 @@ import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import play.api.libs.json._
 
 class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
-  private def nullToNone(o: Option[JsValue]): Option[JsValue] = o.flatMap(jsValue => if (jsValue == JsNull) None else Some(jsValue))
+  private def jsValueOrNone(o: Option[JsValue]): Option[JsValue] = o.flatMap(jsValue => if (jsValue == JsNull) None else Some(jsValue))
 
   private def nonEmptyString: Gen[String] = Gen.alphaStr.suchThat(!_.isEmpty)
 
@@ -135,18 +135,18 @@ class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with Genera
         if ((json \ "partnershipAddress" \ "country").as[String] == "GB") {
           transformedTrustee.correspondenceAddressDetails.addressDetails mustBe UkAddress(
             addressLine1 = (json \ "partnershipAddress" \ "addressLine1").as[String],
-            addressLine2 = nullToNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
-            addressLine3 = nullToNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
-            addressLine4 = nullToNone((json \ "partnershipAddress" \ "addressLine4").toOption).map(_.as[String]),
+            addressLine2 = jsValueOrNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
+            addressLine3 = jsValueOrNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
+            addressLine4 = jsValueOrNone((json \ "partnershipAddress" \ "addressLine4").toOption).map(_.as[String]),
             countryCode = "GB",
             postalCode = (json \ "partnershipAddress" \ "postalCode").as[String]
           )
         } else {
           transformedTrustee.correspondenceAddressDetails.addressDetails mustBe InternationalAddress(
             addressLine1 = (json \ "partnershipAddress" \ "addressLine1").as[String],
-            addressLine2 = nullToNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
-            addressLine3 = nullToNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
-            addressLine4 = nullToNone((json \ "partnershipAddress" \ "addressLine4").toOption).map(_.as[String]),
+            addressLine2 = jsValueOrNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
+            addressLine3 = jsValueOrNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
+            addressLine4 = jsValueOrNone((json \ "partnershipAddress" \ "addressLine4").toOption).map(_.as[String]),
             countryCode = (json \ "partnershipAddress" \ "country").as[String],
             postalCode = None
           )
@@ -161,18 +161,18 @@ class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with Genera
           if ((json \ "partnershipPreviousAddress" \ "country").as[String] == "GB") {
             transformedTrustee.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(UkAddress(
               addressLine1 = (json \ "partnershipPreviousAddress" \ "addressLine1").as[String],
-              addressLine2 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
-              addressLine3 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
-              addressLine4 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine4").toOption).map(_.as[String]),
+              addressLine2 = jsValueOrNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
+              addressLine3 = jsValueOrNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
+              addressLine4 = jsValueOrNone((json \ "partnershipPreviousAddress" \ "addressLine4").toOption).map(_.as[String]),
               countryCode = "GB",
               postalCode = (json \ "partnershipPreviousAddress" \ "postalCode").as[String]
             ))
           } else {
             transformedTrustee.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(InternationalAddress(
               addressLine1 = (json \ "partnershipPreviousAddress" \ "addressLine1").as[String],
-              addressLine2 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
-              addressLine3 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
-              addressLine4 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine4").toOption).map(_.as[String]),
+              addressLine2 = jsValueOrNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
+              addressLine3 = jsValueOrNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
+              addressLine4 = jsValueOrNone((json \ "partnershipPreviousAddress" \ "addressLine4").toOption).map(_.as[String]),
               countryCode = (json \ "partnershipPreviousAddress" \ "country").as[String],
               postalCode = None
             ))
