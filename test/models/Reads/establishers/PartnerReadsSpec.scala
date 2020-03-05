@@ -16,7 +16,6 @@
 
 package models.Reads.establishers
 
-import models.userAnswersToEtmp.{ReadsEstablisherCompany, ReadsEstablisherPartnership}
 import models.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
@@ -78,7 +77,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
     "must read partner details" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = json.as[Individual](Individual.readsPartner)
           model.personalDetails.firstName mustBe (json \ "partnerDetails" \ "firstName").as[String]
           model.personalDetails.lastName mustBe (json \ "partnerDetails" \ "lastName").as[String]
           model.personalDetails.dateOfBirth mustBe (json \ "dateOfBirth").as[String]
@@ -89,7 +88,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
       forAll(individualGenerator, "under_a_year"){
         (json, addressYears) =>
           val newJson  = json + ("partnerAddressYears" -> JsString(addressYears))
-          val model = newJson.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = newJson.as[Individual](Individual.readsPartner)
           model.previousAddressDetails.value.isPreviousAddressLast12Month mustBe true
           model.previousAddressDetails.value.previousAddressDetails.value mustBe (json \ "partnerPreviousAddress").as[Address]
       }
@@ -98,7 +97,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
     "must not read previous address when address years is not under a year" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = json.as[Individual](Individual.readsPartner)
           model.previousAddressDetails mustBe None
       }
     }
@@ -106,7 +105,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
     "must read address" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = json.as[Individual](Individual.readsPartner)
           model.correspondenceAddressDetails.addressDetails mustBe (json \ "partnerAddressId").as[Address]
       }
     }
@@ -114,7 +113,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
     "must read contact details" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = json.as[Individual](Individual.readsPartner)
           model.correspondenceContactDetails.contactDetails.email mustBe (json \ "partnerContactDetails" \ "emailAddress").as[String]
           model.correspondenceContactDetails.contactDetails.telephone mustBe (json \ "partnerContactDetails" \ "phoneNumber").as[String]
       }
@@ -124,7 +123,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
       forAll(individualGenerator, arbitrary[String]){
         (json, nino) =>
           val newJson  = json + ("partnerNino" -> Json.obj("value" -> nino))
-          val model = newJson.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = newJson.as[Individual](Individual.readsPartner)
           model.referenceOrNino.value mustBe (newJson \ "partnerNino" \ "value").as[String]
       }
     }
@@ -133,7 +132,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
       forAll(individualGenerator, arbitrary[String]){
         (json, noNinoReason) =>
           val newJson  = json + ("noNinoReason" -> JsString(noNinoReason))
-          val model = newJson.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = newJson.as[Individual](Individual.readsPartner)
           model.noNinoReason.value mustBe (newJson \ "noNinoReason").as[String]
       }
     }
@@ -142,7 +141,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
       forAll(individualGenerator, arbitrary[String]){
         (json, utr) =>
           val newJson  = json + ("utr" -> Json.obj("value" -> utr))
-          val model = newJson.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = newJson.as[Individual](Individual.readsPartner)
           model.utr.value mustBe (newJson \ "utr" \ "value").as[String]
       }
     }
@@ -151,7 +150,7 @@ class PartnerReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPr
       forAll(individualGenerator, arbitrary[String]){
         (json, noUtrReason) =>
           val newJson  = json + ("noUtrReason" -> JsString(noUtrReason))
-          val model = newJson.as[Individual](ReadsEstablisherPartnership.readsPartner)
+          val model = newJson.as[Individual](Individual.readsPartner)
           model.noUtrReason.value mustBe (newJson \ "noUtrReason").as[String]
       }
     }

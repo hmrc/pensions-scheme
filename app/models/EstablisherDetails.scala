@@ -16,12 +16,10 @@
 
 package models
 
-import models.userAnswersToEtmp.ReadsEstablisherCompany.readsEstablisherCompanies
-import models.userAnswersToEtmp.ReadsEstablisherIndividual.readsEstablisherIndividuals
-import models.userAnswersToEtmp.ReadsEstablisherPartnership.readsEstablisherPartnerships
-import play.api.libs.json._
-import play.api.libs.json.Writes.seq
+import models.userAnswersToEtmp.ReadsCommon.readsFiltered
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Writes.seq
+import play.api.libs.json._
 
 case class EstablisherDetails(
                                individual: Seq[Individual],
@@ -33,9 +31,14 @@ object EstablisherDetails {
   implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
 
   val readsEstablisherDetails: Reads[EstablisherDetails] = (
-    (JsPath \ "establishers").readNullable(readsEstablisherIndividuals) and
-      (JsPath \ "establishers").readNullable(readsEstablisherCompanies) and
-      (JsPath \ "establishers").readNullable(readsEstablisherPartnerships)
+    (JsPath \ "establishers").readNullable(
+      readsFiltered(_ \ "establisherDetails", Individual.readsEstablisherIndividual, "establisherDetails")
+    ) and
+      (JsPath \ "establishers").readNullable(
+        readsFiltered(_ \ "companyDetails", CompanyEstablisher.readsEstablisherCompany, "companyDetails")
+      ) and
+      (JsPath \ "establishers").readNullable(
+        readsFiltered(_ \ "partnershipDetails", Partnership.readsEstablisherPartnership, "partnershipDetails"))
     ) ((establisherIndividuals, establisherCompanies, establisherPartnerships) =>
     EstablisherDetails(
       individual = establisherIndividuals.getOrElse(Nil),

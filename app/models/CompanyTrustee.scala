@@ -16,7 +16,8 @@
 
 package models
 
-import play.api.libs.json.{Format, JsPath, Json, Writes}
+import models.userAnswersToEtmp.ReadsCommon.{companyReads, previousAddressDetails}
+import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 case class CompanyTrustee(
@@ -34,6 +35,21 @@ case class CompanyTrustee(
 
 object CompanyTrustee {
   implicit val formats: Format[CompanyTrustee] = Json.format[CompanyTrustee]
+
+  val readsTrusteeCompany: Reads[CompanyTrustee] =
+    JsPath.read(companyReads).map(test =>
+      CompanyTrustee(
+        organizationName = test.name,
+        utr = test.utr,
+        noUtrReason = test.noUtrReason,
+        crnNumber = test.crn,
+        noCrnReason = test.noCrnReason,
+        vatRegistrationNumber = test.vatNumber,
+        payeReference = test.payeNumber,
+        correspondenceAddressDetails = CorrespondenceAddressDetails(test.address),
+        correspondenceContactDetails = CorrespondenceContactDetails(test.contactDetails),
+        previousAddressDetails = previousAddressDetails(test.addressYears, test.previousAddress))
+    )
 
   val updateWrites: Writes[CompanyTrustee] = (
     (JsPath \ "organisationName").write[String] and

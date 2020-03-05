@@ -16,9 +16,11 @@
 
 package models
 
-import play.api.libs.json.{Format, JsPath, Json, Writes}
-import play.api.libs.json.Writes.seq
+import models.userAnswersToEtmp.ReadsCommon
+import models.userAnswersToEtmp.ReadsCommon.{partnershipReads, readsFiltered}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Writes.seq
+import play.api.libs.json._
 
 case class Partnership(
                         organizationName: String,
@@ -35,6 +37,27 @@ case class Partnership(
 
 object Partnership {
   implicit val formats: Format[Partnership] = Json.format[Partnership]
+
+  val readsEstablisherPartnership: Reads[Partnership] = (
+    JsPath.read(partnershipReads) and
+      (JsPath \ "otherPartners").readNullable[Boolean] and
+      (JsPath \ "partner").readNullable(
+        readsFiltered(_ \ "partnerDetails", Individual.readsPartner, "partnerDetails")
+      )
+    ) ((partnership, otherPartners, partners) =>
+    Partnership(
+      organizationName = partnership.name,
+      utr = partnership.utr,
+      noUtrReason = partnership.utrReason,
+      vatRegistrationNumber = partnership.vat,
+      payeReference = partnership.paye,
+      haveMoreThanTenDirectorOrPartner = otherPartners.getOrElse(false),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
+      correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
+      previousAddressDetails = ReadsCommon.previousAddressDetails(partnership.addressYears, partnership.previousAddress),
+      partnerDetails = partners.getOrElse(Nil)
+    )
+  )
 
   val updateWrites: Writes[Partnership] = (
     (JsPath \ "partnershipName").write[String] and

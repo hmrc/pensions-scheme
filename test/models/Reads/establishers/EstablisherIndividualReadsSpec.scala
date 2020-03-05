@@ -17,7 +17,6 @@
 package models.Reads.establishers
 
 import models.{Address, Individual}
-import models.userAnswersToEtmp.ReadsEstablisherIndividual
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
@@ -78,7 +77,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     "must read individual details" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.personalDetails.firstName mustBe (json \ "establisherDetails" \ "firstName").as[String]
           model.personalDetails.lastName mustBe (json \ "establisherDetails" \ "lastName").as[String]
           model.personalDetails.dateOfBirth mustBe (json \ "dateOfBirth").as[String]
@@ -89,7 +88,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
       forAll(individualGenerator, "under_a_year"){
         (json, addressYears) =>
           val newJson  = json + ("addressYears" -> JsString(addressYears))
-          val model = newJson.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
           model.previousAddressDetails.value.isPreviousAddressLast12Month mustBe true
           model.previousAddressDetails.value.previousAddressDetails.value mustBe (json \ "previousAddress").as[Address]
       }
@@ -98,7 +97,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     "must not read previous address when address years is not under a year" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.previousAddressDetails mustBe None
       }
     }
@@ -106,7 +105,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     "must read address" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.correspondenceAddressDetails.addressDetails mustBe (json \ "address").as[Address]
       }
     }
@@ -114,7 +113,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     "must read contact details" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.correspondenceContactDetails.contactDetails.email mustBe (json \ "contactDetails" \ "emailAddress").as[String]
           model.correspondenceContactDetails.contactDetails.telephone mustBe (json \ "contactDetails" \ "phoneNumber").as[String]
       }
@@ -124,7 +123,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
       forAll(individualGenerator, arbitrary[String]){
         (json, nino) =>
           val newJson  = json + ("establisherNino" -> Json.obj("value" -> nino))
-          val model = newJson.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
           model.referenceOrNino.value mustBe (newJson \ "establisherNino" \ "value").as[String]
       }
     }
@@ -133,7 +132,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
       forAll(individualGenerator, arbitrary[String]){
         (json, noNinoReason) =>
           val newJson  = json + ("noNinoReason" -> JsString(noNinoReason))
-          val model = newJson.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
           model.noNinoReason.value mustBe (newJson \ "noNinoReason").as[String]
       }
     }
@@ -142,7 +141,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
       forAll(individualGenerator, arbitrary[String]){
         (json, utr) =>
           val newJson  = json + ("utr" -> Json.obj("value" -> utr))
-          val model = newJson.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
           model.utr.value mustBe (newJson \ "utr" \ "value").as[String]
       }
     }
@@ -151,7 +150,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
       forAll(individualGenerator, arbitrary[String]){
         (json, noUtrReason) =>
           val newJson  = json + ("noUtrReason" -> JsString(noUtrReason))
-          val model = newJson.as[Individual](ReadsEstablisherIndividual.readsEstablisherIndividual)
+          val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
           model.noUtrReason.value mustBe (newJson \ "noUtrReason").as[String]
       }
     }

@@ -16,7 +16,6 @@
 
 package models.Reads.trustees
 
-import models.userAnswersToEtmp.ReadsTrusteeIndividual
 import models.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
@@ -78,7 +77,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
     "must read individual details" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = json.as[Individual](Individual.readsTrusteeIndividual)
           model.personalDetails.firstName mustBe (json \ "trusteeDetails" \ "firstName").as[String]
           model.personalDetails.lastName mustBe (json \ "trusteeDetails" \ "lastName").as[String]
           model.personalDetails.dateOfBirth mustBe (json \ "dateOfBirth").as[String]
@@ -89,7 +88,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
       forAll(individualGenerator, "under_a_year"){
         (json, addressYears) =>
           val newJson  = json + ("trusteeAddressYears" -> JsString(addressYears))
-          val model = newJson.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = newJson.as[Individual](Individual.readsTrusteeIndividual)
           model.previousAddressDetails.value.isPreviousAddressLast12Month mustBe true
           model.previousAddressDetails.value.previousAddressDetails.value mustBe (json \ "trusteePreviousAddress").as[Address]
       }
@@ -98,7 +97,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
     "must not read previous address when address years is not under a year" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = json.as[Individual](Individual.readsTrusteeIndividual)
           model.previousAddressDetails mustBe None
       }
     }
@@ -106,7 +105,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
     "must read address" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = json.as[Individual](Individual.readsTrusteeIndividual)
           model.correspondenceAddressDetails.addressDetails mustBe (json \ "trusteeAddressId").as[Address]
       }
     }
@@ -114,7 +113,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
     "must read contact details" in {
       forAll(individualGenerator){
         json =>
-          val model = json.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = json.as[Individual](Individual.readsTrusteeIndividual)
           model.correspondenceContactDetails.contactDetails.email mustBe (json \ "trusteeContactDetails" \ "emailAddress").as[String]
           model.correspondenceContactDetails.contactDetails.telephone mustBe (json \ "trusteeContactDetails" \ "phoneNumber").as[String]
       }
@@ -124,7 +123,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
       forAll(individualGenerator, arbitrary[String]){
         (json, nino) =>
           val newJson  = json + ("trusteeNino" -> Json.obj("value" -> nino))
-          val model = newJson.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = newJson.as[Individual](Individual.readsTrusteeIndividual)
           model.referenceOrNino.value mustBe (newJson \ "trusteeNino" \ "value").as[String]
       }
     }
@@ -133,7 +132,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
       forAll(individualGenerator, arbitrary[String]){
         (json, noNinoReason) =>
           val newJson  = json + ("noNinoReason" -> JsString(noNinoReason))
-          val model = newJson.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = newJson.as[Individual](Individual.readsTrusteeIndividual)
           model.noNinoReason.value mustBe (newJson \ "noNinoReason").as[String]
       }
     }
@@ -142,7 +141,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
       forAll(individualGenerator, arbitrary[String]){
         (json, utr) =>
           val newJson  = json + ("utr" -> Json.obj("value" -> utr))
-          val model = newJson.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = newJson.as[Individual](Individual.readsTrusteeIndividual)
           model.utr.value mustBe (newJson \ "utr" \ "value").as[String]
       }
     }
@@ -151,7 +150,7 @@ class TrusteeIndividualReadsSpec extends FreeSpec with MustMatchers with Generat
       forAll(individualGenerator, arbitrary[String]){
         (json, noUtrReason) =>
           val newJson  = json + ("noUtrReason" -> JsString(noUtrReason))
-          val model = newJson.as[Individual](ReadsTrusteeIndividual.readsTrusteeIndividual)
+          val model = newJson.as[Individual](Individual.readsTrusteeIndividual)
           model.noUtrReason.value mustBe (newJson \ "noUtrReason").as[String]
       }
     }

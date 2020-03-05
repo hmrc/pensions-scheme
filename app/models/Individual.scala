@@ -17,7 +17,7 @@
 package models
 
 import models.userAnswersToEtmp.ReadsCommon
-import models.userAnswersToEtmp.ReadsCommon.{readsContactDetails, readsPersonDetails}
+import models.userAnswersToEtmp.ReadsCommon.{readsContactDetails, readsPersonDetails, previousAddressDetails}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
@@ -34,6 +34,52 @@ case class Individual(
 
 object Individual {
   implicit val formats: Format[Individual] = Json.format[Individual]
+
+  val readsCompanyDirector: Reads[Individual] = (
+    readsPersonDetails(userAnswersBase = "directorDetails") and
+      (JsPath \ "directorAddressId").read[Address] and
+      (JsPath \ "directorContactDetails").read[ContactDetails](readsContactDetails) and
+      (JsPath \ "directorNino").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noNinoReason").readNullable[String] and
+      (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noUtrReason").readNullable[String] and
+      (JsPath \ "companyDirectorAddressYears").read[String] and
+      (JsPath \ "previousAddress").readNullable[Address]
+    ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
+    Individual(
+      personalDetails = personalDetails,
+      referenceOrNino = nino,
+      noNinoReason = noNinoReason,
+      utr = utr,
+      noUtrReason = noUtrReason,
+      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
+      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
+      previousAddressDetails = previousAddressDetails(addressYears, previousAddress)
+    )
+  )
+
+  val readsPartner: Reads[Individual] = (
+    readsPersonDetails(userAnswersBase = "partnerDetails") and
+      (JsPath \ "partnerAddressId").read[Address] and
+      (JsPath \ "partnerContactDetails").read[ContactDetails](readsContactDetails) and
+      (JsPath \ "partnerNino").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noNinoReason").readNullable[String] and
+      (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noUtrReason").readNullable[String] and
+      (JsPath \ "partnerAddressYears").read[String] and
+      (JsPath \ "partnerPreviousAddress").readNullable[Address]
+    ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
+    Individual(
+      personalDetails = personalDetails,
+      referenceOrNino = nino,
+      noNinoReason = noNinoReason,
+      utr = utr,
+      noUtrReason = noUtrReason,
+      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
+      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
+      previousAddressDetails = previousAddressDetails(addressYears, previousAddress)
+    )
+  )
 
   val readsEstablisherIndividual: Reads[Individual] = (
     readsPersonDetails("establisherDetails") and
@@ -55,6 +101,29 @@ object Individual {
       correspondenceAddressDetails = CorrespondenceAddressDetails(address),
       correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
       previousAddressDetails = ReadsCommon.previousAddressDetails(addressYears, previousAddress)
+    )
+  )
+
+  val readsTrusteeIndividual: Reads[Individual] = (
+    readsPersonDetails(userAnswersBase = "trusteeDetails") and
+      (JsPath \ "trusteeAddressId").read[Address] and
+      (JsPath \ "trusteeContactDetails").read[ContactDetails](readsContactDetails) and
+      (JsPath \ "trusteeNino").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noNinoReason").readNullable[String] and
+      (JsPath \ "utr").readNullable[String]((__ \ "value").read[String]) and
+      (JsPath \ "noUtrReason").readNullable[String] and
+      (JsPath \ "trusteeAddressYears").read[String] and
+      (JsPath \ "trusteePreviousAddress").readNullable[Address]
+    ) ((personalDetails, address, contactDetails, nino, noNinoReason, utr, noUtrReason, addressYears, previousAddress) =>
+    Individual(
+      personalDetails = personalDetails,
+      referenceOrNino = nino,
+      noNinoReason = noNinoReason,
+      utr = utr,
+      noUtrReason = noUtrReason,
+      correspondenceAddressDetails = CorrespondenceAddressDetails(address),
+      correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
+      previousAddressDetails = previousAddressDetails(addressYears, previousAddress)
     )
   )
 
@@ -86,9 +155,3 @@ object Individual {
     ) (getIndividual(_))
 }
 
-case class PersonalDetails(title: Option[String] = None, firstName: String, middleName: Option[String] = None,
-                           lastName: String, dateOfBirth: String)
-
-object PersonalDetails {
-  implicit val formats: Format[PersonalDetails] = Json.format[PersonalDetails]
-}

@@ -16,7 +16,8 @@
 
 package models
 
-import play.api.libs.json.{Format, JsPath, Json, Writes}
+import models.userAnswersToEtmp.ReadsCommon.{partnershipReads, previousAddressDetails}
+import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 case class PartnershipTrustee(
@@ -32,6 +33,20 @@ case class PartnershipTrustee(
 
 object PartnershipTrustee {
   implicit val formats: Format[PartnershipTrustee] = Json.format[PartnershipTrustee]
+
+  val readsTrusteePartnership: Reads[PartnershipTrustee] =
+    JsPath.read(partnershipReads).map(partnership =>
+      PartnershipTrustee(
+        organizationName = partnership.name,
+        utr = partnership.utr,
+        noUtrReason = partnership.utrReason,
+        vatRegistrationNumber = partnership.vat,
+        payeReference = partnership.paye,
+        correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
+        correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
+        previousAddressDetails = previousAddressDetails(partnership.addressYears, partnership.previousAddress)
+      )
+    )
 
   val updateWrites: Writes[PartnershipTrustee] = (
     (JsPath \ "partnershipName").write[String] and

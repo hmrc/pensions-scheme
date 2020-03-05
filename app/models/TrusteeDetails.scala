@@ -16,25 +16,30 @@
 
 package models
 
-import models.userAnswersToEtmp.ReadsTrusteeCompany.readsTrusteeCompanies
-import models.userAnswersToEtmp.ReadsTrusteeIndividual.readsTrusteeIndividuals
-import models.userAnswersToEtmp.ReadsTrusteePartnership.readsTrusteePartnerships
-import play.api.libs.json._
-import play.api.libs.json.Writes.seq
+import models.userAnswersToEtmp.ReadsCommon.readsFiltered
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Writes.seq
+import play.api.libs.json._
 
 case class TrusteeDetails(
                            individualTrusteeDetail: Seq[Individual],
                            companyTrusteeDetail: Seq[CompanyTrustee],
                            partnershipTrusteeDetail: Seq[PartnershipTrustee]
                          )
+
 object TrusteeDetails {
-  implicit val formats : Format[TrusteeDetails] = Json.format[TrusteeDetails]
+  implicit val formats: Format[TrusteeDetails] = Json.format[TrusteeDetails]
 
   val readsTrusteeDetails: Reads[TrusteeDetails] = (
-    (JsPath \ "trustees").readNullable(readsTrusteeIndividuals) and
-      (JsPath \ "trustees").readNullable(readsTrusteeCompanies) and
-      (JsPath \ "trustees").readNullable(readsTrusteePartnerships)
+    (JsPath \ "trustees").readNullable(
+      readsFiltered(_ \ "trusteeDetails", Individual.readsTrusteeIndividual, "trusteeDetails")
+    ) and
+      (JsPath \ "trustees").readNullable(
+        readsFiltered(_ \ "companyDetails", CompanyTrustee.readsTrusteeCompany, "companyDetails")
+      ) and
+      (JsPath \ "trustees").readNullable(
+        readsFiltered(_ \ "partnershipDetails", PartnershipTrustee.readsTrusteePartnership, "partnershipDetails")
+      )
     ) ((trusteeIndividuals, trusteeCompanies, trusteePartnerships) =>
     TrusteeDetails(
       individualTrusteeDetail = trusteeIndividuals.getOrElse(Nil),
@@ -43,11 +48,11 @@ object TrusteeDetails {
     )
   )
 
-  val updateWrites : Writes[TrusteeDetails] = (
+  val updateWrites: Writes[TrusteeDetails] = (
     (JsPath \ "individualDetails").writeNullable(seq(Individual.individualUpdateWrites)) and
       (JsPath \ "companyTrusteeDetailsType").writeNullable(seq(CompanyTrustee.updateWrites)) and
       (JsPath \ "partnershipTrusteeDetails").writeNullable(seq(PartnershipTrustee.updateWrites))
-    )(trustee => (
+    ) (trustee => (
     if (trustee.individualTrusteeDetail.nonEmpty) Some(trustee.individualTrusteeDetail) else None,
     if (trustee.companyTrusteeDetail.nonEmpty) Some(trustee.companyTrusteeDetail) else None,
     if (trustee.partnershipTrusteeDetail.nonEmpty) Some(trustee.partnershipTrusteeDetail) else None)

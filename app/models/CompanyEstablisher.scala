@@ -16,9 +16,10 @@
 
 package models
 
-import play.api.libs.json.{Format, JsPath, Json, Writes}
-import play.api.libs.json.Writes.seq
+import models.userAnswersToEtmp.ReadsCommon.{companyReads, previousAddressDetails, readsFiltered}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Writes.seq
+import play.api.libs.json._
 
 case class CompanyEstablisher(
                                organizationName: String,
@@ -37,6 +38,29 @@ case class CompanyEstablisher(
 
 object CompanyEstablisher {
   implicit val formats: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
+
+  val readsEstablisherCompany: Reads[CompanyEstablisher] = (
+    JsPath.read(companyReads) and
+      (JsPath \ "otherDirectors").readNullable[Boolean] and
+      (JsPath \ "director").readNullable(
+        readsFiltered(_ \ "directorDetails", Individual.readsCompanyDirector, "directorDetails")
+      )
+    ) ((company, otherDirectors, directors) =>
+    CompanyEstablisher(
+      organizationName = company.name,
+      utr = company.utr,
+      noUtrReason = company.noUtrReason,
+      crnNumber = company.crn,
+      noCrnReason = company.noCrnReason,
+      vatRegistrationNumber = company.vatNumber,
+      payeReference = company.payeNumber,
+      haveMoreThanTenDirectorOrPartner = otherDirectors.getOrElse(false),
+      correspondenceAddressDetails = CorrespondenceAddressDetails(company.address),
+      correspondenceContactDetails = CorrespondenceContactDetails(company.contactDetails),
+      previousAddressDetails = previousAddressDetails(company.addressYears, company.previousAddress, company.tradingTime),
+      directorDetails = directors.getOrElse(Nil)
+    )
+  )
 
   val updateWrites: Writes[CompanyEstablisher] = (
     (JsPath \ "organisationName").write[String] and
