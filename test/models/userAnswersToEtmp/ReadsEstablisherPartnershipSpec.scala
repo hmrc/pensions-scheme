@@ -108,30 +108,30 @@ class ReadsEstablisherPartnershipSpec extends FreeSpec with MustMatchers with Ge
   "An establisher partnership" - {
     "must be read from valid data" in {
       forAll(partnershipGenerator) { json =>
-        val model = JsArray(Seq(json)).as[Seq[Partnership]](ReadsEstablisherPartnership.readsEstablisherPartnerships)
-        model.head.organizationName mustBe (json \ "partnershipDetails" \ "name").as[String]
+        val model = JsArray(Seq(json)).as[Seq[Partnership]](ReadsEstablisherPartnership.readsEstablisherPartnerships).head
+        model.organizationName mustBe (json \ "partnershipDetails" \ "name").as[String]
         if ((json \ "hasUtr").as[Boolean]) {
-          model.head.utr mustBe Option((json \ "utr" \ "value").as[String])
-          model.head.noUtrReason mustBe None
+          model.utr mustBe Option((json \ "utr" \ "value").as[String])
+          model.noUtrReason mustBe None
         } else {
-          model.head.utr mustBe None
-          model.head.noUtrReason mustBe Option((json \ "noUtrReason").as[String])
+          model.utr mustBe None
+          model.noUtrReason mustBe Option((json \ "noUtrReason").as[String])
         }
 
         if ((json \ "hasVat").as[Boolean]) {
-          model.head.vatRegistrationNumber mustBe Option((json \ "partnershipVat" \ "value").as[String])
+          model.vatRegistrationNumber mustBe Option((json \ "partnershipVat" \ "value").as[String])
         } else {
-          model.head.vatRegistrationNumber mustBe None
+          model.vatRegistrationNumber mustBe None
         }
 
         if ((json \ "hasPaye").as[Boolean]) {
-          model.head.payeReference mustBe Option((json \ "partnershipPaye" \ "value").as[String])
+          model.payeReference mustBe Option((json \ "partnershipPaye" \ "value").as[String])
         } else {
-          model.head.payeReference mustBe None
+          model.payeReference mustBe None
         }
 
         if ((json \ "partnershipAddress" \ "country").as[String] == "GB") {
-          model.head.correspondenceAddressDetails.addressDetails mustBe UkAddress(
+          model.correspondenceAddressDetails.addressDetails mustBe UkAddress(
             addressLine1 = (json \ "partnershipAddress" \ "addressLine1").as[String],
             addressLine2 = nullToNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
             addressLine3 = nullToNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
@@ -140,7 +140,7 @@ class ReadsEstablisherPartnershipSpec extends FreeSpec with MustMatchers with Ge
             postalCode = (json \ "partnershipAddress" \ "postalCode").as[String]
           )
         } else {
-          model.head.correspondenceAddressDetails.addressDetails mustBe InternationalAddress(
+          model.correspondenceAddressDetails.addressDetails mustBe InternationalAddress(
             addressLine1 = (json \ "partnershipAddress" \ "addressLine1").as[String],
             addressLine2 = nullToNone((json \ "partnershipAddress" \ "addressLine2").toOption).map(_.as[String]),
             addressLine3 = nullToNone((json \ "partnershipAddress" \ "addressLine3").toOption).map(_.as[String]),
@@ -150,14 +150,14 @@ class ReadsEstablisherPartnershipSpec extends FreeSpec with MustMatchers with Ge
           )
         }
 
-        model.head.correspondenceContactDetails mustBe CorrespondenceContactDetails(ContactDetails(
+        model.correspondenceContactDetails mustBe CorrespondenceContactDetails(ContactDetails(
           telephone = (json \ "partnershipContactDetails" \ "phoneNumber").as[String],
           email = (json \ "partnershipContactDetails" \ "emailAddress").as[String]
         ))
 
         if ((json \ "hasBeenTrading").as[Boolean] && (json \ "partnershipAddressYears").as[String] == "under_a_year") {
           if ((json \ "partnershipPreviousAddress" \ "country").as[String] == "GB") {
-            model.head.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(UkAddress(
+            model.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(UkAddress(
               addressLine1 = (json \ "partnershipPreviousAddress" \ "addressLine1").as[String],
               addressLine2 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
               addressLine3 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
@@ -166,7 +166,7 @@ class ReadsEstablisherPartnershipSpec extends FreeSpec with MustMatchers with Ge
               postalCode = (json \ "partnershipPreviousAddress" \ "postalCode").as[String]
             ))
           } else {
-            model.head.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(InternationalAddress(
+            model.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(InternationalAddress(
               addressLine1 = (json \ "partnershipPreviousAddress" \ "addressLine1").as[String],
               addressLine2 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine2").toOption).map(_.as[String]),
               addressLine3 = nullToNone((json \ "partnershipPreviousAddress" \ "addressLine3").toOption).map(_.as[String]),
@@ -176,7 +176,7 @@ class ReadsEstablisherPartnershipSpec extends FreeSpec with MustMatchers with Ge
             ))
           }
         } else {
-          model.head.previousAddressDetails mustBe None
+          model.previousAddressDetails mustBe None
         }
       }
     }
