@@ -94,7 +94,7 @@ class ReadsEstablisherPartnershipSpec extends FreeSpec with MustMatchers with Ge
           "phoneNumber" -> phoneNumber
         ),
         "hasBeenTrading" -> hasBeenTrading,
-        "partnershipPreviousAddress" -> (if(hasBeenTrading && addressYears == "under_a_year") previousAddressDetails else JsNull),
+        "partnershipPreviousAddress" -> previousAddressDetails,
         "partnershipAddress" -> addressDetails,
         "establisherKind" -> "partnership",
         "partnershipDetails" -> Json.obj(
