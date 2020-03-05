@@ -26,7 +26,7 @@ object ReadsTrusteeIndividual {
   def readsTrusteeIndividuals: Reads[Seq[Individual]] =
     readsFiltered(_ \ "trusteeDetails", readsTrusteeIndividual, "trusteeDetails")
 
-  private def readsTrusteeIndividual: Reads[Individual] = (
+  def readsTrusteeIndividual: Reads[Individual] = (
     readsPersonDetails(userAnswersBase = "trusteeDetails") and
       (JsPath \ "trusteeAddressId").read[Address] and
       (JsPath \ "trusteeContactDetails").read[ContactDetails](readsContactDetails) and

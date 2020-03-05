@@ -26,7 +26,7 @@ object ReadsEstablisherIndividual {
   def readsEstablisherIndividuals: Reads[Seq[Individual]] =
     readsFiltered(_ \ "establisherDetails", readsEstablisherIndividual, "establisherDetails")
 
-  private def readsEstablisherIndividual: Reads[Individual] = (
+  def readsEstablisherIndividual: Reads[Individual] = (
     readsPersonDetails("establisherDetails") and
       (JsPath \ "address").read[Address] and
       (JsPath \ "contactDetails").read[ContactDetails](readsContactDetails) and

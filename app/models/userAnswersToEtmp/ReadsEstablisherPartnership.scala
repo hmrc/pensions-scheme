@@ -48,7 +48,7 @@ object ReadsEstablisherPartnership {
   private def readsPartners: Reads[Seq[Individual]] =
     readsFiltered(_ \ "partnerDetails", readsPartner, "partnerDetails")
 
-  private def readsPartner: Reads[Individual] = (
+  def readsPartner: Reads[Individual] = (
     readsPersonDetails(userAnswersBase = "partnerDetails") and
       (JsPath \ "partnerAddressId").read[Address] and
       (JsPath \ "partnerContactDetails").read[ContactDetails](readsContactDetails) and

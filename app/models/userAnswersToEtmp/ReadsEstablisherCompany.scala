@@ -52,7 +52,7 @@ object ReadsEstablisherCompany {
   private def readsCompanyDirectors: Reads[Seq[Individual]] =
     readsFiltered(_ \ "directorDetails", readsCompanyDirector, "directorDetails")
 
-  private def readsCompanyDirector: Reads[Individual] = (
+  def readsCompanyDirector: Reads[Individual] = (
     readsPersonDetails(userAnswersBase = "directorDetails") and
       (JsPath \ "directorAddressId").read[Address] and
       (JsPath \ "directorContactDetails").read[ContactDetails](readsContactDetails) and
