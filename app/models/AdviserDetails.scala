@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-package models.schemes
+package models
 
-import models.CorrespondenceAddress
+import play.api.libs.json.{Format, JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
-import play.api.libs.json._
 
-case class PreviousAddressInfo(isPreviousAddressLast12Month: Boolean,
-                               previousAddress: Option[CorrespondenceAddress] = None)
+case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber: String)
 
-object PreviousAddressInfo {
+object AdviserDetails {
 
-  val apiReads: Reads[PreviousAddressInfo] = (
-    (JsPath \ s"isPreviousAddressLast12Month").read[Boolean] and
-      (JsPath \ s"previousAddress").readNullable(CorrespondenceAddress.reads)
-    ) ((addressLast12Months, address) => {
-    PreviousAddressInfo(addressLast12Months, address)
-  })
+  implicit val formats: Format[AdviserDetails] = Json.format[AdviserDetails]
 
-  implicit val formats: OFormat[PreviousAddressInfo] = Json.format[PreviousAddressInfo]
+  implicit val readsAdviserDetails: Reads[AdviserDetails] = (
+    (JsPath \ "adviserName").read[String] and
+      (JsPath \ "emailAddress").read[String] and
+      (JsPath \ "phoneNumber").read[String]
+    ) ((name, email, phone) => AdviserDetails(name, email, phone))
 }

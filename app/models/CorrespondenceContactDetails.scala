@@ -16,6 +16,10 @@
 
 package models
 
-import uk.gov.hmrc.auth.core.AffinityGroup
+import play.api.libs.json.{Format, Json}
 
-case class User(externalId: String, affinityGroup: AffinityGroup)
+case class CorrespondenceContactDetails(contactDetails: ContactDetails)
+
+object CorrespondenceContactDetails {
+  implicit val formats: Format[CorrespondenceContactDetails] = Json.format[CorrespondenceContactDetails]
+}

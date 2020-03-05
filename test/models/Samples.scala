@@ -24,11 +24,6 @@ trait Samples {
   val previousAddressDetailsSample = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   val contactDetailsSample = ContactDetails("07592113", email = "test@test.com")
 
-  val companySample = OrganisationDetailType("Company Test", vatRegistrationNumber = Some("VAT11111"),
-    payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
-
-  val pensionAdviserSample = PensionAdvisorDetail("John", ukAddressSample, contactDetailsSample)
-
   val trusteePartnershipData = PartnershipTrustee(
     organizationName = "test partnership",
     utr = Some("1111111111"),

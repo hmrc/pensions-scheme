@@ -16,11 +16,11 @@
 
 package models
 
-import models.schemes.PreviousAddressInfo
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class CorrespondenceAddress(addressLine1: String, addressLine2: String, addressLine3: Option[String], addressLine4: Option[String], countryCode: String, postalCode: Option[String])
+case class CorrespondenceAddress(addressLine1: String, addressLine2: String, addressLine3: Option[String],
+                                 addressLine4: Option[String], countryCode: String, postalCode: Option[String])
 
 object CorrespondenceAddress {
   implicit val writes: Writes[CorrespondenceAddress] = Json.writes[CorrespondenceAddress]
@@ -32,8 +32,6 @@ object CorrespondenceAddress {
       (JsPath \ "countryCode").read[String] and
       (JsPath \ "postalCode").readNullable[String]
     ) (CorrespondenceAddress.apply _)
-
-  implicit val formats: OFormat[PreviousAddressInfo] = Json.format[PreviousAddressInfo]
 }
 
 sealed trait Address

@@ -15,11 +15,13 @@
  */
 
 package models
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, _}
 
-import play.api.libs.json.{Json, OFormat}
+case class CorrespondenceAddressDetails(addressDetails: Address)
 
-case class Name(firstName: Option[String], middleName: Option[String], lastName: Option[String])
+object CorrespondenceAddressDetails {
+  implicit val formats: Format[CorrespondenceAddressDetails] = Json.format[CorrespondenceAddressDetails]
 
-object Name {
-  implicit val formats : OFormat[Name] = Json.format[Name]
+  val updateWrites: Writes[CorrespondenceAddressDetails] = (JsPath \ "addressDetails").write[Address](Address.updateWrites).contramap(c => c.addressDetails)
 }
