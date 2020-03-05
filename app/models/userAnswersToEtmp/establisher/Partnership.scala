@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp.establisher
 
-import models.userAnswersToEtmp.ReadsCommon
-import models.userAnswersToEtmp.ReadsCommon.{partnershipReads, readsFiltered}
+import models._
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.ReadsHelper.readsFiltered
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._
@@ -39,7 +40,7 @@ object Partnership {
   implicit val formats: Format[Partnership] = Json.format[Partnership]
 
   val readsEstablisherPartnership: Reads[Partnership] = (
-    JsPath.read(partnershipReads) and
+    JsPath.read(PartnershipDetail.partnershipReads) and
       (JsPath \ "otherPartners").readNullable[Boolean] and
       (JsPath \ "partner").readNullable(
         readsFiltered(_ \ "partnerDetails", Individual.readsPartner, "partnerDetails")
@@ -54,7 +55,7 @@ object Partnership {
       haveMoreThanTenDirectorOrPartner = otherPartners.getOrElse(false),
       correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
       correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
-      previousAddressDetails = ReadsCommon.previousAddressDetails(partnership.addressYears, partnership.previousAddress),
+      previousAddressDetails = ReadsHelper.previousAddressDetails(partnership.addressYears, partnership.previousAddress),
       partnerDetails = partners.getOrElse(Nil)
     )
   )

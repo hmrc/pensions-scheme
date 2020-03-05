@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.jsonTransformations
+package models.etmpToUserAnswers
 
 import com.google.inject.Inject
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}

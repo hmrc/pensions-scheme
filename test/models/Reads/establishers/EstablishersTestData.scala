@@ -20,6 +20,9 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import models._
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.establisher.{CompanyEstablisher, Partnership}
+import models.userAnswersToEtmp.trustee.CompanyTrustee
 
 import scala.util.Random
 

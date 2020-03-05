@@ -16,6 +16,7 @@
 
 package models
 
+import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsResponse}
 import org.scalatest.{MustMatchers, OptionValues, WordSpecLike}
 import play.api.libs.json.{JsSuccess, Json}
 

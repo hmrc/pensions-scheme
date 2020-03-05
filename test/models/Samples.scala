@@ -16,6 +16,9 @@
 
 package models
 
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee}
+
 trait Samples {
 
   val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")

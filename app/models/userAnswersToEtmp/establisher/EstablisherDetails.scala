@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp.establisher
 
-import models.userAnswersToEtmp.ReadsCommon.readsFiltered
+import models.userAnswersToEtmp.Individual
+import models.userAnswersToEtmp.ReadsHelper.readsFiltered
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._

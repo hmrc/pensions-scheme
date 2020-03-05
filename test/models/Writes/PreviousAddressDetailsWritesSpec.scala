@@ -16,7 +16,8 @@
 
 package models.Writes
 
-import models.{PreviousAddressDetails, Samples}
+import models.Samples
+import models.userAnswersToEtmp.PreviousAddressDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.SchemaValidatorForTests

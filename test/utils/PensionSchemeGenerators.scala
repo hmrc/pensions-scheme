@@ -17,6 +17,9 @@
 package utils
 
 import models._
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
+import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee, TrusteeDetails}
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
 import play.api.libs.json.Json

@@ -19,7 +19,7 @@ package connector
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, BarsCheck}
 import com.github.tomakehurst.wiremock.client.WireMock._
-import models.{BankAccount, ValidateBankDetailsRequest}
+import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsRequest}
 import org.scalatest.{AsyncFlatSpec, Matchers, OptionValues}
 import play.api.http.Status
 import play.api.inject.bind

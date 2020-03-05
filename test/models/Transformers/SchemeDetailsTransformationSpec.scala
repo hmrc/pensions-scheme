@@ -16,7 +16,7 @@
 
 package models.Transformers
 
-import models.jsonTransformations.{AddressTransformer, SchemeDetailsTransformer}
+import models.etmpToUserAnswers.{AddressTransformer, SchemeDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import utils.PensionSchemeJsValueGenerators

@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp
 
-import play.api.libs.json.{Format, JsPath, Json, Reads}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{Json, Reads, _}
 
-case class AdviserDetails(adviserName: String, emailAddress: String, phoneNumber: String)
+case class ContactDetails(telephone: String, mobileNumber: Option[String] = None, fax: Option[String] = None, email: String)
 
-object AdviserDetails {
+object ContactDetails {
+  implicit val formats: OFormat[ContactDetails] = Json.format[ContactDetails]
 
-  implicit val formats: Format[AdviserDetails] = Json.format[AdviserDetails]
-
-  implicit val readsAdviserDetails: Reads[AdviserDetails] = (
-    (JsPath \ "adviserName").read[String] and
-      (JsPath \ "emailAddress").read[String] and
+  val readsContactDetails: Reads[ContactDetails] = (
+    (JsPath \ "emailAddress").read[String] and
       (JsPath \ "phoneNumber").read[String]
-    ) ((name, email, phone) => AdviserDetails(name, email, phone))
+    ) ((email, phone) => ContactDetails(telephone = phone, email = email))
 }

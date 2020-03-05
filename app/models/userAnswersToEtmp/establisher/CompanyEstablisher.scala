@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp.establisher
 
-import models.userAnswersToEtmp.ReadsCommon.{companyReads, previousAddressDetails, readsFiltered}
+import models.userAnswersToEtmp.ReadsHelper.{previousAddressDetails, readsFiltered}
+import models.userAnswersToEtmp._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._
@@ -40,7 +41,7 @@ object CompanyEstablisher {
   implicit val formats: Format[CompanyEstablisher] = Json.format[CompanyEstablisher]
 
   val readsEstablisherCompany: Reads[CompanyEstablisher] = (
-    JsPath.read(companyReads) and
+    JsPath.read(Company.companyReads) and
       (JsPath \ "otherDirectors").readNullable[Boolean] and
       (JsPath \ "director").readNullable(
         readsFiltered(_ \ "directorDetails", Individual.readsCompanyDirector, "directorDetails")

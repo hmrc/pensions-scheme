@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp
 
+import models.userAnswersToEtmp.establisher.EstablisherDetails
+import models.userAnswersToEtmp.trustee.TrusteeDetails
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, _}
 import utils.Lens
@@ -28,9 +30,19 @@ object PensionsScheme {
 
   implicit val formatsPensionsScheme: Format[PensionsScheme] = Json.format[PensionsScheme]
 
-  val apiReads: Reads[PensionsScheme] = (
+  val registerApiReads: Reads[PensionsScheme] = (
     CustomerAndSchemeDetails.apiReads and
       PensionSchemeDeclaration.apiReads and
+      EstablisherDetails.readsEstablisherDetails and
+      TrusteeDetails.readsTrusteeDetails and
+      (JsPath \ "changeOfEstablisherOrTrustDetails").readNullable[Boolean]
+    ) ((custAndSchemeDetails, declaration, estDetails, trusteeDetails, changeFlag) =>
+    PensionsScheme(custAndSchemeDetails, declaration, estDetails, trusteeDetails, changeFlag)
+  )
+
+  val updateApiReads: Reads[PensionsScheme] = (
+    CustomerAndSchemeDetails.apiReads and
+      PensionSchemeUpdateDeclaration.reads and
       EstablisherDetails.readsEstablisherDetails and
       TrusteeDetails.readsTrusteeDetails and
       (JsPath \ "changeOfEstablisherOrTrustDetails").readNullable[Boolean]

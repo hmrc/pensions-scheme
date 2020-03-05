@@ -16,7 +16,7 @@
 
 package models.Writes
 
-import models.EstablisherDetails
+import models.userAnswersToEtmp.establisher.EstablisherDetails
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}

@@ -17,13 +17,16 @@
 package models.Reads.establishers
 
 import models._
-import models.userAnswersToEtmp.ReadsCommon._
+import models.userAnswersToEtmp.{Address, Individual, PreviousAddressDetails, UkAddress}
+import models.userAnswersToEtmp.ReadsHelper._
+import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
+import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee, TrusteeDetails}
 import org.scalatest.{Assertion, FlatSpec, Matchers}
 import play.api.libs.json._
 
-class ReadsCommonSpec extends FlatSpec with Matchers {
+class ReadsHelperSpec extends FlatSpec with Matchers {
 
-  import ReadsCommonSpec._
+  import ReadsHelperSpec._
 
   "ReadsEstablisherDetails" should "read a company with minimal details" in {
 
@@ -640,7 +643,7 @@ class ReadsCommonSpec extends FlatSpec with Matchers {
 
 }
 
-object ReadsCommonSpec extends Matchers {
+object ReadsHelperSpec extends Matchers {
 
   val previousAddress: Address = UkAddress("addressLine 1", Some("addressLine2"), None, None, "GB", "ZZ11ZZ")
 

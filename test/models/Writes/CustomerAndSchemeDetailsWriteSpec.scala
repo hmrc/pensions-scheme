@@ -16,8 +16,8 @@
 
 package models.Writes
 
-import models.CustomerAndSchemeDetails
 import models.enumeration.{Benefits, SchemeType}
+import models.userAnswersToEtmp.CustomerAndSchemeDetails
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Json

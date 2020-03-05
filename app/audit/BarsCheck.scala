@@ -16,7 +16,7 @@
 
 package audit
 
-import models.ValidateBankDetailsRequest
+import models.userAnswersToEtmp.ValidateBankDetailsRequest
 import play.api.libs.json.{JsValue, Json}
 
 case class BarsCheck(psaIdentifier: String, status: Int, request: ValidateBankDetailsRequest, response: Option[JsValue]) extends AuditEvent {

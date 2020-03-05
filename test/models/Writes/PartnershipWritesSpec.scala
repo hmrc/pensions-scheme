@@ -16,7 +16,8 @@
 
 package models.Writes
 
-import models.{Partnership, PartnershipTrustee}
+import models.userAnswersToEtmp.establisher.Partnership
+import models.userAnswersToEtmp.trustee.PartnershipTrustee
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}

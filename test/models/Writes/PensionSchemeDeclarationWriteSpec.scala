@@ -16,7 +16,7 @@
 
 package models.Writes
 
-import models.PensionSchemeUpdateDeclaration
+import models.userAnswersToEtmp.PensionSchemeUpdateDeclaration
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.Json
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}

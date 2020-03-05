@@ -17,7 +17,7 @@
 package models.Transformers
 
 import base.JsonFileReader
-import models.jsonTransformations.{AddressTransformer, DirectorsOrPartnersTransformer, EstablisherDetailsTransformer}
+import models.etmpToUserAnswers.{AddressTransformer, DirectorsOrPartnersTransformer, EstablisherDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._

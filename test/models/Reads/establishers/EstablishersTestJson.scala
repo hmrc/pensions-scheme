@@ -17,6 +17,9 @@
 package models.Reads.establishers
 
 import models._
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.establisher.{CompanyEstablisher, Partnership}
+import models.userAnswersToEtmp.trustee.CompanyTrustee
 import org.scalatest.OptionValues
 import play.api.libs.json._
 

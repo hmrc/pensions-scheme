@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, JsPath, Json, Reads}
 
 case class PersonalDetails(title: Option[String] = None, firstName: String, middleName: Option[String] = None,
                            lastName: String, dateOfBirth: String)
 
 object PersonalDetails {
   implicit val formats: Format[PersonalDetails] = Json.format[PersonalDetails]
+
+  def readsPersonDetails(userAnswersBase: String): Reads[PersonalDetails] =
+    (
+      (JsPath \ userAnswersBase \ "firstName").read[String] and
+        (JsPath \ userAnswersBase \ "lastName").read[String] and
+        (JsPath \ "dateOfBirth").read[String]
+      ) ((firstName, lastName, date) => PersonalDetails(None, firstName, None, lastName, date))
 }

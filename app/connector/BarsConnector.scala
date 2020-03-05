@@ -19,7 +19,7 @@ package connector
 import audit.{AuditService, BarsCheck}
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import config.AppConfig
-import models.{BankAccount, ValidateBankDetailsRequest, ValidateBankDetailsResponse}
+import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsRequest, ValidateBankDetailsResponse}
 import play.api.Logger
 import play.api.libs.json.JsSuccess
 import play.api.mvc.RequestHeader

@@ -16,7 +16,7 @@
 
 package audit
 
-import models.{BankAccount, ValidateBankDetailsRequest}
+import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsRequest}
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.Json
 

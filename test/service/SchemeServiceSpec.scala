@@ -21,10 +21,11 @@ import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
-import models.{EstablisherDetails, PensionsScheme, _}
+import models.userAnswersToEtmp.establisher.EstablisherDetails
+import models.userAnswersToEtmp.trustee.TrusteeDetails
+import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import play.api.http.Status
-import play.api.libs.json.Reads._
 import play.api.libs.json.{__, _}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
@@ -90,42 +91,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     actual.isLeft shouldBe true
     actual.left.toOption.map(_.message).getOrElse("") shouldBe "Invalid bank account details"
   }
-
-/*  "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
-
-    testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads) shouldBe a[Right[_, PensionsScheme]]
-
-  }
-
-  it should "return a pensions scheme object given valid JSON with correct register scheme declaration reads" in {
-
-    val result = testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads)
-
-    Json.toJson(result.right.get).transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt shouldBe None
-
-  }
-
-  it should "return a pensions scheme object given valid JSON with correct update scheme declaration reads" in {
-
-    val result = testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeUpdateDeclaration.reads)
-
-    Json.toJson(result.right.get).transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt shouldBe Some(JsBoolean(false))
-
-  }
-
-  it should "return a flag that says whether there has been any changes on establishers or trustee details" in {
-    val inputWithUpdatedTrusteesOrEstablishers = pensionsSchemeJson.as[JsObject] ++ Json.obj("changeOfEstablisherOrTrustDetails" -> true)
-
-    val result = testFixture().schemeService.transformJsonToModel(inputWithUpdatedTrusteesOrEstablishers, PensionSchemeDeclaration.apiReads)
-
-    result.right.get.changeOfEstablisherOrTrustDetails mustBe Some(true)
-  }
-
-  it should "return a BadRequestException if the JSON is invalid" in {
-
-    testFixture().schemeService.transformJsonToModel(Json.obj(), PensionSchemeDeclaration.apiReads) shouldBe a[Left[BadRequestException, _]]
-
-  }*/
 
   "registerScheme" should "return the result of submitting the pensions scheme" in {
 
@@ -352,7 +317,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   }
 
-
   "updateScheme" should "return the result of submitting the pensions scheme and have the right declaration type" in {
     val f = new UpdateTestFixture() {}
 
@@ -535,7 +499,7 @@ object SchemeServiceSpec extends SpecBase {
 
   def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
 
-    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.apiReads).fold(
+    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
       error => throw new BadRequestException(""),
       scheme => Json.toJson(scheme)
     )

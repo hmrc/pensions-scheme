@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import play.api.libs.functional.syntax._

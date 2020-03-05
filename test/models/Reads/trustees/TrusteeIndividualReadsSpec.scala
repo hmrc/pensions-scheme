@@ -16,7 +16,7 @@
 
 package models.Reads.trustees
 
-import models.{Address, Individual}
+import models.userAnswersToEtmp.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks

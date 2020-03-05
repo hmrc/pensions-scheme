@@ -20,9 +20,9 @@ import audit.{AuditService, SchemeList, SchemeSubscription, SchemeUpdate, Scheme
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
-import models.PensionsScheme.pensionSchemeHaveInvalidBank
-import models._
 import models.enumeration.SchemeType
+import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
+import models.userAnswersToEtmp.{BankAccount, PensionsScheme}
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json._
@@ -56,7 +56,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
-    json.validate[PensionsScheme](PensionsScheme.apiReads).fold(
+    json.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
       invalid = {
         errors =>
           val ex = JsResultException(errors)
@@ -82,7 +82,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
                                                          ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-    json.validate[PensionsScheme](PensionsScheme.apiReads).fold(
+    json.validate[PensionsScheme](PensionsScheme.updateApiReads).fold(
       invalid = {
         errors =>
           val ex = JsResultException(errors)

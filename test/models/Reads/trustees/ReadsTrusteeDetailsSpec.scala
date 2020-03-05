@@ -18,6 +18,8 @@ package models.Reads.trustees
 
 import models.Reads.establishers.EstablishersTestJson.{ninoJson, utrJson}
 import models._
+import models.userAnswersToEtmp.PersonalDetails
+import models.userAnswersToEtmp.trustee.TrusteeDetails
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 

@@ -16,7 +16,7 @@
 
 package models.Reads
 
-import models.{CustomerAndSchemeDetails, UkAddress}
+import models.userAnswersToEtmp.{CustomerAndSchemeDetails, UkAddress}
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
 

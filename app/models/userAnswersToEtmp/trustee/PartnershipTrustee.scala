@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package models
+package models.userAnswersToEtmp.trustee
 
-import models.userAnswersToEtmp.ReadsCommon.{partnershipReads, previousAddressDetails}
-import play.api.libs.json._
+import models.userAnswersToEtmp.ReadsHelper.previousAddressDetails
+import models.userAnswersToEtmp.{CorrespondenceAddressDetails, CorrespondenceContactDetails, PartnershipDetail, PreviousAddressDetails}
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 case class PartnershipTrustee(
                                organizationName: String,
@@ -35,7 +36,7 @@ object PartnershipTrustee {
   implicit val formats: Format[PartnershipTrustee] = Json.format[PartnershipTrustee]
 
   val readsTrusteePartnership: Reads[PartnershipTrustee] =
-    JsPath.read(partnershipReads).map(partnership =>
+    JsPath.read(PartnershipDetail.partnershipReads).map(partnership =>
       PartnershipTrustee(
         organizationName = partnership.name,
         utr = partnership.utr,

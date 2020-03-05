@@ -16,7 +16,7 @@
 
 package models.Writes
 
-import models.Address
+import models.userAnswersToEtmp.Address
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
