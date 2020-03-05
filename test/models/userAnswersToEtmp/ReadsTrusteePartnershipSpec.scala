@@ -19,11 +19,11 @@ package models.userAnswersToEtmp
 import models._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
+import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 
-class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
+class ReadsTrusteePartnershipSpec extends WordSpec with MustMatchers with OptionValues {
   private def jsValueOrNone(o: Option[JsValue]): Option[JsValue] = o.flatMap(jsValue => if (jsValue == JsNull) None else Some(jsValue))
 
   private def nonEmptyString: Gen[String] = Gen.alphaStr.suchThat(!_.isEmpty)
@@ -49,28 +49,13 @@ class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with Genera
   private val addressGen: Gen[JsObject] = Gen.oneOf(ukAddressGen, internationalAddressGen)
   private val addressYearsGen: Gen[String] = Gen.oneOf("over_a_year", "under_a_year")
 
-  private def codeJson(code: String, hasCode: Boolean): JsValue =
-    (code, hasCode) match {
-      case (_, true) => Json.obj("value" -> code)
-      case _ => JsNull
-    }
-
-  private def noCodeReasonJson(reason: String, hasCode: Boolean): JsValue =
-    (reason, hasCode) match {
-      case (_, false) => JsString(reason)
-      case _ => JsNull
-    }
-
   private implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 
   private val partnershipGenerator: Gen[JsObject] =
     for {
-      hasVat <- arbitrary[Boolean]
       vat <- nonEmptyString
-      hasUtr <- arbitrary[Boolean]
       utr <- nonEmptyString
       noUtrReason <- nonEmptyString
-      hasPaye <- arbitrary[Boolean]
       paye <- nonEmptyString
       emailAddress <- nonEmptyString
       phoneNumber <- nonEmptyString
@@ -82,13 +67,10 @@ class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with Genera
     } yield {
       Json.obj(
         "isTrusteeNew" -> true,
-        "hasVat" -> hasVat,
-        "partnershipVat" -> codeJson(vat, hasVat),
-        "hasUtr" -> hasUtr,
-        "utr" -> codeJson(utr, hasUtr),
-        "noUtrReason" -> noCodeReasonJson(noUtrReason, hasUtr),
-        "hasPaye" -> hasPaye,
-        "partnershipPaye" -> codeJson(paye, hasPaye),
+        "partnershipVat" -> Json.obj("value" -> vat),
+        "utr" -> Json.obj("value" -> utr),
+        "noUtrReason" -> JsString(noUtrReason),
+        "partnershipPaye" -> Json.obj("value" -> paye),
         "partnershipContactDetails" -> Json.obj(
           "emailAddress" -> emailAddress,
           "phoneNumber" -> phoneNumber
@@ -105,33 +87,45 @@ class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with Genera
       )
     }
 
-  "A trustee partnership" - {
-    "must be read from valid data" in {
+  "A Json payload containing trustee partnership" should {
+    "have partnership name read correctly" in {
       forAll(partnershipGenerator) { json =>
         val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
-
         transformedTrustee.organizationName mustBe (json \ "partnershipDetails" \ "name").as[String]
+      }
+    }
 
-        if ((json \ "hasUtr").as[Boolean]) {
-          transformedTrustee.utr mustBe Option((json \ "utr" \ "value").as[String])
-          transformedTrustee.noUtrReason mustBe None
-        } else {
-          transformedTrustee.utr mustBe None
-          transformedTrustee.noUtrReason mustBe Option((json \ "noUtrReason").as[String])
-        }
+    "have partnership utr read correctly" in {
+      forAll(partnershipGenerator) { json =>
+        val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
+        transformedTrustee.utr mustBe Option((json \ "utr" \ "value").as[String])
+      }
+    }
 
-        if ((json \ "hasVat").as[Boolean]) {
-          transformedTrustee.vatRegistrationNumber mustBe Option((json \ "partnershipVat" \ "value").as[String])
-        } else {
-          transformedTrustee.vatRegistrationNumber mustBe None
-        }
+    "have partnership no utr reason read correctly" in {
+      forAll(partnershipGenerator) { json =>
+        val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
+        transformedTrustee.noUtrReason mustBe Option((json \ "noUtrReason").as[String])
+      }
+    }
 
-        if ((json \ "hasPaye").as[Boolean]) {
-          transformedTrustee.payeReference mustBe Option((json \ "partnershipPaye" \ "value").as[String])
-        } else {
-          transformedTrustee.payeReference mustBe None
-        }
+    "have partnership vat read correctly" in {
+      forAll(partnershipGenerator) { json =>
+        val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
+        transformedTrustee.vatRegistrationNumber mustBe Option((json \ "partnershipVat" \ "value").as[String])
+      }
+    }
 
+    "have partnership paye read correctly" in {
+      forAll(partnershipGenerator) { json =>
+        val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
+        transformedTrustee.payeReference mustBe Option((json \ "partnershipPaye" \ "value").as[String])
+      }
+    }
+
+    "have partnership address read correctly" in {
+      forAll(partnershipGenerator) { json =>
+        val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
         if ((json \ "partnershipAddress" \ "country").as[String] == "GB") {
           transformedTrustee.correspondenceAddressDetails.addressDetails mustBe UkAddress(
             addressLine1 = (json \ "partnershipAddress" \ "addressLine1").as[String],
@@ -151,12 +145,22 @@ class ReadsTrusteePartnershipSpec extends FreeSpec with MustMatchers with Genera
             postalCode = None
           )
         }
+      }
+    }
 
+    "have partnership contact details read correctly" in {
+      forAll(partnershipGenerator) { json =>
+        val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
         transformedTrustee.correspondenceContactDetails mustBe CorrespondenceContactDetails(ContactDetails(
           telephone = (json \ "partnershipContactDetails" \ "phoneNumber").as[String],
           email = (json \ "partnershipContactDetails" \ "emailAddress").as[String]
         ))
+      }
+    }
 
+    "have partnership previous address read correctly" in {
+      forAll(partnershipGenerator) { json =>
+        val transformedTrustee = JsArray(Seq(json)).as[Seq[PartnershipTrustee]](ReadsTrusteePartnership.readsTrusteePartnerships).head
         if ((json \ "hasBeenTrading").as[Boolean] && (json \ "partnershipAddressYears").as[String] == "under_a_year") {
           if ((json \ "partnershipPreviousAddress" \ "country").as[String] == "GB") {
             transformedTrustee.previousAddressDetails.flatMap(_.previousAddressDetails) mustBe Some(UkAddress(
