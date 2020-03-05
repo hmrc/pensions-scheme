@@ -16,6 +16,7 @@
 
 package models.userAnswersToEtmp.Reads.establishers
 
+import models.userAnswersToEtmp.Reads.CommonGenerator
 import models.userAnswersToEtmp.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
@@ -26,51 +27,6 @@ import play.api.libs.json.{JsObject, JsString, Json}
 class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
 
   implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
-
-  lazy val addressGen: Gen[JsObject] = Gen.oneOf(ukAddressGen, internationalAddressGen)
-
-  lazy val ukAddressGen: Gen[JsObject] = for {
-    line1 <- arbitrary[String]
-    line2 <- arbitrary[String]
-    line3 <- arbitrary[Option[String]]
-    line4 <- arbitrary[Option[String]]
-    postalCode <- arbitrary[String]
-  } yield Json.obj("addressLine1" -> line1, "addressLine2" -> line2, "addressLine3" ->line3,
-    "addressLine4" -> line4, "country" -> "GB", "postalCode" -> postalCode)
-
-  lazy val internationalAddressGen: Gen[JsObject] = for {
-    line1 <- arbitrary[String]
-    line2 <- arbitrary[String]
-    line3 <- arbitrary[Option[String]]
-    line4 <- arbitrary[Option[String]]
-    countryCode <- arbitrary[String]
-  } yield Json.obj("addressLine1" -> line1, "addressLine2" -> line2, "addressLine3" ->line3,
-    "addressLine4" -> line4, "country" -> countryCode)
-
-  val individualGenerator: Gen[JsObject] =
-    for {
-      firstName <- arbitrary[String]
-      lastName <- arbitrary[String]
-      dateOfBirth <- arbitrary[String]
-      correspondenceAddressDetails <- addressGen
-      addressYears <- arbitrary[String]
-      previousAddressDetails <- addressGen
-      mobileNumber <- arbitrary[String]
-      emailAddress <- arbitrary[String]
-    } yield Json.obj(
-      "directorDetails" -> Json.obj(
-        "firstName" -> firstName,
-        "lastName" -> lastName
-      ),
-      "dateOfBirth" -> dateOfBirth,
-      "directorAddressId" -> correspondenceAddressDetails,
-      "companyDirectorAddressYears" -> addressYears,
-      "previousAddress" -> previousAddressDetails,
-      "directorContactDetails" -> Json.obj(
-        "emailAddress" -> emailAddress,
-        "phoneNumber" -> mobileNumber
-      )
-    )
 
   "A company director" - {
 
@@ -155,4 +111,29 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
       }
     }
   }
+
+  val individualGenerator: Gen[JsObject] =
+    for {
+      firstName <- arbitrary[String]
+      lastName <- arbitrary[String]
+      dateOfBirth <- arbitrary[String]
+      correspondenceAddressDetails <- CommonGenerator.addressGen
+      addressYears <- arbitrary[String]
+      previousAddressDetails <- CommonGenerator.addressGen
+      mobileNumber <- arbitrary[String]
+      emailAddress <- arbitrary[String]
+    } yield Json.obj(
+      "directorDetails" -> Json.obj(
+        "firstName" -> firstName,
+        "lastName" -> lastName
+      ),
+      "dateOfBirth" -> dateOfBirth,
+      "directorAddressId" -> correspondenceAddressDetails,
+      "companyDirectorAddressYears" -> addressYears,
+      "previousAddress" -> previousAddressDetails,
+      "directorContactDetails" -> Json.obj(
+        "emailAddress" -> emailAddress,
+        "phoneNumber" -> mobileNumber
+      )
+    )
 }
