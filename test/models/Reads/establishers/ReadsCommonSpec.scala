@@ -16,115 +16,18 @@
 
 package models.Reads.establishers
 
-import models.ReadsEstablisherDetails._
+import models.userAnswersToEtmp.ReadsCommon._
 import models._
 import org.scalatest.{Assertion, FlatSpec, Matchers}
 import play.api.libs.json._
+import models.userAnswersToEtmp.ReadsEstablishers.readsEstablisherDetails
+import models.userAnswersToEtmp.ReadsTrustees.readsTrusteeDetails
 
-class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
+class ReadsCommonSpec extends FlatSpec with Matchers {
 
-  import ReadsEstablisherDetailsSpec._
+  import ReadsCommonSpec._
 
-  "ReadsEstablisherDetails" should "read a company with minimal details" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .build(), true, false))
-
-  }
-
-  it should "read multiple companies" in {
-
-    establisherTest(
-      Nil,
-      (1 to 3).map(
-        _ =>
-          (CompanyEstablisherBuilder()
-            .build(), false, false)
-      ),
-      Nil,
-      Nil,
-      Nil
-    )
-
-  }
-
-  it should "read multiple companies without deleted ones" in {
-
-    establisherTest(
-      Nil,
-      (1 to 3).map(
-        _ =>
-          (CompanyEstablisherBuilder()
-            .build(), false, false)
-      ) :+ ((CompanyEstablisherBuilder()
-        .build(), true, false)),
-      Nil,
-      Nil,
-      Nil
-    )
-
-  }
-
-  it should "read a company with a UTR" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withUtr()
-        .build(), false, false)
-    )
-
-  }
-
-  it should "read a company with a CRN" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withCrn()
-        .build(), false, true)
-    )
-
-  }
-
-  it should "read a company with a VAT number" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withVat()
-        .build(), false, true)
-    )
-  }
-
-  it should "read a company with a PAYE reference" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withPaye()
-        .build(), false, true)
-    )
-  }
-
-  it should "read a company with Other Directors true" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withOtherDirectors(true)
-        .build(), false, false)
-    )
-
-  }
-
-  it should "read a company with a previous address" in {
-
-    establisherCompanyTest(
-      (CompanyEstablisherBuilder()
-        .withPreviousAddress()
-        .build(), false, false)
-    )
-
-  }
-
-  it should "read a company wth a director with minimal details" in {
+  "ReadsEstablisherDetails" should "read a company wth a director with minimal details" in {
 
     companyDirectorTest(
       IndividualBuilder()
@@ -640,7 +543,7 @@ class ReadsEstablisherDetailsSpec extends FlatSpec with Matchers {
 
 }
 
-object ReadsEstablisherDetailsSpec extends Matchers {
+object ReadsCommonSpec extends Matchers {
 
   val previousAddress: Address = UkAddress("addressLine 1", Some("addressLine2"), None, None, "GB", "ZZ11ZZ")
 
