@@ -16,13 +16,13 @@
 
 package models.userAnswersToEtmp.Reads.establishers
 
-import models.userAnswersToEtmp.Reads.CommonGenerator
+import models.userAnswersToEtmp.Reads.CommonGenerator.establisherIndividualGenerator
 import models.userAnswersToEtmp.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.{Gen, Shrink}
+import org.scalacheck.Shrink
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{JsString, Json}
 
 class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
 
@@ -31,7 +31,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
   "An establisher individual" - {
 
     "must read individual details" in {
-      forAll(individualGenerator){
+      forAll(establisherIndividualGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.personalDetails.firstName mustBe (json \ "establisherDetails" \ "firstName").as[String]
@@ -41,7 +41,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must read previous address when address years is under a year" in {
-      forAll(individualGenerator, "under_a_year"){
+      forAll(establisherIndividualGenerator(), "under_a_year"){
         (json, addressYears) =>
           val newJson  = json + ("addressYears" -> JsString(addressYears))
           val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
@@ -51,7 +51,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must not read previous address when address years is not under a year" in {
-      forAll(individualGenerator){
+      forAll(establisherIndividualGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.previousAddressDetails mustBe None
@@ -59,7 +59,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must read address" in {
-      forAll(individualGenerator){
+      forAll(establisherIndividualGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.correspondenceAddressDetails.addressDetails mustBe (json \ "address").as[Address]
@@ -67,7 +67,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must read contact details" in {
-      forAll(individualGenerator){
+      forAll(establisherIndividualGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsEstablisherIndividual)
           model.correspondenceContactDetails.contactDetails.email mustBe (json \ "contactDetails" \ "emailAddress").as[String]
@@ -76,7 +76,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must read nino when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(establisherIndividualGenerator(), arbitrary[String]){
         (json, nino) =>
           val newJson  = json + ("establisherNino" -> Json.obj("value" -> nino))
           val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
@@ -85,7 +85,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must read no nino reason when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(establisherIndividualGenerator(), arbitrary[String]){
         (json, noNinoReason) =>
           val newJson  = json + ("noNinoReason" -> JsString(noNinoReason))
           val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
@@ -94,7 +94,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must read utr when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(establisherIndividualGenerator(), arbitrary[String]){
         (json, utr) =>
           val newJson  = json + ("utr" -> Json.obj("value" -> utr))
           val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
@@ -103,7 +103,7 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
     }
 
     "must read no utr reason when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(establisherIndividualGenerator(), arbitrary[String]){
         (json, noUtrReason) =>
           val newJson  = json + ("noUtrReason" -> JsString(noUtrReason))
           val model = newJson.as[Individual](Individual.readsEstablisherIndividual)
@@ -111,29 +111,4 @@ class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with Gen
       }
     }
   }
-
-  val individualGenerator: Gen[JsObject] =
-    for {
-      firstName <- arbitrary[String]
-      lastName <- arbitrary[String]
-      dateOfBirth <- arbitrary[String]
-      correspondenceAddressDetails <- CommonGenerator.addressGen
-      addressYears <- arbitrary[String]
-      previousAddressDetails <- CommonGenerator.addressGen
-      mobileNumber <- arbitrary[String]
-      emailAddress <- arbitrary[String]
-    } yield Json.obj(
-      "establisherDetails" -> Json.obj(
-        "firstName" -> firstName,
-        "lastName" -> lastName
-      ),
-      "dateOfBirth" -> dateOfBirth,
-      "address" -> correspondenceAddressDetails,
-      "addressYears" -> addressYears,
-      "previousAddress" -> previousAddressDetails,
-      "contactDetails" -> Json.obj(
-        "emailAddress" -> emailAddress,
-        "phoneNumber" -> mobileNumber
-      )
-    )
 }

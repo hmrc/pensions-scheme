@@ -55,7 +55,7 @@ object Partnership {
       haveMoreThanTenDirectorOrPartner = otherPartners.getOrElse(false),
       correspondenceAddressDetails = CorrespondenceAddressDetails(partnership.address),
       correspondenceContactDetails = CorrespondenceContactDetails(partnership.contact),
-      previousAddressDetails = ReadsHelper.previousAddressDetails(partnership.addressYears, partnership.previousAddress),
+      previousAddressDetails = ReadsHelper.previousAddressDetails(partnership.addressYears, partnership.previousAddress, partnership.tradingTime),
       partnerDetails = partners.getOrElse(Nil)
     )
   )

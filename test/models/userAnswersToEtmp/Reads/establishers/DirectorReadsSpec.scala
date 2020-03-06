@@ -16,13 +16,13 @@
 
 package models.userAnswersToEtmp.Reads.establishers
 
-import models.userAnswersToEtmp.Reads.CommonGenerator
+import models.userAnswersToEtmp.Reads.CommonGenerator.directorGenerator
 import models.userAnswersToEtmp.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.{Gen, Shrink}
+import org.scalacheck.Shrink
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{JsString, Json}
 
 class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
 
@@ -31,7 +31,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
   "A company director" - {
 
     "must read director details" in {
-      forAll(individualGenerator){
+      forAll(directorGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsCompanyDirector)
           model.personalDetails.firstName mustBe (json \ "directorDetails" \ "firstName").as[String]
@@ -41,7 +41,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must read previous address when address years is under a year" in {
-      forAll(individualGenerator, "under_a_year"){
+      forAll(directorGenerator(), "under_a_year"){
         (json, addressYears) =>
           val newJson  = json + ("companyDirectorAddressYears" -> JsString(addressYears))
           val model = newJson.as[Individual](Individual.readsCompanyDirector)
@@ -51,7 +51,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must not read previous address when address years is not under a year" in {
-      forAll(individualGenerator){
+      forAll(directorGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsCompanyDirector)
           model.previousAddressDetails mustBe None
@@ -59,7 +59,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must read address" in {
-      forAll(individualGenerator){
+      forAll(directorGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsCompanyDirector)
           model.correspondenceAddressDetails.addressDetails mustBe (json \ "directorAddressId").as[Address]
@@ -67,7 +67,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must read contact details" in {
-      forAll(individualGenerator){
+      forAll(directorGenerator()){
         json =>
           val model = json.as[Individual](Individual.readsCompanyDirector)
           model.correspondenceContactDetails.contactDetails.email mustBe (json \ "directorContactDetails" \ "emailAddress").as[String]
@@ -76,7 +76,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must read nino when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(directorGenerator(), arbitrary[String]){
         (json, nino) =>
           val newJson  = json + ("directorNino" -> Json.obj("value" -> nino))
           val model = newJson.as[Individual](Individual.readsCompanyDirector)
@@ -85,7 +85,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must read no nino reason when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(directorGenerator(), arbitrary[String]){
         (json, noNinoReason) =>
           val newJson  = json + ("noNinoReason" -> JsString(noNinoReason))
           val model = newJson.as[Individual](Individual.readsCompanyDirector)
@@ -94,7 +94,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must read utr when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(directorGenerator(), arbitrary[String]){
         (json, utr) =>
           val newJson  = json + ("utr" -> Json.obj("value" -> utr))
           val model = newJson.as[Individual](Individual.readsCompanyDirector)
@@ -103,7 +103,7 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
     }
 
     "must read no utr reason when it is present" in {
-      forAll(individualGenerator, arbitrary[String]){
+      forAll(directorGenerator(), arbitrary[String]){
         (json, noUtrReason) =>
           val newJson  = json + ("noUtrReason" -> JsString(noUtrReason))
           val model = newJson.as[Individual](Individual.readsCompanyDirector)
@@ -111,29 +111,4 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenP
       }
     }
   }
-
-  val individualGenerator: Gen[JsObject] =
-    for {
-      firstName <- arbitrary[String]
-      lastName <- arbitrary[String]
-      dateOfBirth <- arbitrary[String]
-      correspondenceAddressDetails <- CommonGenerator.addressGen
-      addressYears <- arbitrary[String]
-      previousAddressDetails <- CommonGenerator.addressGen
-      mobileNumber <- arbitrary[String]
-      emailAddress <- arbitrary[String]
-    } yield Json.obj(
-      "directorDetails" -> Json.obj(
-        "firstName" -> firstName,
-        "lastName" -> lastName
-      ),
-      "dateOfBirth" -> dateOfBirth,
-      "directorAddressId" -> correspondenceAddressDetails,
-      "companyDirectorAddressYears" -> addressYears,
-      "previousAddress" -> previousAddressDetails,
-      "directorContactDetails" -> Json.obj(
-        "emailAddress" -> emailAddress,
-        "phoneNumber" -> mobileNumber
-      )
-    )
 }

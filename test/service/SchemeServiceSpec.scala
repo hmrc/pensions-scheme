@@ -20,10 +20,11 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.enumeration.SchemeType
-import models.userAnswersToEtmp.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
-import models.userAnswersToEtmp.establisher.EstablisherDetails
+import models.userAnswersToEtmp.Reads.CommonGenerator.{establisherIndividualGenerator, establisherCompanyGenerator, establisherPartnershipGenerator}
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
 import models.userAnswersToEtmp.trustee.TrusteeDetails
-import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import play.api.http.Status
 import play.api.libs.json.{__, _}
@@ -34,7 +35,7 @@ import utils.Lens
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
+class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
   import FakeSchemeConnector._
   import SchemeServiceSpec._
@@ -224,74 +225,83 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   it should "translate a scheme with individual establishers" in {
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Nil,
-            individual = Seq(IndividualBuilder().build()),
-            partnership = Nil
-          )
+    forAll(establisherIndividualGenerator()) {
+      json =>
+        val individual = json.as[Individual](Individual.readsEstablisherIndividual)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Nil,
+                individual = Seq(individual),
+                partnership = Nil
+              )
+            )
+
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasIndividualEstablisher = true,
+          request = Json.toJson(scheme)
         )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+        actual shouldBe expected
 
-    val expected = schemeSubscription.copy(
-      hasIndividualEstablisher = true,
-      request = Json.toJson(scheme)
-    )
-
-    actual shouldBe expected
-
+    }
   }
 
   it should "translate a scheme with company establishers" in {
+    forAll(establisherCompanyGenerator()) {
+      json =>
+        val estCom = json.as[CompanyEstablisher](CompanyEstablisher.readsEstablisherCompany)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Seq(estCom),
+                individual = Nil,
+                partnership = Nil
+              )
+            )
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Seq(CompanyEstablisherBuilder().build()),
-            individual = Nil,
-            partnership = Nil
-          )
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasCompanyEstablisher = true,
+          request = Json.toJson(scheme)
         )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+        actual shouldBe expected
 
-    val expected = schemeSubscription.copy(
-      hasCompanyEstablisher = true,
-      request = Json.toJson(scheme)
-    )
-
-    actual shouldBe expected
-
+    }
   }
 
   it should "translate a scheme with partnership establishers" in {
+    forAll(establisherPartnershipGenerator()) {
+      json =>
+        val estPart = json.as[Partnership](Partnership.readsEstablisherPartnership)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Nil,
+                individual = Nil,
+                partnership = Seq(estPart)
+              )
+            )
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Nil,
-            individual = Nil,
-            partnership = Seq(PartnershipBuilder().build())
-          )
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasPartnershipEstablisher = true,
+          request = Json.toJson(scheme)
         )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
-
-    val expected = schemeSubscription.copy(
-      hasPartnershipEstablisher = true,
-      request = Json.toJson(scheme)
-    )
-
-    actual shouldBe expected
-
+        actual shouldBe expected
+    }
   }
 
   it should "translate a scheme with dormant company, bank details, and invalid bank details" in {

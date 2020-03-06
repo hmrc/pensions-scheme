@@ -27,6 +27,8 @@ object ReadsHelper {
                              tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
 
     val tradingTimeAnswer = tradingTime.getOrElse(true)
+
+
     if (addressYears == "under_a_year" && tradingTimeAnswer) {
       Some(
         PreviousAddressDetails(isPreviousAddressLast12Month = true, previousAddress)
