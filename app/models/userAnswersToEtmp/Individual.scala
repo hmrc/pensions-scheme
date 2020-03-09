@@ -151,6 +151,6 @@ object Individual {
   val individualUpdateWrites: Writes[Individual] = (
     (JsPath \ "personalDetails").write[PersonalDetails] and
       JsPath.write(commonIndividualWrites)
-    ) (getIndividual(_))
+    )(details => getIndividual(details))
 }
 

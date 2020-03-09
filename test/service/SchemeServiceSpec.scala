@@ -20,7 +20,7 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.enumeration.SchemeType
-import models.userAnswersToEtmp.Reads.CommonGenerator.{establisherIndividualGenerator, establisherCompanyGenerator, establisherPartnershipGenerator}
+import models.userAnswersToEtmp.reads.CommonGenerator.{establisherIndividualGenerator, establisherCompanyGenerator, establisherPartnershipGenerator}
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
 import models.userAnswersToEtmp.trustee.TrusteeDetails

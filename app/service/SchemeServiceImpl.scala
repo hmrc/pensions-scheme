@@ -102,9 +102,9 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   }
 /*
 
-  private[service] def transformJsonToModel[A<:Declaration](json: JsValue, readsDeclaration: Reads[A]): Either[BadRequestException, PensionsScheme] = {
+  private[service] def transformJsonToModel[A<:Declaration](json: JsValue, readsDeclaration: reads[A]): Either[BadRequestException, PensionsScheme] = {
 
-    val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] = CustomerAndSchemeDetails.apiReads
+    val readsCustomerAndSchemeDetails: reads[CustomerAndSchemeDetails] = CustomerAndSchemeDetails.apiReads
 
     val result = for {
       customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
