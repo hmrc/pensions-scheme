@@ -100,32 +100,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
         }
       })
   }
-/*
-
-  private[service] def transformJsonToModel[A<:Declaration](json: JsValue, readsDeclaration: reads[A]): Either[BadRequestException, PensionsScheme] = {
-
-    val readsCustomerAndSchemeDetails: reads[CustomerAndSchemeDetails] = CustomerAndSchemeDetails.apiReads
-
-    val result = for {
-      customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
-      declaration <- json.validate[A](readsDeclaration)
-      establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
-      trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
-      changeOfEstablisherOrTrustDetails <- json.validate[Option[Boolean]]((JsPath \ "changeOfEstablisherOrTrustDetails").readNullable[Boolean])
-    } yield {
-      PensionsScheme(customerAndScheme, declaration, establishers, trustees, changeOfEstablisherOrTrustDetails)
-    }
-
-    result.fold(
-      errors => {
-        val ex = JsResultException(errors)
-        Logger.warn("Invalid pension scheme", ex)
-        Left(new BadRequestException("Invalid pension scheme"))
-      },
-      scheme => Right(scheme)
-    )
-  }
-*/
 
   private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {
 
