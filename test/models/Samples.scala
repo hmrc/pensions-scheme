@@ -16,6 +16,9 @@
 
 package models
 
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee}
+
 trait Samples {
 
   val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")
@@ -23,11 +26,6 @@ trait Samples {
   val ukAddressSample = UkAddress("line1", Some("line2"), Some("line3"), Some("line4"), "GB", "NE1")
   val previousAddressDetailsSample = PreviousAddressDetails(isPreviousAddressLast12Month = false)
   val contactDetailsSample = ContactDetails("07592113", email = "test@test.com")
-
-  val companySample = OrganisationDetailType("Company Test", vatRegistrationNumber = Some("VAT11111"),
-    payeReference = Some("PAYE11111"), crnNumber = Some("CRN11111"))
-
-  val pensionAdviserSample = PensionAdvisorDetail("John", ukAddressSample, contactDetailsSample)
 
   val trusteePartnershipData = PartnershipTrustee(
     organizationName = "test partnership",

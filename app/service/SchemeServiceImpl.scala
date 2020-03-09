@@ -20,11 +20,9 @@ import audit.{AuditService, SchemeList, SchemeSubscription, SchemeUpdate, Scheme
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
-import models.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.ReadsEstablishers.readsEstablisherDetails
-import models.userAnswersToEtmp.ReadsTrustees.readsTrusteeDetails
-import models._
 import models.enumeration.SchemeType
+import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
+import models.userAnswersToEtmp.{BankAccount, PensionsScheme}
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json._
@@ -58,9 +56,14 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
-    transformJsonToModel(json, PensionSchemeDeclaration.apiReads).fold(
-      error => Future.failed(error),
-      validPensionsScheme =>
+    json.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          Logger.warn("Invalid pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid pension scheme"))
+      },
+      valid = { validPensionsScheme =>
         readBankAccount(json).fold(
           error => Future.failed(error),
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
@@ -73,15 +76,20 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
               }
           }
         )
+      }
     )
-
   }
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
                                                          ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-    transformJsonToModel(json, PensionSchemeUpdateDeclaration.reads).fold(
-      error => Future.failed(error),
-      validPensionsScheme => {
+    json.validate[PensionsScheme](PensionsScheme.updateApiReads).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          Logger.warn("Invalid pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid pension scheme"))
+      },
+      valid = { validPensionsScheme =>
         val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
         Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
         schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
@@ -91,30 +99,6 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
             sendSchemeUpdateEvent(psaId, validPensionsScheme, error.responseCode, None)
         }
       })
-  }
-
-  private[service] def transformJsonToModel[A<:Declaration](json: JsValue, readsDeclaration: Reads[A]): Either[BadRequestException, PensionsScheme] = {
-
-    val readsCustomerAndSchemeDetails: Reads[CustomerAndSchemeDetails] = CustomerAndSchemeDetails.apiReads
-
-    val result = for {
-      customerAndScheme <- json.validate[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
-      declaration <- json.validate[A](readsDeclaration)
-      establishers <- json.validate[EstablisherDetails](readsEstablisherDetails)
-      trustees <- json.validate[TrusteeDetails](readsTrusteeDetails)
-      changeOfEstablisherOrTrustDetails <- json.validate[Option[Boolean]]((JsPath \ "changeOfEstablisherOrTrustDetails").readNullable[Boolean])
-    } yield {
-      PensionsScheme(customerAndScheme, declaration, establishers, trustees, changeOfEstablisherOrTrustDetails)
-    }
-
-    result.fold(
-      errors => {
-        val ex = JsResultException(errors)
-        Logger.warn("Invalid pension scheme", ex)
-        Left(new BadRequestException("Invalid pension scheme"))
-      },
-      scheme => Right(scheme)
-    )
   }
 
   private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {

@@ -19,21 +19,23 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
-import models.Reads.establishers.{CompanyEstablisherBuilder, IndividualBuilder, PartnershipBuilder}
 import models.enumeration.SchemeType
-import models.{EstablisherDetails, PensionsScheme, _}
+import models.userAnswersToEtmp.reads.CommonGenerator.{establisherIndividualGenerator, establisherCompanyGenerator, establisherPartnershipGenerator}
+import models.userAnswersToEtmp._
+import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
+import models.userAnswersToEtmp.trustee.TrusteeDetails
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import play.api.http.Status
-import play.api.libs.json.Reads._
 import play.api.libs.json.{__, _}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
-import utils.{FakeFeatureSwitchManagementService, Lens}
+import utils.Lens
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
+class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
   import FakeSchemeConnector._
   import SchemeServiceSpec._
@@ -89,42 +91,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     val actual = testFixture().schemeService.readBankAccount(Json.obj("uKBankDetails" -> "invalid"))
     actual.isLeft shouldBe true
     actual.left.toOption.map(_.message).getOrElse("") shouldBe "Invalid bank account details"
-  }
-
-  "transformJsonToModel" should "return a pensions scheme object given valid JSON" in {
-
-    testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads) shouldBe a[Right[_, PensionsScheme]]
-
-  }
-
-  it should "return a pensions scheme object given valid JSON with correct register scheme declaration reads" in {
-
-    val result = testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads)
-
-    Json.toJson(result.right.get).transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt shouldBe None
-
-  }
-
-  it should "return a pensions scheme object given valid JSON with correct update scheme declaration reads" in {
-
-    val result = testFixture().schemeService.transformJsonToModel(pensionsSchemeJson, PensionSchemeUpdateDeclaration.reads)
-
-    Json.toJson(result.right.get).transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt shouldBe Some(JsBoolean(false))
-
-  }
-
-  it should "return a flag that says whether there has been any changes on establishers or trustee details" in {
-    val inputWithUpdatedTrusteesOrEstablishers = pensionsSchemeJson.as[JsObject] ++ Json.obj("changeOfEstablisherOrTrustDetails" -> true)
-
-    val result = testFixture().schemeService.transformJsonToModel(inputWithUpdatedTrusteesOrEstablishers, PensionSchemeDeclaration.apiReads)
-
-    result.right.get.changeOfEstablisherOrTrustDetails mustBe Some(true)
-  }
-
-  it should "return a BadRequestException if the JSON is invalid" in {
-
-    testFixture().schemeService.transformJsonToModel(Json.obj(), PensionSchemeDeclaration.apiReads) shouldBe a[Left[BadRequestException, _]]
-
   }
 
   "registerScheme" should "return the result of submitting the pensions scheme" in {
@@ -259,74 +225,83 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
 
   it should "translate a scheme with individual establishers" in {
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Nil,
-            individual = Seq(IndividualBuilder().build()),
-            partnership = Nil
-          )
+    forAll(establisherIndividualGenerator()) {
+      json =>
+        val individual = json.as[Individual](Individual.readsEstablisherIndividual)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Nil,
+                individual = Seq(individual),
+                partnership = Nil
+              )
+            )
+
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasIndividualEstablisher = true,
+          request = Json.toJson(scheme)
         )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+        actual shouldBe expected
 
-    val expected = schemeSubscription.copy(
-      hasIndividualEstablisher = true,
-      request = Json.toJson(scheme)
-    )
-
-    actual shouldBe expected
-
+    }
   }
 
   it should "translate a scheme with company establishers" in {
+    forAll(establisherCompanyGenerator()) {
+      json =>
+        val estCom = json.as[CompanyEstablisher](CompanyEstablisher.readsEstablisherCompany)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Seq(estCom),
+                individual = Nil,
+                partnership = Nil
+              )
+            )
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Seq(CompanyEstablisherBuilder().build()),
-            individual = Nil,
-            partnership = Nil
-          )
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasCompanyEstablisher = true,
+          request = Json.toJson(scheme)
         )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+        actual shouldBe expected
 
-    val expected = schemeSubscription.copy(
-      hasCompanyEstablisher = true,
-      request = Json.toJson(scheme)
-    )
-
-    actual shouldBe expected
-
+    }
   }
 
   it should "translate a scheme with partnership establishers" in {
+    forAll(establisherPartnershipGenerator()) {
+      json =>
+        val estPart = json.as[Partnership](Partnership.readsEstablisherPartnership)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Nil,
+                individual = Nil,
+                partnership = Seq(estPart)
+              )
+            )
 
-    val scheme =
-      PensionsSchemeSchemeStructure
-        .set(pensionsScheme, Some(SchemeType.single.value))
-        .copy(establisherDetails =
-          EstablisherDetails(
-            companyOrOrganization = Nil,
-            individual = Nil,
-            partnership = Seq(PartnershipBuilder().build())
-          )
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasPartnershipEstablisher = true,
+          request = Json.toJson(scheme)
         )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
-
-    val expected = schemeSubscription.copy(
-      hasPartnershipEstablisher = true,
-      request = Json.toJson(scheme)
-    )
-
-    actual shouldBe expected
-
+        actual shouldBe expected
+    }
   }
 
   it should "translate a scheme with dormant company, bank details, and invalid bank details" in {
@@ -351,7 +326,6 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers {
     actual shouldBe expected
 
   }
-
 
   "updateScheme" should "return the result of submitting the pensions scheme and have the right declaration type" in {
     val f = new UpdateTestFixture() {}
@@ -535,11 +509,10 @@ object SchemeServiceSpec extends SpecBase {
 
   def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
 
-    service.transformJsonToModel(pensionsSchemeJson, PensionSchemeDeclaration.apiReads).fold(
-      ex => throw ex,
+    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
+      error => throw new BadRequestException(""),
       scheme => Json.toJson(scheme)
     )
-
   }
 
   val schemeUpdateRequestJson = Json.parse(

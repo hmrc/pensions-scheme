@@ -18,16 +18,12 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeConnector
-import models.ListOfSchemes
-import play.api.libs.json.Json
-
-import play.api.libs.json._
 import play.api.mvc._
 import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
-import utils.validationUtils._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector,
