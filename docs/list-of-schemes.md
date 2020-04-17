@@ -166,6 +166,14 @@ Retrieves list of schemes successfully submitted to date.
   * **Code:** 400 BAD_REQUEST <br />
     **Content:** `{"statusCode":400,"message":"Bad Request with no Psa Id"}`
 
+  * **Code:** 403 FORBIDDEN <br />
+  **Content:** `{"statusCode":403,"message":"INVALID_BUSINESS_PARTNER"}`
+
+  * **Code:** 409 FORBIDDEN <br />
+  **Content:** `{"statusCode":409,"message":"DUPLICATE_SUBMISSION"}`
+  
+  * **Code:** 404 NOT_FOUND <br />
+
   OR anything else
 
   * **Code:** 500 INTERNAL_SERVER_ERROR <br />

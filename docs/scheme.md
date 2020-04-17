@@ -174,3 +174,13 @@ Returns scheme details.
 }
 ```
 
+* **Error Response:**
+
+  * **Code:** 400 BAD_REQUEST <br />
+    **Content:** `{"statusCode":400,"message":"Bad Request with missing parameters idType, idNumber or PSAId"}`
+  
+  * **Code:** 404 NOT_FOUND <br />
+
+  OR anything else
+
+  * **Code:** 500 INTERNAL_SERVER_ERROR <br />
