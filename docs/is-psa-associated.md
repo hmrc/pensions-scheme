@@ -1,6 +1,6 @@
-Register-scheme
+Is-psa-associated
 -----------------------
-Register a scheme.
+Returns boolean indicating whether a PSA is associated with any schemes.
 
 * **URL**
 

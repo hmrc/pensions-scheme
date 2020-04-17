@@ -14,10 +14,10 @@ API
 | *Task* | *Supported Methods* | *Description* |
 |--------|----|----|
 | ```/register-scheme                                     ```  | POST   | Register scheme [More...](docs/register-scheme.md) |
-| ```/update-scheme                                       ```  | POST   | Update scheme
-| ```/list-of-schemes                                     ```  | GET    | Retrieves list of schemes successfully submitted to date
-| ```/scheme                                              ```  | GET    | Returns scheme details
-| ```/journey-cache/scheme-subscription/:id               ```  | GET    | Returns the value of a key from the Mongo subscription journey cache
+| ```/update-scheme                                       ```  | POST   | Update scheme [More...](docs/update-scheme.md) |
+| ```/list-of-schemes                                     ```  | GET    | Retrieves list of schemes successfully submitted to date [More...](docs/list-of-schemes.md) |
+| ```/scheme                                              ```  | GET    | Returns scheme details [More...](docs/scheme.md) |
+| ```/journey-cache/scheme-subscription/:id               ```  | GET    | Returns the value of a key from the Mongo subscription journey cache 
 | ```/journey-cache/scheme-subscription/:id               ```  | POST   | Saves a value to a key in the Mongo subscription journey cache
 | ```/journey-cache/scheme-subscription/:id               ```  | DELETE | Removes the value of a key from the Mongo subscription journey cache
 | ```/journey-cache/scheme-subscription/:id/lastUpdated   ```  | GET    | Returns the date and time when the Mongo subscription journey cache was last updated
@@ -34,8 +34,8 @@ API
 | ```/update-scheme/isLockByPsaOrScheme                   ```  | GET    | Returns a lock record for a scheme that is locked by PSA ID or SRN or 403 if not found
 | ```/update-scheme/lock                                  ```  | POST   | Locks a scheme
 | ```/update-scheme/release-lock                          ```  | DELETE | Releases a locked scheme
-| ```/email-response/*id                                  ```  | POST   | 
-| ```/is-psa-associated                                   ```  | GET    | Returns boolean indicating whether a PSA is associated with any schemes
+| ```/email-response/*id                                  ```  | POST   | Sends an audit event indicating the response returned by the email service in response to a request to send an email
+| ```/is-psa-associated                                   ```  | GET    | Returns boolean indicating whether a PSA is associated with any schemes [More...](docs/is-psa-associated.md) |
 
 
 
