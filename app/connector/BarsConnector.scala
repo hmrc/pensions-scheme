@@ -21,13 +21,14 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import config.AppConfig
 import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsRequest, ValidateBankDetailsResponse}
 import play.api.Logger
+import play.api.http.Status._
 import play.api.libs.json.JsSuccess
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Failure
 
 @ImplementedBy(classOf[BarsConnectorImpl])
 trait BarsConnector {
@@ -39,44 +40,34 @@ class BarsConnectorImpl @Inject()(http: HttpClient, appConfig: AppConfig, auditS
 
   val barsBaseUrl: String = appConfig.barsBaseUrl
 
-  val invalid = true
-  val notInvalid = false
-
-  def invalidBankAccount(bankAccount: BankAccount, psaId: String)(implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean] = {
+  def invalidBankAccount(bankAccount: BankAccount, psaId: String)
+                        (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean] = {
 
     val request = ValidateBankDetailsRequest(bankAccount)
 
-    http.POST(s"$barsBaseUrl/validateBankDetails", request).map {
+    http.POST[ValidateBankDetailsRequest, HttpResponse](s"$barsBaseUrl/validateBankDetails", request).map {
       httpResponse =>
-        require(httpResponse.status == 200)
 
         auditService.sendEvent(
           BarsCheck(
-            psaId,
-            httpResponse.status,
-            request,
-            Some(httpResponse.json)
+            psaIdentifier = psaId,
+            status = httpResponse.status,
+            request = request,
+            response = if (httpResponse.status == OK) Some(httpResponse.json) else None
           )
         )
 
-        httpResponse.json.validate[ValidateBankDetailsResponse] match {
-          case JsSuccess(ValidateBankDetailsResponse(false, false), _) => invalid
-          case _ => notInvalid
-        }
-    } andThen {
-      case Failure(t: HttpException) =>
-        auditService.sendEvent(
-          BarsCheck(
-            psaId,
-            t.responseCode,
-            request,
-            None
-          )
-        )
+        if (httpResponse.status == OK)
+          httpResponse.json.validate[ValidateBankDetailsResponse] match {
+            case JsSuccess(ValidateBankDetailsResponse(false, false), _) => true
+            case _ => false
+          }
+        else
+          false
     } recoverWith {
       case t =>
         Logger.error("Exception calling bank reputation service", t)
-        Future.successful(notInvalid)
+        Future.successful(false)
     }
   }
 

@@ -85,7 +85,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[Upstream4xxResponse] {
+    recoverToSucceededIf[UpstreamErrorResponse] {
       connector.registerScheme(psaId, registerSchemeData)
     }
   }
