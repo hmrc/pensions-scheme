@@ -56,16 +56,16 @@ trait ErrorHandler {
     }
   }
 
-  protected def result(ex: HttpException): Result = {
+  protected def result(res: HttpResponse): Result = {
 
     val responseBodyRegex: Regex = """^.*Response body:? '(.*)'$""".r
 
-    val httpEntity = ex.message match {
+    val httpEntity = res.body match {
       case responseBodyRegex(body) => HttpEntity.Strict(ByteString(body), Some("application/json"))
       case message: String => HttpEntity.Strict(ByteString(message), Some("text/plain"))
     }
 
-    Result(ResponseHeader(ex.responseCode), httpEntity)
+    Result(ResponseHeader(res.status), httpEntity)
   }
 
   protected def logWarning(endpoint: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {

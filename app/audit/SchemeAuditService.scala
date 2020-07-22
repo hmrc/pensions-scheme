@@ -20,7 +20,7 @@ import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.HttpException
+import uk.gov.hmrc.http.{HttpException, HttpResponse}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 class SchemeAuditService {
 
   def sendSchemeDetailsEvent(psaId: String)(sendEvent: SchemeDetailsAuditEvent => Unit)
-                         (implicit rh: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
+                         (implicit rh: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
 
 
 
@@ -44,8 +44,8 @@ class SchemeAuditService {
       sendEvent(
         SchemeDetailsAuditEvent(
           psaId = psaId,
-          status = e.responseCode,
-          payload = Some(Json.parse(e.message))
+          status = e.status,
+          payload = Some(Json.parse(e.body))
         )
       )
     case Failure(t) =>
