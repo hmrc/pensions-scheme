@@ -114,7 +114,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   override def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = collection.find(
     byLock(psaId, srn)).one[SchemeVariance].flatMap[Option[Lock]] {
-    case Some(x) => Future.successful(Some(VarianceLock))
+    case Some(_) => Future.successful(Some(VarianceLock))
     case None => for {
       psaLock <- getExistingLockByPSA(psaId)
       srnLock <- getExistingLockBySRN(srn)
@@ -143,12 +143,11 @@ class LockMongoRepository @Inject()(config: AppConfig,
       lastError =>
         lastError.writeErrors.isEmpty
     } recoverWith {
-      case e: LastError if e.code == documentExistsErrorCode => {
+      case e: LastError if e.code == documentExistsErrorCode =>
         getExistingLock(newLock).map {
           case Some(existingLock) => existingLock.psaId == newLock.psaId && existingLock.srn == newLock.srn
           case None => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
         }
-      }
     }
   }
 
@@ -156,9 +155,8 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
     collection.update(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
       .map[Lock](_ => VarianceLock) recoverWith {
-      case e: LastError if e.code == documentExistsErrorCode => {
+      case e: LastError if e.code == documentExistsErrorCode =>
         findLock(newLock.psaId, newLock.srn)
-      }
     }
   }
 
@@ -172,7 +170,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
         case (None, Some(_)) => SchemeLock
         case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
         case (Some(_), Some(_)) => VarianceLock
-        case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${psaId} and srn: ${srn}")
+        case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
       }
     }
   }

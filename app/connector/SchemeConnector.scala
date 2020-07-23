@@ -26,13 +26,12 @@ import play.Logger
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, JsValue, Writes}
 import play.api.mvc.RequestHeader
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.InvalidPayloadHandler
-import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Failure
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
@@ -108,8 +107,8 @@ class SchemeConnectorImpl @Inject()(
     val schemeDetailsUrl = config.schemeDetailsUrl.format(schemeIdType, idNumber)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly)
-      .map(response => handleSchemeDetailsResponse(response, schemeDetailsUrl)) andThen
+    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly).map(response =>
+      handleSchemeDetailsResponse(response)) andThen
       schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
@@ -154,11 +153,8 @@ class SchemeConnectorImpl @Inject()(
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
-  private def handleSchemeDetailsResponse(response: HttpResponse, url: String)(
+  private def handleSchemeDetailsResponse(response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
-
-    val badResponseSeq =
-      Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
 
     response.status match {
       case OK =>
@@ -171,19 +167,4 @@ class SchemeConnectorImpl @Inject()(
       case _ => Left(response)
     }
   }
-
-  private def handleErrorResponse(methodContext: String, url: String, response: HttpResponse, badResponseSeq: Seq[String]): HttpException =
-    response.status match {
-      case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) =>
-        new BadRequestException(response.body)
-      case NOT_FOUND =>
-        new NotFoundException(response.body)
-      case status if is4xx(status) =>
-        throw UpstreamErrorResponse(upstreamResponseMessage(methodContext, url, status, response.body), status, status, response.headers)
-      case status if is5xx(status) =>
-        throw UpstreamErrorResponse(upstreamResponseMessage(methodContext, url, status, response.body), status, BAD_GATEWAY)
-      case status =>
-        throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
-
-    }
 }

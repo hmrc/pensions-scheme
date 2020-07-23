@@ -21,13 +21,11 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.HttpEntity
 import play.api.mvc.{ResponseHeader, Result}
-import uk.gov.hmrc.http.{HttpResponse, NotFoundException, Upstream4xxResponse}
+import uk.gov.hmrc.http.{HttpResponse, NotFoundException, Upstream4xxResponse, UpstreamErrorResponse}
 
 class ErrorHandlerSpec extends WordSpec with MustMatchers {
   private val eh = new ErrorHandler {
-    def testResult(res: HttpResponse) = {
-      result(res)
-    }
+    def testResult(res: HttpResponse): Result = result(res)
   }
 
   "recoverFromError" must {
@@ -43,7 +41,7 @@ class ErrorHandlerSpec extends WordSpec with MustMatchers {
 
     "return a 4xx exception when such is passed into" in {
       val testMessage = "INVALID_BUSINESS_PARTNER"
-      val exception = Upstream4xxResponse(testMessage, 403, 403)
+      val exception = UpstreamErrorResponse(testMessage, 403, 403)
 
       val result = eh.recoverFromError(exception)
       ScalaFutures.whenReady(result.failed) {
