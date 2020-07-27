@@ -37,35 +37,42 @@ trait ErrorHandler {
       Future.failed(new BadRequestException(e.message))
     case e: NotFoundException =>
       Future.failed(new NotFoundException(e.message))
-    case e: Upstream4xxResponse =>
-      Future.failed(throwAppropriateException(e))
-    case e: Upstream5xxResponse =>
-      Future.failed(Upstream5xxResponse(e.message, e.upstreamResponseCode, e.reportAs))
+    case e: UpstreamErrorResponse =>
+      e match {
+        case Upstream4xxResponse(message, statusCode, reportAs, headers) =>
+          Future.failed(
+            throwAppropriateException(UpstreamErrorResponse(message, statusCode, reportAs, headers))
+          )
+        case Upstream5xxResponse(message, statusCode, reportAs, headers) =>
+          Future.failed(
+            UpstreamErrorResponse(message, statusCode, reportAs, headers)
+          )
+      }
     case e: Exception =>
       Future.failed(new Exception(e.getMessage))
   }
 
-  private def throwAppropriateException(e: Upstream4xxResponse): Exception = {
-    e.upstreamResponseCode match {
+  private def throwAppropriateException(e: UpstreamErrorResponse): Exception = {
+    e.statusCode match {
       case FORBIDDEN if e.message.contains("INVALID_BUSINESS_PARTNER") =>
         new ForbiddenException(e.message)
       case CONFLICT if e.message.contains("DUPLICATE_SUBMISSION") =>
         new ConflictException(e.message)
       case _ =>
-        Upstream4xxResponse(e.message, e.upstreamResponseCode, e.reportAs)
+        UpstreamErrorResponse(e.message, e.statusCode, e.reportAs)
     }
   }
 
-  protected def result(ex: HttpException): Result = {
+  protected def result(res: HttpResponse): Result = {
 
     val responseBodyRegex: Regex = """^.*Response body:? '(.*)'$""".r
 
-    val httpEntity = ex.message match {
+    val httpEntity = res.body match {
       case responseBodyRegex(body) => HttpEntity.Strict(ByteString(body), Some("application/json"))
       case message: String => HttpEntity.Strict(ByteString(message), Some("text/plain"))
     }
 
-    Result(ResponseHeader(ex.responseCode), httpEntity)
+    Result(ResponseHeader(res.status), httpEntity)
   }
 
   protected def logWarning(endpoint: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {

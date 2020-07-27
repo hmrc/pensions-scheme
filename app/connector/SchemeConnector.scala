@@ -24,14 +24,14 @@ import config.AppConfig
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.{JsObject, JsValue, Writes}
 import play.api.mvc.RequestHeader
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.InvalidPayloadHandler
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Failure
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
@@ -49,7 +49,7 @@ trait SchemeConnector {
 
   def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
                                                                               ec: ExecutionContext,
-                                                                              request: RequestHeader): Future[Either[HttpException, JsValue]]
+                                                                              request: RequestHeader): Future[Either[HttpResponse, JsValue]]
 
   def updateSchemeDetails(pstr: String, data: JsValue)(implicit
                                                        headerCarrier: HeaderCarrier,
@@ -86,11 +86,15 @@ class SchemeConnectorImpl @Inject()(
 
     Logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
-    http.POST(schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
+    http.POST[JsValue, HttpResponse](schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
-      .andThen {
-        case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
-          invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
+      .map { response =>
+        response.status match {
+          case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
+            invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
+          case _ => Unit
+        }
+        response
       }
   }
 
@@ -98,17 +102,13 @@ class SchemeConnectorImpl @Inject()(
                                 idNumber: String)(implicit
                                                   headerCarrier: HeaderCarrier,
                                                   ec: ExecutionContext,
-                                                  request: RequestHeader): Future[Either[HttpException, JsValue]] = {
-
-    implicit val rds: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
-      override def read(method: String, url: String, response: HttpResponse): HttpResponse = response
-    }
+                                                  request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
 
     val schemeDetailsUrl = config.schemeDetailsUrl.format(schemeIdType, idNumber)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly)
-      .map(response => handleSchemeDetailsResponse(psaId, response, schemeDetailsUrl)) andThen
+    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly).map(response =>
+      handleSchemeDetailsResponse(response)) andThen
       schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
@@ -134,11 +134,15 @@ class SchemeConnectorImpl @Inject()(
 
     Logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
 
-    http.POST(updateSchemeUrl, data)(implicitly[Writes[JsValue]],
+    http.POST[JsValue, HttpResponse](updateSchemeUrl, data)(implicitly[Writes[JsValue]],
       implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
-      .andThen {
-        case Failure(x: BadRequestException) if x.message.contains("INVALID_PAYLOAD") =>
-          invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
+      .map { response =>
+        response.status match {
+          case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
+            invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
+          case _ => Unit
+        }
+        response
       }
   }
 
@@ -149,32 +153,18 @@ class SchemeConnectorImpl @Inject()(
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
-  private def handleSchemeDetailsResponse(psaId: String, response: HttpResponse, url: String)(
-    implicit requestHeader: RequestHeader, executionContext: ExecutionContext) = {
-
-    val badResponseSeq = Seq("INVALID_CORRELATION_ID", "INVALID_PAYLOAD", "INVALID_IDTYPE", "INVALID_SRN", "INVALID_PSTR", "INVALID_CORRELATIONID")
+  private def handleSchemeDetailsResponse(response: HttpResponse)(
+    implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
 
     response.status match {
       case OK =>
-         val userAnswersJson = response.json.transform(
-         schemeSubscriptionDetailsTransformer.transformToUserAnswers).getOrElse(throw new SchemeFailedMapToUserAnswersException)
-         Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
-         Right(userAnswersJson)
-      case FORBIDDEN if response.body.contains("INVALID_BUSINESS_PARTNER") => Left(new ForbiddenException(response.body))
-      case _ => Left(handleErrorResponse("getSchemeDetails", url, response, badResponseSeq))
+        val userAnswersJson =
+          response.json.transform(
+            schemeSubscriptionDetailsTransformer.transformToUserAnswers
+          ).getOrElse(throw new SchemeFailedMapToUserAnswersException)
+        Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
+        Right(userAnswersJson)
+      case _ => Left(response)
     }
   }
-
-  private def handleErrorResponse(methodContext: String, url: String, response: HttpResponse, badResponseSeq: Seq[String]): HttpException =
-    response.status match {
-      case BAD_REQUEST if badResponseSeq.exists(response.body.contains(_)) => new BadRequestException(response.body)
-      case NOT_FOUND => new NotFoundException(response.body)
-      case status if is4xx(status) =>
-        throw Upstream4xxResponse(upstreamResponseMessage(methodContext, url, status, response.body), status, status, response.allHeaders)
-      case status if is5xx(status) =>
-        throw Upstream5xxResponse(upstreamResponseMessage(methodContext, url, status, response.body), status, BAD_GATEWAY)
-      case status =>
-        throw new Exception(s"Subscription failed with status $status. Response body: '${response.body}'")
-
-    }
 }

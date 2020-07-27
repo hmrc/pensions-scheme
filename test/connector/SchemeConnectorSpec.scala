@@ -85,8 +85,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[Upstream4xxResponse] {
-      connector.registerScheme(psaId, registerSchemeData)
+    connector.registerScheme(psaId, registerSchemeData).map { response =>
+      response.status shouldBe FORBIDDEN
     }
   }
 
@@ -95,14 +95,14 @@ class SchemeConnectorSpec extends AsyncFlatSpec
       post(urlEqualTo(schemeUrl))
         .willReturn(
           aResponse()
-            .withStatus(Status.CONFLICT)
+            .withStatus(CONFLICT)
             .withHeader("Content-Type", "application/json")
             .withBody(duplicateSubmissionResponse)
         )
     )
 
-    recoverToSucceededIf[Upstream4xxResponse] {
-      connector.registerScheme(psaId, registerSchemeData)
+    connector.registerScheme(psaId, registerSchemeData).map { response =>
+      response.status shouldBe CONFLICT
     }
   }
 
@@ -116,8 +116,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[BadRequestException] {
-      connector.registerScheme(psaId, registerSchemeData)
+    connector.registerScheme(psaId, registerSchemeData).map { response =>
+      response.status shouldBe BAD_REQUEST
     }
   }
 
@@ -131,8 +131,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[NotFoundException] {
-      connector.registerScheme(psaId, registerSchemeData)
+    connector.registerScheme(psaId, registerSchemeData).map { response =>
+      response.status shouldBe NOT_FOUND
     }
   }
 
@@ -148,12 +148,10 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     logger.reset()
 
-    connector.registerScheme(psaId, registerSchemeData).map(_ => fail("Expected failure"))
-      .recover {
-        case _: BadRequestException =>
-          logger.getLogEntries.size shouldBe 1
-          logger.getLogEntries.head.level shouldBe Level.WARN
-        case _ => fail("Expected BadRequestException")
+    connector.registerScheme(psaId, registerSchemeData).map { response =>
+        response.status shouldBe BAD_REQUEST
+        logger.getLogEntries.size shouldBe 1
+        logger.getLogEntries.head.level shouldBe Level.WARN
       }
   }
 
@@ -179,8 +177,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[BadRequestException] {
-      connector.listOfSchemes(psaId)
+    connector.listOfSchemes(psaId).map { response =>
+      response.status shouldBe BAD_REQUEST
     }
   }
 
@@ -192,8 +190,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[NotFoundException] {
-      connector.listOfSchemes(psaId)
+    connector.listOfSchemes(psaId).map { response =>
+      response.status shouldBe NOT_FOUND
     }
   }
 
@@ -205,8 +203,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[Upstream5xxResponse] {
-      connector.listOfSchemes(psaId)
+    connector.listOfSchemes(psaId).map { response =>
+      response.status shouldBe INTERNAL_SERVER_ERROR
     }
   }
 
@@ -238,8 +236,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     )
     connector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
       response =>
-        response.left.value shouldBe a[BadRequestException]
-        response.left.value.message should include("INVALID_IDTYPE")
+        response.left.value.status shouldBe BAD_REQUEST
+        response.left.value.body should include("INVALID_IDTYPE")
     }
   }
 
@@ -255,8 +253,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
-        response.left.value shouldBe a[BadRequestException]
-        response.left.value.message should include("INVALID_SRN")
+        response.left.value.status shouldBe BAD_REQUEST
+        response.left.value.body should include("INVALID_SRN")
     }
   }
 
@@ -272,8 +270,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
-        response.left.value shouldBe a[BadRequestException]
-        response.left.value.message should include("INVALID_PSTR")
+        response.left.value.status shouldBe BAD_REQUEST
+        response.left.value.body should include("INVALID_PSTR")
     }
   }
 
@@ -289,8 +287,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
       response =>
-        response.left.value shouldBe a[BadRequestException]
-        response.left.value.message should include("INVALID_CORRELATIONID")
+        response.left.value.status shouldBe BAD_REQUEST
+        response.left.value.body should include("INVALID_CORRELATIONID")
     }
   }
 
@@ -304,13 +302,13 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
-      ex =>
-        ex.upstreamResponseCode shouldBe BAD_REQUEST
-        ex.message should include ("not valid")
-        ex.reportAs shouldBe BAD_REQUEST
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+      response =>
+        response.left.value.status shouldBe BAD_REQUEST
+        response.left.value.body should include("not valid")
     }
   }
+
   it should "return Not Found - 404" in {
     server.stubFor(
       get(urlEqualTo(schemeDetailsUrl))
@@ -320,8 +318,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
     connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
-      response.left.value shouldBe a[NotFoundException]
-      response.left.value.message should include("NOT_FOUND")
+      response.left.value.status shouldBe NOT_FOUND
+      response.left.value.body should include("NOT_FOUND")
     }
   }
   it should "throw Upstream4XX for server unavailable - 403" in {
@@ -333,10 +331,11 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("FORBIDDEN"))
         )
     )
-    recoverToExceptionIf[Upstream4xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
-      ex =>
-        ex.upstreamResponseCode shouldBe FORBIDDEN
-        ex.message should include ("FORBIDDEN")
+
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+      response =>
+        response.left.value.status shouldBe FORBIDDEN
+        response.left.value.body should include("FORBIDDEN")
     }
   }
 
@@ -350,11 +349,10 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToExceptionIf[Upstream5xxResponse] (connector.getSchemeDetails(psaId, schemeIdType, idNumber)) map {
-      ex =>
-        ex.upstreamResponseCode shouldBe INTERNAL_SERVER_ERROR
-        ex.message should include("SERVER_ERROR")
-        ex.reportAs shouldBe BAD_GATEWAY
+    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+      response =>
+        response.left.value.status shouldBe INTERNAL_SERVER_ERROR
+        response.left.value.body should include("SERVER_ERROR")
     }
   }
 
@@ -441,8 +439,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[Upstream4xxResponse] {
-      connector.updateSchemeDetails(pstr, updateSchemeData)
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+      response.status shouldBe FORBIDDEN
     }
   }
 
@@ -451,18 +449,18 @@ class SchemeConnectorSpec extends AsyncFlatSpec
       post(urlEqualTo(updateSchemeUrl))
         .willReturn(
           aResponse()
-            .withStatus(Status.CONFLICT)
+            .withStatus(CONFLICT)
             .withHeader("Content-Type", "application/json")
             .withBody(errorResponse("DUPLICATE_SUBMISSION"))
         )
     )
 
-    recoverToSucceededIf[Upstream4xxResponse] {
-      connector.updateSchemeDetails(pstr, updateSchemeData)
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+      response.status shouldBe CONFLICT
     }
   }
 
-  it should "handle INVALID_PSTR (400)" in {
+  it should "handle BAD_REQUEST (400)" in {
     server.stubFor(
       post(urlEqualTo(updateSchemeUrl))
         .willReturn(
@@ -472,23 +470,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    recoverToSucceededIf[BadRequestException] {
-      connector.updateSchemeDetails(pstr, updateSchemeData)
-    }
-  }
-
-  it should "handle INVALID_CORRELATION_ID (400)" in {
-    server.stubFor(
-      post(urlEqualTo(updateSchemeUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_CORRELATION_ID"))
-        )
-    )
-
-    recoverToSucceededIf[BadRequestException] {
-      connector.updateSchemeDetails(pstr, updateSchemeData)
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+      response.status shouldBe BAD_REQUEST
     }
   }
 
@@ -504,13 +487,11 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     logger.reset()
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map(_ => fail("Expected failure"))
-      .recover {
-        case _: BadRequestException =>
-          logger.getLogEntries.size shouldBe 1
-          logger.getLogEntries.head.level shouldBe Level.WARN
-        case _ => fail("Expected BadRequestException")
-      }
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+      response.status shouldBe BAD_REQUEST
+      logger.getLogEntries.size shouldBe 1
+      logger.getLogEntries.head.level shouldBe Level.WARN
+    }
   }
 }
 

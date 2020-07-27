@@ -21,13 +21,11 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.HttpEntity
 import play.api.mvc.{ResponseHeader, Result}
-import uk.gov.hmrc.http.{HttpException, NotFoundException, Upstream4xxResponse}
+import uk.gov.hmrc.http.{HttpResponse, NotFoundException, Upstream4xxResponse, UpstreamErrorResponse}
 
 class ErrorHandlerSpec extends WordSpec with MustMatchers {
   private val eh = new ErrorHandler {
-    def testResult(ex: HttpException) = {
-      result(ex)
-    }
+    def testResult(res: HttpResponse): Result = result(res)
   }
 
   "recoverFromError" must {
@@ -43,7 +41,7 @@ class ErrorHandlerSpec extends WordSpec with MustMatchers {
 
     "return a 4xx exception when such is passed into" in {
       val testMessage = "INVALID_BUSINESS_PARTNER"
-      val exception = Upstream4xxResponse(testMessage, 403, 403)
+      val exception = UpstreamErrorResponse(testMessage, 403, 403)
 
       val result = eh.recoverFromError(exception)
       ScalaFutures.whenReady(result.failed) {
@@ -56,18 +54,18 @@ class ErrorHandlerSpec extends WordSpec with MustMatchers {
     "return correct result for json" in {
       val testJson = "some json"
       val testMessage = s"Response body: '$testJson'"
-      val ex = new HttpException(testMessage, 433)
-      val expectedResult = Result(ResponseHeader(ex.responseCode), HttpEntity.Strict(ByteString(testJson), Some("application/json")))
-      val result = eh.testResult(ex)
+      val res = HttpResponse(433, testMessage)
+      val expectedResult = Result(ResponseHeader(res.status), HttpEntity.Strict(ByteString(testJson), Some("application/json")))
+      val result = eh.testResult(res)
       result.header mustBe expectedResult.header
       result.body mustBe expectedResult.body
     }
 
     "return correct result for plain text" in {
       val testJson = "some text"
-      val ex = new HttpException(testJson, 433)
-      val expectedResult = Result(ResponseHeader(ex.responseCode), HttpEntity.Strict(ByteString(testJson), Some("text/plain")))
-      val result = eh.testResult(ex)
+      val res = HttpResponse(433, testJson)
+      val expectedResult = Result(ResponseHeader(res.status), HttpEntity.Strict(ByteString(testJson), Some("text/plain")))
+      val result = eh.testResult(res)
       result.header mustBe expectedResult.header
       result.body mustBe expectedResult.body
     }
