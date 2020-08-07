@@ -153,7 +153,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
 
     val scheme = PensionsSchemeIsSchemeMasterTrust.set(pensionsScheme, true)
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, status = Status.OK, response = None)
 
     val expected = schemeSubscription.copy(
       schemeType = Some(AuditSchemeType.masterTrust),
@@ -168,7 +168,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.single.value))
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
       request = Json.toJson(scheme)
@@ -182,7 +182,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.group.value))
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
       schemeType = Some(AuditSchemeType.groupLifeDeath),
@@ -197,7 +197,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.corp.value))
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
       schemeType = Some(AuditSchemeType.bodyCorporate),
@@ -212,7 +212,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.other.value))
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
 
     val expected = schemeSubscription.copy(
       schemeType = Some(AuditSchemeType.other),
@@ -239,7 +239,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
               )
             )
 
-        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
 
         val expected = schemeSubscription.copy(
           hasIndividualEstablisher = true,
@@ -266,7 +266,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
               )
             )
 
-        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
 
         val expected = schemeSubscription.copy(
           hasCompanyEstablisher = true,
@@ -293,7 +293,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
               )
             )
 
-        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, false, Status.OK, None)
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
 
         val expected = schemeSubscription.copy(
           hasPartnershipEstablisher = true,
@@ -313,7 +313,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
       pensionSchemeDeclaration = declaration.copy(box5 = Some(true))
     )
 
-    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, true, Status.OK, None)
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = true, Status.OK, None)
 
     val expected = schemeSubscription.copy(
       schemeType = Some(AuditSchemeType.singleTrust),
@@ -342,9 +342,8 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
   it should "send a SchemeUpdate audit event following a successful submission" in {
     val f = new UpdateTestFixture() {}
 
-    f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(responseStatus = Status.OK, responseJson = Some(testResponse))))
-    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
-      response =>
+    f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(Status.OK, testResponse.toString())))
+    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map { _ =>
         val expectedAuditEvent =
           SchemeUpdate(psaIdentifier = "test-psa-id",
             schemeType = Some(audit.SchemeType.singleTrust),
@@ -435,7 +434,7 @@ object SchemeServiceSpec extends SpecBase {
       )
     )
 
-  val pensionsScheme = PensionsScheme(
+  val pensionsScheme: PensionsScheme = PensionsScheme(
     CustomerAndSchemeDetails(
       schemeName = "test-pensions-scheme",
       isSchemeMasterTrust = false,
@@ -510,12 +509,12 @@ object SchemeServiceSpec extends SpecBase {
   def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
 
     pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
-      error => throw new BadRequestException(""),
+      throw new BadRequestException(""),
       scheme => Json.toJson(scheme)
     )
   }
 
-  val schemeUpdateRequestJson = Json.parse(
+  val schemeUpdateRequestJson: JsValue = Json.parse(
     """
       |{
       |   "customerAndSchemeDetails":{
@@ -580,7 +579,7 @@ object SchemeServiceSpec extends SpecBase {
       |}
     """.stripMargin)
 
-  val schemeSubscription = SchemeSubscription(
+  val schemeSubscription: SchemeSubscription = SchemeSubscription(
     psaIdentifier = psaId,
     schemeType = Some(AuditSchemeType.singleTrust),
     hasIndividualEstablisher = false,
@@ -594,7 +593,7 @@ object SchemeServiceSpec extends SpecBase {
     response = None
   )
 
-  val schemeUpdate = SchemeUpdate(
+  val schemeUpdate: SchemeUpdate = SchemeUpdate(
     psaIdentifier = psaId,
     schemeType = Some(AuditSchemeType.singleTrust),
     status = Status.OK,

@@ -27,7 +27,7 @@ import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -115,12 +115,13 @@ class FakeSchemeConnector extends SchemeConnector {
   import FakeSchemeConnector._
 
   private var registerSchemeResponse = Future.successful(
-    HttpResponse(Status.OK, Some(schemeRegistrationResponseJson)))
+    HttpResponse(Status.OK, schemeRegistrationResponseJson.toString()))
 
-  protected var updateSchemeResponse = Future.successful(HttpResponse(responseStatus = Status.OK))
+  protected var updateSchemeResponse: Future[AnyRef with HttpResponse] =
+    Future.successful(HttpResponse(Status.OK, ""))
 
   private var listOfSchemesResponse =
-    Future.successful(HttpResponse(Status.OK, Some(listOfSchemesJson)))
+    Future.successful(HttpResponse(Status.OK, listOfSchemesJson.toString()))
 
   def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit =
     this.registerSchemeResponse = response
@@ -158,7 +159,7 @@ class FakeSchemeConnector extends SchemeConnector {
 
 object FakeSchemeConnector extends JsonFileReader {
 
-  val schemeRegistrationResponse = SchemeRegistrationResponse(
+  val schemeRegistrationResponse: SchemeRegistrationResponse = SchemeRegistrationResponse(
     "test-processing-date",
     "test-scheme-reference-number")
   val schemeRegistrationResponseJson: JsValue =

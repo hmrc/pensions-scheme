@@ -23,7 +23,7 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import reactivemongo.api.DB
+import reactivemongo.api.{DB, ReadConcern}
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.bson.BSONDocument
@@ -69,7 +69,7 @@ class LockMongoRepositoryTest extends MongoUnitSpec
 
       await(repository.releaseLock(SchemeVariance("psa2", "srn2")))
 
-      thenTheDocumentCountShouldBe(1)
+      thenTheDocumentCountShouldBeOne
     }
   }
 
@@ -80,7 +80,7 @@ class LockMongoRepositoryTest extends MongoUnitSpec
 
       await(repository.releaseLockByPSA("psa1"))
 
-      thenTheDocumentCountShouldBe(1)
+      thenTheDocumentCountShouldBeOne
     }
   }
 
@@ -91,7 +91,7 @@ class LockMongoRepositoryTest extends MongoUnitSpec
 
       await(repository.releaseLockBySRN("srn2"))
 
-      thenTheDocumentCountShouldBe(1)
+      thenTheDocumentCountShouldBeOne
     }
   }
 
@@ -241,11 +241,11 @@ class LockMongoRepositoryTest extends MongoUnitSpec
   }
 
   private def givenAnExistingDocument(schemeVariance: SchemeVariance): Unit = {
-    await(repository.collection.insert(schemeVariance))
+    await(repository.collection.insert(ordered = false).one(schemeVariance))
   }
 
-  private def thenTheDocumentCountShouldBe(count: Int): Unit = {
-    await(repository.collection.count()) shouldBe count
+  private def thenTheDocumentCountShouldBeOne: Unit = {
+    await(repository.collection.count(None, None, skip = 0, None, ReadConcern.Local)) shouldBe 1
   }
 
 }

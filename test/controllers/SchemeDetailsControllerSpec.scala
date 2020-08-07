@@ -24,7 +24,7 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -147,11 +147,11 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
     "throw Upstream4xxResponse when UpStream4XXResponse returned from Des" in {
 
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(Upstream4xxResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND)))
+        Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream4xxResponse]
+        e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe errorResponse("NOT_FOUND")
       }
     }
@@ -159,11 +159,11 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
     "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from Des" in {
 
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(Upstream5xxResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+        Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream5xxResponse]
+        e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe errorResponse("NOT_FOUND")
       }
     }
@@ -171,11 +171,11 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
     "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from Des" in {
 
       when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(Upstream5xxResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+        Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream5xxResponse]
+        e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe errorResponse("NOT_FOUND")
       }
     }
