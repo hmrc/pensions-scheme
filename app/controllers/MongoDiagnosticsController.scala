@@ -23,12 +23,11 @@ import javax.inject.Inject
 import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.Cursor
+import reactivemongo.api.{Cursor, ReadConcern}
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson.{BSONDocument, BSONString}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
@@ -127,7 +126,7 @@ class MongoDiagnosticsController @Inject()(config: Configuration,
   def ids(collection: BSONCollection): Future[String] = {
 
     val query = BSONDocument()
-    val projection = BSONDocument("_id" -> 0, "id" -> 1)
+    val projection = Some(BSONDocument("_id" -> 0, "id" -> 1))
 
     collection.find(query, projection)
       .cursor[BSONDocument]()
@@ -139,13 +138,8 @@ class MongoDiagnosticsController @Inject()(config: Configuration,
               doc.getAs[String]("id").getOrElse("<unknown>")
           } mkString "\n"
       }
-
   }
 
-  def rowCount(collection: BSONCollection): Future[Int] = {
-
-    collection.count()
-
-  }
+  def rowCount(collection: BSONCollection): Future[Long] = collection.count(None, None, skip = 0, None, ReadConcern.Local)
 
 }

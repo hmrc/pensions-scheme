@@ -25,7 +25,7 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.LastError
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{Cursor, DB}
+import reactivemongo.api.{Cursor, DB, WriteConcern}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -100,20 +100,26 @@ class LockMongoRepository @Inject()(config: AppConfig,
     Future.sequence(indexes.map(collection.indexesManager.ensure(_)))
   }
 
-  override def releaseLock(lock: SchemeVariance): Future[Unit] = collection.findAndRemove(byLock(lock.psaId, lock.srn)).map(_ => ())
+  override def releaseLock(lock: SchemeVariance): Future[Unit] =
+    collection.findAndRemove(byLock(lock.psaId, lock.srn), None, None, WriteConcern.Default, None, None, Nil).map(_ => ())
 
-  override def releaseLockByPSA(psaId: String): Future[Unit] = collection.findAndRemove(byPsaId(psaId)).map(_ => ())
+  override def releaseLockByPSA(psaId: String): Future[Unit] =
+    collection.findAndRemove(byPsaId(psaId), None, None, WriteConcern.Default, None, None, Nil).map(_ => ())
 
-  override def releaseLockBySRN(srn: String): Future[Unit] = collection.findAndRemove(bySrn(srn)).map(_ => ())
+  override def releaseLockBySRN(srn: String): Future[Unit] =
+    collection.findAndRemove(bySrn(srn), None, None, WriteConcern.Default, None, None, Nil).map(_ => ())
 
-  override def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]] = collection.find(byLock(lock.psaId, lock.srn)).one[SchemeVariance]
+  override def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]] =
+    collection.find[BSONDocument, BSONDocument](byLock(lock.psaId, lock.srn), None).one[SchemeVariance]
 
-  override def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]] = collection.find(byPsaId(psaId)).one[SchemeVariance]
+  override def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]] =
+    collection.find[BSONDocument, BSONDocument](byPsaId(psaId), None).one[SchemeVariance]
 
-  override def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]] = collection.find(bySrn(srn)).one[SchemeVariance]
+  override def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]] =
+    collection.find[BSONDocument, BSONDocument](bySrn(srn), None).one[SchemeVariance]
 
-  override def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = collection.find(
-    byLock(psaId, srn)).one[SchemeVariance].flatMap[Option[Lock]] {
+  override def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = collection.find[BSONDocument, BSONDocument](
+    byLock(psaId, srn), None).one[SchemeVariance].flatMap[Option[Lock]] {
     case Some(_) => Future.successful(Some(VarianceLock))
     case None => for {
       psaLock <- getExistingLockByPSA(psaId)
@@ -132,14 +138,13 @@ class LockMongoRepository @Inject()(config: AppConfig,
   override def list: Future[List[SchemeVariance]] = {
     //scalastyle:off magic.number
     val arbitraryLimit = 10000
-    collection.find(Json.obj())
+    collection.find[JsObject, JsObject](Json.obj(), None)
       .cursor[SchemeVariance]()
       .collect[List](arbitraryLimit, Cursor.FailOnError())
   }
 
   override def replaceLock(newLock: SchemeVariance): Future[Boolean] = {
-    collection.update(
-      byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true).map {
+    collection.update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true).map {
       lastError =>
         lastError.writeErrors.isEmpty
     } recoverWith {
@@ -153,7 +158,7 @@ class LockMongoRepository @Inject()(config: AppConfig,
 
   override def lock(newLock: SchemeVariance): Future[Lock] = {
 
-    collection.update(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
+    collection.update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
       .map[Lock](_ => VarianceLock) recoverWith {
       case e: LastError if e.code == documentExistsErrorCode =>
         findLock(newLock.psaId, newLock.srn)

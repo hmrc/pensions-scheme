@@ -37,7 +37,7 @@ import scala.concurrent.Future
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
   val mockSchemeService: SchemeService = mock[SchemeService]
   val schemeController = new SchemeController(mockSchemeService, stubControllerComponents())
-  val validSchemeUpdateData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
+  val validSchemeUpdateData: JsValue = readJsonFromFile("/data/validSchemeUpdateRequest.json")
 
   before {
     reset(mockSchemeService)
@@ -51,7 +51,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
       when(mockSchemeService.registerScheme(any(), meq(validData))(any(), any(), any())).thenReturn(
-        Future.successful(HttpResponse(OK, Some(successResponse))))
+        Future.successful(HttpResponse(OK, successResponse.toString())))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result) { _ =>
@@ -105,11 +105,11 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "reason" -> "Duplicate submission acknowledgement reference from remote endpoint returned."
       )
       when(mockSchemeService.registerScheme(any(), any())(any(), any(), any())).thenReturn(
-        Future.failed(Upstream4xxResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
+        Future.failed(UpstreamErrorResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream4xxResponse]
+        e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe invalidSubmission.toString()
       }
     }
@@ -121,11 +121,11 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "reason" -> "Dependent systems are currently not responding."
       )
       when(mockSchemeService.registerScheme(any(), any())(any(), any(), any())).thenReturn(
-        Future.failed(Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+        Future.failed(UpstreamErrorResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream5xxResponse]
+        e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe serviceUnavailable.toString()
       }
     }
@@ -149,7 +149,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "return OK with list of schems when DES/ETMP returns it successfully" in {
       val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
       when(mockSchemeService.listOfSchemes(meq("A2000001"))(any(), any(), any())).thenReturn(Future.successful(
-        HttpResponse(OK, Some(validResponse))))
+        HttpResponse(OK, validResponse.toString())))
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
         status(result) mustBe OK
@@ -171,7 +171,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "throw BadRequestException when the invalid data returned from DES/ETMP" in {
       val validResponse = Json.obj("invalid" -> "data")
       when(mockSchemeService.listOfSchemes(meq("A2000001"))(any(), any(), any())).thenReturn(Future.successful(
-        HttpResponse(OK, Some(validResponse))))
+        HttpResponse(OK, validResponse.toString())))
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
@@ -201,11 +201,11 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "reason" -> "Dependent systems are currently not responding."
       )
       when(mockSchemeService.listOfSchemes(meq("A2000001"))(any(), any(), any())).thenReturn(
-        Future.failed(Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+        Future.failed(UpstreamErrorResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream5xxResponse]
+        e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe serviceUnavailable.toString()
         verify(mockSchemeService, times(1)).listOfSchemes(meq("A2000001"))(any(), any(), any())
       }
@@ -232,7 +232,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "return OK when the scheme is updated successfully" in {
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
       when(mockSchemeService.updateScheme(any(), any(), meq(validSchemeUpdateData))(any(), any(), any())).thenReturn(
-        Future.successful(HttpResponse(OK, Some(successResponse))))
+        Future.successful(HttpResponse(OK, successResponse.toString())))
 
       val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
       ScalaFutures.whenReady(result) { _ =>
@@ -281,7 +281,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "reason" -> "The back end has indicated that duplicate submission or acknowledgement reference."
       )
       when(mockSchemeService.updateScheme(any(), any(), any())(any(), any(), any())).thenReturn(
-        Future.failed(Upstream4xxResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
+        Future.failed(UpstreamErrorResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
 
       val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
       ScalaFutures.whenReady(result.failed) { e =>
@@ -296,11 +296,11 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "reason" -> "Dependent systems are currently not responding."
       )
       when(mockSchemeService.updateScheme(any(), any(), any())(any(), any(), any())).thenReturn(
-        Future.failed(Upstream5xxResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+        Future.failed(UpstreamErrorResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
       ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[Upstream5xxResponse]
+        e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe serviceUnavailable.toString()
       }
     }
