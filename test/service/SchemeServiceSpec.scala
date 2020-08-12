@@ -110,21 +110,17 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
   }
 
   it should "send a SchemeSubscription audit event following a successful submission" in {
-
     val fixture = testFixture()
-
     fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       httpResponse =>
         val expected = schemeSubscription.copy(
           hasIndividualEstablisher = true,
           status = Status.OK,
-          request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
+          request = expectedJsonForAudit,
           response = Some(httpResponse.json)
         )
-
         fixture.auditService.lastEvent shouldBe Some(expected)
     }
-
   }
 
   it should "not send a SchemeSubscription audit event following an unsuccessful submission" in {
@@ -140,7 +136,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDriven
           val expected = schemeSubscription.copy(
             hasIndividualEstablisher = true,
             status = Status.BAD_REQUEST,
-            request = schemeSubscriptionRequestJson(pensionsSchemeJson, fixture.schemeService),
+            request = expectedJsonForAudit,
             response = None
           )
 
@@ -467,6 +463,74 @@ object SchemeServiceSpec extends SpecBase {
       Nil
     )
   )
+
+  val expectedJsonForAudit = Json.parse("""{
+   "customerAndSchemeDetails":{
+      "schemeName":"test-scheme-name",
+      "isSchemeMasterTrust":false,
+      "schemeStructure":"A single trust under which all of the assets are held for the benefit of all members of the scheme",
+      "currentSchemeMembers":"0",
+      "futureSchemeMembers":"0",
+      "isReguledSchemeInvestment":false,
+      "isOccupationalPensionScheme":false,
+      "areBenefitsSecuredContractInsuranceCompany":false,
+      "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
+      "schemeEstablishedCountry":"test-scheme-established-country",
+      "haveInvalidBank":false,
+      "insuranceCompanyName":"Test insurance company name",
+      "policyNumber":"Test insurance policy number"
+   },
+   "pensionSchemeDeclaration":{
+      "box1":false,
+      "box2":false,
+      "box6":false,
+      "box7":false,
+      "box8":false,
+      "box9":false,
+      "box10":true
+   },
+   "establisherDetails":{
+      "individual":[
+         {
+            "personalDetails":{
+               "firstName":"test-first-name",
+               "lastName":"test-last-name",
+               "dateOfBirth":"1969-07-20"
+            },
+            "correspondenceAddressDetails":{
+               "addressDetails":{
+                  "line1":"test-address-line-1",
+                  "countryCode":"test-country",
+                  "addressType":"NON-UK"
+               }
+            },
+            "correspondenceContactDetails":{
+               "contactDetails":{
+                  "telephone":"test-phone-number",
+                  "email":"test-email-address"
+               }
+            }
+         }
+      ],
+      "companyOrOrganization":[
+
+      ],
+      "partnership":[
+
+      ]
+   },
+   "trusteeDetails":{
+      "individualTrusteeDetail":[
+
+      ],
+      "companyTrusteeDetail":[
+
+      ],
+      "partnershipTrusteeDetail":[
+
+      ]
+   }
+  }""")
 
   val pensionsSchemeJson: JsValue = Json.obj(
     "schemeName" -> "test-scheme-name",
