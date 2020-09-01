@@ -188,7 +188,7 @@ class InvalidPayloadHandlerSpec extends FlatSpec with Matchers {
 
     logger.getLogEntries.size shouldBe 1
     logger.getLogEntries.head.level shouldBe Level.WARN
-    logger.getLogEntries.head.msg should include("Invalid Paylod JSON Failures")
+    logger.getLogEntries.head.msg should include("Invalid Payload JSON Failures")
     logger.getLogEntries.head.msg should include("Failures: 2")
     logger.getLogEntries.head.msg should include("$.test1")
     logger.getLogEntries.head.msg should include("$.test2")
