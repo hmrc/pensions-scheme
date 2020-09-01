@@ -164,7 +164,8 @@ class SchemeConnectorImpl @Inject()(
           ).getOrElse(throw new SchemeFailedMapToUserAnswersException)
         Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
         Right(userAnswersJson)
-      case _ => Left(response)
+      case _ =>
+        Left(response)
     }
   }
 }
