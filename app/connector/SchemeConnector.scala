@@ -81,17 +81,22 @@ class SchemeConnectorImpl @Inject()(
                                                                     ec: ExecutionContext,
                                                                     request: RequestHeader): Future[HttpResponse] = {
 
-    val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
+    val url = config.schemeRegistrationUrl.format(psaId)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     Logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
-    http.POST[JsValue, HttpResponse](schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
-      implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
-      .map { response =>
+    http.POST[JsValue, HttpResponse](url, registerData)(
+      implicitly[Writes[JsValue]],
+      implicitly[HttpReads[HttpResponse]],
+      implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext]
+    ) map { response =>
         response.status match {
           case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-            invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
+            invalidPayloadHandler.logFailures(
+              "/resources/schemas/schemeSubscription.json", registerData, url
+            )
           case _ => Unit
         }
         response
@@ -129,17 +134,22 @@ class SchemeConnectorImpl @Inject()(
                                                                 ec: ExecutionContext,
                                                                 request: RequestHeader): Future[HttpResponse] = {
 
-    val updateSchemeUrl = config.updateSchemeUrl.format(pstr)
+    val url = config.updateSchemeUrl.format(pstr)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     Logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
 
-    http.POST[JsValue, HttpResponse](updateSchemeUrl, data)(implicitly[Writes[JsValue]],
-      implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
-      .map { response =>
+    http.POST[JsValue, HttpResponse](url, data)(
+      implicitly[Writes[JsValue]],
+      implicitly[HttpReads[HttpResponse]],
+      implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext]
+    ) map { response =>
         response.status match {
           case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-            invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
+            invalidPayloadHandler.logFailures(
+              "/resources/schemas/schemeVariationSchema.json", data, url
+            )
           case _ => Unit
         }
         response
