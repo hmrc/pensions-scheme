@@ -182,13 +182,33 @@ class InvalidPayloadHandlerSpec extends FlatSpec with Matchers {
 
     val fixture = testFixture()
     val handler = fixture.handler
-    handler.logFailures(multiSchema, json)
+    handler.logFailure(multiSchema, json, Seq.empty)
 
     val logger = fixture.logger
 
     logger.getLogEntries.size shouldBe 1
     logger.getLogEntries.head.level shouldBe Level.WARN
     logger.getLogEntries.head.msg should include("Invalid Payload JSON Failures")
+    logger.getLogEntries.head.msg should include("Failures: 2")
+    logger.getLogEntries.head.msg should include("$.test1")
+    logger.getLogEntries.head.msg should include("$.test2")
+
+  }
+
+  "logFailures" should "contain all validation failures and url when provided" in {
+
+    val json = Json.obj("test1" -> "abc", "test2" -> true)
+    val url = "/url"
+
+    val fixture = testFixture()
+    val handler = fixture.handler
+    handler.logFailure(multiSchema, json, Seq(url))
+
+    val logger = fixture.logger
+
+    logger.getLogEntries.size shouldBe 1
+    logger.getLogEntries.head.level shouldBe Level.WARN
+    logger.getLogEntries.head.msg should include(s"Invalid Payload JSON Failures for url: $url")
     logger.getLogEntries.head.msg should include("Failures: 2")
     logger.getLogEntries.head.msg should include("$.test1")
     logger.getLogEntries.head.msg should include("$.test2")
