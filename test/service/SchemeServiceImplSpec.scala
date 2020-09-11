@@ -155,6 +155,10 @@ class FakeSchemeConnector extends SchemeConnector {
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(
     implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = updateSchemeResponse
+
+  override def listOfSchemes(idType: String, idValue: String)
+                            (implicit headerCarrier: HeaderCarrier,
+                             ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 }
 
 object FakeSchemeConnector extends JsonFileReader {
@@ -172,7 +176,7 @@ object FakeSchemeConnector extends JsonFileReader {
     ListOfSchemes(
       processingDate = "1969-07-20",
       totalSchemesRegistered = "0",
-      schemeDetail = None
+      schemeDetails = None
     )
 
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)

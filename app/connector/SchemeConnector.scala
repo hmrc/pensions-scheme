@@ -45,6 +45,11 @@ trait SchemeConnector {
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
 
+  def listOfSchemes(idType: String, idValue: String)(implicit
+                                   headerCarrier: HeaderCarrier,
+                                   ec: ExecutionContext,
+                                   request: RequestHeader): Future[HttpResponse]
+
   def getCorrelationId(requestId: Option[String]): String
 
   def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
@@ -64,7 +69,8 @@ class SchemeConnectorImpl @Inject()(
                                      auditService: AuditService,
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
-                                     schemeAuditService: SchemeAuditService
+                                     schemeAuditService: SchemeAuditService,
+                                     headerUtils: HeaderUtils
                                    ) extends SchemeConnector with HttpErrorFunctions {
 
   case class SchemeFailedMapToUserAnswersException() extends Exception
@@ -118,6 +124,20 @@ class SchemeConnectorImpl @Inject()(
                                             request: RequestHeader): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesUrl.format(psaId)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+
+    http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext])
+
+  }
+
+  override def listOfSchemes(idType: String, idValue: String)(implicit
+                                                     headerCarrier: HeaderCarrier,
+                                                     ec: ExecutionContext,
+                                                     request: RequestHeader): Future[HttpResponse] = {
+    val listOfSchemesUrl = config.listOfSchemesIFUrl.format(idType, idValue)
+
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
+      headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])

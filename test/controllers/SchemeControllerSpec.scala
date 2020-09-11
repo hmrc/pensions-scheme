@@ -143,7 +143,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     }
   }
 
-  "list of schems" must {
+  "list of schemes" must {
     val fakeRequest = FakeRequest("GET", "/").withHeaders(("psaId", "A2000001"))
 
     "return OK with list of schems when DES/ETMP returns it successfully" in {
@@ -153,7 +153,9 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
         status(result) mustBe OK
-        contentAsJson(result) mustEqual validResponse
+        contentAsJson(result) mustEqual Json.parse(validResponse.toString()
+          .replace("schemeDetail", "schemeDetails")
+          .replace("relationShip", "relationship"))
         verify(mockSchemeService, times(1)).listOfSchemes(any())(any(), any(), any())
       }
     }

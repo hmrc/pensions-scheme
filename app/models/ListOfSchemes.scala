@@ -16,18 +16,58 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, JsPath, Json, Reads}
+import play.api.libs.functional.syntax._
 
-case class SchemeDetail(name: String, referenceNumber: String, schemeStatus: String, openDate: Option[String],
-                        pstr: Option[String] = None, relationShip: Option[String], underAppeal: Option[String] = None)
+case class PSPDetails(pspid: String,
+                      orgOrPartName: Option[String],
+                      firstName: Option[String],
+                      secondName: Option[String],
+                      lastName: Option[String],
+                      relationshipStartDate: String,
+                      authorizedPSAID: String,
+                      authorizedPSAOrgOrPartName: Option[String],
+                      authorizedPSAFirstName: Option[String],
+                      authorizedPSASecondName: Option[String],
+                      authorizedPSALastName: Option[String])
 
-object SchemeDetail {
-  implicit val format = Json.format[SchemeDetail]
+object PSPDetails {
+  implicit val format: Format[PSPDetails] = Json.format[PSPDetails]
+}
+
+case class SchemeDetails(name: String, referenceNumber: String, schemeStatus: String, openDate: Option[String], pstr: Option[String] = None,
+                         relationship: Option[String], pspDetails: Option[List[PSPDetails]] = None, underAppeal: Option[String] = None)
+
+object SchemeDetails {
+  implicit val format: Format[SchemeDetails] = Json.format[SchemeDetails]
+
+  val desReads: Reads[SchemeDetails] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "referenceNumber").read[String] and
+      (JsPath \ "schemeStatus").read[String] and
+      (JsPath \ "openDate").readNullable[String] and
+      (JsPath \ "pstr").readNullable[String] and
+      (JsPath \ "relationShip").readNullable[String] and
+      (JsPath \ "pspDetails").readNullable[List[PSPDetails]] and
+      (JsPath \ "underAppeal").readNullable[String]
+    ) (
+    (name, srn, status, openDate, pstr, relationship, pspDetails, underAppeal) =>
+      SchemeDetails(name, srn, status, openDate, pstr, relationship, pspDetails, underAppeal)
+  )
 }
 
 case class ListOfSchemes(processingDate: String, totalSchemesRegistered: String,
-                         schemeDetail: Option[List[SchemeDetail]] = None)
+                         schemeDetails: Option[List[SchemeDetails]] = None)
 
 object ListOfSchemes {
-  implicit val format = Json.format[ListOfSchemes]
+  implicit val format: Format[ListOfSchemes] = Json.format[ListOfSchemes]
+
+  val desReads: Reads[ListOfSchemes] = (
+    (JsPath \ "processingDate").read[String] and
+      (JsPath \ "totalSchemesRegistered").read[String] and
+      (JsPath \ "schemeDetail").readNullable[List[SchemeDetails]](Reads.list(SchemeDetails.desReads))
+    ) (
+    (processingDate, totalSchemesRegistered, schemeDetails) =>
+      ListOfSchemes(processingDate, totalSchemesRegistered, schemeDetails)
+  )
 }
