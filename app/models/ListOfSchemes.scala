@@ -48,11 +48,10 @@ object SchemeDetails {
       (JsPath \ "openDate").readNullable[String] and
       (JsPath \ "pstr").readNullable[String] and
       (JsPath \ "relationShip").readNullable[String] and
-      (JsPath \ "pspDetails").readNullable[List[PSPDetails]] and
       (JsPath \ "underAppeal").readNullable[String]
     ) (
-    (name, srn, status, openDate, pstr, relationship, pspDetails, underAppeal) =>
-      SchemeDetails(name, srn, status, openDate, pstr, relationship, pspDetails, underAppeal)
+    (name, srn, status, openDate, pstr, relationship, underAppeal) =>
+      SchemeDetails(name, srn, status, openDate, pstr, relationship, None, underAppeal)
   )
 }
 
