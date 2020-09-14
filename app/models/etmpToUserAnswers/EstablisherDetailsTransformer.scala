@@ -17,16 +17,18 @@
 package models.etmpToUserAnswers
 
 import com.google.inject.Inject
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
-                                              directorsOrPartnersTransformer: DirectorsOrPartnersTransformer) extends JsonTransformer {
+                                              directorsOrPartnersTransformer: DirectorsOrPartnersTransformer,
+                                              val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
 
   val userAnswersEstablishersReads: Reads[JsObject] = {
-    (__ \ 'psaSchemeDetails \ 'establisherDetails).readNullable(__.read(
+    (__ \ basePath \ 'establisherDetails).readNullable(__.read(
       (__ \ 'individualDetails).readNullable(
         __.read(Reads.seq(userAnswersEstablisherIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
         (__ \ 'companyOrOrganisationDetails).readNullable(
