@@ -16,7 +16,7 @@
 
 package service
 
-import audit.{AuditService, SchemeList, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{AuditService, ListOfSchemesAudit, SchemeList, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
@@ -45,6 +45,17 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
         sendSchemeListEvent(psaId, error.responseCode, None)
     }
 
+  }
+
+  override def listOfSchemes(idType: String, idValue: String)
+                     (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+
+    schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly) andThen {
+      case Success(httpResponse) =>
+        auditService.sendEvent(ListOfSchemesAudit(idType, idValue, Status.OK, Some(httpResponse.json)))
+      case Failure(error: HttpException) =>
+        auditService.sendEvent(ListOfSchemesAudit(idType, idValue, error.responseCode, None))
+    }
   }
 
   private def sendSchemeListEvent(psaId: String, status: Int, response: Option[JsValue])(implicit request: RequestHeader, ec: ExecutionContext): Unit = {

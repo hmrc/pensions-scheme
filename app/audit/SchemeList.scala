@@ -41,3 +41,29 @@ case class SchemeList(
 object SchemeList {
   implicit val formatsSchemeList: Format[SchemeList] = Json.format[SchemeList]
 }
+
+case class ListOfSchemesAudit(
+                          idType: String,
+                          idValue: String,
+                          status: Int,
+                          response: Option[JsValue]
+                     ) extends AuditEvent {
+  override def auditType: String = "SchemeList"
+
+  override def details: Map[String, String] =
+    Map(
+      "idType" -> idType,
+      "idValue" -> idValue,
+      "status" -> status.toString,
+      "response" -> {
+        response match {
+          case Some(json) => Json.stringify(json)
+          case _ => ""
+        }
+      }
+    )
+}
+
+object ListOfSchemesAudit {
+  implicit val formatsSchemeList: Format[ListOfSchemesAudit] = Json.format[ListOfSchemesAudit]
+}

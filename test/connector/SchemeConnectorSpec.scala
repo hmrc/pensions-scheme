@@ -70,7 +70,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(psaId, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe OK
     }
   }
@@ -85,7 +85,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(psaId, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe FORBIDDEN
     }
   }
@@ -101,7 +101,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(psaId, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe CONFLICT
     }
   }
@@ -116,7 +116,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(psaId, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -131,7 +131,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(psaId, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe NOT_FOUND
     }
   }
@@ -148,14 +148,14 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     logger.reset()
 
-    connector.registerScheme(psaId, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
         response.status shouldBe BAD_REQUEST
         logger.getLogEntries.size shouldBe 1
         logger.getLogEntries.head.level shouldBe Level.WARN
       }
   }
 
-  "SchemeConnector listOfScheme" should "return OK with the list of schemes response" in {
+  "SchemeConnector listOfSchemes" should "return OK with the list of schemes response" in {
     server.stubFor(
       get(listOfSchemeUrl)
         .willReturn(
@@ -163,12 +163,11 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(psaId).map { response =>
+    connector.listOfSchemes(idValue).map { response =>
       response.status shouldBe OK
       response.body shouldBe Json.stringify(validListOfSchemeResponse)
     }
   }
-
   it should "throw Bad Request Exception when DES/ETMP throws BadRequestException" in {
     server.stubFor(
       get(listOfSchemeUrl)
@@ -177,7 +176,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(psaId).map { response =>
+    connector.listOfSchemes(idValue).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -190,7 +189,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(psaId).map { response =>
+    connector.listOfSchemes(idValue).map { response =>
       response.status shouldBe NOT_FOUND
     }
   }
@@ -203,7 +202,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(psaId).map { response =>
+    connector.listOfSchemes(idValue).map { response =>
       response.status shouldBe INTERNAL_SERVER_ERROR
     }
   }
@@ -220,7 +219,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(desResponse.toString())
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
       response.right.value shouldBe userAnswersResponse
     }
   }
@@ -234,7 +233,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("INVALID_IDTYPE"))
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_IDTYPE")
@@ -251,7 +250,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_SRN")
@@ -268,7 +267,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_PSTR")
@@ -285,7 +284,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_CORRELATIONID")
@@ -302,7 +301,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("not valid")
@@ -317,7 +316,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("NOT_FOUND"))
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
       response.left.value.status shouldBe NOT_FOUND
       response.left.value.body should include("NOT_FOUND")
     }
@@ -332,7 +331,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
       response =>
         response.left.value.status shouldBe FORBIDDEN
         response.left.value.body should include("FORBIDDEN")
@@ -349,7 +348,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber) map {
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
       response =>
         response.left.value.status shouldBe INTERNAL_SERVER_ERROR
         response.left.value.body should include("SERVER_ERROR")
@@ -368,9 +367,9 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(desResponse.toString())
         )
     )
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { _ =>
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { _ =>
       auditService.verifySent(
-        SchemeDetailsAuditEvent(psaId, 200, Some(userAnswersResponse))
+        SchemeDetailsAuditEvent(idValue, 200, Some(userAnswersResponse))
       ) shouldBe true
     }
   }
@@ -387,9 +386,9 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(psaId, schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
       auditService.verifySent(
-        SchemeDetailsAuditEvent(psaId, 404, Some(Json.parse(expectedResponse)))
+        SchemeDetailsAuditEvent(idValue, 404, Some(Json.parse(expectedResponse)))
       ) shouldBe true
     }
   }
@@ -498,14 +497,14 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 object SchemeConnectorSpec extends JsonFileReader {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
-  val psaId = "test"
+  val idValue = "test"
   val schemeIdType = "srn"
   val idNumber = "S1234567890"
   val pstr = "20010010AA"
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
   private val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
-  val schemeUrl = s"/pension-online/scheme-subscription/$psaId"
-  val listOfSchemeUrl = s"/pension-online/subscription/$psaId/list"
+  val schemeUrl = s"/pension-online/scheme-subscription/$idValue"
+  val listOfSchemeUrl: String = s"/pension-online/subscription/$idValue/list"
   val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$idNumber"
   val updateSchemeUrl = s"/pension-online/scheme-variation/pstr/$pstr"
   private val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
