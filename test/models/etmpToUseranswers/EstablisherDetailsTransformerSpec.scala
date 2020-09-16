@@ -23,13 +23,13 @@ import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import utils.PensionSchemeJsValueGenerators
 
-class EstablisherDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
+class EstablisherDetailsTransformerSpec extends TransformationSpec {
 
   import EstablisherDetailsTransformerSpec._
 
-  private val addressTransformer = new AddressTransformer
-  private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)
-  private val transformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
+  private val addressTransformer = new AddressTransformer(fs)
+  private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer, fs)
+  private val transformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer, fs)
 
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format" that {

@@ -21,12 +21,24 @@ import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import utils.PensionSchemeJsValueGenerators
 
-class SchemeDetailsTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
+class SchemeDetailsTransformationSpec extends TransformationSpec {
 
-  val addressTransformer = new AddressTransformer
-  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer)
+  val addressTransformer = new AddressTransformer(fs)
+  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer, fs)
 
   "A DES payload with Scheme details" must {
+    "have the scheme details transformed correctly to valid user answers format" in {
+
+      forAll(schemeDetailsGen) {
+        schemeDetails =>
+          val (desSchemeDetails, userAnswersSchemeDetails) = schemeDetails
+          val result = desSchemeDetails.transform(schemeDetailsTransformer.userAnswersSchemeDetailsReads).get
+          result mustBe userAnswersSchemeDetails
+      }
+    }
+  }
+
+  "An IF payload with Scheme details" must {
     "have the scheme details transformed correctly to valid user answers format" in {
 
       forAll(schemeDetailsGen) {

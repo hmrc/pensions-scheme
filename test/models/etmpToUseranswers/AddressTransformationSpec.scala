@@ -22,11 +22,11 @@ import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import utils.PensionSchemeJsValueGenerators
 
-class AddressTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
+class AddressTransformationSpec extends TransformationSpec {
 
   import AddressTransformationSpec._
 
-  val addressTransformer = new AddressTransformer
+  val addressTransformer = new AddressTransformer(fs)
 
   "DES payload containing an address" when {
     "transformed using getAddress" must {

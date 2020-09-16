@@ -88,22 +88,17 @@ class SchemeConnectorImpl @Inject()(
                                                                     ec: ExecutionContext,
                                                                     request: RequestHeader): Future[HttpResponse] = {
 
-    val url = config.schemeRegistrationUrl.format(psaId)
+    val schemeRegisterUrl = config.schemeRegistrationUrl.format(psaId)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     Logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
-    http.POST[JsValue, HttpResponse](url, registerData)(
-      implicitly[Writes[JsValue]],
-      implicitly[HttpReads[HttpResponse]],
-      implicitly[HeaderCarrier](hc),
-      implicitly[ExecutionContext]
-    ) map { response =>
+    http.POST[JsValue, HttpResponse](schemeRegisterUrl, registerData)(implicitly[Writes[JsValue]],
+      implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
+      .map { response =>
         response.status match {
           case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-            invalidPayloadHandler.logFailures(
-              "/resources/schemas/schemeSubscription.json", registerData, url
-            )
+            invalidPayloadHandler.logFailures("/resources/schemas/schemeSubscription.json", registerData)
           case _ => Unit
         }
         response
@@ -118,10 +113,10 @@ class SchemeConnectorImpl @Inject()(
 
     val (url, hc) = if(fs.get(Toggles.schemeDetailsIFEnabled)) {
       (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
-       HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
     } else {
       (config.schemeDetailsUrl.format(schemeIdType, idNumber),
-       HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
+        HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
     }
 
     http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
@@ -160,22 +155,17 @@ class SchemeConnectorImpl @Inject()(
                                                                 ec: ExecutionContext,
                                                                 request: RequestHeader): Future[HttpResponse] = {
 
-    val url = config.updateSchemeUrl.format(pstr)
+    val updateSchemeUrl = config.updateSchemeUrl.format(pstr)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     Logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
 
-    http.POST[JsValue, HttpResponse](url, data)(
-      implicitly[Writes[JsValue]],
-      implicitly[HttpReads[HttpResponse]],
-      implicitly[HeaderCarrier](hc),
-      implicitly[ExecutionContext]
-    ) map { response =>
+    http.POST[JsValue, HttpResponse](updateSchemeUrl, data)(implicitly[Writes[JsValue]],
+      implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc), implicitly[ExecutionContext])
+      .map { response =>
         response.status match {
           case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-            invalidPayloadHandler.logFailures(
-              "/resources/schemas/schemeVariationSchema.json", data, url
-            )
+            invalidPayloadHandler.logFailures("/resources/schemas/schemeVariationSchema.json", data)
           case _ => Unit
         }
         response
