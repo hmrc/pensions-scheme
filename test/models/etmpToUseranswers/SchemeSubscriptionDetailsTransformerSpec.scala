@@ -55,12 +55,10 @@ class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
 
       s"uses generators" in {
         forAll(getSchemeDetailsGen) {
-          schemeDetails => {
-            val (desScheme, uaScheme) = schemeDetails
+          case (desScheme, uaScheme) =>
 
             val result = desScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
-          }
         }
       }
 
