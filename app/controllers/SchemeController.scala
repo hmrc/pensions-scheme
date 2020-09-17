@@ -57,7 +57,7 @@ class SchemeController @Inject()(schemeService: SchemeService,
       psaId match {
         case Some(psa) =>
           schemeService.listOfSchemes(psa).map { httpResponse =>
-            Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
+            Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes](ListOfSchemes.desReads)))
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
       }
