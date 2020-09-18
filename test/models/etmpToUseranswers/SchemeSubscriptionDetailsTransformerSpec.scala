@@ -17,27 +17,31 @@
 package models.etmpToUseranswers
 
 import base.JsonFileReader
+import config.FeatureSwitchManagementServiceTestImpl
 import models.etmpToUserAnswers._
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import play.api.inject.Injector
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsValue
+import play.api.{Configuration, Environment}
 import utils.PensionSchemeJsValueGenerators
 
-class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
-  private def addressTransformer =
-    new AddressTransformer
+class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
+
+  private def addressTransformer = new AddressTransformer(fs)
 
   private def directorOrPartnerTransformer =
-    new DirectorsOrPartnersTransformer(addressTransformer)
+    new DirectorsOrPartnersTransformer(addressTransformer, fs)
 
   private def schemeDetailsTransformer =
-    new SchemeDetailsTransformer(addressTransformer)
+    new SchemeDetailsTransformer(addressTransformer, fs)
 
   private def establisherTransformer =
-    new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
+    new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer, fs)
 
   private def trusteesTransformer =
-    new TrusteeDetailsTransformer(addressTransformer)
+    new TrusteeDetailsTransformer(addressTransformer, fs)
 
   private def transformer = new SchemeSubscriptionDetailsTransformer(
     schemeDetailsTransformer, establisherTransformer,
@@ -51,12 +55,10 @@ class SchemeSubscriptionDetailsTransformerSpec extends WordSpec with MustMatcher
 
       s"uses generators" in {
         forAll(getSchemeDetailsGen) {
-          schemeDetails => {
-            val (desScheme, uaScheme) = schemeDetails
+          case (desScheme, uaScheme) =>
 
             val result = desScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
-          }
         }
       }
 

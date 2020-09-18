@@ -23,12 +23,12 @@ import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import utils.PensionSchemeJsValueGenerators
 
-class TrusteeDetailsTransformerSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
+class TrusteeDetailsTransformerSpec extends TransformationSpec {
 
   import TrusteeDetailsTransformerSpec._
 
-  private val addressTransformer = new AddressTransformer
-  private def transformer = new TrusteeDetailsTransformer(addressTransformer)
+  private val addressTransformer = new AddressTransformer(fs)
+  private def transformer = new TrusteeDetailsTransformer(addressTransformer, fs)
 
   "A DES payload containing trustee details" must {
     "have the individual details transformed correctly to valid user answers format" that {

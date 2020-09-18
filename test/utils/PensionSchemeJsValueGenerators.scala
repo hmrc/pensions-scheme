@@ -95,6 +95,24 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
               "relationshipType" -> "Primary"
             ) ++ date
           )
+          ),
+          "pspDetails" -> JsArray(Seq(
+            Json.obj("pspid" -> "A2200000",
+              "firstName" -> "First",
+              "middleName" -> "Middle",
+              "lastName" -> "Last",
+              "relationshipStartDate" -> "2021-04-01",
+              "authorisedPSAID" ->"A0000000",
+              "authorisedPSAOrganizationOrPartnershipName" -> "Acme Ltd"),
+            Json.obj("pspid" -> "A2200001",
+              "organizationOrPartnershipName" -> "PSP Limited",
+              "relationshipStartDate" -> "2021-04-01",
+              "authorisedPSAID" ->"A0000000",
+              "authorisedPSAFirstName" -> "First",
+              "authorisedPSAMiddleName" -> "Middle",
+              "authorisedPSALastName" -> "Last"
+            )
+          )
           )
         )
       ),
@@ -118,6 +136,30 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
               "organisationOrPartnershipName" -> "Acme Ltd"
             ) ++ date
           )
+        ),
+        "pspDetails" -> JsArray(Seq(
+          Json.obj("id" -> "A2200000",
+            "individual" -> Json.obj(
+              "firstName" -> "First",
+              "middleName" -> "Middle",
+              "lastName" -> "Last"
+            ),
+            "relationshipStartDate" -> "2021-04-01",
+            "authorisingPSAID" ->"A0000000",
+            "authorisingPSA" -> Json.obj(
+              "organisationOrPartnershipName" -> "Acme Ltd")
+          ),
+          Json.obj("id" -> "A2200001",
+            "organisationOrPartnershipName" -> "PSP Limited",
+            "relationshipStartDate" -> "2021-04-01",
+            "authorisingPSAID" ->"A0000000",
+            "authorisingPSA" -> Json.obj(
+              "firstName" -> "First",
+              "middleName" -> "Middle",
+              "lastName" -> "Last"
+            )
+          )
+        )
         ),
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
         "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),

@@ -20,7 +20,7 @@ import java.util.UUID.randomUUID
 
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
-import config.AppConfig
+import config.{AppConfig, FeatureSwitchManagementService}
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
@@ -29,7 +29,7 @@ import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import utils.InvalidPayloadHandler
+import utils.{InvalidPayloadHandler, Toggles}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -70,7 +70,8 @@ class SchemeConnectorImpl @Inject()(
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
                                      schemeAuditService: SchemeAuditService,
-                                     headerUtils: HeaderUtils
+                                     headerUtils: HeaderUtils,
+                                     fs: FeatureSwitchManagementService
                                    ) extends SchemeConnector with HttpErrorFunctions {
 
   case class SchemeFailedMapToUserAnswersException() extends Exception
@@ -115,10 +116,15 @@ class SchemeConnectorImpl @Inject()(
                                                   ec: ExecutionContext,
                                                   request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
 
-    val schemeDetailsUrl = config.schemeDetailsUrl.format(schemeIdType, idNumber)
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+    val (url, hc) = if(fs.get(Toggles.schemeDetailsIFEnabled)) {
+      (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
+    } else {
+      (config.schemeDetailsUrl.format(schemeIdType, idNumber),
+        HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
+    }
 
-    http.GET[HttpResponse](schemeDetailsUrl)(implicitly, hc, implicitly).map(response =>
+    http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
       handleSchemeDetailsResponse(response)) andThen
       schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }

@@ -17,14 +17,16 @@
 package models.etmpToUserAnswers
 
 import com.google.inject.Inject
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
-class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
+class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer,
+                                          val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   val userAnswersTrusteesReads: Reads[JsObject] = {
-    (__ \ 'psaSchemeDetails \ 'trusteeDetails).readNullable(__.read(
+    (__ \ basePath \ 'trusteeDetails).readNullable(__.read(
       (__ \ 'individualTrusteeDetails).readNullable(
         __.read(Reads.seq(userAnswersTrusteeIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
         (__ \ 'companyTrusteeDetails).readNullable(
@@ -71,4 +73,5 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
       addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
       addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
       userAnswersContactDetailsReads("partnershipContactDetails", desPath) reduce
+
 }

@@ -22,10 +22,10 @@ import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators}
 
-class DirectorsOrPartnersTransformationSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeJsValueGenerators {
+class DirectorsOrPartnersTransformationSpec extends TransformationSpec {
 
-  val addressTransformer = new AddressTransformer
-  val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)
+  val addressTransformer = new AddressTransformer(fs)
+  val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer, fs)
 
   "A DES payload with Partner or director" must {
     "have the partner details transformed correctly to valid user answers format" that {

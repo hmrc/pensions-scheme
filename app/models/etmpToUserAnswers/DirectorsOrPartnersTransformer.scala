@@ -17,11 +17,13 @@
 package models.etmpToUserAnswers
 
 import com.google.inject.Inject
+import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
-class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
+class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer,
+                                               val fs: FeatureSwitchManagementService) extends JsonTransformer {
 
   def userAnswersDirectorReads(desPath: JsPath): Reads[JsObject] = {
     userAnswersIndividualDetailsReads("directorDetails", desPath) and

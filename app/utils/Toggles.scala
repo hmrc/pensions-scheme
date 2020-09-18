@@ -17,4 +17,5 @@
 package utils
 
 object Toggles {
+  val schemeDetailsIFEnabled: String = "if-get-scheme-details-enabled"
 }
