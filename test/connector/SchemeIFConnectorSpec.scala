@@ -59,7 +59,7 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
   private val psaType = "PSA"
   private val pspType = "PSP"
   private val validListOfSchemeIFResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
-  def listOfSchemesIFUrl(idType: String = psaType) = s"/if/sync/pension-online/subscriptions/schemes/list/PODS/$idType/$idValue"
+  def listOfSchemesIFUrl(idType: String = psaType) = s"/pension-online/subscriptions/schemes/list/PODS/$idType/$idValue"
 
   "SchemeConnector listOfScheme from IF" should "return OK with the list of schemes response for PSA" in {
     server.stubFor(
