@@ -16,7 +16,6 @@
 
 package models.userAnswersToEtmp.establisher
 
-import models._
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.ReadsHelper.readsFiltered
 import play.api.libs.functional.syntax._

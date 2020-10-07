@@ -24,7 +24,7 @@ import scala.annotation.tailrec
 object ReadsHelper {
 
   def previousAddressDetails(addressYears: String, previousAddress: Option[Address],
-                             tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
+    tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
 
     val tradingTimeAnswer = tradingTime.getOrElse(true)
 
@@ -50,6 +50,17 @@ object ReadsHelper {
     }
   }
 
+  //noinspection ConvertExpressionToSAM
+  def readsFilteredBoolean[T](isA: JsValue => Boolean, readsA: Reads[T], detailsType: String): Reads[Seq[T]] = new Reads[Seq[T]] {
+    override def reads(json: JsValue): JsResult[Seq[T]] = {
+      json match {
+        case JsArray(establishers) =>
+          readFilteredSeqBoolean(JsSuccess(Nil), filterDeleted(establishers, detailsType), isA, readsA)
+        case _ => JsSuccess(Nil)
+      }
+    }
+  }
+
   private def filterDeleted(jsValueSeq: Seq[JsValue], detailsType: String): Seq[JsValue] = {
     jsValueSeq.filterNot { json =>
       (json \ detailsType \ "isDeleted").validate[Boolean] match {
@@ -70,6 +81,24 @@ object ReadsHelper {
               case error@JsError(_) => error
             }
           case _ => readFilteredSeq(result, t, isA, reads)
+        }
+      case Nil => result
+    }
+  }
+
+  @tailrec
+  private def readFilteredSeqBoolean[T](result: JsResult[Seq[T]], js: Seq[JsValue], isA: JsValue => Boolean, reads: Reads[T]): JsResult[Seq[T]] = {
+    js match {
+      case Seq(h, t@_*) =>
+        if (isA(h)) {
+          reads.reads(h) match {
+            case JsSuccess(individual, _) =>
+              readFilteredSeqBoolean(JsSuccess(result.get :+ individual), t, isA, reads)
+            case error@JsError(_) =>
+              error
+          }
+        } else {
+          readFilteredSeqBoolean(result, t, isA, reads)
         }
       case Nil => result
     }

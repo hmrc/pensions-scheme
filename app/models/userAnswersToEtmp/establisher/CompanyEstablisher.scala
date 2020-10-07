@@ -16,7 +16,8 @@
 
 package models.userAnswersToEtmp.establisher
 
-import models.userAnswersToEtmp.ReadsHelper.{previousAddressDetails, readsFiltered}
+import models.userAnswersToEtmp.ReadsHelper.previousAddressDetails
+import models.userAnswersToEtmp.ReadsHelper.readsFiltered
 import models.userAnswersToEtmp._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq

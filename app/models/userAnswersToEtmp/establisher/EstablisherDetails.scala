@@ -17,7 +17,7 @@
 package models.userAnswersToEtmp.establisher
 
 import models.userAnswersToEtmp.Individual
-import models.userAnswersToEtmp.ReadsHelper.readsFiltered
+import models.userAnswersToEtmp.ReadsHelper.readsFilteredBoolean
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._
@@ -31,15 +31,19 @@ case class EstablisherDetails(
 object EstablisherDetails {
   implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
 
+  private val isEstablisherKindIndividual: JsValue => Boolean = js => (js \ "establisherKind").asOpt[String].contains( "individual")
+  private val isEstablisherKindCompany: JsValue => Boolean = js => (js \ "establisherKind").asOpt[String].contains("company")
+  private val isEstablisherKindPartnership: JsValue => Boolean = js => (js \ "establisherKind").asOpt[String].contains("partnership")
+
   val readsEstablisherDetails: Reads[EstablisherDetails] = (
     (JsPath \ "establishers").readNullable(
-      readsFiltered(_ \ "establisherDetails", Individual.readsEstablisherIndividual, "establisherDetails")
+      readsFilteredBoolean( isEstablisherKindIndividual, Individual.readsEstablisherIndividual, "establisherDetails")
     ) and
       (JsPath \ "establishers").readNullable(
-        readsFiltered(_ \ "companyDetails", CompanyEstablisher.readsEstablisherCompany, "companyDetails")
+        readsFilteredBoolean(isEstablisherKindCompany, CompanyEstablisher.readsEstablisherCompany, "companyDetails")
       ) and
       (JsPath \ "establishers").readNullable(
-        readsFiltered(_ \ "partnershipDetails", Partnership.readsEstablisherPartnership, "partnershipDetails"))
+        readsFilteredBoolean(isEstablisherKindPartnership, Partnership.readsEstablisherPartnership, "partnershipDetails"))
     ) ((establisherIndividuals, establisherCompanies, establisherPartnerships) =>
     EstablisherDetails(
       individual = establisherIndividuals.getOrElse(Nil),

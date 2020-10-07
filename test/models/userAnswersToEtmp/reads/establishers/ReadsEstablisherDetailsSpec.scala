@@ -29,24 +29,27 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsPath
 import play.api.libs.json.Json
 
-class ReadsEstablisherDetailsSpec extends WordSpec with MustMatchers with OptionValues {
+class ReadsEstablisherDetailsSpec
+  extends WordSpec
+    with MustMatchers
+    with OptionValues {
 
   "ReadsEstablisherDetails" must {
 
-    //"read multiple establishers with filtering out the deleted ones" in {
-    //  forAll(establishersGen) { json =>
-    //    val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
-    //
-    //    estDetails.companyOrOrganization.head.organizationName mustBe
-    //      (json \ "establishers" \ 0 \ "companyDetails" \ "companyName").as[String]
-    //
-    //    estDetails.individual.head.personalDetails.firstName mustBe
-    //      (json \ "establishers" \ 3 \ "establisherDetails" \ "firstName").as[String]
-    //
-    //    estDetails.partnership.head.organizationName mustBe
-    //      (json \ "establishers" \ 4 \ "partnershipDetails" \ "name").as[String]
-    //  }
-    //}
+    "read multiple establishers with filtering out the deleted ones" in {
+      forAll(establishersGen) { json =>
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.companyOrOrganization.head.organizationName mustBe
+          (json \ "establishers" \ 0 \ "companyDetails" \ "companyName").as[String]
+
+        estDetails.individual.head.personalDetails.firstName mustBe
+          (json \ "establishers" \ 3 \ "establisherDetails" \ "firstName").as[String]
+
+        estDetails.partnership.head.organizationName mustBe
+          (json \ "establishers" \ 4 \ "partnershipDetails" \ "name").as[String]
+      }
+    }
 
     "read individual establisher which includes a companyDetails node" in {
       forAll(establisherIndividualGenerator()) { individualEstablisher =>
@@ -63,7 +66,7 @@ class ReadsEstablisherDetailsSpec extends WordSpec with MustMatchers with Option
         val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
 
         estDetails.individual.head.personalDetails.firstName mustBe
-          (json \ "establisherDetails" \ "firstName").as[String]
+          (json \ "establishers" \ 0 \ "establisherDetails" \ "firstName").as[String]
       }
     }
 
@@ -82,9 +85,10 @@ class ReadsEstablisherDetailsSpec extends WordSpec with MustMatchers with Option
         val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
 
         estDetails.individual.head.personalDetails.firstName mustBe
-          (json \ "establisherDetails" \ "firstName").as[String]
+          (json \ "establishers" \ 0 \ "establisherDetails" \ "firstName").as[String]
       }
     }
+
 
     "read company establisher which includes an establisherDetails node" in {
       forAll(establisherCompanyGenerator()) { companyEstablisher =>
@@ -102,7 +106,7 @@ class ReadsEstablisherDetailsSpec extends WordSpec with MustMatchers with Option
         val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
 
         estDetails.companyOrOrganization.head.organizationName mustBe
-          (json \ "companyDetails" \ "companyName").as[String]
+          (json \ "establishers" \ 0 \ "companyDetails" \ "companyName").as[String]
       }
     }
 
@@ -122,10 +126,8 @@ class ReadsEstablisherDetailsSpec extends WordSpec with MustMatchers with Option
         val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
 
         estDetails.partnership.head.organizationName mustBe
-          (json \ "partnershipDetails" \ "name").as[String]
+          (json \ "establishers" \ 0 \ "partnershipDetails" \ "name").as[String]
       }
     }
   }
 }
-
-
