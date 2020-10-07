@@ -18,15 +18,13 @@ package models.userAnswersToEtmp.reads.establishers
 
 import models.userAnswersToEtmp.reads.CommonGenerator.establishersGen
 import models.userAnswersToEtmp.establisher.EstablisherDetails
-import models.userAnswersToEtmp.reads.CommonGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherCompanyGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherPartnershipGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherIndividualGenerator
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{OptionValues, MustMatchers, WordSpec}
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsPath
+import org.scalatest.MustMatchers
+import org.scalatest.OptionValues
+import org.scalatest.WordSpec
 import play.api.libs.json.Json
 
 class ReadsEstablisherDetailsSpec
@@ -51,14 +49,12 @@ class ReadsEstablisherDetailsSpec
       }
     }
 
-    "read individual establisher which includes a companyDetails node (due to url manipulation - production issue)" in {
+    "read individual establisher which includes a companyDetails node (due to url manipulation - fix for production issue)" in {
       forAll(establisherIndividualGenerator()) { individualEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
             individualEstablisher ++ Json.obj(
-              "companyDetails" -> Json.obj(
-                "companyName" -> "bla"
-              )
+              "companyDetails" -> Json.obj()
             )
           )
         )
@@ -70,14 +66,12 @@ class ReadsEstablisherDetailsSpec
       }
     }
 
-    "read individual establisher which includes a partnershipDetails node (due to url manipulation - production issue)" in {
+    "read individual establisher which includes a partnershipDetails node (due to url manipulation - fix for production issue)" in {
       forAll(establisherIndividualGenerator()) { individualEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
             individualEstablisher ++ Json.obj(
-              "partnershipDetails" -> Json.obj(
-                "name" -> "bla"
-              )
+              "partnershipDetails" -> Json.obj()
             )
           )
         )
@@ -89,16 +83,12 @@ class ReadsEstablisherDetailsSpec
       }
     }
 
-
-    "read company establisher which includes an establisherDetails node (due to url manipulation - production issue)" in {
+    "read company establisher which includes an establisherDetails node (due to url manipulation - fix for production issue)" in {
       forAll(establisherCompanyGenerator()) { companyEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
             companyEstablisher ++ Json.obj(
-              "establisherDetails" -> Json.obj(
-                "firstName" -> "bla",
-                "lastName" -> "bla"
-              )
+              "establisherDetails" -> Json.obj()
             )
           )
         )
@@ -110,15 +100,12 @@ class ReadsEstablisherDetailsSpec
       }
     }
 
-    "read partnership establisher which includes an establisherDetails node (due to url manipulation - production issue)" in {
+    "read partnership establisher which includes an establisherDetails node (due to url manipulation - fix for production issue)" in {
       forAll(establisherPartnershipGenerator()) { partnershipEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
             partnershipEstablisher ++ Json.obj(
-              "establisherDetails" -> Json.obj(
-                "firstName" -> "bla",
-                "lastName" -> "bla"
-              )
+              "establisherDetails" -> Json.obj()
             )
           )
         )
