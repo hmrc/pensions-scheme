@@ -51,7 +51,7 @@ class ReadsEstablisherDetailsSpec
       }
     }
 
-    "read individual establisher which includes a companyDetails node" in {
+    "read individual establisher which includes a companyDetails node (due to url manipulation - production issue)" in {
       forAll(establisherIndividualGenerator()) { individualEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
@@ -70,7 +70,7 @@ class ReadsEstablisherDetailsSpec
       }
     }
 
-    "read individual establisher which includes a partnershipDetails node" in {
+    "read individual establisher which includes a partnershipDetails node (due to url manipulation - production issue)" in {
       forAll(establisherIndividualGenerator()) { individualEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
@@ -90,7 +90,7 @@ class ReadsEstablisherDetailsSpec
     }
 
 
-    "read company establisher which includes an establisherDetails node" in {
+    "read company establisher which includes an establisherDetails node (due to url manipulation - production issue)" in {
       forAll(establisherCompanyGenerator()) { companyEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
@@ -110,7 +110,7 @@ class ReadsEstablisherDetailsSpec
       }
     }
 
-    "read partnership establisher which includes an establisherDetails node" in {
+    "read partnership establisher which includes an establisherDetails node (due to url manipulation - production issue)" in {
       forAll(establisherPartnershipGenerator()) { partnershipEstablisher =>
         val json = Json.obj(
           "establishers" -> Json.arr(
