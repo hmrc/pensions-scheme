@@ -211,7 +211,8 @@ object CommonGenerator {
       "contactDetails" -> Json.obj(
         "emailAddress" -> emailAddress,
         "phoneNumber" -> mobileNumber
-      )
+      ),
+      "establisherKind" -> "individual"
     )
 
   def establisherCompanyGenerator(isDeleted: Boolean = false): Gen[JsObject] =
@@ -241,7 +242,8 @@ object CommonGenerator {
       "otherDirectors" -> otherDirectors,
       "director" -> Seq(
         director1, director2, director3
-      )
+      ),
+      "establisherKind" -> "company"
     )
 
   def establisherPartnershipGenerator(isDeleted: Boolean = false): Gen[JsObject] =
@@ -274,7 +276,8 @@ object CommonGenerator {
         "otherPartners" -> otherPartners,
         "partner" -> Seq(
           partner1, partner2, partner3
-        )
+        ),
+        "establisherKind" -> "partnership"
       )
     }
 

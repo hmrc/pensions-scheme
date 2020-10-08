@@ -565,7 +565,8 @@ object SchemeServiceSpec extends SpecBase {
           "addressLine1" -> "test-address-line-1",
           "country" -> "test-country"
         ),
-        "addressYears" -> "test-address-years"
+        "addressYears" -> "test-address-years",
+        "establisherKind" -> "individual"
       )
     )
   )

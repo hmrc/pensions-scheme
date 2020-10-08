@@ -18,10 +18,19 @@ package models.userAnswersToEtmp.reads.establishers
 
 import models.userAnswersToEtmp.reads.CommonGenerator.establishersGen
 import models.userAnswersToEtmp.establisher.EstablisherDetails
+import models.userAnswersToEtmp.reads.CommonGenerator.establisherCompanyGenerator
+import models.userAnswersToEtmp.reads.CommonGenerator.establisherPartnershipGenerator
+import models.userAnswersToEtmp.reads.CommonGenerator.establisherIndividualGenerator
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.MustMatchers
+import org.scalatest.OptionValues
+import org.scalatest.WordSpec
+import play.api.libs.json.Json
 
-class ReadsEstablisherDetailsSpec extends WordSpec with MustMatchers with OptionValues {
+class ReadsEstablisherDetailsSpec
+  extends WordSpec
+    with MustMatchers
+    with OptionValues {
 
   "ReadsEstablisherDetails" must {
 
@@ -39,7 +48,73 @@ class ReadsEstablisherDetailsSpec extends WordSpec with MustMatchers with Option
           (json \ "establishers" \ 4 \ "partnershipDetails" \ "name").as[String]
       }
     }
+
+    "read individual establisher which includes a companyDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(establisherIndividualGenerator()) { individualEstablisher =>
+        val json = Json.obj(
+          "establishers" -> Json.arr(
+            individualEstablisher ++ Json.obj(
+              "companyDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.individual.head.personalDetails.firstName mustBe
+          (json \ "establishers" \ 0 \ "establisherDetails" \ "firstName").as[String]
+      }
+    }
+
+    "read individual establisher which includes a partnershipDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(establisherIndividualGenerator()) { individualEstablisher =>
+        val json = Json.obj(
+          "establishers" -> Json.arr(
+            individualEstablisher ++ Json.obj(
+              "partnershipDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.individual.head.personalDetails.firstName mustBe
+          (json \ "establishers" \ 0 \ "establisherDetails" \ "firstName").as[String]
+      }
+    }
+
+    "read company establisher which includes an establisherDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(establisherCompanyGenerator()) { companyEstablisher =>
+        val json = Json.obj(
+          "establishers" -> Json.arr(
+            companyEstablisher ++ Json.obj(
+              "establisherDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.companyOrOrganization.head.organizationName mustBe
+          (json \ "establishers" \ 0 \ "companyDetails" \ "companyName").as[String]
+      }
+    }
+
+    "read partnership establisher which includes an establisherDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(establisherPartnershipGenerator()) { partnershipEstablisher =>
+        val json = Json.obj(
+          "establishers" -> Json.arr(
+            partnershipEstablisher ++ Json.obj(
+              "establisherDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.partnership.head.organizationName mustBe
+          (json \ "establishers" \ 0 \ "partnershipDetails" \ "name").as[String]
+      }
+    }
   }
 }
-
-
