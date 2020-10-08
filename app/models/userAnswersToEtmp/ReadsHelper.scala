@@ -16,7 +16,6 @@
 
 package models.userAnswersToEtmp
 
-import models._
 import play.api.libs.json._
 
 import scala.annotation.tailrec
