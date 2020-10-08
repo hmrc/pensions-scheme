@@ -23,7 +23,9 @@ import scala.annotation.tailrec
 
 object ReadsHelper {
 
-  def previousAddressDetails(addressYears: String, previousAddress: Option[Address],
+  def previousAddressDetails(
+    addressYears: String,
+    previousAddress: Option[Address],
     tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
 
     val tradingTimeAnswer = tradingTime.getOrElse(true)
