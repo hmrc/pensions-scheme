@@ -65,7 +65,8 @@ object CommonGenerator {
       "companyContactDetails" -> Json.obj(
         "emailAddress" -> emailAddress,
         "phoneNumber" -> mobileNumber
-      )
+      ),
+      "trusteeKind" -> "company"
     )
 
   def trusteePartnershipGenerator(isDeleted: Boolean = false): Gen[JsObject] =
@@ -90,7 +91,8 @@ object CommonGenerator {
           "name" -> name,
           "isDeleted" -> isDeleted
         ),
-        "partnershipAddressYears" -> addressYears
+        "partnershipAddressYears" -> addressYears,
+        "trusteeKind" -> "partnership"
       )
     }
 
@@ -117,7 +119,8 @@ object CommonGenerator {
       "trusteeContactDetails" -> Json.obj(
         "emailAddress" -> emailAddress,
         "phoneNumber" -> mobileNumber
-      )
+      ),
+      "trusteeKind" -> "individual"
     )
 
   val trusteesGen: Gen[JsObject] =
