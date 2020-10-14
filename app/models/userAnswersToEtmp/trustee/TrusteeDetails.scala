@@ -21,6 +21,7 @@ import models.userAnswersToEtmp.ReadsHelper.readsFiltered
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._
+import models.userAnswersToEtmp.ReadsHelper.readsFilteredBoolean
 
 case class TrusteeDetails(
                            individualTrusteeDetail: Seq[Individual],
@@ -31,15 +32,19 @@ case class TrusteeDetails(
 object TrusteeDetails {
   implicit val formats: Format[TrusteeDetails] = Json.format[TrusteeDetails]
 
+  private val isKindIndividual: JsValue => Boolean = js => (js \ "trusteeKind").asOpt[String].contains( "individual")
+  private val isKindCompany: JsValue => Boolean = js => (js \ "trusteeKind").asOpt[String].contains("company")
+  private val isKindPartnership: JsValue => Boolean = js => (js \ "trusteeKind").asOpt[String].contains("partnership")
+
   val readsTrusteeDetails: Reads[TrusteeDetails] = (
     (JsPath \ "trustees").readNullable(
-      readsFiltered(_ \ "trusteeDetails", Individual.readsTrusteeIndividual, "trusteeDetails")
+      readsFilteredBoolean( isKindIndividual, Individual.readsTrusteeIndividual, "trusteeDetails")
     ) and
       (JsPath \ "trustees").readNullable(
-        readsFiltered(_ \ "companyDetails", CompanyTrustee.readsTrusteeCompany, "companyDetails")
+        readsFilteredBoolean(isKindCompany, CompanyTrustee.readsTrusteeCompany, "companyDetails")
       ) and
       (JsPath \ "trustees").readNullable(
-        readsFiltered(_ \ "partnershipDetails", PartnershipTrustee.readsTrusteePartnership, "partnershipDetails")
+        readsFilteredBoolean(isKindPartnership, PartnershipTrustee.readsTrusteePartnership, "partnershipDetails")
       )
     ) ((trusteeIndividuals, trusteeCompanies, trusteePartnerships) =>
     TrusteeDetails(

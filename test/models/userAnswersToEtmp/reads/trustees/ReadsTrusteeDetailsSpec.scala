@@ -16,10 +16,12 @@
 
 package models.userAnswersToEtmp.reads.trustees
 
+import models.userAnswersToEtmp.reads.CommonGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.trusteesGen
 import models.userAnswersToEtmp.trustee.TrusteeDetails
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.{OptionValues, MustMatchers, WordSpec}
+import play.api.libs.json.Json
 
 class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValues {
 
@@ -39,7 +41,85 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
           (json \ "trustees" \ 4 \ "partnershipDetails" \ "name").as[String]
       }
     }
+
+
+
+    "read individual trustee which includes a companyDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(CommonGenerator.trusteeIndividualGenerator()) { individualTrustee =>
+        val json = Json.obj(
+          "trustees" -> Json.arr(
+            individualTrustee ++ Json.obj(
+              "companyDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val trusteeDetails = json.as[TrusteeDetails](TrusteeDetails.readsTrusteeDetails)
+
+        trusteeDetails.individualTrusteeDetail.head.personalDetails.firstName mustBe
+          (json \ "trustees" \ 0 \ "trusteeDetails" \ "firstName").as[String]
+      }
+    }
+
+    "read individual trustee which includes a partnershipDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(CommonGenerator.trusteeIndividualGenerator()) { individualTrustee =>
+        val json = Json.obj(
+          "trustees" -> Json.arr(
+            individualTrustee ++ Json.obj(
+              "partnershipDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val trusteeDetails = json.as[TrusteeDetails](TrusteeDetails.readsTrusteeDetails)
+
+        trusteeDetails.individualTrusteeDetail.head.personalDetails.firstName mustBe
+          (json \ "trustees" \ 0 \ "trusteeDetails" \ "firstName").as[String]
+      }
+    }
+
+    "read company trustee which includes an trusteeDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(CommonGenerator.trusteeCompanyGenerator()) { companyTrustee =>
+        val json = Json.obj(
+          "trustees" -> Json.arr(
+            companyTrustee ++ Json.obj(
+              "trusteeDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val trusteeDetails = json.as[TrusteeDetails](TrusteeDetails.readsTrusteeDetails)
+
+        trusteeDetails.companyTrusteeDetail.head.organizationName mustBe
+          (json \ "trustees" \ 0 \ "companyDetails" \ "companyName").as[String]
+      }
+    }
+
+    "read partnership trustee which includes an trusteeDetails node (due to url manipulation - fix for production issue)" in {
+      forAll(CommonGenerator.trusteePartnershipGenerator()) { partnershipTrustee =>
+        val json = Json.obj(
+          "trustees" -> Json.arr(
+            partnershipTrustee ++ Json.obj(
+              "trusteeDetails" -> Json.obj()
+            )
+          )
+        )
+
+        val trusteeDetails = json.as[TrusteeDetails](TrusteeDetails.readsTrusteeDetails)
+
+        trusteeDetails.partnershipTrusteeDetail.head.organizationName mustBe
+          (json \ "trustees" \ 0 \ "partnershipDetails" \ "name").as[String]
+      }
+    }
   }
+
+
+
+
+
+
+
+
 }
 
 
