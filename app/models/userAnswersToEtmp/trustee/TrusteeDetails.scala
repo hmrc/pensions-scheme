@@ -39,15 +39,12 @@ object TrusteeDetails {
   val readsTrusteeDetails: Reads[TrusteeDetails] = (
     (JsPath \ "trustees").readNullable(
       readsFilteredBoolean( isKindIndividual, Individual.readsTrusteeIndividual, "trusteeDetails")
-      //readsFiltered(_ \ "trusteeDetails", Individual.readsTrusteeIndividual, "trusteeDetails")
     ) and
       (JsPath \ "trustees").readNullable(
         readsFilteredBoolean(isKindCompany, CompanyTrustee.readsTrusteeCompany, "companyDetails")
-        //readsFiltered(_ \ "companyDetails", CompanyTrustee.readsTrusteeCompany, "companyDetails")
       ) and
       (JsPath \ "trustees").readNullable(
         readsFilteredBoolean(isKindPartnership, PartnershipTrustee.readsTrusteePartnership, "partnershipDetails")
-        //readsFiltered(_ \ "partnershipDetails", PartnershipTrustee.readsTrusteePartnership, "partnershipDetails")
       )
     ) ((trusteeIndividuals, trusteeCompanies, trusteePartnerships) =>
     TrusteeDetails(
