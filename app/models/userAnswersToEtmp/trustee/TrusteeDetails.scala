@@ -32,9 +32,15 @@ case class TrusteeDetails(
 object TrusteeDetails {
   implicit val formats: Format[TrusteeDetails] = Json.format[TrusteeDetails]
 
-  private val isKindIndividual: JsValue => Boolean = js => (js \ "trusteeKind").asOpt[String].contains( "individual")
-  private val isKindCompany: JsValue => Boolean = js => (js \ "trusteeKind").asOpt[String].contains("company")
-  private val isKindPartnership: JsValue => Boolean = js => (js \ "trusteeKind").asOpt[String].contains("partnership")
+  private val isKindIndividual: JsValue => Boolean = js =>
+    (js \ "trusteeKind").asOpt[String].contains( "individual") &&
+      (js \ "trusteeDetails" \ "firstName").asOpt[String].isDefined
+  private val isKindCompany: JsValue => Boolean = js =>
+    (js \ "trusteeKind").asOpt[String].contains("company") &&
+      (js \ "companyDetails" \ "companyName").asOpt[String].isDefined
+  private val isKindPartnership: JsValue => Boolean = js =>
+    (js \ "trusteeKind").asOpt[String].contains("partnership") &&
+      (js \ "partnershipDetails" \ "name").asOpt[String].isDefined
 
   val readsTrusteeDetails: Reads[TrusteeDetails] = (
     (JsPath \ "trustees").readNullable(
