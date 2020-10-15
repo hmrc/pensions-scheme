@@ -116,5 +116,71 @@ class ReadsEstablisherDetailsSpec
           (json \ "establishers" \ 0 \ "partnershipDetails" \ "name").as[String]
       }
     }
+
+    "read only 1 of 2 company establishers of which one includes only an establisherKind node and " +
+      "an isEstablisherNew node (due to not entering a name - fix for production issue)" in {
+      forAll(establisherCompanyGenerator()) { companyEstablisher =>
+        val json = Json.obj(
+          "establishers" -> Json.arr(
+            companyEstablisher,
+            Json.obj(
+                "establisherKind" -> "company",
+                "isEstablisherNew" -> true
+            )
+          )
+        )
+
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.companyOrOrganization.head.organizationName mustBe
+          (json \ "establishers" \ 0 \ "companyDetails" \ "companyName").as[String]
+        estDetails.companyOrOrganization.size mustBe 1
+
+      }
+    }
+
+    "read only 1 of 2 individual establishers of which one includes only an establisherKind node and " +
+      "an isEstablisherNew node (due to not entering a name - fix for production issue)" in {
+      forAll(establisherIndividualGenerator()) { individualEstablisher =>
+        val json = Json.obj(
+          "establishers" -> Json.arr(
+            individualEstablisher,
+            Json.obj(
+              "establisherKind" -> "individual",
+              "isEstablisherNew" -> true
+            )
+          )
+        )
+
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.individual.head.personalDetails.firstName mustBe
+          (json \ "establishers" \ 0 \ "establisherDetails" \ "firstName").as[String]
+        estDetails.individual.size mustBe 1
+
+      }
+    }
+
+    "read only 1 of 2 partnership establishers of which one includes only an establisherKind node and " +
+      "an isEstablisherNew node (due to not entering a name - fix for production issue)" in {
+      forAll(establisherPartnershipGenerator()) { partnershipEstablisher =>
+        val json = Json.obj(
+          "establishers" -> Json.arr(
+            partnershipEstablisher,
+            Json.obj(
+              "establisherKind" -> "partnership",
+              "isEstablisherNew" -> true
+            )
+          )
+        )
+
+        val estDetails = json.as[EstablisherDetails](EstablisherDetails.readsEstablisherDetails)
+
+        estDetails.partnership.head.organizationName mustBe
+          (json \ "establishers" \ 0 \ "partnershipDetails" \ "name").as[String]
+        estDetails.partnership.size mustBe 1
+
+      }
+    }
   }
 }

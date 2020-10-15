@@ -20,7 +20,9 @@ import models.userAnswersToEtmp.reads.CommonGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.trusteesGen
 import models.userAnswersToEtmp.trustee.TrusteeDetails
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{OptionValues, MustMatchers, WordSpec}
+import org.scalatest.MustMatchers
+import org.scalatest.OptionValues
+import org.scalatest.WordSpec
 import play.api.libs.json.Json
 
 class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValues {
@@ -113,13 +115,69 @@ class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValu
     }
   }
 
+  "read only 1 of 2 company trustees of which one includes only an trusteeKind node and " +
+    "an isTrusteeNew node (due to not entering a name - fix for production issue)" in {
+    forAll(CommonGenerator.trusteeCompanyGenerator()) { companyTrustee =>
+      val json = Json.obj(
+        "trustees" -> Json.arr(
+          companyTrustee,
+          Json.obj(
+            "trusteeKind" -> "company",
+            "isTrusteeNew" -> true
+          )
+        )
+      )
 
+      val trusteeDetails = json.as[TrusteeDetails](TrusteeDetails.readsTrusteeDetails)
 
+      trusteeDetails.companyTrusteeDetail.head.organizationName mustBe
+        (json \ "trustees" \ 0 \ "companyDetails" \ "companyName").as[String]
+      trusteeDetails.companyTrusteeDetail.size mustBe 1
 
+    }
+  }
 
+  "read only 1 of 2 individual trustees of which one includes only an trusteeKind node and " +
+    "an isTrusteeNew node (due to not entering a name - fix for production issue)" in {
+    forAll(CommonGenerator.trusteeIndividualGenerator()) { individualTrustee =>
+      val json = Json.obj(
+        "trustees" -> Json.arr(
+          individualTrustee,
+          Json.obj(
+            "trusteeKind" -> "individual",
+            "isTrusteeNew" -> true
+          )
+        )
+      )
 
+      val trusteeDetails = json.as[TrusteeDetails](TrusteeDetails.readsTrusteeDetails)
 
+      trusteeDetails.individualTrusteeDetail.head.personalDetails.firstName mustBe
+        (json \ "trustees" \ 0 \ "trusteeDetails" \ "firstName").as[String]
+      trusteeDetails.individualTrusteeDetail.size mustBe 1
 
+    }
+  }
+
+  "read only 1 of 2 partnership trustees of which one includes only an trusteeKind node and " +
+    "an isTrusteeNew node (due to not entering a name - fix for production issue)" in {
+    forAll(CommonGenerator.trusteePartnershipGenerator()) { partnershipTrustee =>
+      val json = Json.obj(
+        "trustees" -> Json.arr(
+          partnershipTrustee,
+          Json.obj(
+            "trusteeKind" -> "partnership",
+            "isTrusteeNew" -> true
+          )
+        )
+      )
+
+      val trusteeDetails = json.as[TrusteeDetails](TrusteeDetails.readsTrusteeDetails)
+
+      trusteeDetails.partnershipTrusteeDetail.head.organizationName mustBe
+        (json \ "trustees" \ 0 \ "partnershipDetails" \ "name").as[String]
+      trusteeDetails.partnershipTrusteeDetail.size mustBe 1
+
+    }
+  }
 }
-
-

@@ -31,9 +31,15 @@ case class EstablisherDetails(
 object EstablisherDetails {
   implicit val formats: Format[EstablisherDetails] = Json.format[EstablisherDetails]
 
-  private val isEstablisherKindIndividual: JsValue => Boolean = js => (js \ "establisherKind").asOpt[String].contains( "individual")
-  private val isEstablisherKindCompany: JsValue => Boolean = js => (js \ "establisherKind").asOpt[String].contains("company")
-  private val isEstablisherKindPartnership: JsValue => Boolean = js => (js \ "establisherKind").asOpt[String].contains("partnership")
+  private val isEstablisherKindIndividual: JsValue => Boolean = js =>
+    (js \ "establisherKind").asOpt[String].contains( "individual") &&
+      (js \ "establisherDetails" \ "firstName").asOpt[String].isDefined
+  private val isEstablisherKindCompany: JsValue => Boolean = js =>
+    (js \ "establisherKind").asOpt[String].contains("company") &&
+      (js \ "companyDetails" \ "companyName").asOpt[String].isDefined
+  private val isEstablisherKindPartnership: JsValue => Boolean = js =>
+    (js \ "establisherKind").asOpt[String].contains("partnership") &&
+      (js \ "partnershipDetails" \ "name").asOpt[String].isDefined
 
   val readsEstablisherDetails: Reads[EstablisherDetails] = (
     (JsPath \ "establishers").readNullable(
