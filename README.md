@@ -5,7 +5,7 @@ Microservice to support the registration and post-registration update (variation
 
 API
 ---
-
+ 
 | *Task* | *Supported Methods* | *Description* |
 |--------|----|----|
 | ```/register-scheme                                     ```  | POST   | Register scheme [More...](docs/register-scheme.md) |
