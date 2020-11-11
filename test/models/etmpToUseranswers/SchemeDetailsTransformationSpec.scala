@@ -16,26 +16,14 @@
 
 package models.etmpToUseranswers
 
-import models.etmpToUserAnswers.DES.AddressTransformer
-import models.etmpToUserAnswers.DES.SchemeDetailsTransformer
+import models.etmpToUserAnswers.AddressTransformer
+import models.etmpToUserAnswers.SchemeDetailsTransformer
 import org.scalatest.prop.PropertyChecks.forAll
 
 class SchemeDetailsTransformationSpec extends TransformationSpec {
 
   val addressTransformer = new AddressTransformer
   val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer)
-
-  "A DES payload with Scheme details" must {
-    "have the scheme details transformed correctly to valid user answers format" in {
-
-      forAll(schemeDetailsGen) {
-        schemeDetails =>
-          val (desSchemeDetails, userAnswersSchemeDetails) = schemeDetails
-          val result = desSchemeDetails.transform(schemeDetailsTransformer.userAnswersSchemeDetailsReads).get
-          result mustBe userAnswersSchemeDetails
-      }
-    }
-  }
 
   "An IF payload with Scheme details" must {
     "have the scheme details transformed correctly to valid user answers format" in {

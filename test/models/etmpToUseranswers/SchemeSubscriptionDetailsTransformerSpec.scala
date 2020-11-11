@@ -16,7 +16,7 @@
 
 package models.etmpToUseranswers
 
-import models.etmpToUserAnswers.DES._
+import models.etmpToUserAnswers._
 import org.scalatest.prop.PropertyChecks.forAll
 import play.api.libs.json.JsValue
 
