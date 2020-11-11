@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package utils
+package models
 
-object Toggles {
-  val schemeDetailsIFEnabled: String = "if-get-scheme-details-enabled"
-}
+sealed trait BinaryResult
+
+case object OperationSucceeded extends BinaryResult
+case object OperationFailed extends BinaryResult

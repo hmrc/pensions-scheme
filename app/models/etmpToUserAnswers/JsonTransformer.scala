@@ -20,11 +20,10 @@ import config.FeatureSwitchManagementService
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
-import utils.Toggles
 
 trait JsonTransformer {
 
-  def fs: FeatureSwitchManagementService
+//  def fs: FeatureSwitchManagementService
   def basePath: String = if(fs.get(Toggles.schemeDetailsIFEnabled)) "psaPspSchemeDetails" else "psaSchemeDetails"
 
   val doNothing: Reads[JsObject] = {

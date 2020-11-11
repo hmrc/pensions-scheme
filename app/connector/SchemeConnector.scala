@@ -29,7 +29,7 @@ import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import utils.{InvalidPayloadHandler, Toggles}
+import utils.InvalidPayloadHandler
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -70,8 +70,7 @@ class SchemeConnectorImpl @Inject()(
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
                                      schemeAuditService: SchemeAuditService,
-                                     headerUtils: HeaderUtils,
-                                     fs: FeatureSwitchManagementService
+                                     headerUtils: HeaderUtils
                                    ) extends SchemeConnector with HttpErrorFunctions {
 
   case class SchemeFailedMapToUserAnswersException() extends Exception
