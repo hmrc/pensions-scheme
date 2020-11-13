@@ -224,7 +224,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 
   "SchemeConnector getSchemeDetails" should "return user answer json" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseDES.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
     server.stubFor(
@@ -372,7 +372,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 
   it should "send audit event for successful response" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseDES.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
     server.stubFor(
