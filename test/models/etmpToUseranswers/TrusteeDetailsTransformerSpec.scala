@@ -27,8 +27,8 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
 
   import TrusteeDetailsTransformerSpec._
 
-  private val addressTransformer = new AddressTransformer(fs)
-  private def transformer = new TrusteeDetailsTransformer(addressTransformer, fs)
+  private val addressTransformer = new AddressTransformer
+  private def transformer = new TrusteeDetailsTransformer(addressTransformer)
 
   "A DES payload containing trustee details" must {
     "have the individual details transformed correctly to valid user answers format" that {

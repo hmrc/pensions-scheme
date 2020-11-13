@@ -16,32 +16,25 @@
 
 package models.etmpToUseranswers
 
-import base.JsonFileReader
-import config.FeatureSwitchManagementServiceTestImpl
 import models.etmpToUserAnswers._
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.inject.Injector
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsValue
-import play.api.{Configuration, Environment}
-import utils.PensionSchemeJsValueGenerators
 
 class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
 
-  private def addressTransformer = new AddressTransformer(fs)
+  private def addressTransformer = new AddressTransformer
 
   private def directorOrPartnerTransformer =
-    new DirectorsOrPartnersTransformer(addressTransformer, fs)
+    new DirectorsOrPartnersTransformer(addressTransformer)
 
   private def schemeDetailsTransformer =
-    new SchemeDetailsTransformer(addressTransformer, fs)
+    new SchemeDetailsTransformer(addressTransformer)
 
   private def establisherTransformer =
-    new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer, fs)
+    new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
 
   private def trusteesTransformer =
-    new TrusteeDetailsTransformer(addressTransformer, fs)
+    new TrusteeDetailsTransformer(addressTransformer)
 
   private def transformer = new SchemeSubscriptionDetailsTransformer(
     schemeDetailsTransformer, establisherTransformer,

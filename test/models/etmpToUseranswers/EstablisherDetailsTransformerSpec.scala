@@ -16,20 +16,19 @@
 
 package models.etmpToUseranswers
 
-import base.JsonFileReader
-import models.etmpToUserAnswers.{AddressTransformer, DirectorsOrPartnersTransformer, EstablisherDetailsTransformer}
+import models.etmpToUserAnswers.AddressTransformer
+import models.etmpToUserAnswers.DirectorsOrPartnersTransformer
+import models.etmpToUserAnswers.EstablisherDetailsTransformer
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.PensionSchemeJsValueGenerators
 
 class EstablisherDetailsTransformerSpec extends TransformationSpec {
 
   import EstablisherDetailsTransformerSpec._
 
-  private val addressTransformer = new AddressTransformer(fs)
-  private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer, fs)
-  private val transformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer, fs)
+  private val addressTransformer = new AddressTransformer
+  private val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)
+  private val transformer = new EstablisherDetailsTransformer(addressTransformer, directorOrPartnerTransformer)
 
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format" that {

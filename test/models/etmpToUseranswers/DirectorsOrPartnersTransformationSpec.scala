@@ -16,16 +16,15 @@
 
 package models.etmpToUseranswers
 
-import models.etmpToUserAnswers.{AddressTransformer, DirectorsOrPartnersTransformer}
+import models.etmpToUserAnswers.AddressTransformer
+import models.etmpToUserAnswers.DirectorsOrPartnersTransformer
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.{FakeFeatureSwitchManagementService, PensionSchemeJsValueGenerators}
 
 class DirectorsOrPartnersTransformationSpec extends TransformationSpec {
 
-  val addressTransformer = new AddressTransformer(fs)
-  val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer, fs)
+  val addressTransformer = new AddressTransformer
+  val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)
 
   "A DES payload with Partner or director" must {
     "have the partner details transformed correctly to valid user answers format" that {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.etmpToUserAnswers
+package models.etmpToUserAnswers.DES
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
@@ -22,7 +22,7 @@ import play.api.libs.json._
 
 trait JsonTransformer {
 
-  def basePath: String = "psaPspSchemeDetails"
+  def basePath: String = "psaSchemeDetails"
 
   val doNothing: Reads[JsObject] = {
     __.json.put(Json.obj())

@@ -16,15 +16,14 @@
 
 package models.etmpToUseranswers
 
-import models.etmpToUserAnswers.{AddressTransformer, SchemeDetailsTransformer}
+import models.etmpToUserAnswers.AddressTransformer
+import models.etmpToUserAnswers.SchemeDetailsTransformer
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import utils.PensionSchemeJsValueGenerators
 
 class SchemeDetailsTransformationSpec extends TransformationSpec {
 
-  val addressTransformer = new AddressTransformer(fs)
-  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer, fs)
+  val addressTransformer = new AddressTransformer
+  val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer)
 
   "A DES payload with Scheme details" must {
     "have the scheme details transformed correctly to valid user answers format" in {

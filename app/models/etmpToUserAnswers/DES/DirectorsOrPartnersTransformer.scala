@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.etmpToUserAnswers
+package models.etmpToUserAnswers.DES
 
 import com.google.inject.Inject
 import play.api.libs.functional.syntax._

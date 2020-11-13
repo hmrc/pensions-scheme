@@ -17,11 +17,13 @@
 package models.etmpToUseranswers
 
 import base.JsonFileReader
-import config.FeatureSwitchManagementServiceTestImpl
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.MustMatchers
+import org.scalatest.OptionValues
+import org.scalatest.WordSpec
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.{Configuration, Environment}
+import play.api.Configuration
+import play.api.Environment
 import utils.PensionSchemeJsValueGenerators
 
 trait TransformationSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
@@ -29,5 +31,4 @@ trait TransformationSpec extends WordSpec with MustMatchers with OptionValues wi
   val injector: Injector = new GuiceApplicationBuilder().build().injector
   val config: Configuration = injector.instanceOf[Configuration]
   val environment: Environment = injector.instanceOf[Environment]
-  val fs = new FeatureSwitchManagementServiceTestImpl(config, environment)
 }

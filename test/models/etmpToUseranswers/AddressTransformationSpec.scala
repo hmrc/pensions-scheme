@@ -18,15 +18,13 @@ package models.etmpToUseranswers
 
 import models.etmpToUserAnswers.AddressTransformer
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.PensionSchemeJsValueGenerators
 
 class AddressTransformationSpec extends TransformationSpec {
 
   import AddressTransformationSpec._
 
-  val addressTransformer = new AddressTransformer(fs)
+  val addressTransformer = new AddressTransformer
 
   "DES payload containing an address" when {
     "transformed using getAddress" must {
