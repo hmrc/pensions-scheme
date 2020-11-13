@@ -17,7 +17,7 @@
 package models.etmpToUseranswers
 
 import base.JsonFileReader
-import models.etmpToUserAnswers.{AddressTransformer, TrusteeDetailsTransformer}
+import models.etmpToUserAnswers.DES.{AddressTransformer, TrusteeDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
