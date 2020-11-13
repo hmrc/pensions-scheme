@@ -24,9 +24,9 @@ import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.Configuration
 import play.api.Environment
-import utils.PensionSchemeJsValueGenerators
+import utils.DESPensionSchemeJsValueGenerators
 
-trait TransformationSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
+trait TransformationSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with DESPensionSchemeJsValueGenerators {
 
   val injector: Injector = new GuiceApplicationBuilder().build().injector
   val config: Configuration = injector.instanceOf[Configuration]
