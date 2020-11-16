@@ -19,16 +19,13 @@ package connector
 import java.util.UUID.randomUUID
 
 import audit._
-import com.google.inject.ImplementedBy
-import com.google.inject.Inject
+import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.FeatureToggleName.IntegrationFramework
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsValue
-import play.api.libs.json.Writes
+import play.api.libs.json.{JsObject, JsValue, Writes}
 import play.api.mvc.RequestHeader
 import service.FeatureToggleService
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -36,8 +33,7 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.InvalidPayloadHandler
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
