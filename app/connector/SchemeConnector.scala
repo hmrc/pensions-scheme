@@ -22,6 +22,7 @@ import audit._
 import com.google.inject.ImplementedBy
 import com.google.inject.Inject
 import config.AppConfig
+import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFramework
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
@@ -118,26 +119,24 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def getSchemeDetails(psaId: String, schemeIdType: String,
-                                idNumber: String)(implicit
-                                                  headerCarrier: HeaderCarrier,
-                                                  ec: ExecutionContext,
-                                                  request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
-      featureToggleService.get(IntegrationFramework).map(_.isEnabled).flatMap { isEnabled =>
-        if(isEnabled) {
-          val (url, hc) = (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
-            HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
-          http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-            handleSchemeDetailsResponse(response)) andThen
-            schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
-        } else {
-          val (url, hc) = (config.schemeDetailsUrl.format(schemeIdType, idNumber),
-            HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
-          http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-            handleSchemeDetailsResponseDES(response)) andThen
-            schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
-        }
-
-      }
+    idNumber: String)(implicit
+    headerCarrier: HeaderCarrier,
+    ec: ExecutionContext,
+    request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
+    featureToggleService.get(IntegrationFramework).flatMap {
+      case Enabled(IntegrationFramework) =>
+        val (url, hc) = (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
+          HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
+        http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
+          handleSchemeDetailsResponse(response)) andThen
+          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
+      case _ =>
+        val (url, hc) = (config.schemeDetailsUrl.format(schemeIdType, idNumber),
+          HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
+        http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
+          handleSchemeDetailsResponseDES(response)) andThen
+          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
+    }
   }
 
   override def listOfSchemes(psaId: String)(implicit
