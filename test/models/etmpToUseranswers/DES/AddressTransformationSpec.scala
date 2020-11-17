@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers
+package models.etmpToUseranswers.DES
 
-import models.etmpToUserAnswers.AddressTransformer
+import models.etmpToUserAnswers.DES.AddressTransformer
 import org.scalatest.prop.PropertyChecks.forAll
 import play.api.libs.json._
 

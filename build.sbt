@@ -1,5 +1,6 @@
 import AppDependencies.{compile, overrides, test}
 import play.sbt.PlayImport.PlayKeys
+import play.sbt.routes.RoutesKeys
 import sbt.Keys._
 import sbt._
 import scoverage.ScoverageKeys
@@ -30,7 +31,10 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     ScoverageKeys.coverageMinimum := 80,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
-    parallelExecution in Test := false
+    parallelExecution in Test := false,
+    RoutesKeys.routesImport ++= Seq(
+      "models.FeatureToggleName"
+    )
   )
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

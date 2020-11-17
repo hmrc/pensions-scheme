@@ -20,16 +20,19 @@ import java.util.UUID.randomUUID
 
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
-import config.{AppConfig, FeatureSwitchManagementService}
+import config.AppConfig
+import models.FeatureToggle.Enabled
+import models.FeatureToggleName.IntegrationFramework
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, JsValue, Writes}
 import play.api.mvc.RequestHeader
+import service.FeatureToggleService
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import utils.{InvalidPayloadHandler, Toggles}
+import utils.InvalidPayloadHandler
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -69,9 +72,10 @@ class SchemeConnectorImpl @Inject()(
                                      auditService: AuditService,
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
+                                     schemeSubscriptionDetailsTransformerDES: models.etmpToUserAnswers.DES.SchemeSubscriptionDetailsTransformer,
                                      schemeAuditService: SchemeAuditService,
                                      headerUtils: HeaderUtils,
-                                     fs: FeatureSwitchManagementService
+                                     featureToggleService: FeatureToggleService
                                    ) extends SchemeConnector with HttpErrorFunctions {
 
   case class SchemeFailedMapToUserAnswersException() extends Exception
@@ -111,22 +115,24 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def getSchemeDetails(psaId: String, schemeIdType: String,
-                                idNumber: String)(implicit
-                                                  headerCarrier: HeaderCarrier,
-                                                  ec: ExecutionContext,
-                                                  request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
-
-    val (url, hc) = if(fs.get(Toggles.schemeDetailsIFEnabled)) {
-      (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
-        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
-    } else {
-      (config.schemeDetailsUrl.format(schemeIdType, idNumber),
-        HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
+    idNumber: String)(implicit
+    headerCarrier: HeaderCarrier,
+    ec: ExecutionContext,
+    request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
+    featureToggleService.get(IntegrationFramework).flatMap {
+      case Enabled(IntegrationFramework) =>
+        val (url, hc) = (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
+          HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
+        http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
+          handleSchemeDetailsResponse(response)) andThen
+          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
+      case _ =>
+        val (url, hc) = (config.schemeDetailsUrl.format(schemeIdType, idNumber),
+          HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
+        http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
+          handleSchemeDetailsResponseDES(response)) andThen
+          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
     }
-
-    http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-      handleSchemeDetailsResponse(response)) andThen
-      schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
   override def listOfSchemes(psaId: String)(implicit
@@ -197,6 +203,22 @@ class SchemeConnectorImpl @Inject()(
         val userAnswersJson =
           response.json.transform(
             schemeSubscriptionDetailsTransformer.transformToUserAnswers
+          ).getOrElse(throw new SchemeFailedMapToUserAnswersException)
+        Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
+        Right(userAnswersJson)
+      case _ =>
+        Left(response)
+    }
+  }
+
+  private def handleSchemeDetailsResponseDES(response: HttpResponse)(
+    implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
+
+    response.status match {
+      case OK =>
+        val userAnswersJson =
+          response.json.transform(
+            schemeSubscriptionDetailsTransformerDES.transformToUserAnswers
           ).getOrElse(throw new SchemeFailedMapToUserAnswersException)
         Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
         Right(userAnswersJson)

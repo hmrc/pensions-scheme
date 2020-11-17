@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers
+package models.etmpToUseranswers.DES
 
-import models.etmpToUserAnswers.AddressTransformer
-import models.etmpToUserAnswers.SchemeDetailsTransformer
+import models.etmpToUserAnswers.DES.AddressTransformer
+import models.etmpToUserAnswers.DES.SchemeDetailsTransformer
 import org.scalatest.prop.PropertyChecks.forAll
 
 class SchemeDetailsTransformationSpec extends TransformationSpec {
@@ -25,7 +25,7 @@ class SchemeDetailsTransformationSpec extends TransformationSpec {
   val addressTransformer = new AddressTransformer
   val schemeDetailsTransformer = new SchemeDetailsTransformer(addressTransformer)
 
-  "An IF payload with Scheme details" must {
+  "A DES payload with Scheme details" must {
     "have the scheme details transformed correctly to valid user answers format" in {
 
       forAll(schemeDetailsGen) {
@@ -36,4 +36,5 @@ class SchemeDetailsTransformationSpec extends TransformationSpec {
       }
     }
   }
+
 }

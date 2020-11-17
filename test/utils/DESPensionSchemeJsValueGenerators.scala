@@ -23,7 +23,7 @@ import org.scalacheck.Gen.const
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsObject, JsValue, Json, _}
 
-trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
+trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
   val schemeDetailsGen: Gen[(JsValue, JsValue)] = for {
     schemeName <- specialCharStringGen
@@ -81,7 +81,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
     (
       Json.obj(
-        "psaPspSchemeDetails" -> Json.obj(
+        "psaSchemeDetails" -> Json.obj(
           "schemeDetails" -> schemeDetails,
           "psaDetails" -> JsArray(Seq(
             Json.obj("psaid" -> "A0000000",
@@ -410,13 +410,13 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       partnership.map { part => Json.obj("partnershipTrusteeDetails" -> part.map(_._1)) }.getOrElse(Json.obj())
 
     val desEstablishersJson = Json.obj(
-      "psaPspSchemeDetails" -> Json.obj(
+      "psaSchemeDetails" -> Json.obj(
         "establisherDetails" -> desEstablishers
       )
     )
 
     val desTrusteesJson = Json.obj(
-      "psaPspSchemeDetails" -> Json.obj(
+      "psaSchemeDetails" -> Json.obj(
         "trusteeDetails" -> desTrustees
       )
     )
@@ -488,17 +488,17 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     trustees <- Gen.option(establisherOrTrusteeJsValueGen(isEstablisher = false))
   } yield {
     val (desSchemeDetails, uaSchemeDetails) = schemeDetails
-    val establisherDetails = establishers.map(_._1).getOrElse(Json.obj("psaPspSchemeDetails" -> Json.obj()))
-    val trusteeDetails = trustees.map(_._1).getOrElse(Json.obj("psaPspSchemeDetails" -> Json.obj()))
+    val establisherDetails = establishers.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
+    val trusteeDetails = trustees.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
 
-    val branch = (__ \ 'psaPspSchemeDetails).json.pick
+    val branch = (__ \ 'psaSchemeDetails).json.pick
     val desEstablishers = establisherDetails.transform(branch).get
     val desTrustee = trusteeDetails.transform(branch).get
 
     val uaEstablisherDetails = establishers.map(_._2).getOrElse(Json.obj())
     val uaErusteeDetails = trustees.map(_._2).getOrElse(Json.obj())
 
-    val jsonTransformer = (__ \ 'psaPspSchemeDetails).json.update(
+    val jsonTransformer = (__ \ 'psaSchemeDetails).json.update(
       __.read[JsObject].map { o => o ++ desEstablishers.as[JsObject] ++ desTrustee.as[JsObject] }
     ).orElse(__.json.put(Json.obj()))
 

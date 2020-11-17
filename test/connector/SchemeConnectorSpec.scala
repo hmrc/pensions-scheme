@@ -17,36 +17,51 @@
 package connector
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{AuditService, SchemeDetailsAuditEvent}
+import audit.AuditService
+import audit.SchemeDetailsAuditEvent
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.joda.time.LocalDate
+import models.FeatureToggle.Disabled
+import models.FeatureToggleName.IntegrationFramework
 import org.scalatest._
 import org.slf4j.event.Level
 import play.api.LoggerLike
-import play.api.http.Status
-import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.RequestHeader
+import service.FeatureToggleService
+import utils.StubLogger
+import utils.WireMockHelper
+import org.joda.time.LocalDate
+import org.scalatest.mockito.MockitoSugar
+import play.api.libs.json.JodaWrites._
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
+import org.mockito.Mockito._
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import utils.{StubLogger, WireMockHelper}
+import org.mockito.Matchers
+
+import scala.concurrent.Future
 
 class SchemeConnectorSpec extends AsyncFlatSpec
-  with Matchers
   with WireMockHelper
   with OptionValues
   with RecoverMethods
   with EitherValues
+  with MockitoSugar
   with ConnectorBehaviours with JsonFileReader{
 
   import SchemeConnectorSpec._
 
+  private val mockFeatureToggleService = mock[FeatureToggleService]
+
   override def beforeEach(): Unit = {
+    org.mockito.Mockito.reset(mockFeatureToggleService)
     auditService.reset()
+    when(mockFeatureToggleService.get(Matchers.any())).thenReturn(Future.successful(Disabled(IntegrationFramework)))
     super.beforeEach()
   }
   override protected def portConfigKey: String = "microservice.services.des-hod.port"
@@ -54,7 +69,8 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
-      bind[LoggerLike].toInstance(logger)
+      bind[LoggerLike].toInstance(logger),
+      bind[FeatureToggleService].toInstance(mockFeatureToggleService)
     )
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
 
@@ -208,7 +224,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 
   "SchemeConnector getSchemeDetails" should "return user answer json" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseDES.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
     server.stubFor(
@@ -356,7 +372,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   }
 
   it should "send audit event for successful response" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseDES.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
     server.stubFor(

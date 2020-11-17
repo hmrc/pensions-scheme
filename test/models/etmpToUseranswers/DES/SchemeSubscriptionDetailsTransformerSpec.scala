@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers
+package models.etmpToUseranswers.DES
 
-import models.etmpToUserAnswers._
+import models.etmpToUserAnswers.DES._
 import org.scalatest.prop.PropertyChecks.forAll
 import play.api.libs.json.JsValue
 
@@ -40,7 +40,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
     schemeDetailsTransformer, establisherTransformer,
     trusteesTransformer)
 
-  private val ifResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+  private val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseDES.json")
   private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
   "A DES payload with full scheme subscription details " must {
@@ -56,7 +56,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
       }
 
       s"uses request/response json" in {
-        val result = ifResponse.transform(transformer.transformToUserAnswers).get
+        val result = desResponse.transform(transformer.transformToUserAnswers).get
         result mustBe userAnswersResponse
       }
     }
