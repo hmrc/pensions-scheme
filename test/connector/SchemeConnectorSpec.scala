@@ -22,7 +22,7 @@ import audit.SchemeDetailsAuditEvent
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.FeatureToggle.Disabled
-import models.FeatureToggleName.IntegrationFramework
+import models.FeatureToggleName.IntegrationFrameworkListSchemes
 import org.scalatest._
 import org.slf4j.event.Level
 import play.api.LoggerLike
@@ -61,7 +61,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   override def beforeEach(): Unit = {
     org.mockito.Mockito.reset(mockFeatureToggleService)
     auditService.reset()
-    when(mockFeatureToggleService.get(Matchers.any())).thenReturn(Future.successful(Disabled(IntegrationFramework)))
+    when(mockFeatureToggleService.get(Matchers.any())).thenReturn(Future.successful(Disabled(IntegrationFrameworkListSchemes)))
     super.beforeEach()
   }
   override protected def portConfigKey: String = "microservice.services.des-hod.port"
