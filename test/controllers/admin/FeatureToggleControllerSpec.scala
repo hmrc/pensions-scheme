@@ -52,14 +52,33 @@ class FeatureToggleControllerSpec
       .thenReturn(Future.successful(Seq(Enabled(IntegrationFramework))))
   }
 
-  "FeatureToggleController.get" must {
+  "FeatureToggleController.getAll" must {
     "return OK and the feature toggles when they exist" in {
 
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 
-      val result = controller.get()(fakeRequest)
+      val result = controller.getAll()(fakeRequest)
 
       status(result) mustBe OK
+    }
+  }
+
+  "FeatureToggleController.get" must {
+    "get the feature toggle value and return OK" in {
+      when(mockAdminDataRepository.setFeatureToggles(any()))
+        .thenReturn(Future.successful(true))
+
+      when(mockFeatureToggleService.get(any()))
+        .thenReturn(Future.successful(Enabled(IntegrationFramework)))
+
+      val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
+
+      val result = controller.get(IntegrationFramework)(fakeRequest)
+
+      status(result) mustBe OK
+
+      verify(mockFeatureToggleService, times(1))
+        .get(name = IntegrationFramework)
     }
   }
 

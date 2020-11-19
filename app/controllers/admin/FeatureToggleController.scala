@@ -26,17 +26,25 @@ import utils.ErrorHandler
 import scala.concurrent.{ExecutionContext, Future}
 
 class FeatureToggleController @Inject()(
-                                          cc: ControllerComponents,
-                                          featureToggleService: FeatureToggleService
-                                        )(implicit ec: ExecutionContext)
+  cc: ControllerComponents,
+  featureToggleService: FeatureToggleService
+)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with ErrorHandler {
 
-  def get(): Action[AnyContent] = Action.async {
+  def getAll: Action[AnyContent] = Action.async {
     _ =>
       featureToggleService.getAll.map(
         toggles =>
           Ok(Json.toJson(toggles.sortWith(_.name.asString < _.name.asString)))
-        )
+      )
+  }
+
+  def get(toggleName: FeatureToggleName): Action[AnyContent] = Action.async {
+    _ =>
+      featureToggleService.get(toggleName).map(
+        toggle =>
+          Ok(Json.toJson(toggle))
+      )
   }
 
   def put(toggleName: FeatureToggleName): Action[AnyContent] = Action.async {
