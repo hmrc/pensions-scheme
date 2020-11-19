@@ -19,11 +19,13 @@ package controllers.admin
 import javax.inject.Inject
 import models.FeatureToggleName
 import play.api.libs.json.{JsBoolean, Json}
-import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import play.api.mvc.{AbstractController, ControllerComponents, AnyContent, Action}
 import service.FeatureToggleService
 import utils.ErrorHandler
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Future, ExecutionContext}
 
 class FeatureToggleController @Inject()(
   cc: ControllerComponents,
@@ -33,7 +35,10 @@ class FeatureToggleController @Inject()(
 
   def getAll: Action[AnyContent] = Action.async {
     _ =>
-      featureToggleService.getAll.map(
+      val xx = featureToggleService.getAll
+      val ff = Await.result(xx, Duration.Inf)
+      println( "\n>>>" + ff)
+      xx.map(
         toggles =>
           Ok(Json.toJson(toggles.sortWith(_.name.asString < _.name.asString)))
       )

@@ -35,13 +35,18 @@ sealed trait FeatureToggleName {
 
 object FeatureToggleName {
 
+  case object IntegrationFrameworkGetSchemeDetails extends FeatureToggleName {
+    val asString = "integration-framework-get-scheme-details"
+  }
+
   case object IntegrationFrameworkListSchemes extends FeatureToggleName {
     val asString = "integration-framework-list-schemes"
   }
 
-  val toggles = Seq(IntegrationFrameworkListSchemes)
+  val toggles = Seq(IntegrationFrameworkGetSchemeDetails, IntegrationFrameworkListSchemes)
 
   implicit val reads: Reads[FeatureToggleName] = Reads {
+    case JsString(IntegrationFrameworkGetSchemeDetails.asString) => JsSuccess(IntegrationFrameworkGetSchemeDetails)
     case JsString(IntegrationFrameworkListSchemes.asString) => JsSuccess(IntegrationFrameworkListSchemes)
     case _ => JsError("Unrecognised feature toggle name")
   }
