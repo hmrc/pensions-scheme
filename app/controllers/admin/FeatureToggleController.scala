@@ -35,10 +35,7 @@ class FeatureToggleController @Inject()(
 
   def getAll: Action[AnyContent] = Action.async {
     _ =>
-      val xx = featureToggleService.getAll
-      val ff = Await.result(xx, Duration.Inf)
-      println( "\n>>>" + ff)
-      xx.map(
+      featureToggleService.getAll.map(
         toggles =>
           Ok(Json.toJson(toggles.sortWith(_.name.asString < _.name.asString)))
       )

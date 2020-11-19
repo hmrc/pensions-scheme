@@ -20,6 +20,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import models.FeatureToggle._
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
+import models.FeatureToggleName.IntegrationFrameworkListSchemes
 import models._
 import play.api.cache.AsyncCacheApi
 import repositories.AdminDataRepository
@@ -38,7 +39,8 @@ class FeatureToggleService @Inject()(
   private val cacheValidFor: FiniteDuration = Duration(2, Seconds)
 
   private val defaults: Seq[FeatureToggle] = Seq(
-    Disabled(IntegrationFrameworkGetSchemeDetails)
+    Disabled(IntegrationFrameworkGetSchemeDetails),
+    Disabled(IntegrationFrameworkListSchemes)
   )
 
   private def addDefaults(fromDb: Seq[FeatureToggle]): Seq[FeatureToggle] = {
