@@ -40,9 +40,11 @@ class SchemeController @Inject()(schemeService: SchemeService,
 
       (psaId, feJson) match {
         case (Some(psa), Some(jsValue)) =>
-          schemeService.registerScheme(psa, jsValue).map {
-            response =>
-              Ok(response.body)
+          schemeService.registerScheme(psa, jsValue).map { response =>
+            response.status match {
+              case OK => Ok(response.body)
+              case _ => result(response)
+            }
           }
 
         case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
@@ -57,7 +59,10 @@ class SchemeController @Inject()(schemeService: SchemeService,
       psaId match {
         case Some(psa) =>
           schemeService.listOfSchemes(psa).map { httpResponse =>
-            Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes](ListOfSchemes.desReads)))
+            httpResponse.status match {
+              case OK => Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes](ListOfSchemes.desReads)))
+              case _ => result(httpResponse)
+            }
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
       }
@@ -70,8 +75,11 @@ class SchemeController @Inject()(schemeService: SchemeService,
       Logger.debug(s"[Update-Scheme-Incoming-Payload]$json")
       (request.headers.get("pstr"), request.headers.get("psaId"), json) match {
         case (Some(pstr), Some(psaId), Some(jsValue)) =>
-          schemeService.updateScheme(pstr, psaId, jsValue).map {
-            response => Ok(response.body)
+          schemeService.updateScheme(pstr, psaId, jsValue).map { response =>
+            response.status match {
+              case OK => Ok(response.body)
+              case _ => result(response)
+            }
           }
 
         case _ => Future.failed(new BadRequestException("Bad Request without PSTR or PSAId or request body"))

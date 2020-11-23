@@ -17,7 +17,6 @@
 package controllers
 
 import com.google.inject.Inject
-import connector.SchemeConnector
 import models.ListOfSchemes
 import play.api.libs.json._
 import play.api.mvc._
@@ -40,7 +39,10 @@ class SchemeIFController @Inject()(schemeService: SchemeService,
       (idType, idValue) match {
         case (Some(typeOfId), Some(valueOfId)) =>
           schemeService.listOfSchemes(typeOfId, valueOfId).map { httpResponse =>
-            Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
+            httpResponse.status match {
+              case OK => Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
+              case _ => result(httpResponse)
+            }
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
       }

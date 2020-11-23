@@ -47,11 +47,11 @@ trait SchemeConnector {
                                    headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
-
+  
   def listOfSchemes(idType: String, idValue: String)(implicit
-                                   headerCarrier: HeaderCarrier,
-                                   ec: ExecutionContext,
-                                   request: RequestHeader): Future[HttpResponse]
+                                                     headerCarrier: HeaderCarrier,
+                                                     ec: ExecutionContext,
+                                                     request: RequestHeader): Future[HttpResponse]
 
   def getCorrelationId(requestId: Option[String]): String
 
@@ -144,13 +144,12 @@ class SchemeConnectorImpl @Inject()(
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
-
   }
 
   override def listOfSchemes(idType: String, idValue: String)(implicit
-                                                     headerCarrier: HeaderCarrier,
-                                                     ec: ExecutionContext,
-                                                     request: RequestHeader): Future[HttpResponse] = {
+                                                              headerCarrier: HeaderCarrier,
+                                                              ec: ExecutionContext,
+                                                              request: RequestHeader): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesIFUrl.format(idType, idValue)
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
@@ -158,7 +157,6 @@ class SchemeConnectorImpl @Inject()(
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
-
   }
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
