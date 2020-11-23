@@ -32,15 +32,17 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, Http
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnector: BarsConnector,
-                                  auditService: AuditService, appConfig: AppConfig) extends SchemeService {
+class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
+                                  barsConnector: BarsConnector,
+                                  auditService: AuditService,
+                                  appConfig: AppConfig) extends SchemeService {
 
   override def listOfSchemes(psaId: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
     schemeConnector.listOfSchemes(psaId) andThen {
       case Success(httpResponse) =>
-        sendSchemeListEvent(psaId, Status.OK, Some(httpResponse.json))
+        sendSchemeListEvent(psaId, httpResponse.status, Some(httpResponse.json))
       case Failure(error: HttpException) =>
         sendSchemeListEvent(psaId, error.responseCode, None)
     }
@@ -52,7 +54,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
 
     schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly) andThen {
       case Success(httpResponse) =>
-        auditService.sendEvent(ListOfSchemesAudit(idType, idValue, Status.OK, Some(httpResponse.json)))
+        auditService.sendEvent(ListOfSchemesAudit(idType, idValue, httpResponse.status, Some(httpResponse.json)))
       case Failure(error: HttpException) =>
         auditService.sendEvent(ListOfSchemesAudit(idType, idValue, error.responseCode, None))
     }
@@ -105,7 +107,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector, barsConnecto
         Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
         schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
           case Success(httpResponse) =>
-            sendSchemeUpdateEvent(psaId, validPensionsScheme, Status.OK, Some(httpResponse.json))
+            sendSchemeUpdateEvent(psaId, validPensionsScheme, httpResponse.status, Some(httpResponse.json))
           case Failure(error: HttpException) =>
             sendSchemeUpdateEvent(psaId, validPensionsScheme, error.responseCode, None)
         }

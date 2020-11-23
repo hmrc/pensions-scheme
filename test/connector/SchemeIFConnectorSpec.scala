@@ -54,12 +54,13 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
       bind[AuditService].toInstance(auditService),
       bind[LoggerLike].toInstance(logger)
     )
-  def connector: SchemeIFConnector = app.injector.instanceOf[SchemeIFConnector]
+  def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
 
   private val psaType = "PSA"
   private val pspType = "PSP"
   private val validListOfSchemeIFResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
-  def listOfSchemesIFUrl(idType: String = psaType) = s"/pension-online/subscriptions/schemes/list/PODS/$idType/$idValue"
+  def listOfSchemesIFUrl(idType: String = psaType): String =
+    s"/pension-online/subscriptions/schemes/list/PODS/$idType/$idValue"
 
   "SchemeConnector listOfScheme from IF" should "return OK with the list of schemes response for PSA" in {
     server.stubFor(
