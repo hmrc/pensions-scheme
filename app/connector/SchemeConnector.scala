@@ -47,7 +47,7 @@ trait SchemeConnector {
                                    headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
-
+  
   def listOfSchemes(idType: String, idValue: String)(implicit
                                                      headerCarrier: HeaderCarrier,
                                                      ec: ExecutionContext,
@@ -165,7 +165,6 @@ class SchemeConnectorImpl @Inject()(
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
-
   }
 
   override def listOfSchemes(idType: String, idValue: String)(implicit
@@ -179,7 +178,6 @@ class SchemeConnectorImpl @Inject()(
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
-
   }
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
