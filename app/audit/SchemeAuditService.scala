@@ -27,15 +27,16 @@ import scala.util.{Failure, Success, Try}
 
 class SchemeAuditService {
 
-  def sendSchemeDetailsEvent(psaId: String)(sendEvent: SchemeDetailsAuditEvent => Unit)
-                         (implicit rh: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
-
+  def sendSchemeDetailsEvent(userIdType: String, userIdNumber: String)
+                            (sendEvent: SchemeDetailsAuditEvent => Unit)
+                            (implicit rh: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
 
 
     case Success(Right(psaSubscription)) =>
       sendEvent(
         SchemeDetailsAuditEvent(
-          psaId = psaId,
+          userIdType = userIdType,
+          userIdNumber = userIdNumber,
           status = Status.OK,
           payload = Some(psaSubscription)
         )
@@ -43,7 +44,8 @@ class SchemeAuditService {
     case Success(Left(e)) =>
       sendEvent(
         SchemeDetailsAuditEvent(
-          psaId = psaId,
+          userIdType = userIdType,
+          userIdNumber = userIdNumber,
           status = e.status,
           payload = Some(Json.parse(e.body))
         )

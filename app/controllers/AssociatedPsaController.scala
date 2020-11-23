@@ -27,27 +27,40 @@ import utils.ErrorHandler
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AssociatedPsaController @Inject()(schemeConnector: SchemeConnector,
-                                        cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
+class AssociatedPsaController @Inject()(
+                                         schemeConnector: SchemeConnector,
+                                         cc: ControllerComponents
+                                       )(implicit ec: ExecutionContext)
+  extends BackendController(cc)
+    with ErrorHandler {
+
   def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
-      val psaId = request.headers.get("psaId")
-      val srn = request.headers.get("schemeReferenceNumber")
-      val srnRequest = "srn"
-      (srn,psaId) match {
-        case (Some(schemeReferenceNumber),Some(id)) =>
-          schemeConnector.getSchemeDetails(id, srnRequest, schemeReferenceNumber).map {
+      val userIdType = request.headers.get("userIdType")
+      val userIdNumber = request.headers.get("userIdNumber")
+      val schemeIdNumber = request.headers.get("schemeIdNumber")
+
+      (schemeIdNumber, userIdType, userIdNumber) match {
+        case (Some(schemeNumber), Some(idType), Some(idNumber)) =>
+          schemeConnector.getSchemeDetails(
+            userIdType = idType,
+            userIdNumber = idNumber,
+            schemeIdType = "srn",
+            schemeIdNumber = schemeNumber
+          ) map {
             case Right(json) =>
 
-              val isAssociated =  (json \ "psaDetails").asOpt[JsArray].exists(_.value.map {
-                item => item.\("id").as[String]
-              }.toList.contains(id))
+              val isAssociated = (json \ "psaDetails").asOpt[JsArray].exists(_.value.map {
+                item =>
+                  (item \ "id").as[String]
+              }.toList.contains(idNumber))
 
               Ok(Json.toJson(isAssociated))
 
             case Left(e) => result(e)
           }
-        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters PSA Id or SRN"))
+        case _ =>
+          Future.failed(new BadRequestException("Bad Request with missing parameters PSA Id or SRN"))
       }
     } recoverWith recoverFromError
   }

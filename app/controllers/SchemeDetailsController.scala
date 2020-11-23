@@ -26,23 +26,28 @@ import utils.ErrorHandler
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeDetailsController @Inject()(schemeConnector: SchemeConnector,
-                                        schemeService: SchemeService,
-                                        cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
+class SchemeDetailsController @Inject()(
+                                         schemeConnector: SchemeConnector,
+                                         cc: ControllerComponents
+                                       )(implicit ec: ExecutionContext)
+  extends BackendController(cc)
+    with ErrorHandler {
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
-      val idType = request.headers.get("schemeIdType")
-      val id = request.headers.get("idNumber")
-      val idPsa = request.headers.get("PSAId")
+      val schemeIdType = request.headers.get("schemeIdType")
+      val schemeIdNumber = request.headers.get("schemeIdNumber")
+      val userIdType = request.headers.get("userIdType")
+      val userIdNumber = request.headers.get("userIdNumber")
 
-      (idType,id, idPsa) match {
-        case (Some(schemeIdType),Some(idNumber), Some(psaId)) =>
-          schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
-            case Right(psaSchemeDetails) =>  Ok(psaSchemeDetails)
+      (schemeIdType, schemeIdNumber, userIdType, userIdNumber) match {
+        case (Some(schemeType), Some(schemeNumber), Some(userType), Some(userNumber)) =>
+          schemeConnector.getSchemeDetails(userType, userNumber, schemeType, schemeNumber).map {
+            case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
             case Left(e) => result(e)
           }
-        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
+        case _ =>
+          Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }

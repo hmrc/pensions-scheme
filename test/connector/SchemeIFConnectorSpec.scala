@@ -59,7 +59,7 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
   private val psaType = "PSA"
   private val pspType = "PSP"
   private val validListOfSchemeIFResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
-  def listOfSchemesIFUrl(idType: String = psaType) = s"/pension-online/subscriptions/schemes/list/PODS/$idType/$idValue"
+  def listOfSchemesIFUrl(idType: String = psaType) = s"/pension-online/subscriptions/schemes/list/PODS/$idType/$userIdNumber"
 
   "SchemeConnector listOfScheme from IF" should "return OK with the list of schemes response for PSA" in {
     server.stubFor(
@@ -69,7 +69,7 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(psaType, idValue).map { response =>
+    connector.listOfSchemes(psaType, userIdNumber).map { response =>
       response.status shouldBe OK
       response.body shouldBe Json.stringify(validListOfSchemeIFResponse)
     }
@@ -83,7 +83,7 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(pspType, idValue).map { response =>
+    connector.listOfSchemes(pspType, userIdNumber).map { response =>
       response.status shouldBe OK
       response.body shouldBe Json.stringify(validListOfSchemeIFResponse)
     }
@@ -97,7 +97,7 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(psaType, idValue).map { response =>
+    connector.listOfSchemes(psaType, userIdNumber).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -110,7 +110,7 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(pspType, idValue).map { response =>
+    connector.listOfSchemes(pspType, userIdNumber).map { response =>
       response.status shouldBe NOT_FOUND
     }
   }
@@ -123,7 +123,7 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.listOfSchemes(psaType, idValue).map { response =>
+    connector.listOfSchemes(psaType, userIdNumber).map { response =>
       response.status shouldBe INTERNAL_SERVER_ERROR
     }
   }

@@ -21,22 +21,24 @@ import play.api.libs.json.Json
 
 class SchemeDetailsAuditEventSpec extends WordSpec with MustMatchers {
 
-  private val psaId = "A2500001"
+  private val userIdType = "PSAID"
+  private val userIdNumber = "A2500001"
   private val status = 200
-  private val payload = Json.toJson(Json.obj("name"->"abc"))
+  private val payload = Json.toJson(Json.obj("name" -> "abc"))
 
 
-  val event = SchemeDetailsAuditEvent(psaId, status, Some(payload))
+  private val event = SchemeDetailsAuditEvent(userIdType, userIdNumber, status, Some(payload))
 
-  val expectedDetails = Map(
-    "psaId" -> psaId,
+  private val expectedDetails = Map(
+    "userIdType" -> userIdType,
+    "userIdNumber" -> userIdNumber,
     "status" -> status.toString,
     "payload" -> payload.toString
   )
 
   "calling SchemeDetailsAuditEvent" must {
 
-    " returns correct event object" in {
+    "returns correct event object" in {
 
       event.auditType mustBe "GetSchemeDetails"
 
