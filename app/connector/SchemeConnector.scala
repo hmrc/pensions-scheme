@@ -154,6 +154,7 @@ class SchemeConnectorImpl @Inject()(
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
       headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
+    Logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
