@@ -19,7 +19,6 @@ package audit
 import play.api.libs.json.{JsValue, Json}
 
 case class SchemeDetailsAuditEvent(
-                                    userIdType: String,
                                     userIdNumber: String,
                                     status: Int,
                                     payload: Option[JsValue]
@@ -28,7 +27,6 @@ case class SchemeDetailsAuditEvent(
   override def auditType: String = "GetSchemeDetails"
 
   override def details: Map[String, String] = Map(
-    "userIdType" -> userIdType,
     "userIdNumber" -> userIdNumber,
     "status" -> status.toString,
     "payload" -> payload.fold("")(Json.stringify)

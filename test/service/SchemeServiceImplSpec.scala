@@ -145,9 +145,7 @@ class FakeSchemeConnector extends SchemeConnector {
     request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
   override def getSchemeDetails(
-                                 userIdType: String,
                                  userIdNumber: String,
-                                 schemeIdType: String,
                                  schemeIdNumber: String
                                )(
                                  implicit

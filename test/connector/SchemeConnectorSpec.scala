@@ -33,7 +33,7 @@ import service.FeatureToggleService
 import utils.StubLogger
 import utils.WireMockHelper
 import org.joda.time.LocalDate
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
@@ -235,7 +235,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(desResponse.toString())
         )
     )
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber).map { response =>
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber).map { response =>
       response.right.value shouldBe userAnswersResponse
     }
   }
@@ -249,7 +249,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("INVALID_IDTYPE"))
         )
     )
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber).map {
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber).map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_IDTYPE")
@@ -266,7 +266,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber) map {
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_SRN")
@@ -283,7 +283,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber) map {
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_PSTR")
@@ -300,7 +300,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber) map {
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("INVALID_CORRELATIONID")
@@ -317,7 +317,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber) map {
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber) map {
       response =>
         response.left.value.status shouldBe BAD_REQUEST
         response.left.value.body should include("not valid")
@@ -332,7 +332,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(errorResponse("NOT_FOUND"))
         )
     )
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber).map { response =>
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber).map { response =>
       response.left.value.status shouldBe NOT_FOUND
       response.left.value.body should include("NOT_FOUND")
     }
@@ -347,7 +347,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber) map {
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber) map {
       response =>
         response.left.value.status shouldBe FORBIDDEN
         response.left.value.body should include("FORBIDDEN")
@@ -364,7 +364,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber) map {
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber) map {
       response =>
         response.left.value.status shouldBe INTERNAL_SERVER_ERROR
         response.left.value.body should include("SERVER_ERROR")
@@ -383,9 +383,9 @@ class SchemeConnectorSpec extends AsyncFlatSpec
             .withBody(desResponse.toString())
         )
     )
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber).map { _ =>
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber).map { _ =>
       auditService.verifySent(
-        SchemeDetailsAuditEvent(userIdType, userIdNumber, 200, Some(userAnswersResponse))
+        SchemeDetailsAuditEvent(userIdNumber, 200, Some(userAnswersResponse))
       ) shouldBe true
     }
   }
@@ -402,9 +402,9 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(userIdType, userIdNumber, schemeIdType, schemeIdNumber).map { response =>
+    connector.getSchemeDetails(userIdNumber, schemeIdNumber).map { response =>
       auditService.verifySent(
-        SchemeDetailsAuditEvent(userIdType, userIdNumber, 404, Some(Json.parse(expectedResponse)))
+        SchemeDetailsAuditEvent(userIdNumber, 404, Some(Json.parse(expectedResponse)))
       ) shouldBe true
     }
   }
@@ -513,16 +513,14 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 object SchemeConnectorSpec extends JsonFileReader {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
-  val userIdType = "PSAID"
   val userIdNumber = "test"
-  val schemeIdType = "srn"
   val schemeIdNumber = "S1234567890"
   val pstr = "20010010AA"
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
   private val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
   val schemeUrl = s"/pension-online/scheme-subscription/$userIdNumber"
   val listOfSchemeUrl: String = s"/pension-online/subscription/$userIdNumber/list"
-  val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$schemeIdNumber"
+  val schemeDetailsUrl = s"/pension-online/scheme-details/srn/$schemeIdNumber"
   val updateSchemeUrl = s"/pension-online/scheme-variation/pstr/$pstr"
   private val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
 

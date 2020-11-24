@@ -43,9 +43,7 @@ class AssociatedPsaController @Inject()(
       (schemeIdNumber, userIdType, userIdNumber) match {
         case (Some(schemeNumber), Some(idType), Some(idNumber)) =>
           schemeConnector.getSchemeDetails(
-            userIdType = idType,
             userIdNumber = idNumber,
-            schemeIdType = "srn",
             schemeIdNumber = schemeNumber
           ) map {
             case Right(json) =>

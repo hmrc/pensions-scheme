@@ -56,9 +56,7 @@ trait SchemeConnector {
   def getCorrelationId(requestId: Option[String]): String
 
   def getSchemeDetails(
-                        userIdType: String,
                         userIdNumber: String,
-                        schemeIdType: String,
                         schemeIdNumber: String
                       )(
                         implicit
@@ -123,9 +121,7 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def getSchemeDetails(
-                                 userIdType: String,
                                  userIdNumber: String,
-                                 schemeIdType: String,
                                  schemeIdNumber: String
                                )(
                                  implicit
@@ -136,24 +132,24 @@ class SchemeConnectorImpl @Inject()(
     featureToggleService.get(IntegrationFramework).flatMap {
       case Enabled(IntegrationFramework) =>
         val (url, hc) = (
-          config.schemeDetailsIFUrl.format(schemeIdType, schemeIdNumber),
+          config.schemeDetailsIFUrl.format("srn", schemeIdNumber),
           HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponse(response)
         ) andThen
-          schemeAuditService.sendSchemeDetailsEvent(userIdType, userIdNumber)(auditService.sendEvent)
+          schemeAuditService.sendSchemeDetailsEvent(userIdNumber)(auditService.sendEvent)
       case _ =>
         val (url, hc) = (
-          config.schemeDetailsUrl.format(schemeIdType, schemeIdNumber),
+          config.schemeDetailsUrl.format("srn", schemeIdNumber),
           HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponseDES(response)
         ) andThen
-          schemeAuditService.sendSchemeDetailsEvent(userIdType, userIdNumber)(auditService.sendEvent)
+          schemeAuditService.sendSchemeDetailsEvent(userIdNumber)(auditService.sendEvent)
     }
 
   override def listOfSchemes(psaId: String)(implicit

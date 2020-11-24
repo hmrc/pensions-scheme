@@ -19,7 +19,6 @@ package controllers
 import com.google.inject.Inject
 import connector.SchemeConnector
 import play.api.mvc._
-import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
@@ -35,14 +34,12 @@ class SchemeDetailsController @Inject()(
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
-      val schemeIdType = request.headers.get("schemeIdType")
       val schemeIdNumber = request.headers.get("schemeIdNumber")
-      val userIdType = request.headers.get("userIdType")
       val userIdNumber = request.headers.get("userIdNumber")
 
-      (schemeIdType, schemeIdNumber, userIdType, userIdNumber) match {
-        case (Some(schemeType), Some(schemeNumber), Some(userType), Some(userNumber)) =>
-          schemeConnector.getSchemeDetails(userType, userNumber, schemeType, schemeNumber).map {
+      (schemeIdNumber, userIdNumber) match {
+        case (Some(schemeNumber), Some(userNumber)) =>
+          schemeConnector.getSchemeDetails(userNumber, schemeNumber).map {
             case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
             case Left(e) => result(e)
           }

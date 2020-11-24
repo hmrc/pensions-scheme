@@ -65,9 +65,7 @@ class AssociatedPsaControllerSpec
         )
 
         when(mockSchemeConnector.getSchemeDetails(
-          userIdType = Matchers.eq(userIdType),
           userIdNumber = Matchers.eq(userIdNumber),
-          schemeIdType = Matchers.eq(schemeIdType),
           schemeIdNumber = Matchers.eq(schemeIdNumber)
         )(any(), any(), any())).thenReturn(
           Future.successful(Right(userAnswersResponse))
@@ -91,9 +89,7 @@ class AssociatedPsaControllerSpec
         val emptyPsa = (userAnswersResponse.as[JsObject] - "psaDetails")
 
         when(mockSchemeConnector.getSchemeDetails(
-          userIdType = Matchers.eq(userIdType),
           userIdNumber = Matchers.eq(userIdNumber),
-          schemeIdType = Matchers.eq(schemeIdType),
           schemeIdNumber = Matchers.eq(schemeIdNumber)
         )(any(), any(), any())).thenReturn(
           Future.successful(Right(emptyPsa))
@@ -117,9 +113,7 @@ class AssociatedPsaControllerSpec
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
         verify(mockSchemeConnector, never()).getSchemeDetails(
-          userIdType = Matchers.any(),
           userIdNumber = Matchers.any(),
-          schemeIdType = Matchers.any(),
           schemeIdNumber = Matchers.any()
         )(any(), any(), any())
       }
@@ -135,9 +129,7 @@ class AssociatedPsaControllerSpec
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
         verify(mockSchemeConnector, never()).getSchemeDetails(
-          userIdType = Matchers.any(),
           userIdNumber = Matchers.any(),
-          schemeIdType = Matchers.any(),
           schemeIdNumber = Matchers.any()
         )(any(), any(), any())
       }
@@ -150,9 +142,7 @@ class AssociatedPsaControllerSpec
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
         verify(mockSchemeConnector, never()).getSchemeDetails(
-          userIdType = Matchers.any(),
           userIdNumber = Matchers.any(),
-          schemeIdType = Matchers.any(),
           schemeIdNumber = Matchers.any()
         )(any(), any(), any())
       }
@@ -160,9 +150,7 @@ class AssociatedPsaControllerSpec
 
     "we receive INVALID_IDTYPE returned from Des" in {
       when(mockSchemeConnector.getSchemeDetails(
-        userIdType = Matchers.eq(userIdType),
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdType = Matchers.eq(schemeIdType),
         schemeIdNumber = Matchers.eq(schemeIdNumber)
       )(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE")))
