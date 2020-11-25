@@ -47,11 +47,11 @@ trait SchemeConnector {
                                    headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
-
+  
   def listOfSchemes(idType: String, idValue: String)(implicit
-                                   headerCarrier: HeaderCarrier,
-                                   ec: ExecutionContext,
-                                   request: RequestHeader): Future[HttpResponse]
+                                                     headerCarrier: HeaderCarrier,
+                                                     ec: ExecutionContext,
+                                                     request: RequestHeader): Future[HttpResponse]
 
   def getCorrelationId(requestId: Option[String]): String
 
@@ -123,12 +123,14 @@ class SchemeConnectorImpl @Inject()(
       case Enabled(IntegrationFrameworkGetSchemeDetails) =>
         val (url, hc) = (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
           HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
+        Logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponse(response)) andThen
           schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
       case _ =>
         val (url, hc) = (config.schemeDetailsUrl.format(schemeIdType, idNumber),
           HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
+        Logger.debug(s"Calling get scheme details API on DES with url $url and hc $hc")
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponseDES(response)) andThen
           schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
@@ -144,21 +146,20 @@ class SchemeConnectorImpl @Inject()(
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
-
   }
 
   override def listOfSchemes(idType: String, idValue: String)(implicit
-                                                     headerCarrier: HeaderCarrier,
-                                                     ec: ExecutionContext,
-                                                     request: RequestHeader): Future[HttpResponse] = {
+                                                              headerCarrier: HeaderCarrier,
+                                                              ec: ExecutionContext,
+                                                              request: RequestHeader): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesIFUrl.format(idType, idValue)
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
       headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
+    Logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
-
   }
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
@@ -197,7 +198,7 @@ class SchemeConnectorImpl @Inject()(
 
   private def handleSchemeDetailsResponse(response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
-
+    Logger.debug(s"Get-Scheme-details-response from IF API - $response")
     response.status match {
       case OK =>
         val userAnswersJson =
@@ -213,7 +214,7 @@ class SchemeConnectorImpl @Inject()(
 
   private def handleSchemeDetailsResponseDES(response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
-
+    Logger.debug(s"Get-Scheme-details-response from DES API - $response")
     response.status match {
       case OK =>
         val userAnswersJson =
