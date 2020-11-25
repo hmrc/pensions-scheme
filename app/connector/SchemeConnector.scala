@@ -57,7 +57,8 @@ trait SchemeConnector {
 
   def getSchemeDetails(
                         userIdNumber: String,
-                        schemeIdNumber: String
+                        schemeIdNumber: String,
+                        schemeIdType: String
                       )(
                         implicit
                         headerCarrier: HeaderCarrier,
@@ -122,7 +123,8 @@ class SchemeConnectorImpl @Inject()(
 
   override def getSchemeDetails(
                                  userIdNumber: String,
-                                 schemeIdNumber: String
+                                 schemeIdNumber: String,
+                                 schemeIdType: String
                                )(
                                  implicit
                                  headerCarrier: HeaderCarrier,
@@ -132,7 +134,7 @@ class SchemeConnectorImpl @Inject()(
     featureToggleService.get(IntegrationFramework).flatMap {
       case Enabled(IntegrationFramework) =>
         val (url, hc) = (
-          config.schemeDetailsIFUrl.format("srn", schemeIdNumber),
+          config.schemeDetailsIFUrl.format(schemeIdType, schemeIdNumber),
           HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
 
@@ -142,7 +144,7 @@ class SchemeConnectorImpl @Inject()(
           schemeAuditService.sendSchemeDetailsEvent(userIdNumber)(auditService.sendEvent)
       case _ =>
         val (url, hc) = (
-          config.schemeDetailsUrl.format("srn", schemeIdNumber),
+          config.schemeDetailsUrl.format(schemeIdType, schemeIdNumber),
           HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
 

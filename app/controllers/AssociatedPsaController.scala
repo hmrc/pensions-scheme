@@ -38,12 +38,14 @@ class AssociatedPsaController @Inject()(
     implicit request => {
       val userIdNumber = request.headers.get("userIdNumber")
       val schemeIdNumber = request.headers.get("schemeIdNumber")
+      val schemeIdType = request.headers.get("schemeIdType")
 
-      (schemeIdNumber, userIdNumber) match {
-        case (Some(schemeNumber), Some(idNumber)) =>
+      (schemeIdNumber, userIdNumber, schemeIdType) match {
+        case (Some(schemeNumber), Some(idNumber), Some(idType)) =>
           schemeConnector.getSchemeDetails(
             userIdNumber = idNumber,
-            schemeIdNumber = schemeNumber
+            schemeIdNumber = schemeNumber,
+            schemeIdType = idType
           ) map {
             case Right(json) =>
 

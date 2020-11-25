@@ -146,7 +146,8 @@ class FakeSchemeConnector extends SchemeConnector {
 
   override def getSchemeDetails(
                                  userIdNumber: String,
-                                 schemeIdNumber: String
+                                 schemeIdNumber: String,
+                                 schemeIdType: String
                                )(
                                  implicit
                                  headerCarrier: HeaderCarrier,

@@ -34,12 +34,20 @@ class SchemeDetailsController @Inject()(
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
+
+      println(s"\n\n\t${request.headers}\n\n")
+
       val schemeIdNumber = request.headers.get("schemeIdNumber")
       val userIdNumber = request.headers.get("userIdNumber")
+      val schemeIdType = request.headers.get("schemeIdType")
 
-      (schemeIdNumber, userIdNumber) match {
-        case (Some(schemeNumber), Some(userNumber)) =>
-          schemeConnector.getSchemeDetails(userNumber, schemeNumber).map {
+      (schemeIdNumber, userIdNumber, schemeIdType) match {
+        case (Some(schemeNumber), Some(userNumber), Some(idType)) =>
+          schemeConnector.getSchemeDetails(
+            userIdNumber = userNumber,
+            schemeIdNumber = schemeNumber,
+            schemeIdType = idType
+          ).map {
             case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
             case Left(e) => result(e)
           }

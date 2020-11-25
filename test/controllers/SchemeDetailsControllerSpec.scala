@@ -66,7 +66,8 @@ class SchemeDetailsControllerSpec
       val successResponse = userAnswersResponse
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.successful(Right(successResponse)))
 
@@ -85,7 +86,7 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any())(any(), any(), any())
+        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
@@ -99,7 +100,7 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any())(any(), any(), any())
+        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
@@ -113,7 +114,7 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any())(any(), any(), any())
+        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
@@ -121,7 +122,8 @@ class SchemeDetailsControllerSpec
     "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
@@ -136,7 +138,8 @@ class SchemeDetailsControllerSpec
 
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_SRN"))))
 
@@ -151,7 +154,8 @@ class SchemeDetailsControllerSpec
 
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_PSTR"))))
 
@@ -166,7 +170,8 @@ class SchemeDetailsControllerSpec
 
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_CORRELATIONID"))))
 
@@ -181,7 +186,8 @@ class SchemeDetailsControllerSpec
 
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND)))
 
@@ -196,7 +202,8 @@ class SchemeDetailsControllerSpec
 
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
@@ -211,7 +218,8 @@ class SchemeDetailsControllerSpec
 
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
@@ -226,7 +234,8 @@ class SchemeDetailsControllerSpec
 
       when(mockSchemeConnector.getSchemeDetails(
         userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber)
+        schemeIdNumber = Matchers.eq(schemeIdNumber),
+        schemeIdType = Matchers.eq(schemeIdType)
       )(any(), any(), any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
