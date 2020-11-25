@@ -137,6 +137,7 @@ class SchemeConnectorImpl @Inject()(
           config.schemeDetailsIFUrl.format(schemeIdType, schemeIdNumber),
           HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
+        Logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponse(response)
@@ -147,6 +148,7 @@ class SchemeConnectorImpl @Inject()(
           config.schemeDetailsUrl.format(schemeIdType, schemeIdNumber),
           HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
+        Logger.debug(s"Calling get scheme details API on DES with url $url and hc $hc")
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponseDES(response)
@@ -173,6 +175,7 @@ class SchemeConnectorImpl @Inject()(
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
       headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
+    Logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
     http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext])
@@ -214,7 +217,7 @@ class SchemeConnectorImpl @Inject()(
 
   private def handleSchemeDetailsResponse(response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
-
+    Logger.debug(s"Get-Scheme-details-response from IF API - $response")
     response.status match {
       case OK =>
         val userAnswersJson =
@@ -230,7 +233,7 @@ class SchemeConnectorImpl @Inject()(
 
   private def handleSchemeDetailsResponseDES(response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
-
+    Logger.debug(s"Get-Scheme-details-response from DES API - $response")
     response.status match {
       case OK =>
         val userAnswersJson =

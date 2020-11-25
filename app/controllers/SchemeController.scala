@@ -18,7 +18,7 @@ package controllers
 
 import com.google.inject.Inject
 import models.ListOfSchemes
-import play.api.Logger
+import play.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import service.SchemeService
@@ -60,8 +60,12 @@ class SchemeController @Inject()(schemeService: SchemeService,
         case Some(psa) =>
           schemeService.listOfSchemes(psa).map { httpResponse =>
             httpResponse.status match {
-              case OK => Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes](ListOfSchemes.desReads)))
-              case _ => result(httpResponse)
+              case OK =>
+                Logger.debug(s"Call to list of schemes API on DES was successful with response ${httpResponse.json}")
+                Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes](ListOfSchemes.desReads)))
+              case errorStatus =>
+                Logger.error(s"List of schemes call to DES API failed with error $errorStatus and details ${httpResponse.body}")
+                result(httpResponse)
             }
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
