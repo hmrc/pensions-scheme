@@ -33,7 +33,7 @@ class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Envi
   lazy val listOfSchemesUrl: String = s"$baseURL${underlying.getString("serviceUrls.list.of.schemes")}"
   lazy val listOfSchemesIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.list.of.schemes")}"
   lazy val schemeDetailsUrl: String = s"$baseURL${underlying.getString("serviceUrls.scheme.details")}"
-  lazy val schemeDetailsIFUrl: String = s"$baseURL${underlying.getString("serviceUrls.if.scheme.details")}"
+  lazy val schemeDetailsIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
   lazy val updateSchemeUrl: String = s"$baseURL${underlying.getString("serviceUrls.update.scheme")}"
   lazy val desEnvironment: String = runModeConfiguration.getOptional[String]("microservice.services.des-hod.env").getOrElse("local")
   lazy val authorization: String = "Bearer " + runModeConfiguration.getOptional[String]("microservice.services.des-hod.authorizationToken").getOrElse("local")

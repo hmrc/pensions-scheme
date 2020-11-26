@@ -198,7 +198,7 @@ class SchemeConnectorImpl @Inject()(
 
   private def handleSchemeDetailsResponse(response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
-    Logger.debug(s"Get-Scheme-details-response from IF API - $response")
+    Logger.debug(s"Get-Scheme-details-response from IF API - ${response.json}")
     response.status match {
       case OK =>
         val userAnswersJson =
