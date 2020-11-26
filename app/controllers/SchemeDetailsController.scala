@@ -34,9 +34,6 @@ class SchemeDetailsController @Inject()(
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
-
-      println(s"\n\n\t${request.headers}\n\n")
-
       val schemeIdNumber = request.headers.get("schemeIdNumber")
       val userIdNumber = request.headers.get("userIdNumber")
       val schemeIdType = request.headers.get("schemeIdType")

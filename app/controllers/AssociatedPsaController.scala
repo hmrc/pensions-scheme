@@ -36,6 +36,8 @@ class AssociatedPsaController @Inject()(
 
   def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
+
+      println(s"\n\nrequest.headers\t${request.headers}\n\n")
       val userIdNumber = request.headers.get("userIdNumber")
       val schemeIdNumber = request.headers.get("schemeIdNumber")
       val schemeIdType = request.headers.get("schemeIdType")

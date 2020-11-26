@@ -47,7 +47,7 @@ trait SchemeConnector {
                                    headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
-  
+
   def listOfSchemes(idType: String, idValue: String)(implicit
                                                      headerCarrier: HeaderCarrier,
                                                      ec: ExecutionContext,
@@ -161,24 +161,34 @@ class SchemeConnectorImpl @Inject()(
                                             ec: ExecutionContext,
                                             request: RequestHeader): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesUrl.format(psaId)
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+    implicit val hc: HeaderCarrier =
+      HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
-      implicitly[ExecutionContext])
+    http.GET[HttpResponse](listOfSchemesUrl)(
+      implicitly[HttpReads[HttpResponse]],
+      implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext]
+    )
   }
 
-  override def listOfSchemes(idType: String, idValue: String)(implicit
-                                                              headerCarrier: HeaderCarrier,
-                                                              ec: ExecutionContext,
-                                                              request: RequestHeader): Future[HttpResponse] = {
+  override def listOfSchemes(
+                              idType: String,
+                              idValue: String
+                            )(implicit
+                              headerCarrier: HeaderCarrier,
+                              ec: ExecutionContext,
+                              request: RequestHeader): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesIFUrl.format(idType, idValue)
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
       headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
     Logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
-    http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
-      implicitly[ExecutionContext])
+    http.GET[HttpResponse](listOfSchemesUrl)(
+      implicitly[HttpReads[HttpResponse]],
+      implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext]
+    )
   }
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
