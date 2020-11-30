@@ -44,7 +44,6 @@ class AssociatedPsaControllerSpec
   private val schemeIdNumber = "S999999999"
   private val schemeIdType = "srn"
   private val userIdNumber = "A0000001"
-  private val userIdType = "PSAID"
   private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
   before {
@@ -59,9 +58,8 @@ class AssociatedPsaControllerSpec
         val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
 
         val request = FakeRequest("GET", "/").withHeaders(
-          ("userIdNumber", userIdNumber),
-          ("schemeIdType", schemeIdType),
-          ("schemeIdNumber", schemeIdNumber)
+          ("psaId", userIdNumber),
+          ("schemeReferenceNumber", schemeIdNumber)
         )
 
         when(mockSchemeConnector.getSchemeDetails(

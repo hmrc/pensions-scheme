@@ -44,7 +44,8 @@ class SchemeDetailsController @Inject()(
             case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
             case Left(e) => result(e)
           }
-        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
+        case _ =>
+          Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }
