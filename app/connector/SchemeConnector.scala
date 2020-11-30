@@ -22,7 +22,7 @@ import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.FeatureToggle.Enabled
-import models.FeatureToggleName.IntegrationFramework
+import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
@@ -119,8 +119,8 @@ class SchemeConnectorImpl @Inject()(
     headerCarrier: HeaderCarrier,
     ec: ExecutionContext,
     request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
-    featureToggleService.get(IntegrationFramework).flatMap {
-      case Enabled(IntegrationFramework) =>
+    featureToggleService.get(IntegrationFrameworkGetSchemeDetails).flatMap {
+      case Enabled(IntegrationFrameworkGetSchemeDetails) =>
         val (url, hc) = (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
           HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
         Logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
