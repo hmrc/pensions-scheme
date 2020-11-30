@@ -30,31 +30,31 @@ import scala.concurrent.{ExecutionContext, Future}
 class AssociatedPsaController @Inject()(
                                          schemeConnector: SchemeConnector,
                                          cc: ControllerComponents
-                                       )(implicit ec: ExecutionContext)
+                                       )(
+                                         implicit ec: ExecutionContext
+                                       )
   extends BackendController(cc)
     with ErrorHandler {
-
   def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
+      val id: String =
+        (request.headers.get("psaId"), request.headers.get("pspId")) match {
+          case (Some(psaId), _) => psaId
+          case (_, Some(pspId)) => pspId
+          case _ => throw new Exception("Unable to retrieve either PSA or PSP from request")
+      }
 
-      println(s"\n\nrequest.headers\t${request.headers}\n\n")
-      val userIdNumber = request.headers.get("userIdNumber")
-      val schemeIdNumber = request.headers.get("schemeIdNumber")
-      val schemeIdType = request.headers.get("schemeIdType")
+      val srn = request.headers.get("schemeReferenceNumber")
+      val srnRequest = "srn"
 
-      (schemeIdNumber, userIdNumber, schemeIdType) match {
-        case (Some(schemeNumber), Some(idNumber), Some(idType)) =>
-          schemeConnector.getSchemeDetails(
-            userIdNumber = idNumber,
-            schemeIdNumber = schemeNumber,
-            schemeIdType = idType
-          ) map {
+      srn match {
+        case Some(schemeReferenceNumber) =>
+          schemeConnector.getSchemeDetails(id, srnRequest, schemeReferenceNumber).map {
             case Right(json) =>
 
               val isAssociated = (json \ "psaDetails").asOpt[JsArray].exists(_.value.map {
-                item =>
-                  (item \ "id").as[String]
-              }.toList.contains(idNumber))
+                item => item.\("id").as[String]
+              }.toList.contains(id))
 
               Ok(Json.toJson(isAssociated))
 

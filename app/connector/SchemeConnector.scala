@@ -22,7 +22,8 @@ import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.FeatureToggle.Enabled
-import models.FeatureToggleName.IntegrationFramework
+import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
+import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
@@ -122,21 +123,23 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def getSchemeDetails(
-                                 userIdNumber: String,
-                                 schemeIdNumber: String,
-                                 schemeIdType: String
+                                 psaId: String,
+                                 schemeIdType: String,
+                                 idNumber: String
                                )(
                                  implicit
                                  headerCarrier: HeaderCarrier,
                                  ec: ExecutionContext,
                                  request: RequestHeader
-                               ): Future[Either[HttpResponse, JsValue]] =
-    featureToggleService.get(IntegrationFramework).flatMap {
-      case Enabled(IntegrationFramework) =>
+                               ): Future[Either[HttpResponse, JsValue]] = {
+
+    featureToggleService.get(IntegrationFrameworkGetSchemeDetails).flatMap {
+      case Enabled(IntegrationFrameworkGetSchemeDetails) =>
         val (url, hc) = (
-          config.schemeDetailsIFUrl.format(schemeIdType, schemeIdNumber),
+          config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
           HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
+
         Logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
@@ -145,9 +148,10 @@ class SchemeConnectorImpl @Inject()(
           schemeAuditService.sendSchemeDetailsEvent(userIdNumber)(auditService.sendEvent)
       case _ =>
         val (url, hc) = (
-          config.schemeDetailsUrl.format(schemeIdType, schemeIdNumber),
+          config.schemeDetailsUrl.format(schemeIdType, idNumber),
           HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
+
         Logger.debug(s"Calling get scheme details API on DES with url $url and hc $hc")
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
