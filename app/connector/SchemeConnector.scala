@@ -26,7 +26,7 @@ import models.FeatureToggleName.IntegrationFramework
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsObject, JsValue, Writes}
+import play.api.libs.json.{JsError, JsObject, JsResultException, JsSuccess, JsValue, Writes}
 import play.api.mvc.RequestHeader
 import service.FeatureToggleService
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -201,12 +201,12 @@ class SchemeConnectorImpl @Inject()(
     Logger.debug(s"Get-Scheme-details-response from IF API - ${response.json}")
     response.status match {
       case OK =>
-        val userAnswersJson =
-          response.json.transform(
-            schemeSubscriptionDetailsTransformer.transformToUserAnswers
-          ).getOrElse(throw new SchemeFailedMapToUserAnswersException)
-        Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
-        Right(userAnswersJson)
+          response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers) match {
+            case JsSuccess(value, _) =>
+              Logger.debug(s"Get-Scheme-details-UserAnswersJson - $value")
+              Right(value)
+            case JsError(e) => throw JsResultException(e)
+          }
       case _ =>
         Left(response)
     }

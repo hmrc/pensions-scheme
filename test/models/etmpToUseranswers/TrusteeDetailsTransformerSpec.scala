@@ -16,12 +16,9 @@
 
 package models.etmpToUseranswers
 
-import base.JsonFileReader
 import models.etmpToUserAnswers.{AddressTransformer, TrusteeDetailsTransformer}
 import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
-import utils.PensionSchemeJsValueGenerators
 
 class TrusteeDetailsTransformerSpec extends TransformationSpec {
 
@@ -205,9 +202,9 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(partnershipJsValueGen(isEstablisher = false)) {
           partnershipDetails => {
             val details = ifPartnershipPath(partnershipDetails._1)
-            val result = details.transform(transformer.userAnswersPartnershipDetailsReads(ifTrusteePartnershipPath)).get
+            val result = details.transform(transformer.userAnswersTrusteePartnershipReads(ifTrusteePartnershipPath)).get
 
-            (result \ "partnershipDetails" \ "name").as[String] mustBe (partnershipValuePath(details) \ "partnershipName").as[String]
+            (result \ "partnershipDetails" \ "name").as[String] mustBe (partnershipValuePath(details) \ "organisationName").as[String]
           }
         }
       }

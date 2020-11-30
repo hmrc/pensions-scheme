@@ -26,12 +26,12 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
 
 
   val userAnswersEstablishersReads: Reads[JsObject] = {
-    (__ \ basePath \ 'establisherDetails).readNullable(__.read(
+    (__ \ 'psaPspSchemeDetails \ 'establisherDetails).readNullable(__.read(
       (__ \ 'individualDetails).readNullable(
         __.read(Reads.seq(userAnswersEstablisherIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
         (__ \ 'companyOrOrganisationDetails).readNullable(
           __.read(Reads.seq(userAnswersEstablisherCompanyReads(__))).map(JsArray(_))).flatMap { company =>
-          (__ \ 'partnershipTrusteeDetail).readNullable(
+          (__ \ 'partnershipEstablisherDetails).readNullable(
             __.read(Reads.seq(userAnswersEstablisherPartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
             (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
           }
