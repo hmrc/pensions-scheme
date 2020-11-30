@@ -268,8 +268,24 @@
       "relationshipDate": "1977-03-22"
     }
   ],
-  "pspDetails" : [],
+  "pspDetails" : [
+    {
+      "authorisingPSA": {
+        "organisationOrPartnershipName": "Xyz Ltd"
+      },
+      "authorisingPSAID": "A0000009",
+      "id": "20000019",
+      "individual": {
+        "firstName": "John",
+        "lastName": "Rich",
+        "middleName": "Mike"
+      },
+      "organisationOrPartnershipName": "SDFG Org Ltd",
+      "relationshipStartDate": "2020-06-13"
+    }
+  ],
   "schemeStatus" : "Pending",
+  "srn": "S9000000000",
   "pstr" : "12345678AB",
   "isAboutBenefitsAndInsuranceComplete": true,
   "isAboutMembersComplete": true,

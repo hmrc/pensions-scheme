@@ -41,7 +41,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
     trusteesTransformer)
 
   private val ifResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
-  private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
+  private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
 
   "A DES payload with full scheme subscription details " must {
     "have the details transformed correctly to valid user answers format" which {
