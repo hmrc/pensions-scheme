@@ -24,7 +24,6 @@ import config.AppConfig
 import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
-import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import play.Logger
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, JsValue, Writes}
@@ -145,7 +144,7 @@ class SchemeConnectorImpl @Inject()(
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponse(response)
         ) andThen
-          schemeAuditService.sendSchemeDetailsEvent(userIdNumber)(auditService.sendEvent)
+          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
       case _ =>
         val (url, hc) = (
           config.schemeDetailsUrl.format(schemeIdType, idNumber),
@@ -157,8 +156,9 @@ class SchemeConnectorImpl @Inject()(
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponseDES(response)
         ) andThen
-          schemeAuditService.sendSchemeDetailsEvent(userIdNumber)(auditService.sendEvent)
+          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
     }
+  }
 
   override def listOfSchemes(psaId: String)(implicit
                                             headerCarrier: HeaderCarrier,
@@ -231,7 +231,7 @@ class SchemeConnectorImpl @Inject()(
 
   private def handleSchemeDetailsResponse(response: HttpResponse)(
     implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
-    Logger.debug(s"Get-Scheme-details-response from IF API - $response")
+    Logger.debug(s"Get-Scheme-details-response from IF API - ${response.json}")
     response.status match {
       case OK =>
         val userAnswersJson =

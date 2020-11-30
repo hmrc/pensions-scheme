@@ -34,22 +34,17 @@ class SchemeDetailsController @Inject()(
 
   def getSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
-      val schemeIdNumber = request.headers.get("schemeIdNumber")
-      val userIdNumber = request.headers.get("userIdNumber")
-      val schemeIdType = request.headers.get("schemeIdType")
+      val idType = request.headers.get("schemeIdType")
+      val id = request.headers.get("idNumber")
+      val idPsa = request.headers.get("PSAId")
 
-      (schemeIdNumber, userIdNumber, schemeIdType) match {
-        case (Some(schemeNumber), Some(userNumber), Some(idType)) =>
-          schemeConnector.getSchemeDetails(
-            userIdNumber = userNumber,
-            schemeIdNumber = schemeNumber,
-            schemeIdType = idType
-          ).map {
+      (idType, id, idPsa) match {
+        case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
+          schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
             case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
             case Left(e) => result(e)
           }
-        case _ =>
-          Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
+        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }
