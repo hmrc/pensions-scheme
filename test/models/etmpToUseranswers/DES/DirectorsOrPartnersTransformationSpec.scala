@@ -18,7 +18,7 @@ package models.etmpToUseranswers.DES
 
 import models.etmpToUserAnswers.DES.AddressTransformer
 import models.etmpToUserAnswers.DES.DirectorsOrPartnersTransformer
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json._
 
 class DirectorsOrPartnersTransformationSpec extends TransformationSpec {

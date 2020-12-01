@@ -21,7 +21,7 @@ import models.userAnswersToEtmp.trustee.PartnershipTrustee
 import models.userAnswersToEtmp._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Shrink
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsBoolean, JsString, Json}
 

@@ -21,7 +21,7 @@ import models.userAnswersToEtmp.reads.CommonGenerator.trusteeCompanyGenerator
 import models.userAnswersToEtmp.trustee.CompanyTrustee
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsArray, JsString, Json}
 
