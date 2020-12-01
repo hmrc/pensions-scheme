@@ -191,9 +191,9 @@ class EstablisherDetailsTransformerSpec extends TransformationSpec {
 
     "have the establisherPartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
-      val desPartnershipPath = __ \ 'psaPspSchemeDetails \ 'establisherDetails \ 'partnershipTrusteeDetail
+      val desPartnershipPath = __ \ 'psaPspSchemeDetails \ 'establisherDetails \ 'partnershipEstablisherDetails
 
-      def partnershipValuePath(details: JsObject): JsLookupResult = details \ "psaPspSchemeDetails" \ "establisherDetails" \ "partnershipTrusteeDetail"
+      def partnershipValuePath(details: JsObject): JsLookupResult = details \ "psaPspSchemeDetails" \ "establisherDetails" \ "partnershipEstablisherDetails"
 
       s"has establisher details in establishers array" in {
         forAll(partnershipJsValueGen(isEstablisher = true)) {
@@ -311,7 +311,7 @@ object EstablisherDetailsTransformerSpec {
     Json.obj(
       "psaPspSchemeDetails" -> Json.obj(
         "establisherDetails" -> Json.obj(
-          "partnershipTrusteeDetail" -> partnershipDetails
+          "partnershipEstablisherDetails" -> partnershipDetails
         )
       )
     )

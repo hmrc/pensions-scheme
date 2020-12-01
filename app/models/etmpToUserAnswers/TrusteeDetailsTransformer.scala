@@ -24,7 +24,7 @@ import play.api.libs.json._
 class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
   val userAnswersTrusteesReads: Reads[JsObject] = {
-    (__ \ basePath \ 'trusteeDetails).readNullable(__.read(
+    (__ \ 'psaPspSchemeDetails \ 'trusteeDetails).readNullable(__.read(
       (__ \ 'individualTrusteeDetails).readNullable(
         __.read(Reads.seq(userAnswersTrusteeIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
         (__ \ 'companyTrusteeDetails).readNullable(
@@ -63,7 +63,7 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
 
   def userAnswersTrusteePartnershipReads(desPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and
-      userAnswersPartnershipDetailsReads(desPath) and
+      userAnswersTrusteePartnershipDetailsReads(desPath) and
       transformVatToUserAnswersReads(desPath, "partnershipVat") and
       userAnswersPayeReads(desPath, "partnershipPaye") and
       userAnswersUtrReads(desPath) and
