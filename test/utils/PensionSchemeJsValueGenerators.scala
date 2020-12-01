@@ -58,7 +58,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
     val schemeDetails =
       Json.obj(
-        "srn" -> "",
+        "srn" -> "srn",
         "schemeStatus" -> schemeStatus,
         "schemeName" -> schemeName,
         "currentSchemeMembers" -> currentSchemeMembers,
@@ -91,7 +91,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
               "relationshipType" -> "Primary")
               ++ date,
             Json.obj("psaid" -> "A0000001",
-              "organizationOrPartnershipName" -> "Acme Ltd",
+              "orgOrPartnershipName" -> "Acme Ltd",
               "relationshipType" -> "Primary"
             ) ++ date
           )
@@ -103,9 +103,9 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
               "lastName" -> "Last",
               "relationshipStartDate" -> "2021-04-01",
               "authorisedPSAID" ->"A0000000",
-              "authorisedPSAOrganizationOrPartnershipName" -> "Acme Ltd"),
+              "authorisedPSAOrgOrPartName" -> "Acme Ltd"),
             Json.obj("pspid" -> "A2200001",
-              "organizationOrPartnershipName" -> "PSP Limited",
+              "orgOrPartnershipName" -> "PSP Limited",
               "relationshipStartDate" -> "2021-04-01",
               "authorisedPSAID" ->"A0000000",
               "authorisedPSAFirstName" -> "First",
@@ -117,6 +117,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         )
       ),
       Json.obj(
+        "srn" -> "srn",
         "schemeName" -> schemeName,
         "isAboutBenefitsAndInsuranceComplete" -> true,
         "isAboutMembersComplete" -> true,
@@ -365,7 +366,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val uaMoreThanTenPartner = if (isEstablisher) Json.obj("otherPartners" -> areMorethanTenPartners) else Json.obj()
     (
       Json.obj(
-        "partnershipName" -> orgName,
+        (if (isEstablisher) "partnershipName" else "organisationName") -> orgName,
         "correspondenceContactDetails" -> desContactDetails,
         "previousAddressDetails" -> pa
       ) ++ desAddress.as[JsObject] ++ optional("vatRegistrationNumber", vat)
@@ -403,7 +404,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
     val desEstablishers = individual.map { indv => Json.obj("individualDetails" -> indv.map(_._1)) }.getOrElse(Json.obj()) ++
       company.map { comp => Json.obj("companyOrOrganisationDetails" -> comp.map(_._1)) }.getOrElse(Json.obj()) ++
-      partnership.map { part => Json.obj("partnershipTrusteeDetail" -> part.map(_._1)) }.getOrElse(Json.obj())
+      partnership.map { part => Json.obj("partnershipEstablisherDetails" -> part.map(_._1)) }.getOrElse(Json.obj())
 
     val desTrustees = individual.map { indv => Json.obj("individualTrusteeDetails" -> indv.map(_._1)) }.getOrElse(Json.obj()) ++
       company.map { comp => Json.obj("companyTrusteeDetails" -> comp.map(_._1)) }.getOrElse(Json.obj()) ++

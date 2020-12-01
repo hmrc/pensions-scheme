@@ -109,7 +109,7 @@
           }
         }
       ],
-      "partnershipTrusteeDetail": [
+      "partnershipEstablisherDetails": [
         {
           "partnershipName": "test partnership",
           "areMorethanTenPartners": false,
@@ -256,7 +256,7 @@
       ],
       "partnershipTrusteeDetails": [
         {
-          "partnershipName": "test partnership",
+          "organisationName": "test partnership",
           "correspondenceAddressDetails": {
             "nonUKAddress": false,
             "line1": "addressline1 trustee part",
@@ -290,7 +290,7 @@
     "psaDetails": [
       {
         "psaid": "A0000000",
-        "organizationOrPartnershipName": "partnetship name",
+        "orgOrPartnershipName": "partnetship name",
         "firstName": "Taylor",
         "middleName": "Middle",
         "lastName": "Rayon",
@@ -299,12 +299,24 @@
       },
       {
         "psaid": "A0000001",
-        "organizationOrPartnershipName": "partnetship name 1",
+        "orgOrPartnershipName": "partnetship name 1",
         "firstName": "Smith",
         "middleName": "A",
         "lastName": "Tony",
         "relationshipType": "Primary",
         "relationshipDate": "1977-03-22"
+      }
+    ],
+    "pspDetails": [
+      {
+        "pspid": "20000019",
+        "orgOrPartnershipName": "SDFG Org Ltd",
+        "firstName": "John",
+        "middleName": "Mike",
+        "lastName": "Rich",
+        "relationshipStartDate": "2020-06-13",
+        "authorisedPSAID": "A0000009",
+        "authorisedPSAOrgOrPartName": "Xyz Ltd"
       }
     ]
   }

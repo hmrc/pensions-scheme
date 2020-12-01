@@ -22,74 +22,75 @@ import play.api.libs.json._
 
 trait JsonTransformer {
 
-  def basePath: String = "psaPspSchemeDetails"
-
   val doNothing: Reads[JsObject] = {
     __.json.put(Json.obj())
   }
 
-  def userAnswersIndividualDetailsReads(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
-    (__ \ userAnswersPath \ 'firstName).json.copyFrom((desPath \ 'personDetails \ 'firstName).json.pick) and
-      (__ \ userAnswersPath \ 'lastName).json.copyFrom((desPath \ 'personDetails \ 'lastName).json.pick) and
-      (__ \ 'dateOfBirth).json.copyFrom((desPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
+  def userAnswersIndividualDetailsReads(userAnswersPath: String, apiPath: JsPath): Reads[JsObject] =
+    (__ \ userAnswersPath \ 'firstName).json.copyFrom((apiPath \ 'personDetails \ 'firstName).json.pick) and
+      (__ \ userAnswersPath \ 'lastName).json.copyFrom((apiPath \ 'personDetails \ 'lastName).json.pick) and
+      (__ \ 'dateOfBirth).json.copyFrom((apiPath \ 'personDetails \ 'dateOfBirth).json.pick) reduce
 
-  def userAnswersNinoReads(userAnswersPath: String, desPath: JsPath): Reads[JsObject] =
-      (desPath \ "nino").read[String].flatMap { _ =>
+  def userAnswersNinoReads(userAnswersPath: String, apiPath: JsPath): Reads[JsObject] =
+      (apiPath \ "nino").read[String].flatMap { _ =>
         (__ \ 'hasNino).json.put(JsBoolean(true)) and
-          (__ \ userAnswersPath \ 'value).json.copyFrom((desPath \ 'nino).json.pick) reduce
+          (__ \ userAnswersPath \ 'value).json.copyFrom((apiPath \ 'nino).json.pick) reduce
       } orElse {
         (__ \ 'hasNino).json.put(JsBoolean(false)) and
-          (__ \ 'noNinoReason).json.copyFrom((desPath \ 'noNinoReason).json.pick) reduce
+          (__ \ 'noNinoReason).json.copyFrom((apiPath \ 'noNinoReason).json.pick) reduce
       } orElse {
         doNothing
       }
 
-  def userAnswersUtrReads(desPath: JsPath): Reads[JsObject] =
-      (desPath \ "utr").read[String].flatMap { _ =>
+  def userAnswersUtrReads(apiPath: JsPath): Reads[JsObject] =
+      (apiPath \ "utr").read[String].flatMap { _ =>
         (__ \ 'hasUtr).json.put(JsBoolean(true)) and
-          (__ \ 'utr \ 'value).json.copyFrom((desPath \ 'utr).json.pick) reduce
+          (__ \ 'utr \ 'value).json.copyFrom((apiPath \ 'utr).json.pick) reduce
       } orElse {
           (__ \ 'hasUtr).json.put(JsBoolean(false)) and
-            (__ \ 'noUtrReason).json.copyFrom((desPath \ 'noUtrReason).json.pick) reduce
+            (__ \ 'noUtrReason).json.copyFrom((apiPath \ 'noUtrReason).json.pick) reduce
       } orElse {
       doNothing
     }
 
-  def userAnswersContactDetailsReads(userAnswersBase: String, desPath: JsPath): Reads[JsObject] =
-    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((desPath \ 'correspondenceContactDetails \ 'email).json.pick) and
-      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((desPath \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
+  def userAnswersContactDetailsReads(userAnswersBase: String, apiPath: JsPath): Reads[JsObject] =
+    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((apiPath \ 'correspondenceContactDetails \ 'email).json.pick) and
+      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((apiPath \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
 
 
-  def userAnswersCompanyDetailsReads(desPath: JsPath): Reads[JsObject] =
-    (__ \ 'companyDetails \ 'companyName).json.copyFrom((desPath \ 'organisationName).json.pick)
+  def userAnswersCompanyDetailsReads(apiPath: JsPath): Reads[JsObject] =
+    (__ \ 'companyDetails \ 'companyName).json.copyFrom((apiPath \ 'organisationName).json.pick)
 
-  def userAnswersCrnReads(desPath: JsPath): Reads[JsObject] =
-      (desPath \ "crnNumber").read[String].flatMap { _ =>
+  def userAnswersCrnReads(apiPath: JsPath): Reads[JsObject] =
+      (apiPath \ "crnNumber").read[String].flatMap { _ =>
         (__ \ 'hasCrn).json.put(JsBoolean(true)) and
-          (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((desPath \ 'crnNumber).json.pick) reduce
+          (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((apiPath \ 'crnNumber).json.pick) reduce
       } orElse {
         (__ \ 'hasCrn).json.put(JsBoolean(false)) and
-          (__ \ 'noCrnReason).json.copyFrom((desPath \ 'noCrnReason).json.pick) reduce
+          (__ \ 'noCrnReason).json.copyFrom((apiPath \ 'noCrnReason).json.pick) reduce
       } orElse {
       doNothing
       }
 
 
-  def userAnswersPartnershipDetailsReads(desPath: JsPath): Reads[JsObject] =
-    (__ \ 'partnershipDetails \ 'name).json.copyFrom((desPath \ 'partnershipName).json.pick)
+  def userAnswersPartnershipDetailsReads(apiPath: JsPath): Reads[JsObject] =
+    (__ \ 'partnershipDetails \ 'name).json.copyFrom((apiPath \ 'partnershipName).json.pick)
 
-  def transformVatToUserAnswersReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
-      (desPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
+  def userAnswersTrusteePartnershipDetailsReads(apiPath: JsPath): Reads[JsObject] =
+    (__ \ 'partnershipDetails \ 'name).json.copyFrom((apiPath \ 'organisationName).json.pick)
+
+  def transformVatToUserAnswersReads(apiPath: JsPath, userAnswersBase: String): Reads[JsObject] =
+      (apiPath \ "vatRegistrationNumber").read[String].flatMap { _ =>
         (__ \ 'hasVat).json.put(JsBoolean(true)) and
-          (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'vatRegistrationNumber).json.pick) reduce
+          (__ \ userAnswersBase \ 'value).json.copyFrom((apiPath \ 'vatRegistrationNumber).json.pick) reduce
       } orElse {
         (__ \ 'hasVat).json.put(JsBoolean(false))
       }
 
-  def userAnswersPayeReads(desPath: JsPath, userAnswersBase: String): Reads[JsObject] =
-      (desPath \ "payeReference").read[String].flatMap { _ =>
+  def userAnswersPayeReads(apiPath: JsPath, userAnswersBase: String): Reads[JsObject] =
+      (apiPath \ "payeReference").read[String].flatMap { _ =>
         (__ \ 'hasPaye).json.put(JsBoolean(true)) and
-          (__ \ userAnswersBase \ 'value).json.copyFrom((desPath \ 'payeReference).json.pick) reduce
+          (__ \ userAnswersBase \ 'value).json.copyFrom((apiPath \ 'payeReference).json.pick) reduce
       } orElse {
         (__ \ 'hasPaye).json.put(JsBoolean(false))
       }
