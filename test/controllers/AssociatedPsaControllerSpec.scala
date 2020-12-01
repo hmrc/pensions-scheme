@@ -28,6 +28,8 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.BadRequestException
+import org.scalatest.RecoverMethods._
+import play.api.mvc.Result
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -62,13 +64,8 @@ class AssociatedPsaControllerSpec
           ("schemeReferenceNumber", schemeIdNumber)
         )
 
-        when(mockSchemeConnector.getSchemeDetails(
-          userIdNumber = Matchers.eq(userIdNumber),
-          schemeIdNumber = Matchers.eq(schemeIdNumber),
-          schemeIdType = Matchers.eq(schemeIdType)
-        )(any(), any(), any())).thenReturn(
-          Future.successful(Right(userAnswersResponse))
-        )
+        when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+          .thenReturn(Future.successful(Right(userAnswersResponse)))
 
         val result = associatedPsaController.isPsaAssociated()(request)
 
@@ -80,20 +77,14 @@ class AssociatedPsaControllerSpec
         val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
 
         val request = FakeRequest("GET", "/").withHeaders(
-          ("userIdNumber", userIdNumber),
-          ("schemeIdType", schemeIdType),
-          ("schemeIdNumber", schemeIdNumber)
+          ("psaId", userIdNumber),
+          ("schemeReferenceNumber", schemeIdNumber)
         )
 
         val emptyPsa = (userAnswersResponse.as[JsObject] - "psaDetails")
 
-        when(mockSchemeConnector.getSchemeDetails(
-          userIdNumber = Matchers.eq(userIdNumber),
-          schemeIdNumber = Matchers.eq(schemeIdNumber),
-          schemeIdType = Matchers.eq(schemeIdType)
-        )(any(), any(), any())).thenReturn(
-          Future.successful(Right(emptyPsa))
-        )
+        when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+          .thenReturn(Future.successful(Right(emptyPsa)))
 
         val result = associatedPsaController.isPsaAssociated()(request)
 
@@ -106,7 +97,7 @@ class AssociatedPsaControllerSpec
   "throw BadRequestException" when {
     "the Scheme Reference Number is not present in the header" in {
       val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(
-        ("psaIdNumber", userIdNumber)
+        ("psaId", userIdNumber)
       ))
 
       ScalaFutures.whenReady(result.failed) { e =>
@@ -121,49 +112,29 @@ class AssociatedPsaControllerSpec
     }
 
 
-    "the PsaId is not present in the header" in {
-      val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(
-        (schemeIdType, schemeIdNumber)
-      ))
+    "both psaId and pspId not present in the header" in {
+      def result: Future[Result] =
+        associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/")
+          .withHeaders(("schemeReferenceNumber", schemeIdNumber)))
 
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
-        verify(mockSchemeConnector, never()).getSchemeDetails(
-          userIdNumber = Matchers.any(),
-          schemeIdNumber = Matchers.any(),
-          schemeIdType = Matchers.any()
-        )(any(), any(), any())
-      }
-    }
+      the [Exception] thrownBy result must have message "Unable to retrieve either PSA or PSP from request"
 
-    "there is no PsaId or SRN" in {
-      val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/"))
-
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
-        verify(mockSchemeConnector, never()).getSchemeDetails(
-          userIdNumber = Matchers.any(),
-          schemeIdNumber = Matchers.any(),
-          schemeIdType = Matchers.any()
-        )(any(), any(), any())
-      }
+      verify(mockSchemeConnector, never()).getSchemeDetails(
+        userIdNumber = Matchers.any(),
+        schemeIdNumber = Matchers.any(),
+        schemeIdType = Matchers.any()
+      )(any(), any(), any())
     }
 
     "we receive INVALID_IDTYPE returned from Des" in {
-      when(mockSchemeConnector.getSchemeDetails(
-        userIdNumber = Matchers.eq(userIdNumber),
-        schemeIdNumber = Matchers.eq(schemeIdNumber),
-        schemeIdType = Matchers.eq(schemeIdType)
-      )(any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE")))
-      )
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(
+          Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE")))
+        )
 
       val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(
-        ("userIdNumber", userIdNumber),
-        ("schemeIdType", schemeIdType),
-        ("schemeIdNumber", schemeIdNumber)
+        ("psaId", userIdNumber),
+        ("schemeReferenceNumber", schemeIdNumber)
       ))
 
       ScalaFutures.whenReady(result.failed) { e =>
