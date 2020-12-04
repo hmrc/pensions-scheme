@@ -24,6 +24,7 @@ import config.AppConfig
 import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
+import models.etmpToUserAnswers.pspSchemeDetails.PspSchemeDetailsTransformer
 import play.Logger
 import play.api.http.Status._
 import play.api.libs.json.{JsError, JsObject, JsResultException, JsSuccess, JsValue, Writes}
@@ -59,6 +60,11 @@ trait SchemeConnector {
                                                                               ec: ExecutionContext,
                                                                               request: RequestHeader): Future[Either[HttpResponse, JsValue]]
 
+  def getPspSchemeDetails(pspId: String, pstr: String)
+                         (implicit headerCarrier: HeaderCarrier,
+                          ec: ExecutionContext,
+                          request: RequestHeader): Future[Either[HttpResponse, JsValue]]
+
   def updateSchemeDetails(pstr: String, data: JsValue)(implicit
                                                        headerCarrier: HeaderCarrier,
                                                        ec: ExecutionContext,
@@ -72,6 +78,7 @@ class SchemeConnectorImpl @Inject()(
                                      auditService: AuditService,
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
+                                     pspSchemeDetailsTransformer: PspSchemeDetailsTransformer,
                                      schemeSubscriptionDetailsTransformerDES: models.etmpToUserAnswers.DES.SchemeSubscriptionDetailsTransformer,
                                      schemeAuditService: SchemeAuditService,
                                      headerUtils: HeaderUtils,
@@ -135,6 +142,20 @@ class SchemeConnectorImpl @Inject()(
           handleSchemeDetailsResponseDES(response)) andThen
           schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
     }
+  }
+
+  override def getPspSchemeDetails(pspId: String, pstr: String)
+                                  (implicit headerCarrier: HeaderCarrier,
+                                   ec: ExecutionContext,
+                                   request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
+
+    val url = config.pspSchemeDetailsUrl.format(pspId, pstr)
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
+    Logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
+    http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
+      handlePspSchemeDetailsResponse(response)) andThen
+      schemeAuditService.sendPspSchemeDetailsEvent(pspId)(auditService.sendEvent)
+
   }
 
   override def listOfSchemes(psaId: String)(implicit
@@ -207,6 +228,22 @@ class SchemeConnectorImpl @Inject()(
               Right(value)
             case JsError(e) => throw JsResultException(e)
           }
+      case _ =>
+        Left(response)
+    }
+  }
+
+  private def handlePspSchemeDetailsResponse(response: HttpResponse)(
+    implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
+    Logger.debug(s"Get-Psp-Scheme-details-response - ${response.json}")
+    response.status match {
+      case OK =>
+        response.json.transform(pspSchemeDetailsTransformer.transformToUserAnswers) match {
+          case JsSuccess(value, _) =>
+            Logger.debug(s"Get-Psp-Scheme-details-UserAnswersJson - $value")
+            Right(value)
+          case JsError(e) => throw JsResultException(e)
+        }
       case _ =>
         Left(response)
     }

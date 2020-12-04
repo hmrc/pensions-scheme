@@ -20,7 +20,7 @@ import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{HttpException, HttpResponse}
+import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -52,4 +52,31 @@ class SchemeAuditService {
       Logger.error("Error in sending audit event for get PSA details", t)
 
   }
+
+  def sendPspSchemeDetailsEvent(pspId: String)(sendEvent: PspSchemeDetailsAuditEvent => Unit)
+                            (implicit rh: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
+
+
+
+    case Success(Right(pspSchemeSubscription)) =>
+      sendEvent(
+        PspSchemeDetailsAuditEvent(
+          pspId = pspId,
+          status = Status.OK,
+          payload = Some(pspSchemeSubscription)
+        )
+      )
+    case Success(Left(e)) =>
+      sendEvent(
+        PspSchemeDetailsAuditEvent(
+          pspId = pspId,
+          status = e.status,
+          payload = Some(Json.parse(e.body))
+        )
+      )
+    case Failure(t) =>
+      Logger.error("Error in sending audit event for get psp scheme details", t)
+
+  }
+
 }
