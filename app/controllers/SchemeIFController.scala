@@ -29,8 +29,12 @@ import utils.validationUtils._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeIFController @Inject()(schemeService: SchemeService,
-                                   cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with ErrorHandler {
+class SchemeIFController @Inject()(
+                                    schemeService: SchemeService,
+                                    cc: ControllerComponents
+                                  )(implicit ec: ExecutionContext)
+  extends BackendController(cc)
+    with ErrorHandler {
 
   def listOfSchemes: Action[AnyContent] = Action.async {
     implicit request => {

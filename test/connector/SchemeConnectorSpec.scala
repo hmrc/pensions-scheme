@@ -33,7 +33,7 @@ import service.FeatureToggleService
 import utils.StubLogger
 import utils.WireMockHelper
 import org.joda.time.LocalDate
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue

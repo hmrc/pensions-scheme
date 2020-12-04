@@ -19,7 +19,7 @@ package models.userAnswersToEtmp.reads.trustees
 import models.userAnswersToEtmp.reads.CommonGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.trusteesGen
 import models.userAnswersToEtmp.trustee.TrusteeDetails
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.MustMatchers
 import org.scalatest.OptionValues
 import org.scalatest.WordSpec

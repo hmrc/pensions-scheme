@@ -18,12 +18,16 @@ package audit
 
 import play.api.libs.json.{JsValue, Json}
 
-case class SchemeDetailsAuditEvent(psaId: String,  status: Int, payload: Option[JsValue]) extends AuditEvent {
+case class SchemeDetailsAuditEvent(
+                                    userIdNumber: String,
+                                    status: Int,
+                                    payload: Option[JsValue]
+                                  ) extends AuditEvent {
 
   override def auditType: String = "GetSchemeDetails"
 
   override def details: Map[String, String] = Map(
-    "psaId" -> psaId,
+    "userIdNumber" -> userIdNumber,
     "status" -> status.toString,
     "payload" -> payload.fold("")(Json.stringify)
   )

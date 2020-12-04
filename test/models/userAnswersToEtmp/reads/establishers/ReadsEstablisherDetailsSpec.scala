@@ -21,7 +21,7 @@ import models.userAnswersToEtmp.establisher.EstablisherDetails
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherCompanyGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherPartnershipGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherIndividualGenerator
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.MustMatchers
 import org.scalatest.OptionValues
 import org.scalatest.WordSpec

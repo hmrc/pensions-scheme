@@ -23,21 +23,25 @@ import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import service.SchemeService
 import uk.gov.hmrc.http._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
+class SchemeDetailsControllerSpec
+  extends SpecBase
+    with MockitoSugar
+    with BeforeAndAfter
+    with PatienceConfiguration {
+
+
   private val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  private val mockSchemeService: SchemeService = mock[SchemeService]
-  private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeService, stubControllerComponents())
+  private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, stubControllerComponents())
   private val schemeIdType = "srn"
   private val idNumber = "00000000AA"
   private val psaId = "000"
@@ -50,13 +54,17 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
   "getSchemeDetails" must {
 
     def fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
-      FakeRequest("GET", "/").withHeaders(("schemeIdType", schemeIdType), ("idNumber", idNumber), ("PSAId", psaId))
+      FakeRequest("GET", "/").withHeaders(
+        ("schemeIdType", schemeIdType),
+        ("idNumber", idNumber),
+        ("PSAId", psaId)
+      )
 
     "return OK when the scheme is registered successfully" in {
 
       val successResponse = userAnswersResponse
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq("srn"), Matchers.eq("00000000AA"))(any(), any(), any())).thenReturn(
-        Future.successful(Right(successResponse)))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(Future.successful(Right(successResponse)))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
 
@@ -65,41 +73,52 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
     }
 
     "throw BadRequestException when SchemeIdNumber is not present in the header" in {
-      val result = schemeDetailsController.getSchemeDetails()(FakeRequest("GET", "/").withHeaders(("schemeIdType", schemeIdType), ("PSAId", psaId)))
+      val result = schemeDetailsController.getSchemeDetails()(FakeRequest("GET", "/").withHeaders(
+        ("schemeIdType", schemeIdType),
+        ("PSAId", psaId)
+      ))
+
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any())(any(), any(), any())
+        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
     "throw BadRequestException when SchemeIdType is not present in the header" in {
 
-      val result = schemeDetailsController.getSchemeDetails()(FakeRequest("GET", "/").withHeaders(("idNumber", idNumber), ("PSAId", psaId)))
+      val result = schemeDetailsController.getSchemeDetails()(FakeRequest("GET", "/").withHeaders(
+        ("idNumber", idNumber),
+        ("PSAId", psaId)
+      ))
+
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any())(any(), any(), any())
+        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
     "throw BadRequestException when PSAId is not present in the header" in {
 
-      val result = schemeDetailsController.getSchemeDetails()(FakeRequest("GET", "/").withHeaders(("idNumber", idNumber), ("schemeIdType", schemeIdType)))
+      val result = schemeDetailsController.getSchemeDetails()(FakeRequest("GET", "/").withHeaders(
+        ("idNumber", idNumber),
+        ("schemeIdType", schemeIdType)
+      ))
+
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(Matchers.any(), Matchers.any(),
-          Matchers.any())(any(), any(), any())
+        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
 
     "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(
+          Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE")))
+        )
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -110,8 +129,10 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw BadRequestException when bad request with INVALID_SRN returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(errorResponse("INVALID_SRN"))))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(
+          Future.failed(new BadRequestException(errorResponse("INVALID_SRN")))
+        )
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -122,8 +143,10 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw BadRequestException when bad request with INVALID_PSTR returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(errorResponse("INVALID_PSTR"))))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(
+          Future.failed(new BadRequestException(errorResponse("INVALID_PSTR")))
+        )
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -134,8 +157,10 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw BadRequestException when bad request with INVALID_CORRELATIONID returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(new BadRequestException(errorResponse("INVALID_CORRELATIONID"))))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(
+          Future.failed(new BadRequestException(errorResponse("INVALID_CORRELATIONID")))
+        )
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -146,8 +171,9 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw Upstream4xxResponse when UpStream4XXResponse returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND)))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any())).thenReturn(
+        Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND))
+      )
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -158,8 +184,10 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(
+          Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE))
+        )
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -170,8 +198,10 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(
+          Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR))
+        )
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -182,8 +212,8 @@ class SchemeDetailsControllerSpec extends SpecBase with MockitoSugar with Before
 
     "throw generic exception when any other exception returned from Des" in {
 
-      when(mockSchemeConnector.getSchemeDetails(Matchers.eq(psaId), Matchers.eq(schemeIdType), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
-        Future.failed(new Exception("Generic Exception")))
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(Future.failed(new Exception("Generic Exception")))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
