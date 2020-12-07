@@ -19,7 +19,7 @@ package models.etmpToUseranswers.DES
 import models.etmpToUserAnswers.DES.AddressTransformer
 import models.etmpToUserAnswers.DES.DirectorsOrPartnersTransformer
 import models.etmpToUserAnswers.DES.EstablisherDetailsTransformer
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json._
 
 class EstablisherDetailsTransformerSpec extends TransformationSpec {

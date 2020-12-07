@@ -17,7 +17,7 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.establisher.CompanyEstablisher
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
