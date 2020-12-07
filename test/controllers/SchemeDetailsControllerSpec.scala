@@ -28,6 +28,7 @@ import play.api.libs.json.JsValue
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import service.SchemeService
 import uk.gov.hmrc.http._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,8 +41,9 @@ class SchemeDetailsControllerSpec
     with PatienceConfiguration {
 
 
+  private val mockSchemeService: SchemeService = mock[SchemeService]
   private val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
-  private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, stubControllerComponents())
+  private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeService, stubControllerComponents())
   private val schemeIdType = "srn"
   private val idNumber = "00000000AA"
   private val psaId = "000"
