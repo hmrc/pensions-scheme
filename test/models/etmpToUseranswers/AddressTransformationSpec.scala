@@ -17,7 +17,7 @@
 package models.etmpToUseranswers
 
 import models.etmpToUserAnswers.AddressTransformer
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json._
 
 class AddressTransformationSpec extends TransformationSpec {

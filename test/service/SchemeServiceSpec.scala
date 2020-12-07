@@ -24,7 +24,7 @@ import models.userAnswersToEtmp.reads.CommonGenerator.{establisherIndividualGene
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
 import models.userAnswersToEtmp.trustee.TrusteeDetails
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import play.api.http.Status
 import play.api.libs.json.{__, _}
@@ -35,7 +35,7 @@ import utils.Lens
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeServiceSpec extends AsyncFlatSpec with Matchers with GeneratorDrivenPropertyChecks {
+class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrivenPropertyChecks {
 
   import FakeSchemeConnector._
   import SchemeServiceSpec._

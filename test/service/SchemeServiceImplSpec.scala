@@ -144,10 +144,16 @@ class FakeSchemeConnector extends SchemeConnector {
     ec: ExecutionContext,
     request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
-  override def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(
-    implicit headerCarrier: HeaderCarrier,
-    ec: ExecutionContext,
-    request: RequestHeader): Future[Either[HttpResponse, JsValue]] =
+  override def getSchemeDetails(
+                                 userIdNumber: String,
+                                 schemeIdNumber: String,
+                                 schemeIdType: String
+                               )(
+                                 implicit
+                                 headerCarrier: HeaderCarrier,
+                                 ec: ExecutionContext,
+                                 request: RequestHeader
+                               ): Future[Either[HttpResponse, JsValue]] =
     Future.successful(Right(userAnswersResponse))
 
   override def getCorrelationId(requestId: Option[String]): String =

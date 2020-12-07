@@ -48,7 +48,7 @@ trait SchemeConnector {
                                    headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
-  
+
   def listOfSchemes(idType: String, idValue: String)(implicit
                                                      headerCarrier: HeaderCarrier,
                                                      ec: ExecutionContext,
@@ -56,9 +56,16 @@ trait SchemeConnector {
 
   def getCorrelationId(requestId: Option[String]): String
 
-  def getSchemeDetails(psaId: String, schemeIdType: String, idNumber: String)(implicit headerCarrier: HeaderCarrier,
-                                                                              ec: ExecutionContext,
-                                                                              request: RequestHeader): Future[Either[HttpResponse, JsValue]]
+  def getSchemeDetails(
+                        userIdNumber: String,
+                        schemeIdNumber: String,
+                        schemeIdType: String
+                      )(
+                        implicit
+                        headerCarrier: HeaderCarrier,
+                        ec: ExecutionContext,
+                        request: RequestHeader
+                      ): Future[Either[HttpResponse, JsValue]]
 
   def getPspSchemeDetails(pspId: String, pstr: String)
                          (implicit headerCarrier: HeaderCarrier,
@@ -110,36 +117,52 @@ class SchemeConnectorImpl @Inject()(
       implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext]
     ) map { response =>
-        response.status match {
-          case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-            invalidPayloadHandler.logFailures(
-              "/resources/schemas/schemeSubscription.json", registerData, url
-            )
-          case _ => Unit
-        }
-        response
+      response.status match {
+        case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
+          invalidPayloadHandler.logFailures(
+            "/resources/schemas/schemeSubscription.json", registerData, url
+          )
+        case _ => Unit
       }
+      response
+    }
   }
 
-  override def getSchemeDetails(psaId: String, schemeIdType: String,
-    idNumber: String)(implicit
-    headerCarrier: HeaderCarrier,
-    ec: ExecutionContext,
-    request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
+  override def getSchemeDetails(
+                                 psaId: String,
+                                 schemeIdType: String,
+                                 idNumber: String
+                               )(
+                                 implicit
+                                 headerCarrier: HeaderCarrier,
+                                 ec: ExecutionContext,
+                                 request: RequestHeader
+                               ): Future[Either[HttpResponse, JsValue]] = {
+
     featureToggleService.get(IntegrationFrameworkGetSchemeDetails).flatMap {
       case Enabled(IntegrationFrameworkGetSchemeDetails) =>
-        val (url, hc) = (config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
-          HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))))
+        val (url, hc) = (
+          config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
+          HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
+        )
+
         Logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
+
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-          handleSchemeDetailsResponse(response)) andThen
+          handleSchemeDetailsResponse(response)
+        ) andThen
           schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
       case _ =>
-        val (url, hc) = (config.schemeDetailsUrl.format(schemeIdType, idNumber),
-          HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))))
+        val (url, hc) = (
+          config.schemeDetailsUrl.format(schemeIdType, idNumber),
+          HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+        )
+
         Logger.debug(s"Calling get scheme details API on DES with url $url and hc $hc")
+
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-          handleSchemeDetailsResponseDES(response)) andThen
+          handleSchemeDetailsResponseDES(response)
+        ) andThen
           schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
     }
   }
@@ -163,24 +186,34 @@ class SchemeConnectorImpl @Inject()(
                                             ec: ExecutionContext,
                                             request: RequestHeader): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesUrl.format(psaId)
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+    implicit val hc: HeaderCarrier =
+      HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
-      implicitly[ExecutionContext])
+    http.GET[HttpResponse](listOfSchemesUrl)(
+      implicitly[HttpReads[HttpResponse]],
+      implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext]
+    )
   }
 
-  override def listOfSchemes(idType: String, idValue: String)(implicit
-                                                              headerCarrier: HeaderCarrier,
-                                                              ec: ExecutionContext,
-                                                              request: RequestHeader): Future[HttpResponse] = {
+  override def listOfSchemes(
+                              idType: String,
+                              idValue: String
+                            )(implicit
+                              headerCarrier: HeaderCarrier,
+                              ec: ExecutionContext,
+                              request: RequestHeader): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesIFUrl.format(idType, idValue)
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
       headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
     Logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
-    http.GET[HttpResponse](listOfSchemesUrl)(implicitly[HttpReads[HttpResponse]], implicitly[HeaderCarrier](hc),
-      implicitly[ExecutionContext])
+    http.GET[HttpResponse](listOfSchemesUrl)(
+      implicitly[HttpReads[HttpResponse]],
+      implicitly[HeaderCarrier](hc),
+      implicitly[ExecutionContext]
+    )
   }
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
@@ -199,15 +232,15 @@ class SchemeConnectorImpl @Inject()(
       implicitly[HeaderCarrier](hc),
       implicitly[ExecutionContext]
     ) map { response =>
-        response.status match {
-          case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-            invalidPayloadHandler.logFailures(
-              "/resources/schemas/schemeVariationSchema.json", data, url
-            )
-          case _ => Unit
-        }
-        response
+      response.status match {
+        case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
+          invalidPayloadHandler.logFailures(
+            "/resources/schemas/schemeVariationSchema.json", data, url
+          )
+        case _ => Unit
       }
+      response
+    }
   }
 
   private def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {

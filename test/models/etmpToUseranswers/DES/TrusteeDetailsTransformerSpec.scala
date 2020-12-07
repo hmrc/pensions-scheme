@@ -17,7 +17,7 @@
 package models.etmpToUseranswers.DES
 
 import models.etmpToUserAnswers.DES.{AddressTransformer, TrusteeDetailsTransformer}
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json._
 
 class TrusteeDetailsTransformerSpec extends TransformationSpec {

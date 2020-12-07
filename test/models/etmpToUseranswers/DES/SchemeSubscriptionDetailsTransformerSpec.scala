@@ -17,7 +17,7 @@
 package models.etmpToUseranswers.DES
 
 import models.etmpToUserAnswers.DES._
-import org.scalatest.prop.PropertyChecks.forAll
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.JsValue
 
 class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
