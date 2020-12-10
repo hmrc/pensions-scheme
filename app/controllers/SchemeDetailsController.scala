@@ -19,6 +19,7 @@ package controllers
 import com.google.inject.Inject
 import connector.SchemeConnector
 import play.api.mvc._
+import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.ErrorHandler
@@ -27,6 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeDetailsController @Inject()(
                                          schemeConnector: SchemeConnector,
+                                         schemeService: SchemeService,
                                          cc: ControllerComponents
                                        )(implicit ec: ExecutionContext)
   extends BackendController(cc)
@@ -46,6 +48,25 @@ class SchemeDetailsController @Inject()(
           }
         case _ =>
           Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
+      }
+    } recoverWith recoverFromError
+  }
+
+  def getPspSchemeDetails: Action[AnyContent] = Action.async {
+    implicit request => {
+      val srnOpt = request.headers.get("srn")
+      val pspIdOpt = request.headers.get("pspId")
+
+      (srnOpt, pspIdOpt) match {
+        case (Some(srn), Some(pspId)) =>
+         schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
+
+           schemeConnector.getPspSchemeDetails(pspId, pstr).map {
+             case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
+             case Left(e) => result(e)
+           }
+         }
+        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }

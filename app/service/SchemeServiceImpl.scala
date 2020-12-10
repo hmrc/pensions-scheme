@@ -20,6 +20,7 @@ import audit.{AuditService, ListOfSchemesAudit, SchemeList, SchemeSubscription, 
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
+import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
 import models.userAnswersToEtmp.{BankAccount, PensionsScheme}
@@ -31,6 +32,8 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, Http
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import utils.validationUtils._
+import play.api.http.Status._
 
 class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
                                   barsConnector: BarsConnector,
@@ -198,5 +201,21 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
     )
 
   }
+
+  override def getPstrFromSrn(srn: String, idType: String, idValue: String)
+                    (implicit headerCarrier: HeaderCarrier,
+                     ec: ExecutionContext, request: RequestHeader): Future[String] =
+    listOfSchemes(idType, idValue).map { response =>
+      response.status match {
+        case OK =>
+          response.json.convertTo[ListOfSchemes].schemeDetails.flatMap { listOfSchemes =>
+            listOfSchemes.find(_.referenceNumber == srn).flatMap(_.pstr)
+          }.getOrElse(throw pstrException)
+
+        case _ => throw pstrException
+      }
+  }
+
+  val pstrException: BadRequestException = new BadRequestException("PSTR could not be retrieved from SRN to call the get psp scheme details API")
 
 }

@@ -165,6 +165,12 @@ class FakeSchemeConnector extends SchemeConnector {
   override def listOfSchemes(idType: String, idValue: String)
                             (implicit headerCarrier: HeaderCarrier,
                              ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
+
+  override def getPspSchemeDetails(pspId: String, pstr: String)
+                                  (implicit headerCarrier: HeaderCarrier,
+                                   ec: ExecutionContext,
+                                   request: RequestHeader): Future[Either[HttpResponse, JsValue]] =
+    Future.successful(Right(userAnswersResponse))
 }
 
 object FakeSchemeConnector extends JsonFileReader {

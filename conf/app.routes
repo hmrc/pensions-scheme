@@ -6,6 +6,7 @@ GET           /list-of-schemes                                  controllers.Sche
 GET           /if-list-of-schemes                               controllers.SchemeIFController.listOfSchemes
 
 GET           /scheme                                           controllers.SchemeDetailsController.getSchemeDetails
+GET           /psp-scheme                                       controllers.SchemeDetailsController.getPspSchemeDetails
 
 # answers caching in protected mongo
 GET           /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.get(id: String)
