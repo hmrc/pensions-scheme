@@ -13,18 +13,18 @@
         "pspid": "A2200005",
         "orgOrPartName": "PSP Limited Company 1",
         "relationshipStartDate": "2021-04-01",
-        "authorizedPSAID": "A2100005",
-        "authorizedPSAFirstName": "Nigel",
-        "authorizedPSASecondName": "Robert",
-        "authorizedPSALastName": "Smith"
+        "authorisedPSAID": "A2100005",
+        "authorisedPSAFirstName": "Nigel",
+        "authorisedPSAMiddleName": "Robert",
+        "authorisedPSALastName": "Smith"
       },
         {
           "pspid": "A2200007",
           "firstName": "PSP Individual",
           "lastName": "Second",
           "relationshipStartDate": "2021-04-01",
-          "authorizedPSAID": "A2100007",
-          "authorizedPSAOrgOrPartName": "Acme Ltd"
+          "authorisedPSAID": "A2100007",
+          "authorisedPSAOrgOrPartName": "Acme Ltd"
         }]
     },
     {
@@ -38,18 +38,18 @@
         "pspid": "A2200005",
         "orgOrPartName": "PSP Limited Company 1",
         "relationshipStartDate": "2021-04-01",
-        "authorizedPSAID": "A2100005",
-        "authorizedPSAFirstName": "Nigel",
-        "authorizedPSASecondName": "Robert",
-        "authorizedPSALastName": "Smith"
+        "authorisedPSAID": "A2100005",
+        "authorisedPSAFirstName": "Nigel",
+        "authorisedPSAMiddleName": "Robert",
+        "authorisedPSALastName": "Smith"
       },
         {
           "pspid": "A2200007",
           "firstName": "PSP Individual",
           "lastName": "Second",
           "relationshipStartDate": "2021-04-01",
-          "authorizedPSAID": "A2100007",
-          "authorizedPSAOrgOrPartName": "Acme Ltd"
+          "authorisedPSAID": "A2100007",
+          "authorisedPSAOrgOrPartName": "Acme Ltd"
         }]
     }
   ]
