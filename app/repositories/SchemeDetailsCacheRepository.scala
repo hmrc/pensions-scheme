@@ -17,7 +17,6 @@
 package repositories
 
 import com.google.inject.Inject
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
 

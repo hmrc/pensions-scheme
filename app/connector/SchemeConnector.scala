@@ -250,8 +250,7 @@ class SchemeConnectorImpl @Inject()(
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
-  private def handleSchemeDetailsResponse(response: HttpResponse)(
-    implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
+  private def handleSchemeDetailsResponse(response: HttpResponse): Either[HttpResponse, JsObject] = {
     Logger.debug(s"Get-Scheme-details-response from IF API - ${response.json}")
     response.status match {
       case OK =>
@@ -266,8 +265,7 @@ class SchemeConnectorImpl @Inject()(
     }
   }
 
-  private def handlePspSchemeDetailsResponse(response: HttpResponse)(
-    implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
+  private def handlePspSchemeDetailsResponse(response: HttpResponse): Either[HttpResponse, JsObject] = {
     Logger.debug(s"Get-Psp-Scheme-details-response - ${response.json}")
     response.status match {
       case OK =>
@@ -282,8 +280,7 @@ class SchemeConnectorImpl @Inject()(
     }
   }
 
-  private def handleSchemeDetailsResponseDES(response: HttpResponse)(
-    implicit requestHeader: RequestHeader, executionContext: ExecutionContext): Either[HttpResponse, JsObject] = {
+  private def handleSchemeDetailsResponseDES(response: HttpResponse): Either[HttpResponse, JsObject] = {
     Logger.debug(s"Get-Scheme-details-response from DES API - $response")
     response.status match {
       case OK =>

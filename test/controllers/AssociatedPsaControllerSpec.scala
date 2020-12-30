@@ -25,11 +25,10 @@ import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.BadRequestException
-import org.scalatest.RecoverMethods._
-import play.api.mvc.Result
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -44,7 +43,6 @@ class AssociatedPsaControllerSpec
   private val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
   private val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
   private val schemeIdNumber = "S999999999"
-  private val schemeIdType = "srn"
   private val userIdNumber = "A0000001"
   private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
@@ -81,7 +79,7 @@ class AssociatedPsaControllerSpec
           ("schemeReferenceNumber", schemeIdNumber)
         )
 
-        val emptyPsa = (userAnswersResponse.as[JsObject] - "psaDetails")
+        val emptyPsa = userAnswersResponse.as[JsObject] - "psaDetails"
 
         when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
           .thenReturn(Future.successful(Right(emptyPsa)))
@@ -117,7 +115,7 @@ class AssociatedPsaControllerSpec
         associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/")
           .withHeaders(("schemeReferenceNumber", schemeIdNumber)))
 
-      the [Exception] thrownBy result must have message "Unable to retrieve either PSA or PSP from request"
+      the[Exception] thrownBy result must have message "Unable to retrieve either PSA or PSP from request"
 
       verify(mockSchemeConnector, never()).getSchemeDetails(
         userIdNumber = Matchers.any(),

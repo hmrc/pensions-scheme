@@ -18,7 +18,6 @@ package utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.ImplementedBy
-import com.josephpconley.jsonpath.JSONPath
 import com.networknt.schema.{JsonSchema, JsonSchemaFactory, ValidationMessage}
 import javax.inject.Inject
 import play.api.LoggerLike
@@ -96,11 +95,11 @@ class InvalidPayloadHandlerImpl @Inject()(logger: LoggerLike) extends InvalidPay
   private def valueFromJson(message: ValidationMessage, json: JsValue): Option[String] = {
     message.getType match {
       case "enum" | "format" | "maximum" | "maxLength" | "minimum" | "minLength" | "pattern" | "type" =>
-        JSONPath.query(message.getPath, json) match {
-          case JsBoolean(bool) => Some(bool.toString)
-          case JsNull => Some("null")
-          case JsNumber(n) => Some(depersonalise(n.toString))
-          case JsString(s) => Some(depersonalise(s))
+        (json \ message.getPath.drop(2)).asOpt[JsValue] match {
+          case Some(JsBoolean(bool)) => Some(bool.toString)
+          case Some(JsNull) => Some("null")
+          case Some(JsNumber(n)) => Some(depersonalise(n.toString))
+          case Some(JsString(s)) => Some(depersonalise(s))
           case _ => None
         }
       case _ => None

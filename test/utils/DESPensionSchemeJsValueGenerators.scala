@@ -25,6 +25,109 @@ import play.api.libs.json.{JsObject, JsValue, Json, _}
 
 trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
+  private val contactDetailsJsValueGen = for {
+    email <- Gen.const("aaa@gmail.com")
+    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
+  } yield {
+    (
+      Json.obj(
+        "telephone" -> phone,
+        "mobileNumber" -> phone,
+        "fax" -> "0044-09876542312",
+        "email" -> email
+      ),
+      Json.obj(
+        "emailAddress" -> email,
+        "phoneNumber" -> phone
+      )
+    )
+  }
+
+  def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
+                        isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
+    line1 <- addressLineGen
+    line2 <- addressLineGen
+    line3 <- addressLineOptional
+    line4 <- addressLineOptional
+    postalCode <- optionalPostalCodeGen
+    countryCode <- countryCode
+  } yield {
+    (
+      Json.obj(
+        desKey -> (Json.obj("nonUKAddress" -> true) ++
+          Json.obj("line1" -> line1) ++
+          Json.obj("line2" -> line2) ++
+          optional("line3", line3) ++
+          optional("line4", line4) ++
+          optional("postalCode", postalCode) ++
+          Json.obj("countryCode" -> countryCode))
+      ),
+      Json.obj(
+        uaKey -> (Json.obj("addressLine1" -> line1) ++
+          Json.obj("addressLine2" -> line2) ++
+          optional("addressLine3", line3) ++
+          optional("addressLine4", line4) ++
+          optional(if (isDifferent) "postcode" else "postalCode", postalCode) ++
+          Json.obj((if (isDifferent) "country" else "countryCode") -> countryCode))
+      )
+    )
+  }
+
+  def individualJsValueGen(isEstablisher: Boolean): Gen[(JsObject, JsObject)] = for {
+    title <- Gen.option(titleGenerator)
+    firstName <- nameGenerator
+    middleName <- Gen.option(nameGenerator)
+    lastName <- nameGenerator
+    referenceOrNino <- Gen.option(ninoGenerator)
+    utr <- Gen.option(utrGenerator)
+    contactDetails <- contactDetailsJsValueGen
+    address <- addressJsValueGen("correspondenceAddressDetails", if (isEstablisher) "address" else "trusteeAddressId", isDifferent = true)
+    previousAddress <- addressJsValueGen("previousAddress", if (isEstablisher) "previousAddress" else "trusteePreviousAddress", isDifferent = true)
+    date <- dateGenerator
+  } yield {
+    val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
+    val previousAddr = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
+    val (desAddress, userAnswersAddress) = address
+    val (desContactDetails, userAnswersContactDetails) = contactDetails
+    (
+      Json.obj(
+        "personDetails" -> Json.obj(
+          "title" -> title,
+          "firstName" -> firstName,
+          "middleName" -> middleName,
+          "lastName" -> lastName,
+          "dateOfBirth" -> date.toString
+        ),
+        "correspondenceContactDetails" -> desContactDetails,
+        "previousAddressDetails" -> previousAddr
+      ) ++ desAddress.as[JsObject] ++ optionalWithReason("nino", referenceOrNino, "noNinoReason")
+        ++ optionalWithReason("utr", utr, "noUtrReason"),
+      Json.obj(
+        (if (isEstablisher) "establisherKind" else "trusteeKind") -> "individual",
+        (if (isEstablisher) "addressYears" else "trusteeAddressYears") -> "under_a_year",
+        (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails
+      ) ++ userAnswersAddress.as[JsObject]
+        ++ userAnswersPreviousAddress.as[JsObject]
+        ++ (if(isEstablisher) ninoJsValue(referenceOrNino, "establisherNino")
+            else ninoJsValue(referenceOrNino, "trusteeNino"))
+        ++ utrJsValue(utr) ++
+        (if(!isEstablisher) getPersonName(firstName, lastName, date, "trusteeDetails")
+          else
+          getPersonName(firstName, lastName, date, "establisherDetails")
+        ) ++
+        (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
+    )
+  }
+
+  private def getPersonName(firstName: String, lastName: String, date: LocalDate, element: String) = {
+    Json.obj(
+      element -> Json.obj(
+        "firstName" -> firstName,
+        "lastName" -> lastName
+      ),
+      "dateOfBirth" -> date.toString)
+  }
+
   val schemeDetailsGen: Gen[(JsValue, JsValue)] = for {
     schemeName <- specialCharStringGen
     isSchemeMasterTrust <- Gen.option(booleanGen)
@@ -176,115 +279,6 @@ trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         moreThanTenTrustees.fold(Json.obj())(moreThanTenValue => Json.obj("moreThanTenTrustees" -> moreThanTenValue))
     )
   }
-  private val contactDetailsJsValueGen = for {
-    email <- Gen.const("aaa@gmail.com")
-    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
-  } yield {
-    (
-      Json.obj(
-        "telephone" -> phone,
-        "mobileNumber" -> phone,
-        "fax" -> "0044-09876542312",
-        "email" -> email
-      ),
-      Json.obj(
-        "emailAddress" -> email,
-        "phoneNumber" -> phone
-      )
-    )
-  }
-
-  def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
-                        isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
-    line1 <- addressLineGen
-    line2 <- addressLineGen
-    line3 <- addressLineOptional
-    line4 <- addressLineOptional
-    postalCode <- optionalPostalCodeGen
-    countryCode <- countryCode
-  } yield {
-    (
-      Json.obj(
-        desKey -> (Json.obj("nonUKAddress" -> true) ++
-          Json.obj("line1" -> line1) ++
-          Json.obj("line2" -> line2) ++
-          optional("line3", line3) ++
-          optional("line4", line4) ++
-          optional("postalCode", postalCode) ++
-          Json.obj("countryCode" -> countryCode))
-      ),
-      Json.obj(
-        uaKey -> (Json.obj("addressLine1" -> line1) ++
-          Json.obj("addressLine2" -> line2) ++
-          optional("addressLine3", line3) ++
-          optional("addressLine4", line4) ++
-          optional(if (isDifferent) "postcode" else "postalCode", postalCode) ++
-          Json.obj((if (isDifferent) "country" else "countryCode") -> countryCode))
-      )
-    )
-  }
-
-  def individualJsValueGen(isEstablisher: Boolean): Gen[(JsObject, JsObject)] = for {
-    title <- Gen.option(titleGenerator)
-    firstName <- nameGenerator
-    middleName <- Gen.option(nameGenerator)
-    lastName <- nameGenerator
-    referenceOrNino <- Gen.option(ninoGenerator)
-    utr <- Gen.option(utrGenerator)
-    contactDetails <- contactDetailsJsValueGen
-    address <- addressJsValueGen("correspondenceAddressDetails", if (isEstablisher) "address" else "trusteeAddressId", isDifferent = true)
-    previousAddress <- addressJsValueGen("previousAddress", if (isEstablisher) "previousAddress" else "trusteePreviousAddress", isDifferent = true)
-    date <- dateGenerator
-  } yield {
-    val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
-    val previousAddr = Json.obj("isPreviousAddressLast12Month" -> true) ++ desPreviousAddress.as[JsObject]
-    val (desAddress, userAnswersAddress) = address
-    val (desContactDetails, userAnswersContactDetails) = contactDetails
-    (
-      Json.obj(
-        "personDetails" -> Json.obj(
-          "title" -> title,
-          "firstName" -> firstName,
-          "middleName" -> middleName,
-          "lastName" -> lastName,
-          "dateOfBirth" -> date.toString
-        ),
-        "correspondenceContactDetails" -> desContactDetails,
-        "previousAddressDetails" -> previousAddr
-      ) ++ desAddress.as[JsObject] ++ optionalWithReason("nino", referenceOrNino, "noNinoReason")
-        ++ optionalWithReason("utr", utr, "noUtrReason"),
-      Json.obj(
-        (if (isEstablisher) "establisherKind" else "trusteeKind") -> "individual",
-        (if (isEstablisher) "addressYears" else "trusteeAddressYears") -> "under_a_year",
-        (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails
-      ) ++ userAnswersAddress.as[JsObject]
-        ++ userAnswersPreviousAddress.as[JsObject]
-        ++ (if(isEstablisher) ninoJsValue(referenceOrNino, "establisherNino")
-            else ninoJsValue(referenceOrNino, "trusteeNino"))
-        ++ utrJsValue(utr) ++
-        (if(!isEstablisher) getPersonName(firstName, lastName, date, "trusteeDetails")
-          else
-          getPersonName(firstName, lastName, date, "establisherDetails")
-        ) ++
-        (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
-    )
-  }
-
-  private def getPersonalDetails(firstName: String, lastName: String, middleName: Option[String], date: LocalDate) = Json.obj(
-    "firstName" -> firstName,
-    "middleName" -> middleName,
-    "lastName" -> lastName,
-    "date" -> date.toString
-  )
-
-  private def getPersonName(firstName: String, lastName: String, date: LocalDate, element: String) = {
-    Json.obj(
-      element -> Json.obj(
-        "firstName" -> firstName,
-        "lastName" -> lastName
-      ),
-      "dateOfBirth" -> date.toString)
-  }
 
   // scalastyle:off method.length
   //scalastyle:off cyclomatic.complexity
@@ -297,8 +291,7 @@ trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
-    directorDetails <- Gen.option(Gen.listOfN(randomNumberFromRange(0, 10),
-      directorOrPartnerJsValueGen("director")))
+    directorDetails <- Gen.option(Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("director")))
     haveMoreThanTenDirectors <- Gen.option(booleanGen)
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress

@@ -48,5 +48,6 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     Resolver.jcenterRepo
   ))
   .settings(majorVersion := 0)
+  .settings(scalaVersion := "2.12.11")
 
 

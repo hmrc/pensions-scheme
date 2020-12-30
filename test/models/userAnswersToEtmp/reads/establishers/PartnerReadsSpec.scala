@@ -16,7 +16,6 @@
 
 package models.userAnswersToEtmp.reads.establishers
 
-import models.userAnswersToEtmp.reads.CommonGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.partnerGenerator
 import models.userAnswersToEtmp.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary

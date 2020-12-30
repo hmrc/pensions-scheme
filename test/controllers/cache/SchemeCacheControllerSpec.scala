@@ -22,7 +22,7 @@ import org.apache.commons.lang3.RandomUtils
 import org.joda.time.DateTime
 import org.mockito.Matchers.{eq => eqTo, _}
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
@@ -46,9 +46,9 @@ class SchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoS
     "encrypted" -> encrypted
   )
 
-  val repo = mock[SchemeCacheRepository]
-  val authConnector = mock[AuthConnector]
-  val cc = app.injector.instanceOf[ControllerComponents]
+  val repo: SchemeCacheRepository = mock[SchemeCacheRepository]
+  val authConnector: AuthConnector = mock[AuthConnector]
+  val cc: ControllerComponents = app.injector.instanceOf[ControllerComponents]
 
   private class SchemeCacheControllerImpl(
                                                    repo: SchemeCacheRepository,

@@ -31,7 +31,6 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[MongoDb])
@@ -72,6 +71,7 @@ trait LockRepository {
 @Singleton
 class LockMongoRepository @Inject()(config: AppConfig,
                                     mongoDbProvider: MongoDbProvider)
+                                   (implicit ec: ExecutionContext)
   extends ReactiveRepository[SchemeVariance, BSONObjectID](
     collectionName = "scheme_variation_lock",
     mongo = mongoDbProvider.mongo,

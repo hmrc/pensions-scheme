@@ -25,6 +25,24 @@ import play.api.libs.json.{JsObject, JsValue, Json, _}
 
 trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
+  private val contactDetailsJsValueGen = for {
+    email <- Gen.const("aaa@gmail.com")
+    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
+  } yield {
+    (
+      Json.obj(
+        "telephone" -> phone,
+        "mobileNumber" -> phone,
+        "fax" -> "0044-09876542312",
+        "email" -> email
+      ),
+      Json.obj(
+        "emailAddress" -> email,
+        "phoneNumber" -> phone
+      )
+    )
+  }
+
   val schemeDetailsGen: Gen[(JsValue, JsValue)] = for {
     schemeName <- specialCharStringGen
     isSchemeMasterTrust <- Gen.option(booleanGen)
@@ -177,23 +195,6 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         moreThanTenTrustees.fold(Json.obj())(moreThanTenValue => Json.obj("moreThanTenTrustees" -> moreThanTenValue))
     )
   }
-  private val contactDetailsJsValueGen = for {
-    email <- Gen.const("aaa@gmail.com")
-    phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
-  } yield {
-    (
-      Json.obj(
-        "telephone" -> phone,
-        "mobileNumber" -> phone,
-        "fax" -> "0044-09876542312",
-        "email" -> email
-      ),
-      Json.obj(
-        "emailAddress" -> email,
-        "phoneNumber" -> phone
-      )
-    )
-  }
 
   def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
                         isDifferent: Boolean = false): Gen[(JsValue, JsValue)] = for {
@@ -271,13 +272,6 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  private def getPersonalDetails(firstName: String, lastName: String, middleName: Option[String], date: LocalDate) = Json.obj(
-    "firstName" -> firstName,
-    "middleName" -> middleName,
-    "lastName" -> lastName,
-    "date" -> date.toString
-  )
-
   private def getPersonName(firstName: String, lastName: String, date: LocalDate, element: String) = {
     Json.obj(
       element -> Json.obj(
@@ -298,8 +292,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     address <- addressJsValueGen("correspondenceAddressDetails", "companyAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "companyPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
-    directorDetails <- Gen.option(Gen.listOfN(randomNumberFromRange(0, 10),
-      directorOrPartnerJsValueGen("director")))
+    directorDetails <- Gen.option(Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("director")))
     haveMoreThanTenDirectors <- Gen.option(booleanGen)
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
@@ -352,8 +345,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     address <- addressJsValueGen("correspondenceAddressDetails", "partnershipAddress", isDifferent = true)
     previousAddress <- addressJsValueGen("previousAddress", "partnershipPreviousAddress", isDifferent = true)
     contactDetails <- contactDetailsJsValueGen
-    partnerDetails <- Gen.listOfN(randomNumberFromRange(0, 10),
-      directorOrPartnerJsValueGen("partner"))
+    partnerDetails <- Gen.listOfN(randomNumberFromRange(0, 10), directorOrPartnerJsValueGen("partner"))
     areMorethanTenPartners <- booleanGen
   } yield {
     val (desPreviousAddress, userAnswersPreviousAddress) = previousAddress
