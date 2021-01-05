@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class SchemeCacheControllerSpec extends WordSpec with MustMatchers with MockitoS
 
   implicit lazy val mat: Materializer = app.materializer
 
-  private def configuration(encrypted: Boolean = true) = Configuration(
+  private def configuration(encrypted: Boolean) = Configuration(
     "mongodb.pensions-scheme-cache.maxSize" -> 512000,
     "encrypted" -> encrypted
   )
