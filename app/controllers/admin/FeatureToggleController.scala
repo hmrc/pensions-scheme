@@ -19,13 +19,11 @@ package controllers.admin
 import javax.inject.Inject
 import models.FeatureToggleName
 import play.api.libs.json.{JsBoolean, Json}
-import play.api.mvc.{AbstractController, ControllerComponents, AnyContent, Action}
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import service.FeatureToggleService
 import utils.ErrorHandler
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 class FeatureToggleController @Inject()(
   cc: ControllerComponents,

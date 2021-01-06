@@ -34,8 +34,6 @@ abstract class SchemeCacheController(
                                       cc: ControllerComponents
                                     )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
 
-  private val maxSize: Int = config.underlying.getInt("mongodb.pensions-scheme-cache.maxSize")
-
   def save(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {

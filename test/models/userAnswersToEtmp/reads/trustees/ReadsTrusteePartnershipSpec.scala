@@ -16,14 +16,14 @@
 
 package models.userAnswersToEtmp.reads.trustees
 
+import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.reads.CommonGenerator.trusteePartnershipGenerator
 import models.userAnswersToEtmp.trustee.PartnershipTrustee
-import models.userAnswersToEtmp._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Shrink
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsBoolean, JsString, Json}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import play.api.libs.json.{JsString, Json}
 
 class ReadsTrusteePartnershipSpec extends WordSpec with MustMatchers with OptionValues {
   private implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny

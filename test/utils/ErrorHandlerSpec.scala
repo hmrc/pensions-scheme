@@ -21,7 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.HttpEntity
 import play.api.mvc.{ResponseHeader, Result}
-import uk.gov.hmrc.http.{HttpResponse, NotFoundException, Upstream4xxResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HttpResponse, NotFoundException, UpstreamErrorResponse}
 
 class ErrorHandlerSpec extends WordSpec with MustMatchers {
   private val eh = new ErrorHandler {

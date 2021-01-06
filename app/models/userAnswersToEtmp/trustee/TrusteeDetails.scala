@@ -17,11 +17,10 @@
 package models.userAnswersToEtmp.trustee
 
 import models.userAnswersToEtmp.Individual
-import models.userAnswersToEtmp.ReadsHelper.readsFiltered
+import models.userAnswersToEtmp.ReadsHelper.readsFilteredBoolean
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._
-import models.userAnswersToEtmp.ReadsHelper.readsFilteredBoolean
 
 case class TrusteeDetails(
                            individualTrusteeDetail: Seq[Individual],

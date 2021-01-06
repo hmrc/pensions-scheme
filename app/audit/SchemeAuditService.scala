@@ -19,17 +19,14 @@ package audit
 import play.api.Logger
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HttpResponse
 
-import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 class SchemeAuditService {
 
   def sendSchemeDetailsEvent(userIdNumber: String)
-                            (sendEvent: SchemeDetailsAuditEvent => Unit)
-                            (implicit rh: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
+                            (sendEvent: SchemeDetailsAuditEvent => Unit): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
 
 
     case Success(Right(psaSubscription)) =>
@@ -53,11 +50,8 @@ class SchemeAuditService {
 
   }
 
-  def sendPspSchemeDetailsEvent(pspId: String)(sendEvent: PspSchemeDetailsAuditEvent => Unit)
-                            (implicit rh: RequestHeader, ec: ExecutionContext): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
-
-
-
+  def sendPspSchemeDetailsEvent(pspId: String)
+                               (sendEvent: PspSchemeDetailsAuditEvent => Unit): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
     case Success(Right(pspSchemeSubscription)) =>
       sendEvent(
         PspSchemeDetailsAuditEvent(
@@ -76,7 +70,6 @@ class SchemeAuditService {
       )
     case Failure(t) =>
       Logger.error("Error in sending audit event for get psp scheme details", t)
-
   }
 
 }

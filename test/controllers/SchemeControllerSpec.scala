@@ -22,7 +22,7 @@ import org.mockito.Matchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.AnyContentAsJson

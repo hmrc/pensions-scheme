@@ -16,25 +16,24 @@
 
 package utils
 
-import models._
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
 import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee, TrusteeDetails}
 import org.joda.time.LocalDate
 import org.scalacheck.Gen
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 
 trait PensionSchemeGenerators {
   val specialCharStringGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
   val addressLineGen: Gen[String] = Gen.listOfN[Char](35, Gen.alphaChar).map(_.mkString)
   val addressLineOptional: Gen[Option[String]] = Gen.option(addressLineGen)
   val postalCodeGem: Gen[String] = Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString)
-  val optionalNinoGenerator = Gen.option("SL221122D")
-  val ninoGenerator = Gen.const("SL221122D")
-  val utrGenerator = Gen.listOfN[Char](10, Gen.numChar).map(_.mkString)
-  val crnGenerator = Gen.const("11111111")
-  val vatGenerator = Gen.const("123456789")
-  val payeGenerator = Gen.const("1111111111111")
+  val optionalNinoGenerator: Gen[Option[String]] = Gen.option("SL221122D")
+  val ninoGenerator: Gen[String] = Gen.const("SL221122D")
+  val utrGenerator: Gen[String] = Gen.listOfN[Char](10, Gen.numChar).map(_.mkString)
+  val crnGenerator: Gen[String] = Gen.const("11111111")
+  val vatGenerator: Gen[String] = Gen.const("123456789")
+  val payeGenerator: Gen[String] = Gen.const("1111111111111")
 
   val optionalPostalCodeGen: Gen[Option[String]] = Gen.option(Gen.listOfN[Char](10, Gen.alphaChar).map(_.mkString))
   val countryCode: Gen[String] = Gen.oneOf(Seq("ES", "IT"))
@@ -179,6 +178,50 @@ trait PensionSchemeGenerators {
     partnerships <- Gen.listOfN(randomNumberFromRange(0, 1), partnershipTrusteeGen)
   } yield TrusteeDetails(individuals, companies, partnerships)
 
+  val establisherAndTrustDetailsGen : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
+    changeOfEstablisherOrTrustDetails <- booleanGen
+    haveMoreThanTenTrustees <- Gen.option(booleanGen)
+    establisherDetails <- establisherDetailsGen
+    trusteeDetailsType <- Gen.option(trusteeDetailsGen).suchThat(_.nonEmpty)
+  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+
+  val establisherAndTrustDetailsGenNonEmpty : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
+    changeOfEstablisherOrTrustDetails <- booleanGen
+    haveMoreThanTenTrustees <- Gen.option(booleanGen).suchThat(_.nonEmpty)
+    establisherDetails <- establisherDetailsGenNonEmpty
+    trusteeDetailsType <- Gen.option(trusteeDetailsGenNonEmpty).suchThat(_.nonEmpty)
+  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+
+
+  val establisherAndTrustDetailsNonEmpty: Gen[List[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]] =
+    Gen.listOf(establisherAndTrustDetailsGenNonEmpty).suchThat(_.nonEmpty)
+
+  val pensionSchemeUpdateDeclarationGen: Gen[PensionSchemeUpdateDeclaration] = for {
+    declaration1 <- booleanGen
+  } yield PensionSchemeUpdateDeclaration(declaration1)
+
+  val schemeProvideBenefitsGen: Gen[String] = Gen.oneOf(Seq("Money Purchase benefits only (defined contribution)",
+    "Defined Benefits only",
+    "Mixture of money purchase benefits and defined benefits"))
+
+  val policyNumberGen: Gen[String] = Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
+  val otherSchemeStructureGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
+
+  val boolenGen: Gen[Boolean] = Gen.oneOf(Seq(true, false))
+
+  val schemeStatusGen: Gen[String] = Gen.oneOf(Seq("Open", "Pending", "Pending Info Required", "Pending Info Received", "Deregistered", "Wound-up", "Rejected Under Appeal"))
+
+  val memberGen: Gen[String] = Gen.oneOf(Seq("0",
+    "1",
+    "2 to 11",
+    "12 to 50",
+    "51 to 10,000",
+    "More than 10,000"))
+
+  val schemeTypeGen: Gen[Option[String]] = Gen.option(Gen.oneOf(Seq("A single trust under which all of the assets are held for the benefit of all members of the scheme",
+    "A group life/death in service scheme",
+    "A body corporate",
+    "Other")))
 
   val CustomerAndSchemeDetailsGen: Gen[CustomerAndSchemeDetails] = for {
     schemeName <- specialCharStringGen
@@ -205,29 +248,6 @@ trait PensionSchemeGenerators {
     insuranceCompanyName, policyNumber,
     insuranceCompanyAddress, isInsuranceDetailsChanged)
 
-
-
-  val establisherAndTrustDetailsGen : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
-    changeOfEstablisherOrTrustDetails <- booleanGen
-    haveMoreThanTenTrustees <- Gen.option(booleanGen)
-    establisherDetails <- establisherDetailsGen
-    trusteeDetailsType <- Gen.option(trusteeDetailsGen).suchThat(_.nonEmpty)
-  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
-
-  val establisherAndTrustDetailsGenNonEmpty : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
-    changeOfEstablisherOrTrustDetails <- booleanGen
-    haveMoreThanTenTrustees <- Gen.option(booleanGen).suchThat(_.nonEmpty)
-    establisherDetails <- establisherDetailsGenNonEmpty
-    trusteeDetailsType <- Gen.option(trusteeDetailsGenNonEmpty).suchThat(_.nonEmpty)
-  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
-
-
-  val establisherAndTrustDetailsNonEmpty = Gen.listOf(establisherAndTrustDetailsGenNonEmpty).suchThat(_.nonEmpty)
-
-  val pensionSchemeUpdateDeclarationGen: Gen[PensionSchemeUpdateDeclaration] = for {
-    declaration1 <- booleanGen
-  } yield PensionSchemeUpdateDeclaration(declaration1)
-
   val schemeDetailsVariationGen: Gen[PensionsScheme]  = for {
     schemeDetails <- CustomerAndSchemeDetailsGen
     pensionSchemeDeclaration <- pensionSchemeUpdateDeclarationGen
@@ -238,36 +258,13 @@ trait PensionSchemeGenerators {
     establisherAndTrustDetailsType._4.get
   )
 
-  val schemeProvideBenefitsGen = Gen.oneOf(Seq("Money Purchase benefits only (defined contribution)",
-    "Defined Benefits only",
-    "Mixture of money purchase benefits and defined benefits"))
-
-  val policyNumberGen = Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
-  val otherSchemeStructureGen = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
-
-  val boolenGen = Gen.oneOf(Seq(true, false))
-
-  val schemeStatusGen = Gen.oneOf(Seq("Open", "Pending", "Pending Info Required", "Pending Info Received", "Deregistered", "Wound-up", "Rejected Under Appeal"))
-
-  val memberGen = Gen.oneOf(Seq("0",
-    "1",
-    "2 to 11",
-    "12 to 50",
-    "51 to 10,000",
-    "More than 10,000"))
-
-  val schemeTypeGen = Gen.option(Gen.oneOf(Seq("A single trust under which all of the assets are held for the benefit of all members of the scheme",
-    "A group life/death in service scheme",
-    "A body corporate",
-    "Other")))
-
-  protected def optional(key: String, element: Option[String]) = {
+  protected def optional(key: String, element: Option[String]): JsObject = {
     element.map { value =>
       Json.obj(key -> value)
     }.getOrElse(Json.obj())
   }
 
-  protected def optionalWithReason(key: String, element: Option[String], reason: String) = {
+  protected def optionalWithReason(key: String, element: Option[String], reason: String): JsObject = {
     element.map { value =>
       Json.obj(key -> value)
     }.getOrElse(Json.obj(reason -> reason))

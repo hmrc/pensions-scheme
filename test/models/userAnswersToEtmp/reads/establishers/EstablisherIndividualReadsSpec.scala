@@ -20,11 +20,11 @@ import models.userAnswersToEtmp.reads.CommonGenerator.establisherIndividualGener
 import models.userAnswersToEtmp.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Shrink
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{JsString, Json}
 
-class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
+class EstablisherIndividualReadsSpec extends FreeSpec with MustMatchers with ScalaCheckDrivenPropertyChecks with OptionValues {
 
   implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 
