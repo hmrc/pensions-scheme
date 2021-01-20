@@ -204,6 +204,8 @@ trait PensionSchemeGenerators {
     "Defined Benefits only",
     "Mixture of money purchase benefits and defined benefits"))
 
+  val moneyPurchaseBenefitsGen: Gen[Option[String]] = Gen.oneOf(Seq("01", "02", "03", "04", "05").map(Some(_)))
+
   val policyNumberGen: Gen[String] = Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
   val otherSchemeStructureGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
 
@@ -234,6 +236,7 @@ trait PensionSchemeGenerators {
     isOccupationalPensionScheme <- boolenGen
     areBenefitsSecuredContractInsuranceCompany <- boolenGen
     doesSchemeProvideBenefits <- schemeProvideBenefitsGen
+    tcmpBenefitsType <- moneyPurchaseBenefitsGen
     schemeEstablishedCountry <- countryCode
     haveInvalidBank <- boolenGen
     insuranceCompanyName <- Gen.option(specialCharStringGen)
@@ -244,9 +247,12 @@ trait PensionSchemeGenerators {
     otherSchemeStructure = None, haveMoreThanTenTrustee,
     currentSchemeMembers, futureSchemeMembers, isReguledSchemeInvestment,
     isOccupationalPensionScheme, areBenefitsSecuredContractInsuranceCompany,
-    doesSchemeProvideBenefits, schemeEstablishedCountry, haveInvalidBank,
+    doesSchemeProvideBenefits, tcmpBenefits(doesSchemeProvideBenefits, tcmpBenefitsType), schemeEstablishedCountry, haveInvalidBank,
     insuranceCompanyName, policyNumber,
     insuranceCompanyAddress, isInsuranceDetailsChanged)
+
+  def tcmpBenefits(doesSchemeProvideBenefits: String, tcmpBenefitsGen: Option[String]): Option[String] =
+    if(doesSchemeProvideBenefits.contains("Defined Benefits only")) None else tcmpBenefitsGen
 
   val schemeDetailsVariationGen: Gen[PensionsScheme]  = for {
     schemeDetails <- CustomerAndSchemeDetailsGen

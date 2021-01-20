@@ -24,9 +24,8 @@ object Benefits extends Enumeration {
   val opt2 = TypeValue("opt2", "Defined Benefits only")
   val opt3 = TypeValue("opt3", "Mixture of money purchase benefits and defined benefits")
 
-  def valueWithName(name: String): String = {
+  def valueWithName(name: String): String =
     super.withName(name).asInstanceOf[TypeValue].value
-  }
 
   def nameWithValue(value: String): String =
     Seq(opt1, opt2, opt3).find(_.value == value).getOrElse(throw new IllegalArgumentException("Unknown value")).name

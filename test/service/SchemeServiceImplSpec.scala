@@ -27,6 +27,7 @@ import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
+import service.SchemeServiceSpec.mock
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -81,6 +82,8 @@ class SchemeServiceImplSpec
 
 object SchemeServiceImplSpec extends SpecBase {
 
+  private val featureToggleService: FeatureToggleService = mock[FeatureToggleService]
+
   trait TestFixture {
     val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
@@ -90,7 +93,8 @@ object SchemeServiceImplSpec extends SpecBase {
       schemeConnector,
       barsConnector,
       auditService,
-      appConfig) {
+      appConfig,
+      featureToggleService) {
       override def registerScheme(psaId: String, json: JsValue)(
         implicit headerCarrier: HeaderCarrier,
         ec: ExecutionContext,

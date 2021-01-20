@@ -35,6 +35,10 @@ sealed trait FeatureToggleName {
 
 object FeatureToggleName {
 
+  case object TCMP extends FeatureToggleName {
+    val asString = "collective-money-purchase"
+  }
+
   case object IntegrationFrameworkGetSchemeDetails extends FeatureToggleName {
     val asString = "integration-framework-get-scheme-details"
   }
@@ -43,11 +47,12 @@ object FeatureToggleName {
     val asString = "integration-framework-list-schemes"
   }
 
-  val toggles = Seq(IntegrationFrameworkGetSchemeDetails, IntegrationFrameworkListSchemes)
+  val toggles = Seq(IntegrationFrameworkGetSchemeDetails, IntegrationFrameworkListSchemes, TCMP)
 
   implicit val reads: Reads[FeatureToggleName] = Reads {
     case JsString(IntegrationFrameworkGetSchemeDetails.asString) => JsSuccess(IntegrationFrameworkGetSchemeDetails)
     case JsString(IntegrationFrameworkListSchemes.asString) => JsSuccess(IntegrationFrameworkListSchemes)
+    case JsString(TCMP.asString) => JsSuccess(TCMP)
     case _ => JsError("Unrecognised feature toggle name")
   }
 
