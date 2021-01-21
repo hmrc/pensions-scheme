@@ -136,7 +136,7 @@ class FakeSchemeConnector extends SchemeConnector {
   def setListOfSchemesResponse(response: Future[HttpResponse]): Unit =
     this.listOfSchemesResponse = response
 
-  override def registerScheme(psaId: String, registerData: JsValue)(
+  override def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(
     implicit
     headerCarrier: HeaderCarrier,
     ec: ExecutionContext,

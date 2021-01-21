@@ -20,7 +20,7 @@ import audit.{AuditService, ListOfSchemesAudit, SchemeList, SchemeSubscription, 
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
-import models.FeatureToggleName.{TCMP, toggles}
+import models.FeatureToggleName.TCMP
 import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
@@ -86,7 +86,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
             error => Future.failed(error),
             bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
               pensionsScheme =>
-                schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
+                schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme), tcmpToggle.isEnabled) andThen {
                   case Success(httpResponse) =>
                     sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
                   case Failure(error: HttpException) =>

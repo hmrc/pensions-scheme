@@ -39,13 +39,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
-  def registerScheme(psaId: String, registerData: JsValue)(implicit
+  def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(implicit
                                                            headerCarrier: HeaderCarrier,
                                                            ec: ExecutionContext,
                                                            request: RequestHeader): Future[HttpResponse]
 
-  def listOfSchemes(psaId: String)(implicit
-                                   headerCarrier: HeaderCarrier,
+  def listOfSchemes(psaId: String)(implicit headerCarrier: HeaderCarrier,
                                    ec: ExecutionContext,
                                    request: RequestHeader): Future[HttpResponse]
 
@@ -101,13 +100,19 @@ class SchemeConnectorImpl @Inject()(
     }.replaceAll("(govuk-tax-|-)", "").slice(0, 32)
   }
 
-  override def registerScheme(psaId: String, registerData: JsValue)(implicit
+  override def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(implicit
                                                                     headerCarrier: HeaderCarrier,
                                                                     ec: ExecutionContext,
                                                                     request: RequestHeader): Future[HttpResponse] = {
 
-    val url = config.schemeRegistrationUrl.format(psaId)
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+    val (url, hc, schemaPath) = if (tcmpToggle)
+    (config.schemeRegistrationIFUrl.format(psaId),
+      HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
+      "/resources/schemas/schemeSubscriptionIF.json")
+    else
+    (config.schemeRegistrationUrl.format(psaId),
+      HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))),
+      "/resources/schemas/schemeSubscription.json")
 
     Logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
@@ -119,9 +124,7 @@ class SchemeConnectorImpl @Inject()(
     ) map { response =>
       response.status match {
         case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-          invalidPayloadHandler.logFailures(
-            "/resources/schemas/schemeSubscription.json", registerData, url
-          )
+          invalidPayloadHandler.logFailures(schemaPath, registerData, url)
         case _ => Unit
       }
       response
