@@ -391,7 +391,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
   class FakeSchemeConnectorStoreJson extends FakeSchemeConnector {
     var lastUpdateSchemeDetailsdata: JsValue = JsNull
 
-    override def updateSchemeDetails(pstr: String, data: JsValue)(
+    override def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)(
       implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
       lastUpdateSchemeDetailsdata = data
       updateSchemeResponse

@@ -21,12 +21,12 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: Option[String],
-                                    otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,
-                                    currentSchemeMembers: String, futureSchemeMembers: String, isReguledSchemeInvestment: Boolean,
-                                    isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
-                                    doesSchemeProvideBenefits: String, tcmpBenefitType: Option[String], schemeEstablishedCountry: String,
-                                    haveInvalidBank: Boolean, insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
-                                    insuranceCompanyAddress: Option[Address] = None, isInsuranceDetailsChanged: Option[Boolean] = None)
+           otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None, currentSchemeMembers: String,
+           futureSchemeMembers: String, isReguledSchemeInvestment: Boolean, isOccupationalPensionScheme: Boolean,
+           areBenefitsSecuredContractInsuranceCompany: Boolean, doesSchemeProvideBenefits: String, tcmpBenefitType: Option[String],
+           schemeEstablishedCountry: String, haveInvalidBank: Boolean, insuranceCompanyName: Option[String] = None,
+           policyNumber: Option[String] = None, insuranceCompanyAddress: Option[Address] = None,
+           isInsuranceDetailsChanged: Option[Boolean] = None, isTcmpChanged: Option[Boolean] = None)
 
 object CustomerAndSchemeDetails {
   implicit val formats: Format[CustomerAndSchemeDetails] = Json.format[CustomerAndSchemeDetails]
@@ -49,10 +49,12 @@ object CustomerAndSchemeDetails {
       (JsPath \ "insuranceCompanyName").readNullable[String] and
       (JsPath \ "insurancePolicyNumber").readNullable[String] and
       (JsPath \ "insurerAddress").readNullable[Address] and
-      (JsPath \ "isInsuranceDetailsChanged").readNullable[Boolean] and benefitsReads(tcmpToggle)
+      (JsPath \ "isInsuranceDetailsChanged").readNullable[Boolean] and
+      (JsPath \ "isTcmpChanged").readNullable[Boolean] and
+      benefitsReads(tcmpToggle)
     ) (
     (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated, occupationalPension, securedBenefits, country,
-     insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged, benefits) => {
+     insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged, isTcmpChanged, benefits) => {
       val (schemeName, otherScheme) = schemeType
       val isMasterTrust = schemeName == "master"
 
@@ -76,7 +78,8 @@ object CustomerAndSchemeDetails {
         insuranceCompanyName = insuranceCompanyName,
         policyNumber = insurancePolicyNumber,
         insuranceCompanyAddress = insurerAddress,
-        isInsuranceDetailsChanged = isInsuranceDetailsChanged)
+        isInsuranceDetailsChanged = isInsuranceDetailsChanged,
+        isTcmpChanged = isTcmpChanged)
     }
   )
 
@@ -115,8 +118,11 @@ object CustomerAndSchemeDetails {
       )(element => element)
   }
 
-  def updateWrites(psaid: String): Writes[CustomerAndSchemeDetails] = (
-    (JsPath \ "psaid").write[String] and
+  def updateWrites(psaid: String, tcmpToggle: Boolean): Writes[CustomerAndSchemeDetails] =
+    if(tcmpToggle) updateWritesTcmpToggleOn(psaid) else updateWritesTcmpToggleOff(psaid)
+
+  def updateWritesTcmpToggleOff(psaid: String): Writes[CustomerAndSchemeDetails] =
+    ((JsPath \ "psaid").write[String] and
       (JsPath \ "schemeName").write[String] and
       (JsPath \ "schemeStatus").write[String] and
       (JsPath \ "isSchemeMasterTrust").write[Boolean] and
@@ -129,7 +135,8 @@ object CustomerAndSchemeDetails {
       (JsPath \ "schemeProvideBenefits").write[String] and
       (JsPath \ "schemeEstablishedCountry").write[String] and
       (JsPath \ "insuranceCompanyDetails").write(insuranceCompanyWrite)
-    ) (scheme => (psaid,
+    ) (scheme => (
+    psaid,
     scheme.schemeName,
     "Open",
     scheme.isSchemeMasterTrust,
@@ -140,6 +147,43 @@ object CustomerAndSchemeDetails {
     scheme.isReguledSchemeInvestment,
     scheme.isOccupationalPensionScheme,
     scheme.doesSchemeProvideBenefits,
+    scheme.schemeEstablishedCountry,
+    (scheme.isInsuranceDetailsChanged.getOrElse(false),
+      scheme.areBenefitsSecuredContractInsuranceCompany,
+      scheme.insuranceCompanyName,
+      scheme.policyNumber,
+      scheme.insuranceCompanyAddress)
+  ))
+
+  def updateWritesTcmpToggleOn(psaid: String): Writes[CustomerAndSchemeDetails] = (
+    (JsPath \ "changeOfschemeDetails").write[Boolean] and
+      (JsPath \ "psaid").write[String] and
+      (JsPath \ "schemeName").write[String] and
+      (JsPath \ "schemeStatus").write[String] and
+      (JsPath \ "isSchemeMasterTrust").write[Boolean] and
+      (JsPath \ "pensionSchemeStructure").writeNullable[String] and
+      (JsPath \ "otherPensionSchemeStructure").writeNullable[String] and
+      (JsPath \ "currentSchemeMembers").write[String] and
+      (JsPath \ "futureSchemeMembers").write[String] and
+      (JsPath \ "isReguledSchemeInvestment").write[Boolean] and
+      (JsPath \ "isOccupationalPensionScheme").write[Boolean] and
+      (JsPath \ "schemeProvideBenefits").write[String] and
+      (JsPath \ "tcmpBenefitType").writeNullable[String] and
+      (JsPath \ "schemeEstablishedCountry").write[String] and
+      (JsPath \ "insuranceCompanyDetails").write(insuranceCompanyWrite)
+    ) (scheme => (scheme.isTcmpChanged.getOrElse(false),
+    psaid,
+    scheme.schemeName,
+    "Open",
+    scheme.isSchemeMasterTrust,
+    scheme.schemeStructure,
+    scheme.otherSchemeStructure,
+    scheme.currentSchemeMembers,
+    scheme.futureSchemeMembers,
+    scheme.isReguledSchemeInvestment,
+    scheme.isOccupationalPensionScheme,
+    scheme.doesSchemeProvideBenefits,
+    scheme.tcmpBenefitType,
     scheme.schemeEstablishedCountry,
     (scheme.isInsuranceDetailsChanged.getOrElse(false),
       scheme.areBenefitsSecuredContractInsuranceCompany,

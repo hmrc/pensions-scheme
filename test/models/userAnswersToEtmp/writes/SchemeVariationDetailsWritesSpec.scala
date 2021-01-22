@@ -28,11 +28,23 @@ class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with O
 
     "map correctly to an update payload for scheme variation details API 1468" when {
 
-      "validate scheme variation details write with schema" in {
+      "validate scheme variation details write with schema with toggle on" in {
 
         forAll(schemeDetailsVariationGen) { pensionsScheme =>
 
-          val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456"))
+          val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456", tcmpToggle = true))
+
+          val result = validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schemaIF.json")
+
+          result.isSuccess mustBe true
+        }
+      }
+
+      "validate scheme variation details write with schema with toggle off" in {
+
+        forAll(schemeDetailsVariationGen) { pensionsScheme =>
+
+          val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456", tcmpToggle = false))
 
           val result = validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schema.json")
 
@@ -46,7 +58,7 @@ class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with O
             val invalidPensionsScheme= pensionsScheme.copy(
               customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(schemeStructure = Some("INVALID")) )
 
-            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(invalidPensionsScheme)(PensionsScheme.updateWrite("A0123456"))
+            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(invalidPensionsScheme)(PensionsScheme.updateWrite("A0123456", tcmpToggle = false))
 
             val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
 

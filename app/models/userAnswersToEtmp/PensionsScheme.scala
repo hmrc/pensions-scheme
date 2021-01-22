@@ -50,8 +50,8 @@ object PensionsScheme {
     PensionsScheme(custAndSchemeDetails, declaration, estDetails, trusteeDetails, changeFlag)
   )
 
-  def updateWrite(psaId: String): Writes[PensionsScheme] = (
-    (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId)) and
+  def updateWrite(psaId: String, tcmpToggle: Boolean): Writes[PensionsScheme] = (
+    (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId, tcmpToggle)) and
       (JsPath \ "pensionSchemeDeclaration").write(Declaration.writes) and
       (JsPath \ "establisherAndTrustDetailsType").write(updateWriteEstablisherAndTrustDetails)
     ) (schemeDetails => (

@@ -140,6 +140,17 @@
             "Mixture of money purchase benefits and defined benefits"
           ]
         },
+        "tcmpBenefitType": {
+          "type": "string",
+          "description": "01 - Collective money purchase benefits, 02- Cash balance benefits, 03 -Other money purchase benefits, 04 - Mixture of Collective money purchase benefits and cash balance and/or other money purchase benefits, 05 - Mixture of Cash balance benefits and other money purchase benefits ",
+          "enum": [
+            "01",
+            "02",
+            "03",
+            "04",
+            "05"
+          ]
+        },
         "schemeEstablishedCountry": {
           "$ref": "#/definitions/schemeCountryCodes"
         },
