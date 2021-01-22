@@ -19,8 +19,7 @@ package service
 import javax.inject.Inject
 import javax.inject.Singleton
 import models.FeatureToggle._
-import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
-import models.FeatureToggleName.IntegrationFrameworkListSchemes
+import models.FeatureToggleName.{IntegrationFrameworkGetSchemeDetails, IntegrationFrameworkListSchemes, TCMP}
 import models._
 import play.api.cache.AsyncCacheApi
 import repositories.AdminDataRepository
@@ -38,10 +37,7 @@ class FeatureToggleService @Inject()(
                                     )(implicit ec: ExecutionContext) {
   private val cacheValidFor: FiniteDuration = Duration(2, Seconds)
 
-  private val defaults: Seq[FeatureToggle] = Seq(
-    Disabled(IntegrationFrameworkGetSchemeDetails),
-    Disabled(IntegrationFrameworkListSchemes)
-  )
+  private val defaults: Seq[FeatureToggle] = FeatureToggleName.toggles.map(Disabled(_))
 
   private def addDefaults(fromDb: Seq[FeatureToggle]): Seq[FeatureToggle] = {
     val toAdd = defaults.filterNot(d => fromDb.exists(fdb => fdb.name == d.name))

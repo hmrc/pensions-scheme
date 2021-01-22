@@ -74,7 +74,104 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     )
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
 
-  "SchemeConnector registerScheme" should "handle OK (200)" in {
+  "SchemeConnector registerScheme with tcmp toggle on" should "handle OK (200)" in {
+    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .withHeader("Content-Type", equalTo("application/json"))
+        .withRequestBody(equalToJson(Json.stringify(registerSchemeData)))
+        .willReturn(
+          ok(Json.stringify(successResponse))
+            .withHeader("Content-Type", "application/json")
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe OK
+    }
+  }
+
+  it should "handle FORBIDDEN (403) - INVALID_BUSINESS_PARTNER" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          forbidden
+            .withHeader("Content-Type", "application/json")
+            .withBody(invalidBusinessPartnerResponse)
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe FORBIDDEN
+    }
+  }
+
+  it should "handle CONFLICT (409) - DUPLICATE_SUBMISSION" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(CONFLICT)
+            .withHeader("Content-Type", "application/json")
+            .withBody(duplicateSubmissionResponse)
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe CONFLICT
+    }
+  }
+
+  it should "handle BAD_REQUEST (400)" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody("Bad Request")
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe BAD_REQUEST
+    }
+  }
+
+  it should "throw NotFoundException for NOT_FOUND (404) response" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          notFound
+            .withHeader("Content-Type", "application/json")
+            .withBody("Not Found")
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe NOT_FOUND
+    }
+  }
+
+  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody("INVALID_PAYLOAD")
+        )
+    )
+
+    logger.reset()
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+        response.status shouldBe BAD_REQUEST
+        logger.getLogEntries.size shouldBe 1
+        logger.getLogEntries.head.level shouldBe Level.WARN
+      }
+  }
+
+  "SchemeConnector registerScheme with tcmp toggle off" should "handle OK (200)" in {
     val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
     server.stubFor(
       post(urlEqualTo(schemeUrl))
@@ -86,7 +183,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe OK
     }
   }
@@ -101,7 +198,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe FORBIDDEN
     }
   }
@@ -117,7 +214,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe CONFLICT
     }
   }
@@ -132,7 +229,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -147,7 +244,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe NOT_FOUND
     }
   }
@@ -164,11 +261,11 @@ class SchemeConnectorSpec extends AsyncFlatSpec
 
     logger.reset()
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
-        response.status shouldBe BAD_REQUEST
-        logger.getLogEntries.size shouldBe 1
-        logger.getLogEntries.head.level shouldBe Level.WARN
-      }
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
+      response.status shouldBe BAD_REQUEST
+      logger.getLogEntries.size shouldBe 1
+      logger.getLogEntries.head.level shouldBe Level.WARN
+    }
   }
 
   "SchemeConnector listOfSchemes" should "return OK with the list of schemes response" in {
@@ -520,6 +617,7 @@ object SchemeConnectorSpec extends JsonFileReader {
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
   private val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
   val schemeUrl = s"/pension-online/scheme-subscription/$idValue"
+  val schemeIFUrl = s"/pension-online/scheme-subscription/pods/$idValue"
   val listOfSchemeUrl: String = s"/pension-online/subscription/$idValue/list"
   val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$idNumber"
   val updateSchemeUrl = s"/pension-online/scheme-variation/pstr/$pstr"

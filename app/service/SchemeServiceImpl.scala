@@ -20,25 +20,27 @@ import audit.{AuditService, ListOfSchemesAudit, SchemeList, SchemeSubscription, 
 import com.google.inject.Inject
 import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
+import models.FeatureToggleName.TCMP
 import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
 import models.userAnswersToEtmp.{BankAccount, PensionsScheme}
 import play.api.Logger
 import play.api.http.Status
+import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
+import utils.validationUtils._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-import utils.validationUtils._
-import play.api.http.Status._
 
 class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
                                   barsConnector: BarsConnector,
                                   auditService: AuditService,
-                                  appConfig: AppConfig) extends SchemeService {
+                                  appConfig: AppConfig,
+                                  featureToggleService: FeatureToggleService) extends SchemeService {
 
   override def listOfSchemes(psaId: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
@@ -71,50 +73,53 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
 
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-
-    json.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
-      invalid = {
-        errors =>
-          val ex = JsResultException(errors)
-          Logger.warn("Invalid pension scheme", ex)
-          Future.failed(new BadRequestException("Invalid pension scheme"))
-      },
-      valid = { validPensionsScheme =>
-        readBankAccount(json).fold(
-          error => Future.failed(error),
-          bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
-            pensionsScheme =>
-              schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme)) andThen {
-                case Success(httpResponse) =>
-                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
-                case Failure(error: HttpException) =>
-                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
-              }
-          }
-        )
-      }
-    )
+    featureToggleService.get(TCMP).flatMap { tcmpToggle =>
+      json.validate[PensionsScheme](PensionsScheme.registerApiReads(tcmpToggle.isEnabled)).fold(
+        invalid = {
+          errors =>
+            val ex = JsResultException(errors)
+            Logger.warn("Invalid pension scheme", ex)
+            Future.failed(new BadRequestException("Invalid pension scheme"))
+        },
+        valid = { validPensionsScheme =>
+          readBankAccount(json).fold(
+            error => Future.failed(error),
+            bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
+              pensionsScheme =>
+                schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme), tcmpToggle.isEnabled) andThen {
+                  case Success(httpResponse) =>
+                    sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
+                  case Failure(error: HttpException) =>
+                    sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
+                }
+            }
+          )
+        }
+      )
+    }
   }
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
                                                          ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-    json.validate[PensionsScheme](PensionsScheme.updateApiReads).fold(
-      invalid = {
-        errors =>
-          val ex = JsResultException(errors)
-          Logger.warn("Invalid pension scheme", ex)
-          Future.failed(new BadRequestException("Invalid pension scheme"))
-      },
-      valid = { validPensionsScheme =>
-        val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
-        Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
-        schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
-          case Success(httpResponse) =>
-            sendSchemeUpdateEvent(psaId, validPensionsScheme, httpResponse.status, Some(httpResponse.json))
-          case Failure(error: HttpException) =>
-            sendSchemeUpdateEvent(psaId, validPensionsScheme, error.responseCode, None)
-        }
-      })
+    featureToggleService.get(TCMP).flatMap { tcmpToggle =>
+      json.validate[PensionsScheme](PensionsScheme.updateApiReads(tcmpToggle.isEnabled)).fold(
+        invalid = {
+          errors =>
+            val ex = JsResultException(errors)
+            Logger.warn("Invalid pension scheme", ex)
+            Future.failed(new BadRequestException("Invalid pension scheme"))
+        },
+        valid = { validPensionsScheme =>
+          val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
+          Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
+          schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
+            case Success(httpResponse) =>
+              sendSchemeUpdateEvent(psaId, validPensionsScheme, httpResponse.status, Some(httpResponse.json))
+            case Failure(error: HttpException) =>
+              sendSchemeUpdateEvent(psaId, validPensionsScheme, error.responseCode, None)
+          }
+        })
+    }
   }
 
   private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {

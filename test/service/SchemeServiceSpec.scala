@@ -19,97 +19,108 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
+import models.FeatureToggle.Disabled
+import models.FeatureToggleName.{IntegrationFrameworkGetSchemeDetails, TCMP}
 import models.enumeration.SchemeType
-import models.userAnswersToEtmp.reads.CommonGenerator.{establisherIndividualGenerator, establisherCompanyGenerator, establisherPartnershipGenerator}
+import models.userAnswersToEtmp.reads.CommonGenerator.{establisherCompanyGenerator, establisherIndividualGenerator, establisherPartnershipGenerator}
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
 import models.userAnswersToEtmp.trustee.TrusteeDetails
+import org.mockito.Mockito.when
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.{AsyncFlatSpec, Matchers}
+import org.scalatest.{AsyncFlatSpec, BeforeAndAfterEach, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status
 import play.api.libs.json.{__, _}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
-import utils.Lens
+import utils.{Lens, WireMockHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrivenPropertyChecks {
+class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyChecks with BeforeAndAfterEach {
 
   import FakeSchemeConnector._
   import SchemeServiceSpec._
 
-  "haveInvalidBank" should "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
+  override def beforeEach(): Unit = {
+    org.mockito.Mockito.reset(featureToggleService)
+
+    when(featureToggleService.get(org.mockito.Matchers.any())).thenReturn(Future.successful(Disabled(TCMP)))
+    super.beforeEach()
+  }
+
+  "haveInvalidBank" must "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
 
     val account = bankAccount(invalidAccountNumber)
 
     testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
       scheme =>
-        scheme.customerAndSchemeDetails.haveInvalidBank shouldBe true
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe true
     }
 
   }
 
-  it should "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
+  it must "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
 
     val account = bankAccount(notInvalidAccountNumber)
 
     testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
       scheme =>
-        scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
     }
 
   }
 
-  it should "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
+  it must "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
 
     testFixture().schemeService.haveInvalidBank(None, pensionsScheme, psaId).map {
       scheme =>
-        scheme.customerAndSchemeDetails.haveInvalidBank shouldBe false
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
     }
 
   }
 
-  "readBankAccount" should "return a bank account where it exists in json" in {
+  "readBankAccount" must "return a bank account where it exists in json" in {
 
     val json = bankDetailsJson(notInvalidAccountNumber)
 
     val actual = testFixture().schemeService.readBankAccount(json)
-    actual shouldBe Right(Some(bankAccount(notInvalidAccountNumber)))
+    actual mustBe Right(Some(bankAccount(notInvalidAccountNumber)))
 
   }
 
-  it should "return None where no account exists in json" in {
+  it must "return None where no account exists in json" in {
 
     val actual = testFixture().schemeService.readBankAccount(Json.obj())
-    actual shouldBe Right(None)
+    actual mustBe Right(None)
 
   }
 
-  it should "return bad request exception where uKBankDetails present but account invalid" in {
+  it must "return bad request exception where uKBankDetails present but account invalid" in {
     val actual = testFixture().schemeService.readBankAccount(Json.obj("uKBankDetails" -> "invalid"))
-    actual.isLeft shouldBe true
-    actual.left.toOption.map(_.message).getOrElse("") shouldBe "Invalid bank account details"
+    actual.isLeft mustBe true
+    actual.left.toOption.map(_.message).getOrElse("") mustBe "Invalid bank account details"
   }
 
-  "registerScheme" should "return the result of submitting the pensions scheme" in {
+  "registerScheme" must "return the result of submitting the pensions scheme" in {
 
     testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       response =>
-        response.status shouldBe Status.OK
+        response.status mustBe Status.OK
         val json = Json.parse(response.body)
 
         json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
 
-        json.validate[SchemeRegistrationResponse] shouldBe JsSuccess(schemeRegistrationResponse)
+        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
 
 
     }
 
   }
 
-  it should "send a SchemeSubscription audit event following a successful submission" in {
+  it must "send a SchemeSubscription audit event following a successful submission" in {
     val fixture = testFixture()
     fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       httpResponse =>
@@ -119,11 +130,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
           request = expectedJsonForAudit,
           response = Some(httpResponse.json)
         )
-        fixture.auditService.lastEvent shouldBe Some(expected)
+        fixture.auditService.lastEvent mustBe Some(expected)
     }
   }
 
-  it should "not send a SchemeSubscription audit event following an unsuccessful submission" in {
+  it must "not send a SchemeSubscription audit event following an unsuccessful submission" in {
 
     val fixture = testFixture()
 
@@ -140,12 +151,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
             response = None
           )
 
-          fixture.auditService.lastEvent shouldBe Some(expected)
+          fixture.auditService.lastEvent mustBe Some(expected)
       }
 
   }
 
-  "translateSchemeSubscriptionEvent" should "translate a master trust scheme" in {
+  "translateSchemeSubscriptionEvent" must "translate a master trust scheme" in {
 
     val scheme = PensionsSchemeIsSchemeMasterTrust.set(pensionsScheme, true)
 
@@ -156,11 +167,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
       request = Json.toJson(scheme)
     )
 
-    actual shouldBe expected
+    actual mustBe expected
 
   }
 
-  it should "translate a single trust scheme" in {
+  it must "translate a single trust scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.single.value))
 
@@ -170,11 +181,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
       request = Json.toJson(scheme)
     )
 
-    actual shouldBe expected
+    actual mustBe expected
 
   }
 
-  it should "translate a group Life/Death scheme" in {
+  it must "translate a group Life/Death scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.group.value))
 
@@ -185,11 +196,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
       request = Json.toJson(scheme)
     )
 
-    actual shouldBe expected
+    actual mustBe expected
 
   }
 
-  it should "translate a body corporate scheme" in {
+  it must "translate a body corporate scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.corp.value))
 
@@ -200,11 +211,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
       request = Json.toJson(scheme)
     )
 
-    actual shouldBe expected
+    actual mustBe expected
 
   }
 
-  it should "translate an 'other' scheme" in {
+  it must "translate an 'other' scheme" in {
 
     val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.other.value))
 
@@ -215,11 +226,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
       request = Json.toJson(scheme)
     )
 
-    actual shouldBe expected
+    actual mustBe expected
 
   }
 
-  it should "translate a scheme with individual establishers" in {
+  it must "translate a scheme with individual establishers" in {
 
     forAll(establisherIndividualGenerator()) {
       json =>
@@ -242,12 +253,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
           request = Json.toJson(scheme)
         )
 
-        actual shouldBe expected
+        actual mustBe expected
 
     }
   }
 
-  it should "translate a scheme with company establishers" in {
+  it must "translate a scheme with company establishers" in {
     forAll(establisherCompanyGenerator()) {
       json =>
         val estCom = json.as[CompanyEstablisher](CompanyEstablisher.readsEstablisherCompany)
@@ -269,12 +280,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
           request = Json.toJson(scheme)
         )
 
-        actual shouldBe expected
+        actual mustBe expected
 
     }
   }
 
-  it should "translate a scheme with partnership establishers" in {
+  it must "translate a scheme with partnership establishers" in {
     forAll(establisherPartnershipGenerator()) {
       json =>
         val estPart = json.as[Partnership](Partnership.readsEstablisherPartnership)
@@ -296,11 +307,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
           request = Json.toJson(scheme)
         )
 
-        actual shouldBe expected
+        actual mustBe expected
     }
   }
 
-  it should "translate a scheme with dormant company, bank details, and invalid bank details" in {
+  it must "translate a scheme with dormant company, bank details, and invalid bank details" in {
 
     val declaration = pensionsScheme.pensionSchemeDeclaration.asInstanceOf[PensionSchemeDeclaration]
 
@@ -319,23 +330,23 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
       request = Json.toJson(scheme)
     )
 
-    actual shouldBe expected
+    actual mustBe expected
 
   }
 
-  "updateScheme" should "return the result of submitting the pensions scheme and have the right declaration type" in {
+  "updateScheme" must "return the result of submitting the pensions scheme and have the right declaration type" in {
     val f = new UpdateTestFixture() {}
 
     f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
       response =>
-        response.status shouldBe Status.OK
+        response.status mustBe Status.OK
         val declaration1Value = f.schemeConnector.lastUpdateSchemeDetailsdata
           .transform((__ \ "pensionSchemeDeclaration" \ "declaration1").json.pick)
-        declaration1Value.asOpt shouldBe Some(JsBoolean(false))
+        declaration1Value.asOpt mustBe Some(JsBoolean(false))
     }
   }
 
-  it should "send a SchemeUpdate audit event following a successful submission" in {
+  it must "send a SchemeUpdate audit event following a successful submission" in {
     val f = new UpdateTestFixture() {}
 
     f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(Status.OK, testResponse.toString())))
@@ -347,11 +358,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
             request = schemeUpdateRequestJson,
             response = Some(testResponse))
 
-        f.auditService.lastEvent shouldBe Some(expectedAuditEvent)
+        f.auditService.lastEvent mustBe Some(expectedAuditEvent)
     }
   }
 
-  it should "send a SchemeUpdate audit event following an unsuccessful submission" in {
+  it must "send a SchemeUpdate audit event following an unsuccessful submission" in {
     val f = new UpdateTestFixture() {}
 
     f.schemeConnector.setUpdateSchemeResponse(Future.failed(new BadRequestException("bad request")))
@@ -366,16 +377,17 @@ class SchemeServiceSpec extends AsyncFlatSpec with Matchers with ScalaCheckDrive
               request = schemeUpdateRequestJson,
               response = None
             )
-          f.auditService.lastEvent shouldBe Some(expectedAuditEvent)
+          f.auditService.lastEvent mustBe Some(expectedAuditEvent)
       }
   }
 }
 
-object SchemeServiceSpec extends SpecBase {
+object SchemeServiceSpec extends SpecBase with MockitoSugar {
   private val testResponse = Json.obj(
     "testDesResponse" -> "a response"
   )
 
+  private val featureToggleService: FeatureToggleService = mock[FeatureToggleService]
   class FakeSchemeConnectorStoreJson extends FakeSchemeConnector {
     var lastUpdateSchemeDetailsdata: JsValue = JsNull
 
@@ -391,7 +403,7 @@ object SchemeServiceSpec extends SpecBase {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig)
+      schemeConnector, barsConnector, auditService, appConfig, featureToggleService)
   }
 
   trait TestFixture {
@@ -399,7 +411,7 @@ object SchemeServiceSpec extends SpecBase {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig)
+      schemeConnector, barsConnector, auditService, appConfig, featureToggleService)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
@@ -441,6 +453,7 @@ object SchemeServiceSpec extends SpecBase {
       isOccupationalPensionScheme = false,
       areBenefitsSecuredContractInsuranceCompany = false,
       doesSchemeProvideBenefits = "test-does-scheme-provide-benefits",
+      tcmpBenefitType = Some("01"),
       schemeEstablishedCountry = "test-scheme-established-country",
       haveInvalidBank = false
     ),
@@ -464,7 +477,7 @@ object SchemeServiceSpec extends SpecBase {
     )
   )
 
-  val expectedJsonForAudit = Json.parse("""{
+  val expectedJsonForAudit: JsValue = Json.parse("""{
    "customerAndSchemeDetails":{
       "schemeName":"test-scheme-name",
       "isSchemeMasterTrust":false,
@@ -571,9 +584,9 @@ object SchemeServiceSpec extends SpecBase {
     )
   )
 
-  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl): JsValue = {
+  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl, tcmpToggle: Boolean = false): JsValue = {
 
-    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
+    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.registerApiReads(tcmpToggle)).fold(
       throw new BadRequestException(""),
       scheme => Json.toJson(scheme)
     )

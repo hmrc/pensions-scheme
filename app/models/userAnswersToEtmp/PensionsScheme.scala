@@ -30,8 +30,8 @@ object PensionsScheme {
 
   implicit val formatsPensionsScheme: Format[PensionsScheme] = Json.format[PensionsScheme]
 
-  val registerApiReads: Reads[PensionsScheme] = (
-    CustomerAndSchemeDetails.apiReads and
+  def registerApiReads(tcmpToggle: Boolean): Reads[PensionsScheme] = (
+    CustomerAndSchemeDetails.apiReads(tcmpToggle) and
       PensionSchemeDeclaration.apiReads and
       EstablisherDetails.readsEstablisherDetails and
       TrusteeDetails.readsTrusteeDetails and
@@ -40,8 +40,8 @@ object PensionsScheme {
     PensionsScheme(custAndSchemeDetails, declaration, estDetails, trusteeDetails, changeFlag)
   )
 
-  val updateApiReads: Reads[PensionsScheme] = (
-    CustomerAndSchemeDetails.apiReads and
+  def updateApiReads(tcmpToggle: Boolean): Reads[PensionsScheme] = (
+    CustomerAndSchemeDetails.apiReads(tcmpToggle) and
       PensionSchemeUpdateDeclaration.reads and
       EstablisherDetails.readsEstablisherDetails and
       TrusteeDetails.readsTrusteeDetails and

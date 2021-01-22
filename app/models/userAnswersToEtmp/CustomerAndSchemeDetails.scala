@@ -24,8 +24,8 @@ case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boo
                                     otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None,
                                     currentSchemeMembers: String, futureSchemeMembers: String, isReguledSchemeInvestment: Boolean,
                                     isOccupationalPensionScheme: Boolean, areBenefitsSecuredContractInsuranceCompany: Boolean,
-                                    doesSchemeProvideBenefits: String, schemeEstablishedCountry: String, haveInvalidBank: Boolean,
-                                    insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
+                                    doesSchemeProvideBenefits: String, tcmpBenefitType: Option[String], schemeEstablishedCountry: String,
+                                    haveInvalidBank: Boolean, insuranceCompanyName: Option[String] = None, policyNumber: Option[String] = None,
                                     insuranceCompanyAddress: Option[Address] = None, isInsuranceDetailsChanged: Option[Boolean] = None)
 
 object CustomerAndSchemeDetails {
@@ -36,7 +36,7 @@ object CustomerAndSchemeDetails {
       (JsPath \ "schemeTypeDetails").readNullable[String]
     ) ((name, schemeDetails) => (name, schemeDetails))
 
-  val apiReads: Reads[CustomerAndSchemeDetails] = (
+  def apiReads(tcmpToggle: Boolean): Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeName").read[String] and
       (JsPath \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
@@ -45,15 +45,14 @@ object CustomerAndSchemeDetails {
       (JsPath \ "investmentRegulated").read[Boolean] and
       (JsPath \ "occupationalPensionScheme").read[Boolean] and
       (JsPath \ "securedBenefits").read[Boolean] and
-      (JsPath \ "benefits").read[String] and
       (JsPath \ "schemeEstablishedCountry").read[String] and
       (JsPath \ "insuranceCompanyName").readNullable[String] and
       (JsPath \ "insurancePolicyNumber").readNullable[String] and
       (JsPath \ "insurerAddress").readNullable[Address] and
-      (JsPath \ "isInsuranceDetailsChanged").readNullable[Boolean]
+      (JsPath \ "isInsuranceDetailsChanged").readNullable[Boolean] and benefitsReads(tcmpToggle)
     ) (
-    (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated,
-     occupationalPension, securedBenefits, benefits, country, insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged) => {
+    (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated, occupationalPension, securedBenefits, country,
+     insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged, benefits) => {
       val (schemeName, otherScheme) = schemeType
       val isMasterTrust = schemeName == "master"
 
@@ -70,7 +69,8 @@ object CustomerAndSchemeDetails {
         isReguledSchemeInvestment = investmentRegulated,
         isOccupationalPensionScheme = occupationalPension,
         areBenefitsSecuredContractInsuranceCompany = securedBenefits,
-        doesSchemeProvideBenefits = Benefits.valueWithName(benefits),
+        doesSchemeProvideBenefits = benefits._1,
+        tcmpBenefitType = benefits._2,
         schemeEstablishedCountry = country,
         haveInvalidBank = false,
         insuranceCompanyName = insuranceCompanyName,
@@ -79,6 +79,32 @@ object CustomerAndSchemeDetails {
         isInsuranceDetailsChanged = isInsuranceDetailsChanged)
     }
   )
+
+  private def benefitsReads(tcmpToggle: Boolean): Reads[(String, Option[String])] =
+    (JsPath \ "benefits").read[String] flatMap {
+      case benefits if !benefits.equalsIgnoreCase("opt2") && tcmpToggle =>
+        moneyPurchaseBenefits(benefits)
+      case _ =>
+        (JsPath \ "benefits").read[String].map(benefits =>
+          (Benefits.valueWithName(benefits), None: Option[String]))
+    }
+
+  private def moneyPurchaseBenefits(benefits: String): Reads[(String, Option[String])] =
+    (JsPath \ "moneyPurchaseBenefits").read[Seq[String]].map { seqMoneyPurchaseBenefits =>
+      val opt1: Boolean = seqMoneyPurchaseBenefits.contains("opt1")
+      val opt2: Boolean = seqMoneyPurchaseBenefits.contains("opt2")
+      val opt3: Boolean = seqMoneyPurchaseBenefits.contains("opt3")
+
+      (opt1, opt2, opt3) match {
+        case (true, false, false) => (Benefits.valueWithName(benefits), Some("01"))
+        case (false, true, false) => (Benefits.valueWithName(benefits), Some("02"))
+        case (false, false, true) => (Benefits.valueWithName(benefits), Some("03"))
+        case (false, true, true) => (Benefits.valueWithName(benefits), Some("05"))
+        case (true, false, true) | (true, true, false) | (true, true, true) => (Benefits.valueWithName(benefits), Some("04"))
+        case _ => (Benefits.valueWithName(benefits), None)
+      }
+    }
+
 
   private val insuranceCompanyWrite: Writes[(Boolean, Boolean, Option[String], Option[String], Option[Address])] ={
     ((JsPath \ "isInsuranceDetailsChanged").write[Boolean] and

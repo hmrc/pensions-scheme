@@ -30,6 +30,7 @@ class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Envi
   lazy val appName: String = underlying.getString("appName")
 
   lazy val schemeRegistrationUrl: String = s"$baseURL${underlying.getString("serviceUrls.scheme.register")}"
+  lazy val schemeRegistrationIFUrl: String = s"$baseURL${underlying.getString("serviceUrls.if.scheme.register")}"
   lazy val listOfSchemesUrl: String = s"$baseURL${underlying.getString("serviceUrls.list.of.schemes")}"
   lazy val listOfSchemesIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.list.of.schemes")}"
   lazy val schemeDetailsUrl: String = s"$baseURL${underlying.getString("serviceUrls.scheme.details")}"

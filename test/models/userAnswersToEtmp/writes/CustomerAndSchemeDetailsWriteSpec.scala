@@ -58,6 +58,7 @@ class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with 
           isOccupationalPensionScheme = false,
           areBenefitsSecuredContractInsuranceCompany = false,
           doesSchemeProvideBenefits = Benefits.opt1.value,
+          tcmpBenefitType = None,
           schemeEstablishedCountry = "INVALID",
           haveInvalidBank = false
         )
