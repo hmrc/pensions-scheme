@@ -32,9 +32,8 @@ import scala.util.{Failure, Success}
 @ImplementedBy(classOf[AuditServiceImpl])
 trait AuditService {
 
-  def sendEvent[T <: AuditEvent](event: T)(implicit
-                                           rh: RequestHeader,
-                                           ec: ExecutionContext): Unit
+  def sendEvent[T <: AuditEvent](event: T)
+                                (implicit rh: RequestHeader, ec: ExecutionContext): Unit
 
 }
 
@@ -46,9 +45,8 @@ class AuditServiceImpl @Inject()(
   private implicit def toHc(request: RequestHeader): AuditHeaderCarrier =
     auditHeaderCarrier(HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session)))
 
-  def sendEvent[T <: AuditEvent](event: T)(implicit
-                                           rh: RequestHeader,
-                                           ec: ExecutionContext): Unit = {
+  def sendEvent[T <: AuditEvent](event: T)
+                                (implicit rh: RequestHeader, ec: ExecutionContext): Unit = {
 
     val details = rh.toAuditDetails() ++ event.details
 

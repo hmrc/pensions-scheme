@@ -16,13 +16,12 @@
 
 package repositories
 
+import org.scalatest.AsyncWordSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import reactivemongo.api.indexes.Index
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-trait MongoUnitSpec extends UnitSpec {
+trait MongoUnitSpec extends AsyncWordSpec {
 
   protected implicit val ordering: Ordering[Index] = Ordering.by { i: Index => i.name }
 

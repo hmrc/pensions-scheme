@@ -23,6 +23,7 @@ import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
 import org.mockito.Matchers
 import org.mockito.Mockito.when
+import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
 import org.scalatest._
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.LoggerLike
@@ -38,13 +39,14 @@ import utils.WireMockHelper
 
 import scala.concurrent.Future
 
-class SchemeIFConnectorSpec extends AsyncFlatSpec
-  with WireMockHelper
-  with OptionValues
-  with MockitoSugar
-  with RecoverMethods
-  with EitherValues
-  with ConnectorBehaviours with JsonFileReader{
+class SchemeIFConnectorSpec
+  extends AsyncFlatSpec
+    with WireMockHelper
+    with OptionValues
+    with MockitoSugar
+    with RecoverMethods
+    with EitherValues
+    with JsonFileReader {
 
   import SchemeConnectorSpec._
 
@@ -52,25 +54,30 @@ class SchemeIFConnectorSpec extends AsyncFlatSpec
   private implicit val rh: RequestHeader = FakeRequest("", "")
 
   private val mockFeatureToggleService = mock[FeatureToggleService]
+
   override def beforeEach(): Unit = {
     auditService.reset()
     when(mockFeatureToggleService.get(Matchers.any())).thenReturn(Future.successful(Enabled(IntegrationFrameworkGetSchemeDetails)))
 
     super.beforeEach()
   }
+
   override protected def portConfigKey: String = "microservice.services.if-hod.port"
+
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
       bind[LoggerLike].toInstance(logger),
       bind[FeatureToggleService].toInstance(mockFeatureToggleService)
     )
+
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
 
   private val psaType = "PSA"
   private val pspType = "PSP"
   private val pspId = "psp-id"
   private val validListOfSchemeIFResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
+
   def listOfSchemesIFUrl(idType: String = psaType): String =
     s"/pension-online/subscriptions/schemes/list/pods/$idType/$idValue"
 

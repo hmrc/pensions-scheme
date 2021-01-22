@@ -25,14 +25,14 @@ import play.api.http.Status._
 import play.api.libs.json.JsSuccess
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[BarsConnectorImpl])
 trait BarsConnector {
-  def invalidBankAccount(bankAccount: BankAccount, psaId: String)(implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean]
+  def invalidBankAccount(bankAccount: BankAccount, psaId: String)
+                        (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean]
 }
 
 @Singleton

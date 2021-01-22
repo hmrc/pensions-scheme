@@ -32,7 +32,7 @@ import play.api.mvc.RequestHeader
 import service.FeatureToggleService
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 import utils.InvalidPayloadHandler
 
 import scala.concurrent.{ExecutionContext, Future}
