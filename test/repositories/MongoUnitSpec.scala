@@ -16,14 +16,19 @@
 
 package repositories
 
-import org.scalatest.AsyncWordSpec
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import reactivemongo.api.indexes.Index
 import reactivemongo.play.json.collection.JSONCollection
 
-trait MongoUnitSpec extends AsyncWordSpec {
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.{Await, Future}
 
+trait MongoUnitSpec {
+
+  implicit val defaultTimeout: FiniteDuration = 5 seconds
   protected implicit val ordering: Ordering[Index] = Ordering.by { i: Index => i.name }
+  def await[A](future: Future[A])(implicit timeout: Duration): A = Await.result(future, timeout)
 
   protected def collection: JSONCollection
 

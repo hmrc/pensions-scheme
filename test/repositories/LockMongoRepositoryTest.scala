@@ -20,28 +20,25 @@ import config.AppConfig
 import models._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.Eventually
-//import org.scalatest.concurrent.ScalaFutures._
+import org.scalatest.concurrent.ScalaFutures._
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers}
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import reactivemongo.api.commands.WriteResult
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers, WordSpec}
 import reactivemongo.api.{DB, ReadConcern}
-//import reactivemongo.api.indexes.Index
-//import reactivemongo.api.indexes.IndexType.Ascending
-//import reactivemongo.bson.BSONDocument
+import reactivemongo.api.indexes.Index
+import reactivemongo.api.indexes.IndexType.Ascending
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class LockMongoRepositoryTest
-  extends MongoUnitSpec
-    with BeforeAndAfterAll
-    with BeforeAndAfterEach
-    with MongoSpecSupport
-    with Eventually
-    with MockitoSugar
-    with MustMatchers {
+class LockMongoRepositoryTest extends WordSpec with MongoUnitSpec
+  with BeforeAndAfterAll
+  with BeforeAndAfterEach
+  with MongoSpecSupport
+  with Eventually
+  with MockitoSugar
+  with MustMatchers {
   self =>
 
   private val provider: MongoDbProvider = new MongoDbProvider {
@@ -57,8 +54,8 @@ class LockMongoRepositoryTest
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-//    await(repository.drop)
-//    await(repository.ensureIndexes)
+    await(repository.drop)
+    await(repository.ensureIndexes)
   }
 
   override def afterAll(): Unit = {
@@ -77,182 +74,178 @@ class LockMongoRepositoryTest
     }
   }
 
-//  "releaseLockByPSA by psaId" must {
-//    "Delete One" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      await(repository.releaseLockByPSA("psa1"))
-//
-//      thenTheDocumentCountShouldBeOne
-//    }
-//  }
-//
-//  "releaseLockBySRN by srn" must {
-//    "Delete One" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      await(repository.releaseLockBySRN("srn2"))
-//
-//      thenTheDocumentCountShouldBeOne
-//    }
-//  }
-//
-//  "getExistingLockByPSA" must {
-//    "Retrieve None" in {
-//      await(repository.getExistingLockByPSA("some id")) mustBe None
-//    }
-//
-//    "Retrieve One" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      await(repository.getExistingLockByPSA("psa1")) mustBe Some(SchemeVariance("psa1", "srn1"))
-//    }
-//  }
-//
-//  "getExistingLockBySRN" must {
-//    "Retrieve None" in {
-//      await(repository.getExistingLockBySRN("some id")) mustBe None
-//    }
-//
-//    "Retrieve One" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      await(repository.getExistingLockBySRN("srn2")) mustBe Some(SchemeVariance("psa2", "srn2"))
-//    }
-//  }
-//
-//  "list" must {
-//    "Retrieve None" in {
-//      await(repository.list) mustBe List()
-//    }
-//
-//    "Retrieve all" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      await(repository.list) mustBe Seq(SchemeVariance("psa1", "srn1"), SchemeVariance("psa2", "srn2"))
-//    }
-//  }
-//
-//  "replaceLock" must {
-//    "return true for existing lock" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      await(repository.replaceLock(SchemeVariance("psa2", "srn2"))) mustBe true
-//    }
-//
-//    "return true and new lock if its not exist lock" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      await(repository.replaceLock(SchemeVariance("psa3", "srn3"))) mustBe true
-//    }
-//
-//    "throw exception if failed to find the lock which doesn't allow" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//
-//      val result = repository.replaceLock(SchemeVariance("psa2", "srn1"))
-//
-//      whenReady(result.failed) { e =>
-//        e mustBe a[Exception]
-//        e.getMessage mustBe "Expected SchemeVariance to be locked, but no lock was found with psaId: psa2 and srn: srn1"
-//      }
-//    }
-//  }
-//
-//  "lock" must {
-//
-//    "return locked if its new and unique combination for psaId and srn" in {
-//      await(repository.lock(SchemeVariance("psa1", "srn1"))) mustBe VarianceLock
-//    }
-//
-//    "return locked if exiting lock" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      await(repository.lock(SchemeVariance("psa1", "srn1"))) mustBe VarianceLock
-//    }
-//
-//    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      await(repository.lock(SchemeVariance("psa1", "srn2"))) mustBe PsaLock
-//    }
-//
-//    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      await(repository.lock(SchemeVariance("psa2", "srn1"))) mustBe SchemeLock
-//    }
-//
-//    "return both locked if its not unique combination for existing psaId2 and srn1" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//      await(repository.lock(SchemeVariance("psa2", "srn1"))) mustBe BothLock
-//    }
-//
-//    "return both locked if its not unique combination for existing psaId1 and srn2" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//      await(repository.lock(SchemeVariance("psa1", "srn2"))) mustBe BothLock
-//    }
-//
-//    "create ttl on expireAt field" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      val index = getIndex("dataExpiry").get
-//      val expected = Index(key = Seq("expireAt" -> Ascending),
-//        name = Some("dataExpiry"),
-//        options = BSONDocument("expireAfterSeconds" -> 0)).copy(version = index.version)
-//
-//      index mustBe expected
-//    }
-//  }
-//
-//  "isLockByPsaIdOrSchemeId" must {
-//
-//    "return locked if its new and unique combination for psaId and srn" in {
-//      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) mustBe None
-//    }
-//
-//    "return locked if exiting lock" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) mustBe Some(VarianceLock)
-//    }
-//
-//    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) mustBe Some(PsaLock)
-//    }
-//
-//    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) mustBe Some(SchemeLock)
-//    }
-//
-//    "return both locked if its not unique combination for existing psaId2 and srn1" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//      await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) mustBe Some(BothLock)
-//    }
-//
-//    "return both locked if its not unique combination for existing psaId1 and srn2" in {
-//      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-//      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-//      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) mustBe Some(BothLock)
-//    }
-//  }
+  "releaseLockByPSA by psaId" must {
+    "Delete One" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
 
-  private def givenAnExistingDocument(schemeVariance: SchemeVariance): Future[WriteResult] = {
-    repository.collection.insert(ordered = false).one(schemeVariance) map {
-      x =>
-        println(s"\n\nTEST\n\n\t$x\n\n\n")
-        x
+      await(repository.releaseLockByPSA("psa1"))
+
+      thenTheDocumentCountShouldBeOne
     }
   }
 
-  private def thenTheDocumentCountShouldBeOne: Assertion = {
+  "releaseLockBySRN by srn" must {
+    "Delete One" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+
+      await(repository.releaseLockBySRN("srn2"))
+
+      thenTheDocumentCountShouldBeOne
+    }
+  }
+
+  "getExistingLockByPSA" must {
+    "Retrieve None" in {
+      await(repository.getExistingLockByPSA("some id")) mustBe None
+    }
+
+    "Retrieve One" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+
+      await(repository.getExistingLockByPSA("psa1")) mustBe Some(SchemeVariance("psa1", "srn1"))
+    }
+  }
+
+  "getExistingLockBySRN" must {
+    "Retrieve None" in {
+      await(repository.getExistingLockBySRN("some id")) mustBe None
+    }
+
+    "Retrieve One" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+
+      await(repository.getExistingLockBySRN("srn2")) mustBe Some(SchemeVariance("psa2", "srn2"))
+    }
+  }
+
+  "list" must {
+    "Retrieve None" in {
+      await(repository.list) mustBe List()
+    }
+
+    "Retrieve all" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+
+      await(repository.list) mustBe Seq(SchemeVariance("psa1", "srn1"),SchemeVariance("psa2", "srn2"))
+    }
+  }
+
+  "replaceLock" must {
+    "return true for existing lock" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+
+      await(repository.replaceLock(SchemeVariance("psa2", "srn2"))) mustBe true
+    }
+
+    "return true and new lock if its not exist lock" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+
+      await(repository.replaceLock(SchemeVariance("psa3", "srn3"))) mustBe true
+    }
+
+    "throw exception if failed to find the lock which doesn't allow" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+
+      val result = repository.replaceLock(SchemeVariance("psa2", "srn1"))
+
+      whenReady(result.failed) { e =>
+        e mustBe a[Exception]
+        e.getMessage mustBe "Expected SchemeVariance to be locked, but no lock was found with psaId: psa2 and srn: srn1"
+      }
+    }
+  }
+
+  "lock" should{
+
+    "return locked if its new and unique combination for psaId and srn"in {
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) mustBe VarianceLock
+    }
+
+    "return locked if exiting lock"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.lock(SchemeVariance("psa1", "srn1"))) mustBe VarianceLock
+    }
+
+    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.lock(SchemeVariance("psa1", "srn2"))) mustBe PsaLock
+    }
+
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.lock(SchemeVariance("psa2", "srn1"))) mustBe SchemeLock
+    }
+
+    "return both locked if its not unique combination for existing psaId2 and srn1"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+      await(repository.lock(SchemeVariance("psa2", "srn1"))) mustBe BothLock
+    }
+
+    "return both locked if its not unique combination for existing psaId1 and srn2"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+      await(repository.lock(SchemeVariance("psa1", "srn2"))) mustBe BothLock
+    }
+
+    "create ttl on expireAt field" in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      val index = getIndex("dataExpiry").get
+      val expected = Index(key = Seq("expireAt" -> Ascending),
+        name = Some("dataExpiry"),
+        options = BSONDocument("expireAfterSeconds" -> 0)).copy(version = index.version)
+
+      index mustBe expected
+    }
+  }
+
+  "isLockByPsaIdOrSchemeId" should{
+
+    "return locked if its new and unique combination for psaId and srn"in {
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) mustBe None
+    }
+
+    "return locked if exiting lock"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) mustBe Some(VarianceLock)
+    }
+
+    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) mustBe Some(PsaLock)
+    }
+
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) mustBe Some(SchemeLock)
+    }
+
+    "return both locked if its not unique combination for existing psaId2 and srn1"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+      await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) mustBe Some(BothLock)
+    }
+
+    "return both locked if its not unique combination for existing psaId1 and srn2"in {
+      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+      await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) mustBe Some(BothLock)
+    }
+  }
+
+  private def givenAnExistingDocument(schemeVariance: SchemeVariance): Unit = {
+    await(repository.collection.insert(ordered = false).one(schemeVariance))
+  }
+
+  private def thenTheDocumentCountShouldBeOne: Unit = {
     await(repository.collection.count(None, None, skip = 0, None, ReadConcern.Local)) mustBe 1
   }
 
