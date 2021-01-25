@@ -22,7 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers, WordSpec}
+import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers, WordSpec}
 import reactivemongo.api.{DB, ReadConcern}
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -32,13 +32,15 @@ import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LockMongoRepositoryTest extends WordSpec with MongoUnitSpec
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with MongoSpecSupport
-  with Eventually
-  with MockitoSugar
-  with MustMatchers {
+class LockMongoRepositoryTest
+  extends WordSpec
+    with MongoUnitSpec
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with MongoSpecSupport
+    with Eventually
+    with MockitoSugar
+    with MustMatchers {
   self =>
 
   private val provider: MongoDbProvider = new MongoDbProvider {
@@ -131,7 +133,7 @@ class LockMongoRepositoryTest extends WordSpec with MongoUnitSpec
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
 
-      await(repository.list) mustBe Seq(SchemeVariance("psa1", "srn1"),SchemeVariance("psa2", "srn2"))
+      await(repository.list) mustBe Seq(SchemeVariance("psa1", "srn1"), SchemeVariance("psa2", "srn2"))
     }
   }
 
@@ -163,34 +165,34 @@ class LockMongoRepositoryTest extends WordSpec with MongoUnitSpec
     }
   }
 
-  "lock" should{
+  "lock" should {
 
-    "return locked if its new and unique combination for psaId and srn"in {
+    "return locked if its new and unique combination for psaId and srn" in {
       await(repository.lock(SchemeVariance("psa1", "srn1"))) mustBe VarianceLock
     }
 
-    "return locked if exiting lock"in {
+    "return locked if exiting lock" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       await(repository.lock(SchemeVariance("psa1", "srn1"))) mustBe VarianceLock
     }
 
-    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
+    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       await(repository.lock(SchemeVariance("psa1", "srn2"))) mustBe PsaLock
     }
 
-    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       await(repository.lock(SchemeVariance("psa2", "srn1"))) mustBe SchemeLock
     }
 
-    "return both locked if its not unique combination for existing psaId2 and srn1"in {
+    "return both locked if its not unique combination for existing psaId2 and srn1" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
       await(repository.lock(SchemeVariance("psa2", "srn1"))) mustBe BothLock
     }
 
-    "return both locked if its not unique combination for existing psaId1 and srn2"in {
+    "return both locked if its not unique combination for existing psaId1 and srn2" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
       await(repository.lock(SchemeVariance("psa1", "srn2"))) mustBe BothLock
@@ -207,34 +209,34 @@ class LockMongoRepositoryTest extends WordSpec with MongoUnitSpec
     }
   }
 
-  "isLockByPsaIdOrSchemeId" should{
+  "isLockByPsaIdOrSchemeId" should {
 
-    "return locked if its new and unique combination for psaId and srn"in {
+    "return locked if its new and unique combination for psaId and srn" in {
       await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) mustBe None
     }
 
-    "return locked if exiting lock"in {
+    "return locked if exiting lock" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       await(repository.isLockByPsaIdOrSchemeId("psa1", "srn1")) mustBe Some(VarianceLock)
     }
 
-    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId"in {
+    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) mustBe Some(PsaLock)
     }
 
-    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn"in {
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) mustBe Some(SchemeLock)
     }
 
-    "return both locked if its not unique combination for existing psaId2 and srn1"in {
+    "return both locked if its not unique combination for existing psaId2 and srn1" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
       await(repository.isLockByPsaIdOrSchemeId("psa2", "srn1")) mustBe Some(BothLock)
     }
 
-    "return both locked if its not unique combination for existing psaId1 and srn2"in {
+    "return both locked if its not unique combination for existing psaId1 and srn2" in {
       givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
       givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
       await(repository.isLockByPsaIdOrSchemeId("psa1", "srn2")) mustBe Some(BothLock)
@@ -245,7 +247,7 @@ class LockMongoRepositoryTest extends WordSpec with MongoUnitSpec
     await(repository.collection.insert(ordered = false).one(schemeVariance))
   }
 
-  private def thenTheDocumentCountShouldBeOne: Unit = {
+  private def thenTheDocumentCountShouldBeOne: Assertion = {
     await(repository.collection.count(None, None, skip = 0, None, ReadConcern.Local)) mustBe 1
   }
 
