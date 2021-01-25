@@ -16,8 +16,6 @@
 
 package connector
 
-import java.util.UUID.randomUUID
-
 import audit._
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
@@ -25,33 +23,49 @@ import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
 import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
 import models.etmpToUserAnswers.pspSchemeDetails.PspSchemeDetailsTransformer
-import play.Logger
+import play.api.Logger
 import play.api.http.Status._
-import play.api.libs.json.{JsError, JsObject, JsResultException, JsSuccess, JsValue, Writes}
+import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import service.FeatureToggleService
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HttpClient, _}
 import utils.InvalidPayloadHandler
 
+import java.util.UUID.randomUUID
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[SchemeConnectorImpl])
 trait SchemeConnector {
-  def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(implicit
-                                                           headerCarrier: HeaderCarrier,
-                                                           ec: ExecutionContext,
-                                                           request: RequestHeader): Future[HttpResponse]
+  def registerScheme(
+                      psaId: String,
+                      registerData: JsValue,
+                      tcmpToggle: Boolean
+                    )(
+                      implicit
+                      headerCarrier: HeaderCarrier,
+                      ec: ExecutionContext,
+                      request: RequestHeader
+                    ): Future[HttpResponse]
 
-  def listOfSchemes(psaId: String)(implicit headerCarrier: HeaderCarrier,
-                                   ec: ExecutionContext,
-                                   request: RequestHeader): Future[HttpResponse]
+  def listOfSchemes(
+                     psaId: String
+                   )(
+                     implicit
+                     headerCarrier: HeaderCarrier,
+                     ec: ExecutionContext,
+                     request: RequestHeader
+                   ): Future[HttpResponse]
 
-  def listOfSchemes(idType: String, idValue: String)(implicit
-                                                     headerCarrier: HeaderCarrier,
-                                                     ec: ExecutionContext,
-                                                     request: RequestHeader): Future[HttpResponse]
+  def listOfSchemes(
+                     idType: String,
+                     idValue: String
+                   )(
+                     implicit
+                     headerCarrier: HeaderCarrier,
+                     ec: ExecutionContext,
+                     request: RequestHeader
+                   ): Future[HttpResponse]
 
   def getCorrelationId(requestId: Option[String]): String
 
@@ -66,15 +80,25 @@ trait SchemeConnector {
                         request: RequestHeader
                       ): Future[Either[HttpResponse, JsValue]]
 
-  def getPspSchemeDetails(pspId: String, pstr: String)
-                         (implicit headerCarrier: HeaderCarrier,
-                          ec: ExecutionContext,
-                          request: RequestHeader): Future[Either[HttpResponse, JsValue]]
+  def getPspSchemeDetails(
+                           pspId: String,
+                           pstr: String
+                         )(
+                           implicit
+                           headerCarrier: HeaderCarrier,
+                           ec: ExecutionContext,
+                           request: RequestHeader
+                         ): Future[Either[HttpResponse, JsValue]]
 
-  def updateSchemeDetails(pstr: String, data: JsValue)(implicit
-                                                       headerCarrier: HeaderCarrier,
-                                                       ec: ExecutionContext,
-                                                       request: RequestHeader): Future[HttpResponse]
+  def updateSchemeDetails(
+                           pstr: String,
+                           data: JsValue
+                         )(
+                           implicit
+                           headerCarrier: HeaderCarrier,
+                           ec: ExecutionContext,
+                           request: RequestHeader
+                         ): Future[HttpResponse]
 
 }
 
@@ -89,32 +113,42 @@ class SchemeConnectorImpl @Inject()(
                                      schemeAuditService: SchemeAuditService,
                                      headerUtils: HeaderUtils,
                                      featureToggleService: FeatureToggleService
-                                   ) extends SchemeConnector with HttpErrorFunctions {
+                                   )
+  extends SchemeConnector
+    with HttpErrorFunctions {
+
+  private val logger = Logger(classOf[SchemeConnectorImpl])
 
   case class SchemeFailedMapToUserAnswersException() extends Exception
 
   override def getCorrelationId(requestId: Option[String]): String = {
     requestId.getOrElse {
-      Logger.error("No Request Id found while calling register with Id")
+      logger.error("No Request Id found while calling register with Id")
       randomUUID.toString
     }.replaceAll("(govuk-tax-|-)", "").slice(0, 32)
   }
 
-  override def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(implicit
-                                                                    headerCarrier: HeaderCarrier,
-                                                                    ec: ExecutionContext,
-                                                                    request: RequestHeader): Future[HttpResponse] = {
+  override def registerScheme(
+                               psaId: String,
+                               registerData: JsValue,
+                               tcmpToggle: Boolean
+                             )(
+                               implicit
+                               headerCarrier: HeaderCarrier,
+                               ec: ExecutionContext,
+                               request: RequestHeader
+                             ): Future[HttpResponse] = {
 
     val (url, hc, schemaPath) = if (tcmpToggle)
-    (config.schemeRegistrationIFUrl.format(psaId),
-      HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
-      "/resources/schemas/schemeSubscriptionIF.json")
+      (config.schemeRegistrationIFUrl.format(psaId),
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
+        "/resources/schemas/schemeSubscriptionIF.json")
     else
-    (config.schemeRegistrationUrl.format(psaId),
-      HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))),
-      "/resources/schemas/schemeSubscription.json")
+      (config.schemeRegistrationUrl.format(psaId),
+        HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))),
+        "/resources/schemas/schemeSubscription.json")
 
-    Logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
+    logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
     http.POST[JsValue, HttpResponse](url, registerData)(
       implicitly[Writes[JsValue]],
@@ -149,7 +183,7 @@ class SchemeConnectorImpl @Inject()(
           HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
 
-        Logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
+        logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponse(response)
@@ -161,7 +195,7 @@ class SchemeConnectorImpl @Inject()(
           HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
         )
 
-        Logger.debug(s"Calling get scheme details API on DES with url $url and hc $hc")
+        logger.debug(s"Calling get scheme details API on DES with url $url and hc $hc")
 
         http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
           handleSchemeDetailsResponseDES(response)
@@ -170,24 +204,33 @@ class SchemeConnectorImpl @Inject()(
     }
   }
 
-  override def getPspSchemeDetails(pspId: String, pstr: String)
-                                  (implicit headerCarrier: HeaderCarrier,
-                                   ec: ExecutionContext,
-                                   request: RequestHeader): Future[Either[HttpResponse, JsValue]] = {
+  override def getPspSchemeDetails(
+                                    pspId: String,
+                                    pstr: String
+                                  )(
+                                    implicit
+                                    headerCarrier: HeaderCarrier,
+                                    ec: ExecutionContext,
+                                    request: RequestHeader
+                                  ): Future[Either[HttpResponse, JsValue]] = {
 
     val url = config.pspSchemeDetailsUrl.format(pspId, pstr)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
-    Logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
+    logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
     http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
       handlePspSchemeDetailsResponse(response)) andThen
       schemeAuditService.sendPspSchemeDetailsEvent(pspId)(auditService.sendEvent)
 
   }
 
-  override def listOfSchemes(psaId: String)(implicit
-                                            headerCarrier: HeaderCarrier,
-                                            ec: ExecutionContext,
-                                            request: RequestHeader): Future[HttpResponse] = {
+  override def listOfSchemes(
+                              psaId: String
+                            )(
+                              implicit
+                              headerCarrier: HeaderCarrier,
+                              ec: ExecutionContext,
+                              request: RequestHeader
+                            ): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesUrl.format(psaId)
     implicit val hc: HeaderCarrier =
       HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
@@ -202,15 +245,17 @@ class SchemeConnectorImpl @Inject()(
   override def listOfSchemes(
                               idType: String,
                               idValue: String
-                            )(implicit
+                            )(
+                              implicit
                               headerCarrier: HeaderCarrier,
                               ec: ExecutionContext,
-                              request: RequestHeader): Future[HttpResponse] = {
+                              request: RequestHeader
+                            ): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesIFUrl.format(idType, idValue)
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
       headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
-    Logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
+    logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
     http.GET[HttpResponse](listOfSchemesUrl)(
       implicitly[HttpReads[HttpResponse]],
@@ -219,15 +264,20 @@ class SchemeConnectorImpl @Inject()(
     )
   }
 
-  override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
-                                                                headerCarrier: HeaderCarrier,
-                                                                ec: ExecutionContext,
-                                                                request: RequestHeader): Future[HttpResponse] = {
+  override def updateSchemeDetails(
+                                    pstr: String,
+                                    data: JsValue
+                                  )(
+                                    implicit
+                                    headerCarrier: HeaderCarrier,
+                                    ec: ExecutionContext,
+                                    request: RequestHeader
+                                  ): Future[HttpResponse] = {
 
     val url = config.updateSchemeUrl.format(pstr)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
-    Logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
+    logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
 
     http.POST[JsValue, HttpResponse](url, data)(
       implicitly[Writes[JsValue]],
@@ -254,27 +304,27 @@ class SchemeConnectorImpl @Inject()(
   }
 
   private def handleSchemeDetailsResponse(response: HttpResponse): Either[HttpResponse, JsObject] = {
-    Logger.debug(s"Get-Scheme-details-response from IF API - ${response.json}")
+    logger.debug(s"Get-Scheme-details-response from IF API - ${response.json}")
     response.status match {
       case OK =>
-          response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers) match {
-            case JsSuccess(value, _) =>
-              Logger.debug(s"Get-Scheme-details-UserAnswersJson - $value")
-              Right(value)
-            case JsError(e) => throw JsResultException(e)
-          }
+        response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers) match {
+          case JsSuccess(value, _) =>
+            logger.debug(s"Get-Scheme-details-UserAnswersJson - $value")
+            Right(value)
+          case JsError(e) => throw JsResultException(e)
+        }
       case _ =>
         Left(response)
     }
   }
 
   private def handlePspSchemeDetailsResponse(response: HttpResponse): Either[HttpResponse, JsObject] = {
-    Logger.debug(s"Get-Psp-Scheme-details-response - ${response.json}")
+    logger.debug(s"Get-Psp-Scheme-details-response - ${response.json}")
     response.status match {
       case OK =>
         response.json.transform(pspSchemeDetailsTransformer.transformToUserAnswers) match {
           case JsSuccess(value, _) =>
-            Logger.debug(s"Get-Psp-Scheme-details-UserAnswersJson - $value")
+            logger.debug(s"Get-Psp-Scheme-details-UserAnswersJson - $value")
             Right(value)
           case JsError(e) => throw JsResultException(e)
         }
@@ -284,14 +334,14 @@ class SchemeConnectorImpl @Inject()(
   }
 
   private def handleSchemeDetailsResponseDES(response: HttpResponse): Either[HttpResponse, JsObject] = {
-    Logger.debug(s"Get-Scheme-details-response from DES API - $response")
+    logger.debug(s"Get-Scheme-details-response from DES API - $response")
     response.status match {
       case OK =>
         val userAnswersJson =
           response.json.transform(
             schemeSubscriptionDetailsTransformerDES.transformToUserAnswers
           ).getOrElse(throw new SchemeFailedMapToUserAnswersException)
-        Logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
+        logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
         Right(userAnswersJson)
       case _ =>
         Left(response)

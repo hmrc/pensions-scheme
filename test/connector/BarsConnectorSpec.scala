@@ -32,9 +32,11 @@ import utils.WireMockHelper
 
 import scala.concurrent.ExecutionContext
 
-
 class BarsConnectorSpec
-  extends AsyncFlatSpec with Matchers with OptionValues with WireMockHelper {
+  extends AsyncFlatSpec
+    with Matchers
+    with OptionValues
+    with WireMockHelper {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
@@ -47,7 +49,8 @@ class BarsConnectorSpec
   val accountNumber = "12345678"
   val psaIdentifier = "test-psa-id"
 
-  "BarsConnector after calling invalidBankAccount" should "return invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
+  "BarsConnector after calling invalidBankAccount" should
+    "return invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
     val response =
       """ {
         "accountNumberWithSortCodeIsValid": false,

@@ -20,22 +20,22 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.FeatureToggle.Disabled
-import models.FeatureToggleName.{IntegrationFrameworkGetSchemeDetails, TCMP}
+import models.FeatureToggleName.TCMP
 import models.enumeration.SchemeType
-import models.userAnswersToEtmp.reads.CommonGenerator.{establisherCompanyGenerator, establisherIndividualGenerator, establisherPartnershipGenerator}
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
+import models.userAnswersToEtmp.reads.CommonGenerator.{establisherCompanyGenerator, establisherIndividualGenerator, establisherPartnershipGenerator}
 import models.userAnswersToEtmp.trustee.TrusteeDetails
 import org.mockito.Mockito.when
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.{AsyncFlatSpec, BeforeAndAfterEach, Matchers}
+import org.scalatest.{AsyncFlatSpec, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.http.Status
 import play.api.libs.json.{__, _}
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
-import utils.{Lens, WireMockHelper}
+import utils.Lens
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -351,14 +351,14 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
 
     f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(Status.OK, testResponse.toString())))
     f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map { _ =>
-        val expectedAuditEvent =
-          SchemeUpdate(psaIdentifier = "test-psa-id",
-            schemeType = Some(audit.SchemeType.singleTrust),
-            status = Status.OK,
-            request = schemeUpdateRequestJson,
-            response = Some(testResponse))
+      val expectedAuditEvent =
+        SchemeUpdate(psaIdentifier = "test-psa-id",
+          schemeType = Some(audit.SchemeType.singleTrust),
+          status = Status.OK,
+          request = schemeUpdateRequestJson,
+          response = Some(testResponse))
 
-        f.auditService.lastEvent mustBe Some(expectedAuditEvent)
+      f.auditService.lastEvent mustBe Some(expectedAuditEvent)
     }
   }
 
@@ -388,6 +388,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
   )
 
   private val featureToggleService: FeatureToggleService = mock[FeatureToggleService]
+
   class FakeSchemeConnectorStoreJson extends FakeSchemeConnector {
     var lastUpdateSchemeDetailsdata: JsValue = JsNull
 
@@ -403,7 +404,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, featureToggleService)
+      schemeConnector, barsConnector, auditService, featureToggleService)
   }
 
   trait TestFixture {
@@ -411,7 +412,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, featureToggleService)
+      schemeConnector, barsConnector, auditService, featureToggleService)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
@@ -477,7 +478,8 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
     )
   )
 
-  val expectedJsonForAudit: JsValue = Json.parse("""{
+  val expectedJsonForAudit: JsValue = Json.parse(
+    """{
    "customerAndSchemeDetails":{
       "schemeName":"test-scheme-name",
       "isSchemeMasterTrust":false,
@@ -583,14 +585,6 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
       )
     )
   )
-
-  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl, tcmpToggle: Boolean = false): JsValue = {
-
-    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.registerApiReads(tcmpToggle)).fold(
-      throw new BadRequestException(""),
-      scheme => Json.toJson(scheme)
-    )
-  }
 
   val schemeUpdateRequestJson: JsValue = Json.parse(
     """

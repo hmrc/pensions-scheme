@@ -25,6 +25,8 @@ import scala.util.{Failure, Success, Try}
 
 class SchemeAuditService {
 
+  private val logger = Logger(classOf[SchemeAuditService])
+
   def sendSchemeDetailsEvent(userIdNumber: String)
                             (sendEvent: SchemeDetailsAuditEvent => Unit): PartialFunction[Try[Either[HttpResponse, JsValue]], Unit] = {
 
@@ -46,7 +48,7 @@ class SchemeAuditService {
         )
       )
     case Failure(t) =>
-      Logger.error("Error in sending audit event for get PSA details", t)
+      logger.error("Error in sending audit event for get PSA details", t)
 
   }
 
@@ -69,7 +71,7 @@ class SchemeAuditService {
         )
       )
     case Failure(t) =>
-      Logger.error("Error in sending audit event for get psp scheme details", t)
+      logger.error("Error in sending audit event for get psp scheme details", t)
   }
 
 }

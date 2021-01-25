@@ -16,43 +16,40 @@
 
 package connector
 
+import audit.{AuditService, SchemeDetailsAuditEvent}
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.AuditService
-import audit.SchemeDetailsAuditEvent
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.FeatureToggle.Disabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
+import org.joda.time.LocalDate
+import org.mockito.Matchers.any
+import org.mockito.Mockito._
+import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
 import org.scalatest._
+import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.event.Level
 import play.api.LoggerLike
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.mvc.RequestHeader
-import service.FeatureToggleService
-import utils.StubLogger
-import utils.WireMockHelper
-import org.joda.time.LocalDate
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsValue
-import play.api.libs.json.Json
-import org.mockito.Mockito._
+import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import service.FeatureToggleService
 import uk.gov.hmrc.http._
-import org.mockito.Matchers
+import utils.{StubLogger, WireMockHelper}
 
 import scala.concurrent.Future
 
-class SchemeConnectorSpec extends AsyncFlatSpec
-  with WireMockHelper
-  with OptionValues
-  with RecoverMethods
-  with EitherValues
-  with MockitoSugar
-  with ConnectorBehaviours with JsonFileReader{
+class SchemeConnectorSpec
+  extends AsyncFlatSpec
+    with WireMockHelper
+    with OptionValues
+    with EitherValues
+    with MockitoSugar
+    with JsonFileReader {
 
   import SchemeConnectorSpec._
 
@@ -61,9 +58,10 @@ class SchemeConnectorSpec extends AsyncFlatSpec
   override def beforeEach(): Unit = {
     org.mockito.Mockito.reset(mockFeatureToggleService)
     auditService.reset()
-    when(mockFeatureToggleService.get(Matchers.any())).thenReturn(Future.successful(Disabled(IntegrationFrameworkGetSchemeDetails)))
+    when(mockFeatureToggleService.get(any())).thenReturn(Future.successful(Disabled(IntegrationFrameworkGetSchemeDetails)))
     super.beforeEach()
   }
+
   override protected def portConfigKey: String = "microservice.services.des-hod.port"
 
   override protected def bindings: Seq[GuiceableModule] =
@@ -72,6 +70,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
       bind[LoggerLike].toInstance(logger),
       bind[FeatureToggleService].toInstance(mockFeatureToggleService)
     )
+
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
 
   "SchemeConnector registerScheme with tcmp toggle on" should "handle OK (200)" in {
@@ -165,10 +164,10 @@ class SchemeConnectorSpec extends AsyncFlatSpec
     logger.reset()
 
     connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
-        response.status shouldBe BAD_REQUEST
-        logger.getLogEntries.size shouldBe 1
-        logger.getLogEntries.head.level shouldBe Level.WARN
-      }
+      response.status shouldBe BAD_REQUEST
+      logger.getLogEntries.size shouldBe 1
+      logger.getLogEntries.head.level shouldBe Level.WARN
+    }
   }
 
   "SchemeConnector registerScheme with tcmp toggle off" should "handle OK (200)" in {
@@ -499,7 +498,7 @@ class SchemeConnectorSpec extends AsyncFlatSpec
         )
     )
 
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { _ =>
       auditService.verifySent(
         SchemeDetailsAuditEvent(idValue, 404, Some(Json.parse(expectedResponse)))
       ) shouldBe true
@@ -641,7 +640,7 @@ object SchemeConnectorSpec extends JsonFileReader {
 
   def errorResponse(code: String): String = {
     Json.stringify(
-        Json.obj(
+      Json.obj(
         "code" -> code,
         "reason" -> s"Reason for $code"
       )

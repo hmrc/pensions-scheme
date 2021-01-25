@@ -16,12 +16,11 @@
 
 package repositories
 
-import java.nio.charset.StandardCharsets
-
 import com.google.inject.Inject
 import org.joda.time.{DateTime, DateTimeZone}
+import org.slf4j.{Logger, LoggerFactory}
+import play.api.Configuration
 import play.api.libs.json.{Format, JsValue, Json, _}
-import play.api.{Configuration, Logger}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.Subtype.GenericBinarySubtype
@@ -31,30 +30,47 @@ import uk.gov.hmrc.crypto.{Crypted, CryptoWithKeysFromConfig, PlainText}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
+import java.nio.charset.StandardCharsets
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeCacheRepository @Inject()(collectionName: String,
-                                      encryptionKey: String,
-                                      expireInSeconds: Option[Int],
-                                      config: Configuration,
-                                      component: ReactiveMongoComponent,
-                                      expireInDays: Option[Int]
-                                            )(implicit ec: ExecutionContext)extends ReactiveRepository[JsValue, BSONObjectID](
-collectionName,
-component.mongoConnector.db,
-implicitly
-){
+class SchemeCacheRepository @Inject()(
+                                       collectionName: String,
+                                       encryptionKey: String,
+                                       expireInSeconds: Option[Int],
+                                       config: Configuration,
+                                       component: ReactiveMongoComponent,
+                                       expireInDays: Option[Int]
+                                     )(
+                                       implicit ec: ExecutionContext
+                                     )
+  extends ReactiveRepository[JsValue, BSONObjectID](
+    collectionName,
+    component.mongoConnector.db,
+    implicitly
+  ) {
 
-  private def getExpireAt: DateTime = if(expireInSeconds.isEmpty){
-    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(
-      expireInDays.getOrElse(config.underlying.getInt("defaultDataExpireInDays")) + 1).toDateTimeAtStartOfDay()
+  override val logger: Logger = LoggerFactory.getLogger("SchemeCacheRepository")
+
+  private def getExpireAt: DateTime = if (expireInSeconds.isEmpty) {
+    DateTime
+      .now(DateTimeZone.UTC)
+      .toLocalDate
+      .plusDays(
+        expireInDays.getOrElse(config.underlying.getInt("defaultDataExpireInDays")) + 1
+      ).toDateTimeAtStartOfDay()
   } else {
-    DateTime.now(DateTimeZone.UTC).plusSeconds(expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds")))
+    DateTime
+      .now(DateTimeZone.UTC)
+      .plusSeconds(
+        expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds"))
+      )
   }
 
-  private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
+  private val jsonCrypto: CryptoWithKeysFromConfig =
+    new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
 
-  private val encrypted: Boolean = config.get[Boolean]("encrypted")
+  private val encrypted: Boolean =
+    config.get[Boolean]("encrypted")
 
   private case class DataEntry(
                                 id: String,
@@ -65,8 +81,12 @@ implicitly
 
   private object DataEntry {
 
-    def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC),
-              expireAt: DateTime = getExpireAt): DataEntry =
+    def apply(
+               id: String,
+               data: Array[Byte],
+               lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC),
+               expireAt: DateTime = getExpireAt
+             ): DataEntry =
       DataEntry(id, BSONBinary(data, GenericBinarySubtype), lastUpdated, expireAt)
 
     private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
@@ -98,25 +118,29 @@ implicitly
   } yield {
     ()
   }) recoverWith {
-    case t: Throwable => Future.successful(Logger.error(s"Error ensuring indexes on collection ${collection.name}", t))
+    case t: Throwable =>
+      Future.successful(logger.error(s"Error ensuring indexes on collection ${collection.name}", t))
   } andThen {
-    case _ => CollectionDiagnostics.logCollectionInfo(collection)
+    case _ =>
+      CollectionDiagnostics.logCollectionInfo(collection)
   }
 
   private def checkIndexTtl(indexName: String, ttl: Option[Int]): Future[Unit] = {
 
     CollectionDiagnostics.indexInfo(collection)
-      .flatMap {seqIndexes =>
+      .flatMap { seqIndexes =>
         seqIndexes
           .find(index => index.name == indexName && index.ttl != ttl)
           .map {
             index =>
-              Logger.warn(s"Index $indexName on collection ${collection.name} is not required")
+              logger.warn(s"Index $indexName on collection ${collection.name} is not required")
               collection.indexesManager.drop(index.name) map {
-                case n if n > 0 => Logger.warn(s"Dropped index $indexName on collection ${collection.name} as index not required")
-                case _ => Logger.warn(s"Index index $indexName on collection ${collection.name} had already been dropped (possible race condition)")
+                case n if n > 0 =>
+                  logger.warn(s"Dropped index $indexName on collection ${collection.name} as index not required")
+                case _ =>
+                  logger.warn(s"Index index $indexName on collection ${collection.name} had already been dropped (possible race condition)")
               }
-          } getOrElse Future.successful(Logger.info(s"Index $indexName on collection ${collection.name} is not available"))
+          } getOrElse Future.successful(logger.info(s"Index $indexName on collection ${collection.name} is not available"))
       }
 
   }
@@ -135,16 +159,18 @@ implicitly
 
     collection.indexesManager.ensure(index) map {
       result => {
-        Logger.warn(s"Created index $indexName on collection ${collection.name} with TTL value $ttl -> result: $result")
+        logger.warn(s"Created index $indexName on collection ${collection.name} with TTL value $ttl -> result: $result")
         result
       }
     } recover {
-      case e => Logger.error("Failed to set TTL index", e)
+      case e =>
+        logger.error("Failed to set TTL index", e)
         false
     }
   }
 
-  def upsert(id: String, data: JsValue)(implicit ec: ExecutionContext): Future[Boolean] = {
+  def upsert(id: String, data: JsValue)
+            (implicit ec: ExecutionContext): Future[Boolean] = {
     val document: JsValue = {
       if (encrypted) {
         val unencrypted = PlainText(Json.stringify(data))
@@ -160,7 +186,8 @@ implicitly
       .map(_.ok)
   }
 
-  def get(id: String)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
+  def get(id: String)
+         (implicit ec: ExecutionContext): Future[Option[JsValue]] = {
     if (encrypted) {
       collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[DataEntry].map {
         _.map {
@@ -180,7 +207,8 @@ implicitly
     }
   }
 
-  def getLastUpdated(id: String)(implicit ec: ExecutionContext): Future[Option[DateTime]] = {
+  def getLastUpdated(id: String)
+                    (implicit ec: ExecutionContext): Future[Option[DateTime]] = {
     if (encrypted) {
       collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[DataEntry].map {
         _.map {
@@ -198,13 +226,15 @@ implicitly
     }
   }
 
-  def remove(id: String)(implicit ec: ExecutionContext): Future[Boolean] = {
-    Logger.warn(s"Removing row from collection ${collection.name} externalId:$id")
+  def remove(id: String)
+            (implicit ec: ExecutionContext): Future[Boolean] = {
+    logger.warn(s"Removing row from collection ${collection.name} externalId:$id")
     val selector = BSONDocument("id" -> id)
     collection.delete().one(selector).map(_.ok)
   }
 
-  def dropCollection()(implicit ec: ExecutionContext): Future[Unit] = {
+  def dropCollection()
+                    (implicit ec: ExecutionContext): Future[Unit] = {
     collection.drop(failIfNotFound = false).map(_ => ())
   }
 

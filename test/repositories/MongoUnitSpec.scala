@@ -18,22 +18,29 @@ package repositories
 
 import reactivemongo.api.indexes.Index
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.play.test.UnitSpec
 
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.{Await, Future}
 
-trait MongoUnitSpec extends UnitSpec {
+trait MongoUnitSpec {
 
-  protected implicit val ordering: Ordering[Index] = Ordering.by { i: Index => i.name }
+  implicit val defaultTimeout: FiniteDuration = 5 seconds
+
+  protected implicit val ordering: Ordering[Index] =
+    Ordering.by { i: Index => i.name }
+
+  def await[A](future: Future[A])
+              (implicit timeout: Duration): A =
+    Await.result(future, timeout)
 
   protected def collection: JSONCollection
 
-  protected def getIndexes: List[Index] = {
+  protected def getIndexes: List[Index] =
     await(collection.indexesManager.list())
-  }
 
-  protected def getIndex(name: String): Option[Index] = {
+  protected def getIndex(name: String): Option[Index] =
     getIndexes.find(_.name.contains(name))
-  }
 
 }
