@@ -38,6 +38,8 @@ trait BarsConnector {
 @Singleton
 class BarsConnectorImpl @Inject()(http: HttpClient, appConfig: AppConfig, auditService: AuditService) extends BarsConnector {
 
+  private val logger = Logger(classOf[BarsConnectorImpl])
+
   val barsBaseUrl: String = appConfig.barsBaseUrl
 
   def invalidBankAccount(bankAccount: BankAccount, psaId: String)
@@ -66,7 +68,7 @@ class BarsConnectorImpl @Inject()(http: HttpClient, appConfig: AppConfig, auditS
           false
     } recoverWith {
       case t =>
-        Logger.error("Exception calling bank reputation service", t)
+        logger.error("Exception calling bank reputation service", t)
         Future.successful(false)
     }
   }

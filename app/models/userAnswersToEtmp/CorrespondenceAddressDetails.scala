@@ -16,7 +16,6 @@
 
 package models.userAnswersToEtmp
 
-import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, _}
 
 case class CorrespondenceAddressDetails(addressDetails: Address)
@@ -24,5 +23,6 @@ case class CorrespondenceAddressDetails(addressDetails: Address)
 object CorrespondenceAddressDetails {
   implicit val formats: Format[CorrespondenceAddressDetails] = Json.format[CorrespondenceAddressDetails]
 
-  val updateWrites: Writes[CorrespondenceAddressDetails] = (JsPath \ "addressDetails").write[Address](Address.updateWrites).contramap(c => c.addressDetails)
+  val updateWrites: Writes[CorrespondenceAddressDetails] =
+    (JsPath \ "addressDetails").write[Address](Address.updateWrites).contramap(c => c.addressDetails)
 }

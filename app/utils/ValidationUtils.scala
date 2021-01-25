@@ -16,17 +16,19 @@
 
 package utils
 
-import play.api.Logger
+import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsLookupResult, JsResultException, JsValue, Reads}
 
-package object validationUtils {
+object ValidationUtils {
+
+  private val logger = LoggerFactory.getLogger("ValidationUtils")
 
   implicit class genResponse(jsValue: JsValue) {
     implicit def convertTo[A](implicit rds: Reads[A]): A = {
       jsValue.validate[A].fold(
         invalid = {
           errors =>
-            Logger.warn(s"Json contains bad data $errors")
+            logger.warn(s"Json contains bad data $errors")
             throw JsResultException(errors)
         },
         valid = { response =>
@@ -42,7 +44,7 @@ package object validationUtils {
       jsLookupResult.validateOpt[A].fold(
         invalid = {
           errors =>
-            Logger.warn(s"Json look up contains bad data $errors")
+            logger.warn(s"Json look up contains bad data $errors")
             throw JsResultException(errors)
         },
         valid = { response =>

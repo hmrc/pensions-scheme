@@ -27,17 +27,20 @@ import scala.concurrent.{Await, Future}
 trait MongoUnitSpec {
 
   implicit val defaultTimeout: FiniteDuration = 5 seconds
-  protected implicit val ordering: Ordering[Index] = Ordering.by { i: Index => i.name }
-  def await[A](future: Future[A])(implicit timeout: Duration): A = Await.result(future, timeout)
+
+  protected implicit val ordering: Ordering[Index] =
+    Ordering.by { i: Index => i.name }
+
+  def await[A](future: Future[A])
+              (implicit timeout: Duration): A =
+    Await.result(future, timeout)
 
   protected def collection: JSONCollection
 
-  protected def getIndexes: List[Index] = {
+  protected def getIndexes: List[Index] =
     await(collection.indexesManager.list())
-  }
 
-  protected def getIndex(name: String): Option[Index] = {
+  protected def getIndex(name: String): Option[Index] =
     getIndexes.find(_.name.contains(name))
-  }
 
 }

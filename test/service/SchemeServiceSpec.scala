@@ -404,7 +404,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, featureToggleService)
+      schemeConnector, barsConnector, auditService, featureToggleService)
   }
 
   trait TestFixture {
@@ -412,7 +412,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
     val barsConnector: FakeBarsConnector = new FakeBarsConnector()
     val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
     val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector, barsConnector, auditService, appConfig, featureToggleService)
+      schemeConnector, barsConnector, auditService, featureToggleService)
   }
 
   def testFixture(): TestFixture = new TestFixture() {}
@@ -585,14 +585,6 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
       )
     )
   )
-
-  def schemeSubscriptionRequestJson(pensionsSchemeJson: JsValue, service: SchemeServiceImpl, tcmpToggle: Boolean = false): JsValue = {
-
-    pensionsSchemeJson.validate[PensionsScheme](PensionsScheme.registerApiReads(tcmpToggle)).fold(
-      throw new BadRequestException(""),
-      scheme => Json.toJson(scheme)
-    )
-  }
 
   val schemeUpdateRequestJson: JsValue = Json.parse(
     """

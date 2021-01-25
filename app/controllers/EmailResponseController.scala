@@ -25,6 +25,7 @@ import play.api.mvc._
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted}
 import uk.gov.hmrc.domain.PsaId
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import scala.concurrent.ExecutionContext
 
 class EmailResponseController @Inject()(
@@ -32,7 +33,10 @@ class EmailResponseController @Inject()(
                                          crypto: ApplicationCrypto,
                                          cc: ControllerComponents,
                                          parsers: PlayBodyParsers
-                                       )(implicit ec: ExecutionContext) extends BackendController(cc) {
+                                       )(implicit ec: ExecutionContext)
+  extends BackendController(cc) {
+
+  private val logger = Logger(classOf[EmailResponseController])
 
   def retrieveStatus(id: String): Action[JsValue] = Action(parsers.tolerantJson) {
     implicit request =>
@@ -44,7 +48,7 @@ class EmailResponseController @Inject()(
               valid.events.filterNot(
                 _.event == Opened
               ).foreach { event =>
-                Logger.debug(s"Email Audit event is $event")
+                logger.debug(s"Email Audit event is $event")
                 auditService.sendEvent(EmailAuditEvent(psaId, event.event))
               }
               Ok
