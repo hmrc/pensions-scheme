@@ -17,30 +17,34 @@
 package controllers.cache
 
 import org.joda.time.DateTime
+import play.api.Logger
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import play.api.{Configuration, Logger}
 import repositories.SchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 abstract class SchemeCacheController(
-                                      config: Configuration,
                                       repository: SchemeCacheRepository,
                                       val authConnector: AuthConnector,
                                       cc: ControllerComponents
-                                    )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
+                                    )(
+                                      implicit ec: ExecutionContext
+                                    )
+  extends BackendController(cc)
+    with AuthorisedFunctions {
+
+  private val logger = Logger(classOf[SchemeCacheController])
 
   def save(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
         request.body.asJson.map {
           jsValue =>
-            repository.upsert(id, jsValue)
-              .map(_ => Ok)
+            repository.upsert(id, jsValue).map(_ => Ok)
         } getOrElse Future.successful(EntityTooLarge)
       }
   }
@@ -48,13 +52,10 @@ abstract class SchemeCacheController(
   def get(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
+        logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
         repository.get(id).map { response =>
-          Logger.debug(s"controllers.PensionsSchemeCacheController.get: Response for request Id $id is $response")
-          response.map {
-            Ok(_)
-          }
-            .getOrElse(NotFound)
+          logger.debug(s"controllers.PensionsSchemeCacheController.get: Response for request Id $id is $response")
+          response.map(Ok(_)).getOrElse(NotFound)
         }
       }
   }
@@ -64,11 +65,12 @@ abstract class SchemeCacheController(
       //This should be removed when manage-pensions-frontend is upgraded to Play 2.6
       val jodaTimeNumberWrites: Writes[DateTime] = Writes(JodaDateTimeNumberWrites.writes(_))
       authorised() {
-        Logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
+        logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
         repository.getLastUpdated(id).map { response =>
-          Logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
-          response.map { date => Ok(Json.toJson(date)(jodaTimeNumberWrites)) }
-            .getOrElse(NotFound)
+          logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
+          response.map {
+            date => Ok(Json.toJson(date)(jodaTimeNumberWrites))
+          } getOrElse NotFound
         }
       }
   }

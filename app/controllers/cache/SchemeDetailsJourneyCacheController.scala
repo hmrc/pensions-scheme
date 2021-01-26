@@ -17,7 +17,6 @@
 package controllers.cache
 
 import com.google.inject.Inject
-import play.api.Configuration
 import play.api.mvc.ControllerComponents
 import repositories.SchemeDetailsCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -25,8 +24,8 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import scala.concurrent.ExecutionContext
 
 class SchemeDetailsJourneyCacheController @Inject()(
-                                                     config: Configuration,
                                                      repository: SchemeDetailsCacheRepository,
                                                      authConnector: AuthConnector,
                                                      cc: ControllerComponents
-                                            )(implicit val ec: ExecutionContext) extends SchemeCacheController(config, repository, authConnector, cc)
+                                                   )(implicit val ec: ExecutionContext)
+  extends SchemeCacheController(repository, authConnector, cc)

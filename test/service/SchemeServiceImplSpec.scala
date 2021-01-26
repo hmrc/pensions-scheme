@@ -93,8 +93,8 @@ object SchemeServiceImplSpec extends SpecBase {
       schemeConnector,
       barsConnector,
       auditService,
-      appConfig,
-      featureToggleService) {
+      featureToggleService
+    ) {
       override def registerScheme(psaId: String, json: JsValue)(
         implicit headerCarrier: HeaderCarrier,
         ec: ExecutionContext,

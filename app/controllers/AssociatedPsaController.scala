@@ -22,7 +22,7 @@ import connector.SchemeConnector
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
 
 import scala.concurrent.{ExecutionContext, Future}

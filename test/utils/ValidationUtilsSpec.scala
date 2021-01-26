@@ -18,14 +18,17 @@ package utils
 
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsResultException, Json, OFormat}
-import utils.validationUtils._
+import utils.ValidationUtils.{genOptResponse, genResponse}
 
-class ValidationUtilsSpec extends WordSpec with MustMatchers with OptionValues {
+class ValidationUtilsSpec
+  extends WordSpec
+    with MustMatchers
+    with OptionValues {
 
   case class TestDetails(first: String, second: Option[String])
 
   object TestDetails {
-    implicit val formats = Json.format[TestDetails]
+    implicit val formats: OFormat[TestDetails] = Json.format[TestDetails]
   }
 
   case class Test(testFirst: String, testLast: String, testDetails: Option[TestDetails])
@@ -75,7 +78,7 @@ class ValidationUtilsSpec extends WordSpec with MustMatchers with OptionValues {
         "testFirst" -> "first",
         "testLast" -> "last"
       )
-      (json \ "testDetails").convertAsOpt[TestDetails] mustEqual None
+      (json \ "testDetails").convertAsOpt[TestDetails] mustBe None
     }
 
     "throw the JsResultException if the jsLookupResult cannot be converted to the appropriate type " in {

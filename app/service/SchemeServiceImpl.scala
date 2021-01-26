@@ -18,7 +18,6 @@ package service
 
 import audit.{AuditService, ListOfSchemesAudit, SchemeList, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
-import config.AppConfig
 import connector.{BarsConnector, SchemeConnector}
 import models.FeatureToggleName.TCMP
 import models.ListOfSchemes
@@ -31,16 +30,19 @@ import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
-import utils.validationUtils._
+import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
-                                  barsConnector: BarsConnector,
-                                  auditService: AuditService,
-                                  appConfig: AppConfig,
-                                  featureToggleService: FeatureToggleService) extends SchemeService {
+class SchemeServiceImpl @Inject()(
+                                   schemeConnector: SchemeConnector,
+                                   barsConnector: BarsConnector,
+                                   auditService: AuditService,
+                                   featureToggleService: FeatureToggleService
+                                 ) extends SchemeService {
+
+  private val logger = Logger(classOf[SchemeServiceImpl])
 
   override def listOfSchemes(psaId: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
@@ -55,7 +57,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
   }
 
   override def listOfSchemes(idType: String, idValue: String)
-                     (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+                            (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
     schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly) andThen {
       case Success(httpResponse) =>
@@ -78,7 +80,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
         invalid = {
           errors =>
             val ex = JsResultException(errors)
-            Logger.warn("Invalid pension scheme", ex)
+            logger.warn("Invalid pension scheme", ex)
             Future.failed(new BadRequestException("Invalid pension scheme"))
         },
         valid = { validPensionsScheme =>
@@ -100,18 +102,18 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
   }
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
-                                                         ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+                                                                        ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
     featureToggleService.get(TCMP).flatMap { tcmpToggle =>
       json.validate[PensionsScheme](PensionsScheme.updateApiReads(tcmpToggle.isEnabled)).fold(
         invalid = {
           errors =>
             val ex = JsResultException(errors)
-            Logger.warn("Invalid pension scheme", ex)
+            logger.warn("Invalid pension scheme", ex)
             Future.failed(new BadRequestException("Invalid pension scheme"))
         },
         valid = { validPensionsScheme =>
           val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId, tcmpToggle.isEnabled))
-          Logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
+          logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
           schemeConnector.updateSchemeDetails(pstr, updatedScheme, tcmpToggle.isEnabled) andThen {
             case Success(httpResponse) =>
               sendSchemeUpdateEvent(psaId, validPensionsScheme, httpResponse.status, Some(httpResponse.json))
@@ -127,7 +129,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
     (json \ "uKBankDetails").validateOpt[BankAccount](BankAccount.apiReads).fold(
       errors => {
         val ex = JsResultException(errors)
-        Logger.warn("Invalid bank account details", ex)
+        logger.warn("Invalid bank account details", ex)
         Left(new BadRequestException("Invalid bank account details"))
       },
       maybeBankAccount => Right(maybeBankAccount)
@@ -142,10 +144,10 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
       case Some(details) =>
         barsConnector.invalidBankAccount(details, psaId).map {
           case true =>
-            Logger.debug("[Invalid-Bank-Account]")
+            logger.debug("[Invalid-Bank-Account]")
             pensionSchemeHaveInvalidBank.set(pensionsScheme, true)
           case false =>
-            Logger.debug("[Valid-Bank-Account]")
+            logger.debug("[Valid-Bank-Account]")
             pensionSchemeHaveInvalidBank.set(pensionsScheme, false)
         }
       case None =>
@@ -154,7 +156,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
 
   }
 
-  private def translateSchemeType(pensionsScheme:PensionsScheme) = {
+  private def translateSchemeType(pensionsScheme: PensionsScheme) = {
     if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
       Some(AuditSchemeType.masterTrust)
     }
@@ -169,7 +171,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
   }
 
   private def sendSchemeUpdateEvent(psaId: String, pensionsScheme: PensionsScheme, status: Int, response: Option[JsValue])
-                                         (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
+                                   (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
     auditService.sendEvent(translateSchemeUpdateEvent(psaId, pensionsScheme, status, response))
   }
 
@@ -208,8 +210,8 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
   }
 
   override def getPstrFromSrn(srn: String, idType: String, idValue: String)
-                    (implicit headerCarrier: HeaderCarrier,
-                     ec: ExecutionContext, request: RequestHeader): Future[String] =
+                             (implicit headerCarrier: HeaderCarrier,
+                              ec: ExecutionContext, request: RequestHeader): Future[String] =
     listOfSchemes(idType, idValue).map { response =>
       response.status match {
         case OK =>
@@ -219,7 +221,7 @@ class SchemeServiceImpl @Inject()(schemeConnector: SchemeConnector,
 
         case _ => throw pstrException
       }
-  }
+    }
 
   val pstrException: BadRequestException = new BadRequestException("PSTR could not be retrieved from SRN to call the get psp scheme details API")
 
