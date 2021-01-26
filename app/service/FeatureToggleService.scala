@@ -19,7 +19,6 @@ package service
 import javax.inject.Inject
 import javax.inject.Singleton
 import models.FeatureToggle._
-import models.FeatureToggleName.{IntegrationFrameworkGetSchemeDetails, IntegrationFrameworkListSchemes, TCMP}
 import models._
 import play.api.cache.AsyncCacheApi
 import repositories.AdminDataRepository
