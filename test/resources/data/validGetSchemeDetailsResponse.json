@@ -12,7 +12,7 @@
       "moreThanTenTrustees": true,
       "currentSchemeMembers": "0",
       "futureSchemeMembers": "0",
-      "isReguledSchemeInvestment": true,
+      "isRegulatedSchemeInvestment": true,
       "isOccupationalPensionScheme": true,
       "schemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
       "schemeEstablishedCountry": "AD",

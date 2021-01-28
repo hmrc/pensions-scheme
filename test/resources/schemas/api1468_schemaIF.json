@@ -63,7 +63,7 @@
             "More than 10,000"
           ]
         },
-        "isReguledSchemeInvestment": {
+        "isRegulatedSchemeInvestment": {
           "type": "boolean",
           "description": "true for Yes, false for No"
         },
@@ -107,7 +107,7 @@
         "isSchemeMasterTrust",
         "currentSchemeMembers",
         "futureSchemeMembers",
-        "isReguledSchemeInvestment",
+        "isRegulatedSchemeInvestment",
         "isOccupationalPensionScheme",
         "schemeProvideBenefits",
         "schemeEstablishedCountry",

@@ -159,7 +159,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
       "we have a valid investment regulated flag" in {
         val result = jsObject.as[CustomerAndSchemeDetails](readsCustomerAndSchemeDetails)
-        result.isReguledSchemeInvestment mustBe customerDetails.isReguledSchemeInvestment
+        result.isRegulatedSchemeInvestment mustBe customerDetails.isRegulatedSchemeInvestment
       }
 
       "we have a valid occupational pension scheme flag" in {
@@ -229,7 +229,7 @@ object CustomerAndSchemeDetailsReadsSpec {
 
   val customerDetails: CustomerAndSchemeDetails = CustomerAndSchemeDetails("test scheme name", isSchemeMasterTrust = false, schemeStructure = Some("A single trust under which all" +
     " of the assets are held for the benefit of all members of the scheme"), otherSchemeStructure = Some("other details"),
-    haveMoreThanTenTrustee = Some(true), currentSchemeMembers = "2 to 11", futureSchemeMembers = "0", isReguledSchemeInvestment = true, isOccupationalPensionScheme = true,
+    haveMoreThanTenTrustee = Some(true), currentSchemeMembers = "2 to 11", futureSchemeMembers = "0", isRegulatedSchemeInvestment = true, isOccupationalPensionScheme = true,
     areBenefitsSecuredContractInsuranceCompany = true, doesSchemeProvideBenefits = "Defined Benefits only", tcmpBenefitType = None,
     schemeEstablishedCountry = "GB", haveInvalidBank = false, insuranceCompanyName = Some("my insurance company"), policyNumber = Some("111"),
     insuranceCompanyAddress = Some(UkAddress("ADDRESS LINE 1", Some("ADDRESS LINE 2"), Some("ADDRESS LINE 3"), Some("ADDRESS LINE 4"), "GB", "ZZ1 1ZZ")))

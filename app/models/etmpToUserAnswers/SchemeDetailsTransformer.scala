@@ -122,7 +122,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       ((__ \ "moreThanTenTrustees").json.copyFrom((__ \ 'psaPspSchemeDetails \ 'schemeDetails \ 'hasMoreThanTenTrustees).json.pick) orElse doNothing) and
       membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
       membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and
-      (__ \ 'investmentRegulated).json.copyFrom((__ \ 'psaPspSchemeDetails \ 'schemeDetails \ 'isReguledSchemeInvestment).json.pick) and
+      (__ \ 'investmentRegulated).json.copyFrom((__ \ 'psaPspSchemeDetails \ 'schemeDetails \ 'isRegulatedSchemeInvestment).json.pick) and
       (__ \ 'occupationalPensionScheme).json.copyFrom((__ \ 'psaPspSchemeDetails \ 'schemeDetails \ 'isOccupationalPensionScheme).json.pick) and
       benefitsReads and
       moneyPurchaseReads and
