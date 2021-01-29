@@ -112,9 +112,9 @@ class SchemeServiceImpl @Inject()(
             Future.failed(new BadRequestException("Invalid pension scheme"))
         },
         valid = { validPensionsScheme =>
-          val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
+          val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId, tcmpToggle.isEnabled))
           logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
-          schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
+          schemeConnector.updateSchemeDetails(pstr, updatedScheme, tcmpToggle.isEnabled) andThen {
             case Success(httpResponse) =>
               sendSchemeUpdateEvent(psaId, validPensionsScheme, httpResponse.status, Some(httpResponse.json))
             case Failure(error: HttpException) =>

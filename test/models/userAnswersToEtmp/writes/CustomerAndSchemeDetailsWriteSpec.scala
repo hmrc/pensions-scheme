@@ -29,16 +29,33 @@ class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with 
 
     "map correctly to an update payload for schemeDetails API 1468" when {
 
-      "validate schemeDetails write with schema" in {
+      "validate schemeDetails write with schema when tcmp toggle is off" in {
 
         forAll(CustomerAndSchemeDetailsGen) {
           schemeDetails => {
 
-            val mappedSchemeDetails = Json.toJson(schemeDetails)(CustomerAndSchemeDetails.updateWrites(psaid = "A0012221"))
+            val mappedSchemeDetails = Json.toJson(schemeDetails)(CustomerAndSchemeDetails.updateWrites(psaid = "A0012221", tcmpToggle = false))
             val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
 
             val result = validateJson(elementToValidate = valid,
               schemaFileName = "api1468_schema.json",
+              schemaNodePath = "#/properties/schemeDetails")
+
+            result.isSuccess mustBe true
+          }
+        }
+      }
+
+      "validate schemeDetails write with schema when tcmp toggle is on" in {
+
+        forAll(CustomerAndSchemeDetailsGen) {
+          schemeDetails => {
+
+            val mappedSchemeDetails = Json.toJson(schemeDetails)(CustomerAndSchemeDetails.updateWrites(psaid = "A0012221", tcmpToggle = true))
+            val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
+
+            val result = validateJson(elementToValidate = valid,
+              schemaFileName = "api1468_schemaIF.json",
               schemaNodePath = "#/properties/schemeDetails")
 
             result.isSuccess mustBe true
@@ -63,7 +80,7 @@ class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with 
           haveInvalidBank = false
         )
 
-        val mappedSchemeDetails = Json.toJson(details)(CustomerAndSchemeDetails.updateWrites(psaid = "INVALID"))
+        val mappedSchemeDetails = Json.toJson(details)(CustomerAndSchemeDetails.updateWrites(psaid = "INVALID", tcmpToggle = false))
         val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
 
         val result = validateJson(elementToValidate = valid,

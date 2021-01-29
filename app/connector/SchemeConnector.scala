@@ -90,15 +90,10 @@ trait SchemeConnector {
                            request: RequestHeader
                          ): Future[Either[HttpResponse, JsValue]]
 
-  def updateSchemeDetails(
-                           pstr: String,
-                           data: JsValue
-                         )(
-                           implicit
-                           headerCarrier: HeaderCarrier,
-                           ec: ExecutionContext,
-                           request: RequestHeader
-                         ): Future[HttpResponse]
+  def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)
+                         (implicit headerCarrier: HeaderCarrier,
+                          ec: ExecutionContext,
+                          request: RequestHeader): Future[HttpResponse]
 
 }
 
@@ -264,18 +259,20 @@ class SchemeConnectorImpl @Inject()(
     )
   }
 
-  override def updateSchemeDetails(
-                                    pstr: String,
-                                    data: JsValue
-                                  )(
-                                    implicit
-                                    headerCarrier: HeaderCarrier,
-                                    ec: ExecutionContext,
-                                    request: RequestHeader
-                                  ): Future[HttpResponse] = {
+  override def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)(implicit
+                                                                headerCarrier: HeaderCarrier,
+                                                                ec: ExecutionContext,
+                                                                request: RequestHeader): Future[HttpResponse] = {
 
-    val url = config.updateSchemeUrl.format(pstr)
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+    val (url, hc, schemaPath) = if (tcmpToggle)
+      (config.updateSchemeIFUrl.format(pstr),
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
+        "/resources/schemas/schemeVariationIFSchema.json")
+        else
+      (config.updateSchemeUrl.format(pstr),
+       HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))),
+        "/resources/schemas/schemeVariationSchema.json")
+
 
     logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
 
@@ -287,9 +284,7 @@ class SchemeConnectorImpl @Inject()(
     ) map { response =>
       response.status match {
         case BAD_REQUEST if response.body.contains("INVALID_PAYLOAD") =>
-          invalidPayloadHandler.logFailures(
-            "/resources/schemas/schemeVariationSchema.json", data, url
-          )
+          invalidPayloadHandler.logFailures(schemaPath, data, url)
         case _ => Unit
       }
       response
