@@ -523,7 +523,89 @@ class SchemeConnectorSpec
     result shouldBe "4725c81192514c069b8ff1"
   }
 
-  "SchemeConnector updateSchemeDetails" should "handle OK (200)" in {
+  "SchemeConnector updateSchemeDetails with toggle on" should "handle OK (200)" in {
+    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .withHeader("Content-Type", equalTo("application/json"))
+        .withRequestBody(equalToJson(Json.stringify(updateSchemeData)))
+        .willReturn(
+          ok(Json.stringify(successResponse))
+            .withHeader("Content-Type", "application/json")
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe OK
+    }
+  }
+
+  it should "handle FORBIDDEN (403) - INVALID_VARIATION" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          forbidden
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_VARIATION"))
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe FORBIDDEN
+    }
+  }
+
+  it should "handle CONFLICT (409) - DUPLICATE_SUBMISSION" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(CONFLICT)
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("DUPLICATE_SUBMISSION"))
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe CONFLICT
+    }
+  }
+
+  it should "handle BAD_REQUEST (400)" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_PSTR"))
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe BAD_REQUEST
+    }
+  }
+
+  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody("INVALID_PAYLOAD")
+        )
+    )
+
+    logger.reset()
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe BAD_REQUEST
+      logger.getLogEntries.size shouldBe 1
+      logger.getLogEntries.head.level shouldBe Level.WARN
+    }
+  }
+
+  "SchemeConnector updateSchemeDetails with toggle off" should "handle OK (200)" in {
     val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
     server.stubFor(
       post(urlEqualTo(updateSchemeUrl))
@@ -535,7 +617,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe OK
     }
   }
@@ -550,7 +632,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe FORBIDDEN
     }
   }
@@ -566,7 +648,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe CONFLICT
     }
   }
@@ -581,7 +663,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -598,7 +680,7 @@ class SchemeConnectorSpec
 
     logger.reset()
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
       response.status shouldBe BAD_REQUEST
       logger.getLogEntries.size shouldBe 1
       logger.getLogEntries.head.level shouldBe Level.WARN
@@ -620,6 +702,7 @@ object SchemeConnectorSpec extends JsonFileReader {
   val listOfSchemeUrl: String = s"/pension-online/subscription/$idValue/list"
   val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$idNumber"
   val updateSchemeUrl = s"/pension-online/scheme-variation/pstr/$pstr"
+  val updateSchemeIFUrl = s"/pension-online/scheme-variation/pods/$pstr"
   private val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
 
   private val invalidBusinessPartnerResponse =
