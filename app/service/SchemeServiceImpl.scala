@@ -73,6 +73,17 @@ class SchemeServiceImpl @Inject()(
 
   }
 
+  private val tcmpToggleOffTranformer: JsValue => JsObject = json => json.as[JsObject].transform(
+    __.json.update(
+      (__ \ "customerAndSchemeDetails" \ "isReguledSchemeInvestment").json.copyFrom(
+        (__ \ "customerAndSchemeDetails" \ "isRegulatedSchemeInvestment").json.pick
+      )
+    ) andThen
+      (__ \ "customerAndSchemeDetails" \ "isRegulatedSchemeInvestment").json.prune
+  ).getOrElse(throw RegisterSchemeToggleOffTransformFailed)
+
+  case object RegisterSchemeToggleOffTransformFailed extends Exception
+
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
     featureToggleService.get(TCMP).flatMap { tcmpToggle =>
@@ -88,7 +99,8 @@ class SchemeServiceImpl @Inject()(
             error => Future.failed(error),
             bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
               pensionsScheme =>
-                schemeConnector.registerScheme(psaId, Json.toJson(pensionsScheme), tcmpToggle.isEnabled) andThen {
+                val registerData = if(tcmpToggle.isEnabled) Json.toJson(pensionsScheme) else tcmpToggleOffTranformer(Json.toJson(pensionsScheme))
+                schemeConnector.registerScheme(psaId, registerData, tcmpToggle.isEnabled) andThen {
                   case Success(httpResponse) =>
                     sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
                   case Failure(error: HttpException) =>

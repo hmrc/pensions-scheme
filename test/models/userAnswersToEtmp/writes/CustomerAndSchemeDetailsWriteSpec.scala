@@ -71,7 +71,7 @@ class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with 
           schemeStructure = Some(SchemeType.single.value),
           currentSchemeMembers = "INVALID",
           futureSchemeMembers = "INVALID",
-          isReguledSchemeInvestment = false,
+          isRegulatedSchemeInvestment = false,
           isOccupationalPensionScheme = false,
           areBenefitsSecuredContractInsuranceCompany = false,
           doesSchemeProvideBenefits = Benefits.opt1.value,

@@ -49,7 +49,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     schemeStructure <- schemeTypeGen
     currentSchemeMembers <- memberGen
     futureSchemeMembers <- memberGen
-    isReguledSchemeInvestment <- boolenGen
+    isRegulatedSchemeInvestment <- boolenGen
     isOccupationalPensionScheme <- boolenGen
     areBenefitsSecuredContractInsuranceCompany <- boolenGen
     schemeProvideBenefits <- schemeProvideBenefitsGen
@@ -81,7 +81,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "schemeName" -> schemeName,
         "currentSchemeMembers" -> currentSchemeMembers,
         "futureSchemeMembers" -> futureSchemeMembers,
-        "isReguledSchemeInvestment" -> isReguledSchemeInvestment,
+        "isRegulatedSchemeInvestment" -> isRegulatedSchemeInvestment,
         "isOccupationalPensionScheme" -> isOccupationalPensionScheme,
         "schemeProvideBenefits" -> schemeProvideBenefits,
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
@@ -183,7 +183,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         "schemeEstablishedCountry" -> schemeEstablishedCountry,
         "membership" -> SchemeMembers.nameWithValue(currentSchemeMembers),
         "membershipFuture" -> SchemeMembers.nameWithValue(futureSchemeMembers),
-        "investmentRegulated" -> isReguledSchemeInvestment,
+        "investmentRegulated" -> isRegulatedSchemeInvestment,
         "occupationalPensionScheme" -> isOccupationalPensionScheme,
         "benefits" -> Benefits.nameWithValue(schemeProvideBenefits),
         "securedBenefits" -> areBenefitsSecuredContractInsuranceCompany

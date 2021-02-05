@@ -22,7 +22,7 @@ import play.api.libs.json._
 
 case class CustomerAndSchemeDetails(schemeName: String, isSchemeMasterTrust: Boolean, schemeStructure: Option[String],
            otherSchemeStructure: Option[String] = None, haveMoreThanTenTrustee: Option[Boolean] = None, currentSchemeMembers: String,
-           futureSchemeMembers: String, isReguledSchemeInvestment: Boolean, isOccupationalPensionScheme: Boolean,
+           futureSchemeMembers: String, isRegulatedSchemeInvestment: Boolean, isOccupationalPensionScheme: Boolean,
            areBenefitsSecuredContractInsuranceCompany: Boolean, doesSchemeProvideBenefits: String, tcmpBenefitType: Option[String],
            schemeEstablishedCountry: String, haveInvalidBank: Boolean, insuranceCompanyName: Option[String] = None,
            policyNumber: Option[String] = None, insuranceCompanyAddress: Option[Address] = None,
@@ -68,7 +68,7 @@ object CustomerAndSchemeDetails {
         haveMoreThanTenTrustee = moreThanTenTrustees,
         currentSchemeMembers = SchemeMembers.valueWithName(membership),
         futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),
-        isReguledSchemeInvestment = investmentRegulated,
+        isRegulatedSchemeInvestment = investmentRegulated,
         isOccupationalPensionScheme = occupationalPension,
         areBenefitsSecuredContractInsuranceCompany = securedBenefits,
         doesSchemeProvideBenefits = benefits._1,
@@ -144,7 +144,7 @@ object CustomerAndSchemeDetails {
     scheme.otherSchemeStructure,
     scheme.currentSchemeMembers,
     scheme.futureSchemeMembers,
-    scheme.isReguledSchemeInvestment,
+    scheme.isRegulatedSchemeInvestment,
     scheme.isOccupationalPensionScheme,
     scheme.doesSchemeProvideBenefits,
     scheme.schemeEstablishedCountry,
@@ -165,7 +165,7 @@ object CustomerAndSchemeDetails {
       (JsPath \ "otherPensionSchemeStructure").writeNullable[String] and
       (JsPath \ "currentSchemeMembers").write[String] and
       (JsPath \ "futureSchemeMembers").write[String] and
-      (JsPath \ "isReguledSchemeInvestment").write[Boolean] and
+      (JsPath \ "isRegulatedSchemeInvestment").write[Boolean] and
       (JsPath \ "isOccupationalPensionScheme").write[Boolean] and
       (JsPath \ "schemeProvideBenefits").write[String] and
       (JsPath \ "tcmpBenefitType").writeNullable[String] and
@@ -180,7 +180,7 @@ object CustomerAndSchemeDetails {
     scheme.otherSchemeStructure,
     scheme.currentSchemeMembers,
     scheme.futureSchemeMembers,
-    scheme.isReguledSchemeInvestment,
+    scheme.isRegulatedSchemeInvestment,
     scheme.isOccupationalPensionScheme,
     scheme.doesSchemeProvideBenefits,
     scheme.tcmpBenefitType,
