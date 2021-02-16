@@ -21,24 +21,26 @@ import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
+import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
 import org.scalatest._
 import org.scalatestplus.mockito.MockitoSugar
+import org.slf4j.event.Level
 import play.api.LoggerLike
-import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JodaWrites._
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import service.FeatureToggleService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.WireMockHelper
 
 import scala.concurrent.Future
-
 class SchemeIFConnectorSpec
   extends AsyncFlatSpec
     with WireMockHelper
@@ -522,6 +524,185 @@ class SchemeIFConnectorSpec
       auditService.verifySent(
         PspSchemeDetailsAuditEvent(pspId, 404, Some(Json.parse(expectedResponse)))
       ) shouldBe true
+    }
+  }
+
+  "SchemeConnector registerScheme with tcmp toggle on" should "handle OK (200)" in {
+    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .withHeader("Content-Type", equalTo("application/json"))
+        .withRequestBody(equalToJson(Json.stringify(registerSchemeData)))
+        .willReturn(
+          ok(Json.stringify(successResponse))
+            .withHeader("Content-Type", "application/json")
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe OK
+    }
+  }
+
+  it should "handle FORBIDDEN (403) - INVALID_BUSINESS_PARTNER" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          forbidden
+            .withHeader("Content-Type", "application/json")
+            .withBody(invalidBusinessPartnerResponse)
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe FORBIDDEN
+    }
+  }
+
+  it should "handle CONFLICT (409) - DUPLICATE_SUBMISSION" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(CONFLICT)
+            .withHeader("Content-Type", "application/json")
+            .withBody(duplicateSubmissionResponse)
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe CONFLICT
+    }
+  }
+
+  it should "handle BAD_REQUEST (400)" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody("Bad Request")
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe BAD_REQUEST
+    }
+  }
+
+  it should "throw NotFoundException for NOT_FOUND (404) response" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          notFound
+            .withHeader("Content-Type", "application/json")
+            .withBody("Not Found")
+        )
+    )
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe NOT_FOUND
+    }
+  }
+
+  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
+    server.stubFor(
+      post(urlEqualTo(schemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody("INVALID_PAYLOAD")
+        )
+    )
+
+    logger.reset()
+
+    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe BAD_REQUEST
+      logger.getLogEntries.size shouldBe 1
+      logger.getLogEntries.head.level shouldBe Level.WARN
+    }
+  }
+
+  "SchemeConnector updateSchemeDetails with toggle on" should "handle OK (200)" in {
+    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .withHeader("Content-Type", equalTo("application/json"))
+        .withRequestBody(equalToJson(Json.stringify(updateSchemeData)))
+        .willReturn(
+          ok(Json.stringify(successResponse))
+            .withHeader("Content-Type", "application/json")
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe OK
+    }
+  }
+
+  it should "handle FORBIDDEN (403) - INVALID_VARIATION" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          forbidden
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_VARIATION"))
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe FORBIDDEN
+    }
+  }
+
+  it should "handle CONFLICT (409) - DUPLICATE_SUBMISSION" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(CONFLICT)
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("DUPLICATE_SUBMISSION"))
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe CONFLICT
+    }
+  }
+
+  it should "handle BAD_REQUEST (400)" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody(errorResponse("INVALID_PSTR"))
+        )
+    )
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe BAD_REQUEST
+    }
+  }
+
+  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
+    server.stubFor(
+      post(urlEqualTo(updateSchemeIFUrl))
+        .willReturn(
+          badRequest
+            .withHeader("Content-Type", "application/json")
+            .withBody("INVALID_PAYLOAD")
+        )
+    )
+
+    logger.reset()
+
+    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+      response.status shouldBe BAD_REQUEST
+      logger.getLogEntries.size shouldBe 1
+      logger.getLogEntries.head.level shouldBe Level.WARN
     }
   }
 }
