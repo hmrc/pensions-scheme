@@ -53,7 +53,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
   }
 
   private val schemeTypeReads: Reads[JsObject] =
-    (__ \ 'schemeDetails \ 'schemeMasterTrust).read[Boolean].flatMap {
+    (__ \ 'schemeDetails \ 'isSchemeMasterTrust).read[Boolean].flatMap {
       case true => (__ \ 'schemeType \ 'name).json.put(JsString("master"))
       case _ =>
         (__ \ 'schemeDetails \ 'pensionSchemeStructure).readNullable[String].flatMap { schemeStructure =>
@@ -77,7 +77,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
     ((__ \ 'pspDetails \ 'authorisingPSA \ 'middleName).json.copyFrom((__ \ 'pspRelationshipDetails \ 'authorisedPSAMiddleName).json.pick) orElse doNothing) and
     ((__ \ 'pspDetails \ 'authorisingPSA \ 'lastName).json.copyFrom((__ \ 'pspRelationshipDetails \ 'authorisedPSALastName).json.pick) orElse doNothing) and
     ((__ \ 'pspDetails \ 'authorisingPSA \ 'organisationOrPartnershipName).json.copyFrom((__ \ 'pspRelationshipDetails \ 'authorisedPSAOrgOrPartName).json.pick) orElse doNothing) and
-    ((__ \ 'pspDetails \ 'pspClientReference).json.copyFrom((__ \ 'pspRelationshipDetails \ 'pspClientReference).json.pick) orElse doNothing)).reduce
+    ((__ \ 'pspDetails \ 'pspClientReference).json.copyFrom((__ \ 'pspRelationshipDetails \ 'clientReference).json.pick) orElse doNothing)).reduce
 
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
     pspRelationshipDetails and
@@ -88,7 +88,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
       schemeTypeReads and
       membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
       membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and
-      (__ \ 'investmentRegulated).json.copyFrom((__ \ 'schemeDetails \ 'isInvestmentRegulatedScheme).json.pick) and
+      (__ \ 'investmentRegulated).json.copyFrom((__ \ 'schemeDetails \ 'isRegulatedSchemeInvestment).json.pick) and
       (__ \ 'occupationalPensionScheme).json.copyFrom((__ \ 'schemeDetails \ 'isOccupationalPensionScheme).json.pick) and
       benefitsReads and
       moneyPurchaseReads and

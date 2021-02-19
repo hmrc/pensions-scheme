@@ -45,7 +45,7 @@ class TrusteeDetailsTransformer extends JsonTransformer {
 
   def userAnswersTrusteeCompanyReads(apiPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
-      (__ \ 'companyDetails \ 'companyName).json.copyFrom((apiPath \ 'companyOrOrgName).json.pick) reduce
+      (__ \ 'companyDetails \ 'companyName).json.copyFrom((apiPath \ 'organisationName).json.pick) reduce
 
   def userAnswersTrusteePartnershipReads(apiPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and

@@ -48,7 +48,7 @@ class EstablisherDetailsTransformer extends JsonTransformer {
 
   def userAnswersEstablisherCompanyReads(apiPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("company")) and
-      (__ \ 'companyDetails \ 'companyName).json.copyFrom((apiPath \ 'companyOrOrgName).json.pick) and
+      (__ \ 'companyDetails \ 'companyName).json.copyFrom((apiPath \ 'organisationName).json.pick) and
       (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
 
 
