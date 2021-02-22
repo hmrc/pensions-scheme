@@ -7,12 +7,12 @@
     "pstr": "24000001IN",
     "schemeStatus": "Open",
     "schemeName": "Open Single Trust Scheme with Indiv Establisher and Trustees",
-    "schemeMasterTrust": true,
+    "isSchemeMasterTrust": true,
     "pensionSchemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
     "otherPensionSchemeStructure": "Pension Scheme Structure Other",
     "currentSchemeMembers": "0",
     "futureSchemeMembers": "0",
-    "isInvestmentRegulatedScheme": true,
+    "isRegulatedSchemeInvestment": true,
     "isOccupationalPensionScheme": true,
     "schemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
     "schemeEstablishedCountry": "AD",
@@ -52,10 +52,10 @@
     ],
     "companyOrOrgDetails": [
       {
-        "companyOrOrgName": "Abc Private limited"
+        "organisationName": "Abc Private limited"
       },
       {
-        "companyOrOrgName": "XYZ Private limited"
+        "organisationName": "XYZ Private limited"
       }
     ],
     "partnershipDetails": [
@@ -84,10 +84,10 @@
     ],
     "companyOrOrgDetails": [
       {
-        "companyOrOrgName": "Trustee Comp Private limited"
+        "organisationName": "Trustee Comp Private limited"
       },
       {
-        "companyOrOrgName": "Next Trustee Comp Private limited"
+        "organisationName": "Next Trustee Comp Private limited"
       }
     ],
     "partnershipDetails": [
@@ -107,6 +107,6 @@
     "relationshipStartDate": "2019-03-29",
     "authorisedPSAID": "A1090099",
     "authorisedPSAOrgOrPartName": "Authorised PSA Organisation Name",
-    "pspClientReference": "1234345"
+    "clientReference": "1234345"
   }
 }
