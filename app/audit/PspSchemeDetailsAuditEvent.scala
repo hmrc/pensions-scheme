@@ -16,15 +16,31 @@
 
 package audit
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json, __}
+import play.api.libs.json.Reads._
+import play.api.libs.functional.syntax._
 
 case class PspSchemeDetailsAuditEvent(pspId: String, status: Int, payload: Option[JsValue]) extends AuditEvent {
 
-  override def auditType: String = "GetPspSchemeDetails"
+  override def auditType: String = "GetPensionSchemePractitionerSchemeDetails"
 
   override def details: Map[String, String] = Map(
-    "pspId" -> pspId,
+    "pensionSchemePractitionerId" -> pspId,
     "status" -> status.toString,
     "payload" -> payload.fold("")(Json.stringify)
   )
+
+  private val expandAcronymTransformer: JsValue => JsObject = json => json.as[JsObject].transform(
+    __.json.update(
+      (
+        (__ \ "pensionSchemePractitionerSchemeDetails").json.copyFrom((__ \ "pspDetails").json.pick) and
+          (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
+            (__ \ "pspDetails" \ "authorisingPSAID").json.pick)
+        ).reduce
+    ) andThen
+      (__ \ "pspDetails").json.prune andThen
+      (__ \ "pspDetails" \ "authorisingPSAID").json.prune
+  ).getOrElse(Json.obj("\n\ntest"-> "\n\ntest"))
+
+  println(s"\n\n\n\n\n ${payload.map(expandAcronymTransformer(_))} \n\n\n\n")
 }
