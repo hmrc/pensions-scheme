@@ -16,11 +16,15 @@
 
 package audit
 
-import play.api.libs.json.{JsObject, JsValue, Json, __}
+import play.api.libs.json.{JsObject, JsValue, Json, Reads, __}
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
 
-case class PspSchemeDetailsAuditEvent(pspId: String, status: Int, payload: Option[JsValue]) extends AuditEvent {
+case class PspSchemeDetailsAuditEvent(
+                                       pspId: String,
+                                       status: Int,
+                                       payload: Option[JsValue]
+                                     ) extends AuditEvent {
 
   override def auditType: String = "GetPensionSchemePractitionerSchemeDetails"
 
@@ -30,17 +34,42 @@ case class PspSchemeDetailsAuditEvent(pspId: String, status: Int, payload: Optio
     "payload" -> payload.fold("")(Json.stringify)
   )
 
-  private val expandAcronymTransformer: JsValue => JsObject = json => json.as[JsObject].transform(
-    __.json.update(
-      (
-        (__ \ "pensionSchemePractitionerSchemeDetails").json.copyFrom((__ \ "pspDetails").json.pick) and
-          (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
-            (__ \ "pspDetails" \ "authorisingPSAID").json.pick)
-        ).reduce
-    ) andThen
-      (__ \ "pspDetails").json.prune andThen
-      (__ \ "pspDetails" \ "authorisingPSAID").json.prune
-  ).getOrElse(Json.obj("\n\ntest"-> "\n\ntest"))
+  val doNothing: Reads[JsObject] = {
+    __.json.put(Json.obj())
+  }
 
-  println(s"\n\n\n\n\n ${payload.map(expandAcronymTransformer(_))} \n\n\n\n")
+  private val expandAcronymTransformer: JsValue => JsObject =
+    json => json.as[JsObject].transform(
+      __.json.update(
+        (
+          (__ \ "pensionSchemePractitionerSchemeDetails").json.copyFrom(
+            (__ \ "pspDetails").json.pick
+          ) and
+            (__ \ "pensionSchemeTaxReference").json.copyFrom(
+              (__ \ "pstr").json.pick
+            ) and
+            (__ \ "schemeReferenceNumber").json.copyFrom(
+              (__ \ "srn").json.pick
+            ) and
+            (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
+              (__ \ "pspDetails" \ "authorisingPSAID").json.pick
+            ) and
+            (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPensionSchemeAdministrator").json.copyFrom(
+              (__ \ "pspDetails" \ "authorisingPSA").json.pick
+            ) and
+            ((__ \ "pensionSchemePractitionerSchemeDetails" \ "pensionSchemePractitionerClientReference").json.copyFrom(
+              (__ \ "pspDetails" \ "pspClientReference").json.pick) orElse doNothing)
+          ) reduce
+      ) andThen
+        (__ \ "pspDetails").json.prune andThen
+        (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPSAID").json.prune andThen
+        (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPSA").json.prune andThen
+        (__ \ "pensionSchemePractitionerSchemeDetails" \ "pspClientReference").json.prune andThen
+        (__ \ "pstr").json.prune andThen
+        (__ \ "srn").json.prune
+    ).getOrElse(throw ExpandAcronymTransformerFailed)
+
+  case object ExpandAcronymTransformerFailed extends Exception
+
+  println(s"\n\n\n\n\n ${Json.prettyPrint(expandAcronymTransformer(payload.get))} \n\n\n\n")
 }
