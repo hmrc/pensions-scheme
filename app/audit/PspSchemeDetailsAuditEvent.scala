@@ -71,5 +71,5 @@ case class PspSchemeDetailsAuditEvent(
 
   case object ExpandAcronymTransformerFailed extends Exception
 
-  println(s"\n\n\n\n\n ${Json.prettyPrint(expandAcronymTransformer(payload.get))} \n\n\n\n")
+
 }
