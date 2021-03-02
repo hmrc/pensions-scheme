@@ -31,7 +31,7 @@ case class PspSchemeDetailsAuditEvent(
   override def details: Map[String, String] = Map(
     "pensionSchemePractitionerId" -> pspId,
     "status" -> status.toString,
-    "payload" -> payload.fold("")(Json.stringify)
+    "payload" -> payload.fold("")(p => Json.stringify(expandAcronymTransformer(p)))
   )
 
   val doNothing: Reads[JsObject] = {
@@ -42,7 +42,7 @@ case class PspSchemeDetailsAuditEvent(
     json => json.as[JsObject].transform(
       __.json.update(
         (
-          (__ \ "pensionSchemePractitionerSchemeDetails").json.copyFrom(
+          (__ \ "pensionSchemePractitionerDetails").json.copyFrom(
             (__ \ "pspDetails").json.pick
           ) and
             (__ \ "pensionSchemeTaxReference").json.copyFrom(
@@ -51,25 +51,24 @@ case class PspSchemeDetailsAuditEvent(
             (__ \ "schemeReferenceNumber").json.copyFrom(
               (__ \ "srn").json.pick
             ) and
-            (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
+            (__ \ "pensionSchemePractitionerDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
               (__ \ "pspDetails" \ "authorisingPSAID").json.pick
             ) and
-            (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPensionSchemeAdministrator").json.copyFrom(
+            (__ \ "pensionSchemePractitionerDetails" \ "authorisingPensionSchemeAdministrator").json.copyFrom(
               (__ \ "pspDetails" \ "authorisingPSA").json.pick
             ) and
-            ((__ \ "pensionSchemePractitionerSchemeDetails" \ "pensionSchemePractitionerClientReference").json.copyFrom(
+            ((__ \ "pensionSchemePractitionerDetails" \ "pensionSchemePractitionerClientReference").json.copyFrom(
               (__ \ "pspDetails" \ "pspClientReference").json.pick) orElse doNothing)
           ) reduce
       ) andThen
         (__ \ "pspDetails").json.prune andThen
-        (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPSAID").json.prune andThen
-        (__ \ "pensionSchemePractitionerSchemeDetails" \ "authorisingPSA").json.prune andThen
-        (__ \ "pensionSchemePractitionerSchemeDetails" \ "pspClientReference").json.prune andThen
+        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSAID").json.prune andThen
+        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSA").json.prune andThen
+        (__ \ "pensionSchemePractitionerDetails" \ "pspClientReference").json.prune andThen
         (__ \ "pstr").json.prune andThen
         (__ \ "srn").json.prune
     ).getOrElse(throw ExpandAcronymTransformerFailed)
 
   case object ExpandAcronymTransformerFailed extends Exception
 
-  println(s"\n\n\n\n\n ${Json.prettyPrint(expandAcronymTransformer(payload.get))} \n\n\n\n")
 }

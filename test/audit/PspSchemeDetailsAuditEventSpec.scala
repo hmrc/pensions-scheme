@@ -17,21 +17,66 @@
 package audit
 
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 
-class PspSchemeDetailsAuditEventSpec  extends WordSpec with MustMatchers {
+class PspSchemeDetailsAuditEventSpec extends WordSpec with MustMatchers {
 
-  private val pspId = "24000040IN"
+  private val pspId = "pspId"
   private val status = 200
-  private val payload = Json.toJson(Json.obj("name" -> "abc"))
+  private val inputPayload: JsValue = Json.parse(
+    """ {
+      |  "pstr": "24000040IN",
+      |  "srn": "S2400000040",
+      |  "pspDetails": {
+      |    "relationshipStartDate": "2019-03-29",
+      |    "pspClientReference": "1234345",
+      |    "authorisingPSA": {
+      |      "organisationOrPartnershipName": "Authorised PSA Organisation Name"
+      |    },
+      |    "id": "21000005",
+      |    "individual": {
+      |      "firstName": "Nigel",
+      |      "lastName": "Smith",
+      |      "middleName": "Robert"
+      |    },
+      |    "authorisingPSAID": "A1090099"
+      |  }
+      |}
+      |""".stripMargin)
 
 
-  private val event = PspSchemeDetailsAuditEvent(pspId, status, Some(payload))
+  private val outputPayload: JsValue = Json.parse(
+    """  {
+      |    "pensionSchemeTaxReference": "24000040IN",
+      |    "schemeReferenceNumber": "S2400000040",
+      |    "pensionSchemePractitionerDetails": {
+      |      "relationshipStartDate": "2019-03-29",
+      |      "pensionSchemePractitionerClientReference": "1234345",
+      |      "authorisingPensionSchemeAdministrator": {
+      |        "organisationOrPartnershipName": "Authorised PSA Organisation Name"
+      |      },
+      |      "id": "21000005",
+      |      "individual": {
+      |        "firstName": "Nigel",
+      |        "lastName": "Smith",
+      |        "middleName": "Robert"
+      |      },
+      |      "authorisingPensionSchemeAdministratorID": "A1090099"
+      |    }
+      |  }
+      |""".stripMargin)
 
-  private val expectedDetails = Map(
+
+  private val event = PspSchemeDetailsAuditEvent(
+    pspId = pspId,
+    status = status,
+    payload = Some(inputPayload)
+  )
+
+  private val expectedDetails: Map[String, String] = Map(
     "pensionSchemePractitionerId" -> pspId,
     "status" -> status.toString,
-    "payload" -> payload.toString
+    "payload" -> outputPayload.toString
   )
 
   "calling PspSchemeDetailsAuditEvent" must {
@@ -42,13 +87,5 @@ class PspSchemeDetailsAuditEventSpec  extends WordSpec with MustMatchers {
 
       event.details mustBe expectedDetails
     }
-
-    "return the correctly transformed JSON" in {
-
-      val expectedJson: String = ""
-
-      event.expandAcronymTransformer
-    }
-
   }
 }
