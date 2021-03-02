@@ -43,5 +43,12 @@ class PspSchemeDetailsAuditEventSpec  extends WordSpec with MustMatchers {
       event.details mustBe expectedDetails
     }
 
+    "return the correctly transformed JSON" in {
+
+      val expectedJson: String = ""
+
+      event.expandAcronymTransformer
+    }
+
   }
 }
