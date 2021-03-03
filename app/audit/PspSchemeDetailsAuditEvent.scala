@@ -16,15 +16,59 @@
 
 package audit
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json, Reads, __}
+import play.api.libs.json.Reads._
+import play.api.libs.functional.syntax._
 
-case class PspSchemeDetailsAuditEvent(pspId: String, status: Int, payload: Option[JsValue]) extends AuditEvent {
+case class PspSchemeDetailsAuditEvent(
+                                       pspId: String,
+                                       status: Int,
+                                       payload: Option[JsValue]
+                                     ) extends AuditEvent {
 
-  override def auditType: String = "GetPspSchemeDetails"
+  override def auditType: String = "GetPensionSchemePractitionerSchemeDetails"
 
   override def details: Map[String, String] = Map(
-    "pspId" -> pspId,
+    "pensionSchemePractitionerId" -> pspId,
     "status" -> status.toString,
-    "payload" -> payload.fold("")(Json.stringify)
+    "payload" -> payload.fold("")(p => Json.stringify(expandAcronymTransformer(p)))
   )
+
+  val doNothing: Reads[JsObject] = {
+    __.json.put(Json.obj())
+  }
+
+  private val expandAcronymTransformer: JsValue => JsObject =
+    json => json.as[JsObject].transform(
+      __.json.update(
+        (
+          (__ \ "pensionSchemePractitionerDetails").json.copyFrom(
+            (__ \ "pspDetails").json.pick
+          ) and
+            (__ \ "pensionSchemeTaxReference").json.copyFrom(
+              (__ \ "pstr").json.pick
+            ) and
+            (__ \ "schemeReferenceNumber").json.copyFrom(
+              (__ \ "srn").json.pick
+            ) and
+            (__ \ "pensionSchemePractitionerDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
+              (__ \ "pspDetails" \ "authorisingPSAID").json.pick
+            ) and
+            (__ \ "pensionSchemePractitionerDetails" \ "authorisingPensionSchemeAdministrator").json.copyFrom(
+              (__ \ "pspDetails" \ "authorisingPSA").json.pick
+            ) and
+            ((__ \ "pensionSchemePractitionerDetails" \ "pensionSchemePractitionerClientReference").json.copyFrom(
+              (__ \ "pspDetails" \ "pspClientReference").json.pick) orElse doNothing)
+          ) reduce
+      ) andThen
+        (__ \ "pspDetails").json.prune andThen
+        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSAID").json.prune andThen
+        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSA").json.prune andThen
+        (__ \ "pensionSchemePractitionerDetails" \ "pspClientReference").json.prune andThen
+        (__ \ "pstr").json.prune andThen
+        (__ \ "srn").json.prune
+    ).getOrElse(throw ExpandAcronymTransformerFailed)
+
+  case object ExpandAcronymTransformerFailed extends Exception
+
 }
