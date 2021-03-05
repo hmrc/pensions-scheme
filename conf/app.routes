@@ -12,14 +12,12 @@ GET           /psp-scheme                                       controllers.Sche
 GET           /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.get(id: String)
 POST          /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.save(id: String)
 DELETE        /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.remove(id: String)
-GET           /journey-cache/scheme-subscription/:id/lastUpdated    controllers.cache.SchemeSubscriptionJourneyCacheController.lastUpdated(id: String)
 
 
 # answers caching in protected mongo
 GET           /journey-cache/update-scheme/:id                  controllers.cache.UpdateSchemeJourneyCacheController.get(id: String)
 POST          /journey-cache/update-scheme/:id                  controllers.cache.UpdateSchemeJourneyCacheController.save(id: String)
 DELETE        /journey-cache/update-scheme/:id                  controllers.cache.UpdateSchemeJourneyCacheController.remove(id: String)
-GET           /journey-cache/update-scheme/:id/lastUpdated      controllers.cache.UpdateSchemeJourneyCacheController.lastUpdated(id: String)
 
 # scheme details lock caching in protected mongo
 GET           /update-scheme/get-lock                           controllers.cache.SchemeVarianceLockCacheController.getLock()

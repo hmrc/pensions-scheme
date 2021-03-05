@@ -21,7 +21,6 @@ import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
-import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
@@ -31,7 +30,6 @@ import org.slf4j.event.Level
 import play.api.LoggerLike
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.JodaWrites._
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
@@ -40,6 +38,7 @@ import service.FeatureToggleService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.WireMockHelper
 
+import java.time.LocalDate
 import scala.concurrent.Future
 class SchemeIFConnectorSpec
   extends AsyncFlatSpec

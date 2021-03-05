@@ -16,12 +16,12 @@
 
 package models.userAnswersToEtmp.reads.schemes
 
-import org.joda.time.LocalDate
 import org.scalacheck.Arbitrary.{arbitrary, _}
 import org.scalacheck.Gen
-import play.api.libs.json.JodaWrites._
 import play.api.libs.json.{JsObject, Json}
 import wolfendale.scalacheck.regexp.RegexpGen
+
+import java.time.LocalDate
 
 //scalastyle:off magic.number
 trait PSASchemeDetailsGenerator {
@@ -43,7 +43,7 @@ trait PSASchemeDetailsGenerator {
     day <- Gen.choose(1, 28)
     month <- Gen.choose(1, 12)
     year <- Gen.choose(1990, 2000)
-  } yield new LocalDate(year, month, day)
+  } yield LocalDate.of(year, month, day)
 
   val addressGenerator: Gen[JsObject] = for {
     nonUkAddress <- arbitrary[Boolean]
@@ -267,7 +267,7 @@ trait PSASchemeDetailsGenerator {
       "Deregistered", "Wound-up", "Rejected Under Appeal")
   }
 
-  def nonEmptyString: Gen[String] = Gen.alphaStr.suchThat(!_.isEmpty)
+  def nonEmptyString: Gen[String] = Gen.alphaStr.suchThat(_.nonEmpty)
 
 }
 

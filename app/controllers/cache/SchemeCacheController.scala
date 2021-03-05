@@ -16,10 +16,7 @@
 
 package controllers.cache
 
-import org.joda.time.DateTime
 import play.api.Logger
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
@@ -56,21 +53,6 @@ abstract class SchemeCacheController(
         repository.get(id).map { response =>
           logger.debug(s"controllers.PensionsSchemeCacheController.get: Response for request Id $id is $response")
           response.map(Ok(_)).getOrElse(NotFound)
-        }
-      }
-  }
-
-  def lastUpdated(id: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      //This should be removed when manage-pensions-frontend is upgraded to Play 2.6
-      val jodaTimeNumberWrites: Writes[DateTime] = Writes(JodaDateTimeNumberWrites.writes(_))
-      authorised() {
-        logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
-        repository.getLastUpdated(id).map { response =>
-          logger.debug("controllers.PensionsSchemeCacheController.get: Response " + response)
-          response.map {
-            date => Ok(Json.toJson(date)(jodaTimeNumberWrites))
-          } getOrElse NotFound
         }
       }
   }

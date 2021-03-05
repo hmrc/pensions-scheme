@@ -17,13 +17,11 @@
 package controllers
 
 import base.SpecBase
-import org.joda.time.LocalDate
 import org.mockito.Matchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.json.JodaWrites._
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
@@ -31,6 +29,7 @@ import play.api.test.Helpers._
 import service.SchemeService
 import uk.gov.hmrc.http._
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
