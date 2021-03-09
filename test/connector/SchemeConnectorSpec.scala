@@ -16,13 +16,12 @@
 
 package connector
 
-import audit.{AuditService, SchemeDetailsAuditEvent}
 import audit.testdoubles.StubSuccessfulAuditService
+import audit.{AuditService, SchemeDetailsAuditEvent}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.FeatureToggle.Disabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
-import org.joda.time.LocalDate
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
@@ -32,7 +31,6 @@ import org.slf4j.event.Level
 import play.api.LoggerLike
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.JodaWrites._
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
@@ -41,6 +39,7 @@ import service.FeatureToggleService
 import uk.gov.hmrc.http._
 import utils.{StubLogger, WireMockHelper}
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class SchemeConnectorSpec
