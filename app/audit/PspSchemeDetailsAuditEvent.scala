@@ -16,22 +16,29 @@
 
 package audit
 
-import play.api.libs.json.{JsObject, JsValue, Json, Reads, __}
-import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
+
+import scala.language.postfixOps
 
 case class PspSchemeDetailsAuditEvent(
                                        pspId: String,
                                        status: Int,
                                        payload: Option[JsValue]
-                                     ) extends AuditEvent {
+                                     ) extends ExtendedAuditEvent {
 
   override def auditType: String = "GetPensionSchemePractitionerSchemeDetails"
 
-  override def details: Map[String, String] = Map(
+  override def details: JsObject = Json.obj(
     "pensionSchemePractitionerId" -> pspId,
     "status" -> status.toString,
-    "payload" -> payload.fold("")(p => Json.stringify(expandAcronymTransformer(p)))
+    "payload" -> {
+      payload match {
+        case Some(json) => expandAcronymTransformer(json)
+        case _ => Json.obj()
+      }
+    }
   )
 
   val doNothing: Reads[JsObject] = {

@@ -214,7 +214,7 @@ class SchemeConnectorImpl @Inject()(
     logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
     http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
       handlePspSchemeDetailsResponse(response)) andThen
-      schemeAuditService.sendPspSchemeDetailsEvent(pspId)(auditService.sendEvent)
+      schemeAuditService.sendPspSchemeDetailsEvent(pspId)(auditService.sendExtendedEvent)
 
   }
 
