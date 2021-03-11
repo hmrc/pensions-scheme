@@ -501,7 +501,7 @@ class SchemeIFConnectorSpec
         )
     )
     connector.getPspSchemeDetails(pspId, pstr).map { _ =>
-      auditService.verifySent(
+      auditService.verifyExtendedSent(
         PspSchemeDetailsAuditEvent(pspId, 200, Some(userAnswersResponse))
       ) shouldBe true
     }
@@ -519,8 +519,8 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.getPspSchemeDetails(pspId, pstr).map { response =>
-      auditService.verifySent(
+    connector.getPspSchemeDetails(pspId, pstr).map { _ =>
+      auditService.verifyExtendedSent(
         PspSchemeDetailsAuditEvent(pspId, 404, Some(Json.parse(expectedResponse)))
       ) shouldBe true
     }

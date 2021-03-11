@@ -17,54 +17,52 @@
 package audit
 
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 
-class PspSchemeDetailsAuditEventSpec extends WordSpec with MustMatchers {
+class PspSchemeDetailsAuditEventSpec
+  extends WordSpec
+    with MustMatchers {
 
   private val pspId = "pspId"
   private val status = 200
-  private val inputPayload: JsValue = Json.parse(
-    """ {
-      |  "pstr": "24000040IN",
-      |  "srn": "S2400000040",
-      |  "pspDetails": {
-      |    "relationshipStartDate": "2019-03-29",
-      |    "pspClientReference": "1234345",
-      |    "authorisingPSA": {
-      |      "organisationOrPartnershipName": "Authorised PSA Organisation Name"
-      |    },
-      |    "id": "21000005",
-      |    "individual": {
-      |      "firstName": "Nigel",
-      |      "lastName": "Smith",
-      |      "middleName": "Robert"
-      |    },
-      |    "authorisingPSAID": "A1090099"
-      |  }
-      |}
-      |""".stripMargin)
+  private val inputPayload: JsValue = Json.obj(
+    "pstr" -> "24000040IN",
+    "srn" -> "S2400000040",
+    "pspDetails" -> Json.obj(
+      "relationshipStartDate" -> "2019-03-29",
+      "pspClientReference" -> "1234345",
+      "authorisingPSA" -> Json.obj(
+        "organisationOrPartnershipName" -> "Authorised PSA Organisation Name"
+      ),
+      "id" -> "21000005",
+      "individual" -> Json.obj(
+        "firstName" -> "Nigel",
+        "lastName" -> "Smith",
+        "middleName" -> "Robert"
+      ),
+      "authorisingPSAID" -> "A1090099"
+    )
+  )
 
 
-  private val outputPayload: JsValue = Json.parse(
-    """  {
-      |    "pensionSchemeTaxReference": "24000040IN",
-      |    "schemeReferenceNumber": "S2400000040",
-      |    "pensionSchemePractitionerDetails": {
-      |      "relationshipStartDate": "2019-03-29",
-      |      "pensionSchemePractitionerClientReference": "1234345",
-      |      "authorisingPensionSchemeAdministrator": {
-      |        "organisationOrPartnershipName": "Authorised PSA Organisation Name"
-      |      },
-      |      "id": "21000005",
-      |      "individual": {
-      |        "firstName": "Nigel",
-      |        "lastName": "Smith",
-      |        "middleName": "Robert"
-      |      },
-      |      "authorisingPensionSchemeAdministratorID": "A1090099"
-      |    }
-      |  }
-      |""".stripMargin)
+  private val outputPayload: JsValue = Json.obj(
+    "pensionSchemeTaxReference" -> "24000040IN",
+    "schemeReferenceNumber" -> "S2400000040",
+    "pensionSchemePractitionerDetails" -> Json.obj(
+      "relationshipStartDate" -> "2019-03-29",
+      "pensionSchemePractitionerClientReference" -> "1234345",
+      "authorisingPensionSchemeAdministrator" -> Json.obj(
+        "organisationOrPartnershipName" -> "Authorised PSA Organisation Name"
+      ),
+      "id" -> "21000005",
+      "individual" -> Json.obj(
+        "firstName" -> "Nigel",
+        "lastName" -> "Smith",
+        "middleName" -> "Robert"
+      ),
+      "authorisingPensionSchemeAdministratorID" -> "A1090099"
+    )
+  )
 
 
   private val event = PspSchemeDetailsAuditEvent(
@@ -73,10 +71,10 @@ class PspSchemeDetailsAuditEventSpec extends WordSpec with MustMatchers {
     payload = Some(inputPayload)
   )
 
-  private val expectedDetails: Map[String, String] = Map(
+  private val expectedDetails: JsObject = Json.obj(
     "pensionSchemePractitionerId" -> pspId,
     "status" -> status.toString,
-    "payload" -> outputPayload.toString
+    "payload" -> outputPayload
   )
 
   "calling PspSchemeDetailsAuditEvent" must {
