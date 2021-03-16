@@ -41,11 +41,17 @@ class StubSuccessfulAuditService extends AuditService {
   def verifyExtendedSent[T <: ExtendedAuditEvent](event: T): Boolean =
     extendedEvents.contains(event)
 
-  def verifyNothingSent(): Boolean = events.isEmpty
+  def verifyNothingSent(): Boolean =
+    events.isEmpty && extendedEvents.isEmpty
 
-  def reset(): Unit =
+  def reset(): Unit = {
     events.clear()
+    extendedEvents.clear()
+  }
 
   def lastEvent: Option[AuditEvent] =
     events.lastOption
+
+  def lastExtendedEvent: Option[ExtendedAuditEvent] =
+    extendedEvents.lastOption
 }
