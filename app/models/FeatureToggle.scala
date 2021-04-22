@@ -39,6 +39,10 @@ object FeatureToggleName {
     val asString = "collective-money-purchase"
   }
 
+  case object RACDAC extends FeatureToggleName {
+    val asString = "rac-dac"
+  }
+
   case object IntegrationFrameworkGetSchemeDetails extends FeatureToggleName {
     val asString = "integration-framework-get-scheme-details"
   }
@@ -47,12 +51,13 @@ object FeatureToggleName {
     val asString = "integration-framework-list-schemes"
   }
 
-  val toggles = Seq(IntegrationFrameworkGetSchemeDetails, IntegrationFrameworkListSchemes, TCMP)
+  val toggles = Seq(IntegrationFrameworkGetSchemeDetails, IntegrationFrameworkListSchemes, TCMP, RACDAC)
 
   implicit val reads: Reads[FeatureToggleName] = Reads {
     case JsString(IntegrationFrameworkGetSchemeDetails.asString) => JsSuccess(IntegrationFrameworkGetSchemeDetails)
     case JsString(IntegrationFrameworkListSchemes.asString) => JsSuccess(IntegrationFrameworkListSchemes)
     case JsString(TCMP.asString) => JsSuccess(TCMP)
+    case JsString(RACDAC.asString) => JsSuccess(RACDAC)
     case _ => JsError("Unrecognised feature toggle name")
   }
 
