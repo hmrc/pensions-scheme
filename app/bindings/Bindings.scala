@@ -16,9 +16,10 @@
 
 package bindings
 
-import play.api.inject.{Binding, Module}
 import bindings.provider.ApplicationCryptoProvider
-import play.api.{Configuration, Environment, Logger, LoggerLike}
+import play.api.Logger
+import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment, LoggerLike}
 import uk.gov.hmrc.crypto.ApplicationCrypto
 
 class Bindings extends Module {
