@@ -23,6 +23,7 @@ object Benefits extends Enumeration {
   val opt1 = TypeValue("opt1", "Money Purchase benefits only (defined contribution)")
   val opt2 = TypeValue("opt2", "Defined Benefits only")
   val opt3 = TypeValue("opt3", "Mixture of money purchase benefits and defined benefits")
+//  val opt4 = TypeValue("opt4", )
 
   def valueWithName(name: String): String =
     super.withName(name).asInstanceOf[TypeValue].value
