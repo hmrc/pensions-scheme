@@ -96,8 +96,6 @@ object CustomerAndSchemeDetails {
     (JsPath \ "moneyPurchaseBenefits").read[String].map {
       moneyPurchaseBenefits =>
         (Benefits.valueWithName(benefits), Some(s"0${moneyPurchaseBenefits.last}"))
-
-      //          case _ => (Benefits.valueWithName(benefits), None)
     }
 
 

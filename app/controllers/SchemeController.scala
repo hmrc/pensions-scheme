@@ -84,8 +84,7 @@ class SchemeController @Inject()(
   def updateScheme(): Action[AnyContent] = Action.async {
     implicit request => {
       val json = request.body.asJson
-      logger.debug(s"\n\n\n\n\n\n\n[Update-Scheme-Incoming-Payload]\n\n\n\n\n\t$json\n\n\n\n\n\n\n")
-      println(s"\n\n\n\n\n\n\nPRINTLN[Update-Scheme-Incoming-Payload]\n\n\n\n\n\t$json\n\n\n\n\n\n\n")
+      logger.debug(s"[Update-Scheme-Incoming-Payload]$json")
       (request.headers.get("pstr"), request.headers.get("psaId"), json) match {
         case (Some(pstr), Some(psaId), Some(jsValue)) =>
           schemeService.updateScheme(pstr, psaId, jsValue).map { response =>
