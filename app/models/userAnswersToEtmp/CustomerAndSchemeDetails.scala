@@ -79,7 +79,8 @@ object CustomerAndSchemeDetails {
         policyNumber = insurancePolicyNumber,
         insuranceCompanyAddress = insurerAddress,
         isInsuranceDetailsChanged = isInsuranceDetailsChanged,
-        isTcmpChanged = isTcmpChanged)
+        isTcmpChanged = isTcmpChanged
+      )
     }
   )
 
@@ -95,7 +96,7 @@ object CustomerAndSchemeDetails {
   private def moneyPurchaseBenefits(benefits: String): Reads[(String, Option[String])] =
     (JsPath \ "moneyPurchaseBenefits").read[String].map {
       moneyPurchaseBenefits =>
-        (Benefits.valueWithName(benefits), Some(s"0${moneyPurchaseBenefits.last}"))
+        (Benefits.valueWithName(benefits), Some(moneyPurchaseBenefits))
     }
 
 
@@ -125,25 +126,29 @@ object CustomerAndSchemeDetails {
       (JsPath \ "schemeProvideBenefits").write[String] and
       (JsPath \ "schemeEstablishedCountry").write[String] and
       (JsPath \ "insuranceCompanyDetails").write(insuranceCompanyWrite)
-      ) (scheme => (
-      psaid,
-      scheme.schemeName,
-      "Open",
-      scheme.isSchemeMasterTrust,
-      scheme.schemeStructure,
-      scheme.otherSchemeStructure,
-      scheme.currentSchemeMembers,
-      scheme.futureSchemeMembers,
-      scheme.isRegulatedSchemeInvestment,
-      scheme.isOccupationalPensionScheme,
-      scheme.doesSchemeProvideBenefits,
-      scheme.schemeEstablishedCountry,
-      (scheme.isInsuranceDetailsChanged.getOrElse(false),
-        scheme.areBenefitsSecuredContractInsuranceCompany,
-        scheme.insuranceCompanyName,
-        scheme.policyNumber,
-        scheme.insuranceCompanyAddress)
-    ))
+      ) (
+      scheme => (
+        psaid,
+        scheme.schemeName,
+        "Open",
+        scheme.isSchemeMasterTrust,
+        scheme.schemeStructure,
+        scheme.otherSchemeStructure,
+        scheme.currentSchemeMembers,
+        scheme.futureSchemeMembers,
+        scheme.isRegulatedSchemeInvestment,
+        scheme.isOccupationalPensionScheme,
+        scheme.doesSchemeProvideBenefits,
+        scheme.schemeEstablishedCountry,
+        (
+          scheme.isInsuranceDetailsChanged.getOrElse(false),
+          scheme.areBenefitsSecuredContractInsuranceCompany,
+          scheme.insuranceCompanyName,
+          scheme.policyNumber,
+          scheme.insuranceCompanyAddress
+        )
+      )
+    )
 
   def updateWritesTcmpToggleOn(psaid: String): Writes[CustomerAndSchemeDetails] = (
     (JsPath \ "changeOfschemeDetails").write[Boolean] and
@@ -161,24 +166,29 @@ object CustomerAndSchemeDetails {
       (JsPath \ "tcmpBenefitType").writeNullable[String] and
       (JsPath \ "schemeEstablishedCountry").write[String] and
       (JsPath \ "insuranceCompanyDetails").write(insuranceCompanyWrite)
-    ) (scheme => (scheme.isTcmpChanged.getOrElse(false),
-    psaid,
-    scheme.schemeName,
-    "Open",
-    scheme.isSchemeMasterTrust,
-    scheme.schemeStructure,
-    scheme.otherSchemeStructure,
-    scheme.currentSchemeMembers,
-    scheme.futureSchemeMembers,
-    scheme.isRegulatedSchemeInvestment,
-    scheme.isOccupationalPensionScheme,
-    scheme.doesSchemeProvideBenefits,
-    scheme.tcmpBenefitType,
-    scheme.schemeEstablishedCountry,
-    (scheme.isInsuranceDetailsChanged.getOrElse(false),
-      scheme.areBenefitsSecuredContractInsuranceCompany,
-      scheme.insuranceCompanyName,
-      scheme.policyNumber,
-      scheme.insuranceCompanyAddress)
-  ))
+    ) (
+    scheme => (
+      scheme.isTcmpChanged.getOrElse(false),
+      psaid,
+      scheme.schemeName,
+      "Open",
+      scheme.isSchemeMasterTrust,
+      scheme.schemeStructure,
+      scheme.otherSchemeStructure,
+      scheme.currentSchemeMembers,
+      scheme.futureSchemeMembers,
+      scheme.isRegulatedSchemeInvestment,
+      scheme.isOccupationalPensionScheme,
+      scheme.doesSchemeProvideBenefits,
+      scheme.tcmpBenefitType,
+      scheme.schemeEstablishedCountry,
+      (
+        scheme.isInsuranceDetailsChanged.getOrElse(false),
+        scheme.areBenefitsSecuredContractInsuranceCompany,
+        scheme.insuranceCompanyName,
+        scheme.policyNumber,
+        scheme.insuranceCompanyAddress
+      )
+    )
+  )
 }

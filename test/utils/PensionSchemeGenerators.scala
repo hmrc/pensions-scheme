@@ -204,7 +204,7 @@ trait PensionSchemeGenerators {
     "Defined Benefits only",
     "Mixture of money purchase benefits and defined benefits"))
 
-  val moneyPurchaseBenefitsGen: Gen[Option[String]] = Gen.oneOf(Seq("01", "02", "03", "04", "05").map(Some(_)))
+  val moneyPurchaseBenefitsGen: Gen[Option[String]] = Gen.oneOf("01", "02", "03", "04", "05").map(Some(_))
 
   val policyNumberGen: Gen[String] = Gen.listOfN[Char](55, Gen.alphaChar).map(_.mkString)
   val otherSchemeStructureGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
