@@ -40,8 +40,6 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     javaOptions in Test += "-Dconfig.file=conf/test.application.conf"
   )
   .settings(resolvers ++= Seq(
-    Resolver.bintrayRepo("hmrc", "releases"),
-    Resolver.bintrayRepo("emueller", "maven"),
     Resolver.jcenterRepo
   ))
   .settings(majorVersion := 0)
