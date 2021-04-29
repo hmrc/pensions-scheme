@@ -37,20 +37,9 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
 
   private val moneyPurchaseReads: Reads[JsObject] =
     (__ \ 'schemeDetails \ 'tcmpBenefitType).readNullable[String].flatMap {
-      case Some(benefits) => (__ \ 'moneyPurchaseBenefits).json.put(moneyPurchaseMapping(benefits))
+      case Some(benefits) => (__ \ 'moneyPurchaseBenefits).json.put(JsString(benefits))
       case _ => doNothing
     }
-
-  private val moneyPurchaseMapping: String => JsArray = { benefitEnum =>
-    val options = benefitEnum match {
-      case "01" => Seq("opt1")
-      case "02" => Seq("opt2")
-      case "03" => Seq("opt3")
-      case "05" => Seq("opt2", "opt3")
-      case "04" => Seq("opt1", "opt2", "opt3")
-    }
-    options.foldLeft(JsArray())((acc, x) => acc ++ Json.arr(x))
-  }
 
   private val schemeTypeReads: Reads[JsObject] =
     (__ \ 'schemeDetails \ 'isSchemeMasterTrust).read[Boolean].flatMap {
