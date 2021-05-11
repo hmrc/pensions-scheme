@@ -19,11 +19,11 @@ package service
 import audit.{SchemeUpdate, AuditService, SchemeSubscription, SchemeList, ListOfSchemesAudit, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
-import models.FeatureToggleName.{TCMP, RACDAC}
+import models.FeatureToggleName.{RACDAC, TCMP}
 import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.{BankAccount, PensionsScheme}
+import models.userAnswersToEtmp.{BankAccount, PensionsScheme, RACDACPensionsScheme}
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
@@ -114,7 +114,7 @@ class SchemeServiceImpl @Inject()(
   private def registerRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled:Boolean)(implicit
     headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
     // TODO 5364: Create new RACDACPensionsScheme case class with reads etc and use that
-    json.validate[PensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
+    json.validate[RACDACPensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
       invalid = {
         errors =>
           val ex = JsResultException(errors)
