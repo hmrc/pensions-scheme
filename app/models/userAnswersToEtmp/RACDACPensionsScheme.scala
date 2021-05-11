@@ -25,7 +25,7 @@ case class RACDACPensionsScheme(
 )
 
 object RACDACPensionsScheme {
-  def registerApiReads(tcmpToggle: Boolean): Reads[RACDACPensionsScheme] = (
+  val registerApiReads: Reads[RACDACPensionsScheme] = (
     RACDACSchemeDetails.apiReads and
       RACDACDeclaration.apiReads
     ) ((racDACSchemeDetails, racDACDeclaration) =>

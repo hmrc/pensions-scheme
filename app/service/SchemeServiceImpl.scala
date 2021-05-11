@@ -114,27 +114,16 @@ class SchemeServiceImpl @Inject()(
   private def registerRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled:Boolean)(implicit
     headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
     // TODO 5364: Create new RACDACPensionsScheme case class with reads etc and use that
-    json.validate[RACDACPensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
+    json.validate[RACDACPensionsScheme](RACDACPensionsScheme.registerApiReads).fold(
       invalid = {
         errors =>
           val ex = JsResultException(errors)
           logger.warn("Invalid RAC/DAC pension scheme", ex)
           Future.failed(new BadRequestException("Invalid RAC/DAC pension scheme"))
       },
-      valid = { validPensionsScheme =>
-        readBankAccount(json).fold(
-          error => Future.failed(error),
-          bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
-            pensionsScheme =>
-              val registerData = if(isTCMPEnabled) Json.toJson(pensionsScheme) else tcmpToggleOffTranformer(Json.toJson(pensionsScheme))
-              schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled) andThen {
-                case Success(httpResponse) =>
-                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
-                case Failure(error: HttpException) =>
-                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
-              }
-          }
-        )
+      valid = { validRACDACPensionsScheme =>
+        val registerData = Json.toJson(validRACDACPensionsScheme)
+        schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled)
       }
     )
   }
