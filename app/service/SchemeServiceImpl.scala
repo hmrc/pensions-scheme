@@ -84,7 +84,7 @@ class SchemeServiceImpl @Inject()(
 
   case object RegisterSchemeToggleOffTransformFailed extends Exception
 
-  private def register(json:JsValue, psaId: String, isTCMPEnabled:Boolean, isRACDACEnabled:Boolean)(implicit
+  private def registerNonRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled:Boolean)(implicit
     headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
     json.validate[PensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
       invalid = {
@@ -109,6 +109,46 @@ class SchemeServiceImpl @Inject()(
         )
       }
     )
+  }
+
+  private def registerRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled:Boolean)(implicit
+    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+    // TODO 5364: Create new RACDACPensionsScheme case class with reads etc and use that
+    json.validate[PensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          logger.warn("Invalid RAC/DAC pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid RAC/DAC pension scheme"))
+      },
+      valid = { validPensionsScheme =>
+        readBankAccount(json).fold(
+          error => Future.failed(error),
+          bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
+            pensionsScheme =>
+              val registerData = if(isTCMPEnabled) Json.toJson(pensionsScheme) else tcmpToggleOffTranformer(Json.toJson(pensionsScheme))
+              schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled) andThen {
+                case Success(httpResponse) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
+                case Failure(error: HttpException) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
+              }
+          }
+        )
+      }
+    )
+  }
+
+  private def register(json:JsValue, psaId: String, isTCMPEnabled:Boolean, isRACDACEnabled:Boolean)(implicit
+    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+
+    def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
+
+    if (isRACDACEnabled && isRACDACSchemeDeclaration) {
+      registerRACDACScheme(json, psaId, isTCMPEnabled)
+    } else {
+      registerNonRACDACScheme(json, psaId, isTCMPEnabled)
+    }
   }
 
   override def registerScheme(psaId: String, json: JsValue)
