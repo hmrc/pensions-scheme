@@ -32,8 +32,6 @@ import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HttpException, HeaderCarrier}
 import utils.ValidationUtils.genResponse
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Failure}
 
@@ -100,7 +98,11 @@ class SchemeServiceImpl @Inject()(
           error => Future.failed(error),
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
-              val registerData = if(isTCMPEnabled) Json.toJson(pensionsScheme) else tcmpToggleOffTranformer(Json.toJson(pensionsScheme))
+              val registerData = {
+                def fullJson:JsValue = Json.toJson(pensionsScheme).as[JsObject] ++
+                  (if (isRACDACEnabled) Json.obj("racdacScheme" -> false) else Json.obj())
+                if (isTCMPEnabled) fullJson else tcmpToggleOffTranformer(fullJson)
+              }
               schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled) andThen {
                 case Success(httpResponse) =>
                   sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))

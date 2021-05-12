@@ -106,8 +106,10 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
     actual.left.toOption.map(_.message).getOrElse("") mustBe "Invalid bank account details"
   }
 
-  "registerScheme (when RAC/DAC toggled off)" must "return the result of submitting the pensions scheme" in {
-    testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+  "registerScheme (when RAC/DAC toggled off)" must "return the result of submitting the pensions scheme and " +
+    "NOT contain the racdacScheme node" in {
+    val fixture = testFixture()
+    fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       response =>
         response.status mustBe Status.OK
         val json = Json.parse(response.body)
@@ -115,13 +117,15 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
         json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
 
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
-        // TODO Check racdacScheme node not present
+        (fixture.schemeConnector.getRegisterData \ "racdacScheme").toOption mustBe None
     }
   }
 
-  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a normal (non RAC/DAC) pensions scheme" in {
+  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a normal " +
+    "(non RAC/DAC) pensions scheme and contain the racdacScheme node set to false" in {
     when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
-    testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+    val fixture = testFixture()
+    fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       response =>
         response.status mustBe Status.OK
         val json = Json.parse(response.body)
@@ -129,7 +133,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
         json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
 
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
-      // TODO Check racdacScheme node present
+        (fixture.schemeConnector.getRegisterData \ "racdacScheme").toOption.map(_.as[Boolean]) mustBe Some(false)
     }
   }
 
