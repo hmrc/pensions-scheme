@@ -24,15 +24,15 @@ case class RACDACPensionsScheme(
   racDACDeclaration: RACDACDeclaration
 )
 
-object RACDACPensionsScheme {
-  val registerApiReads: Reads[RACDACPensionsScheme] = (
-    RACDACSchemeDetails.apiReads and
-      RACDACDeclaration.apiReads
-    ) ((racDACSchemeDetails, racDACDeclaration) =>
-    RACDACPensionsScheme(
-      racdacScheme = true,
-      racDACSchemeDetails = racDACSchemeDetails,
-      racDACDeclaration = racDACDeclaration
-    )
-  )
-}
+//object RACDACPensionsScheme {
+//  val registerApiReads: Reads[RACDACPensionsScheme] = (
+//    RACDACSchemeDetails.apiReads and
+//      RACDACDeclaration.apiReads
+//    ) ((racDACSchemeDetails, racDACDeclaration) =>
+//    RACDACPensionsScheme(
+//      racdacScheme = true,
+//      racDACSchemeDetails = racDACSchemeDetails,
+//      racDACDeclaration = racDACDeclaration
+//    )
+//  )
+//}
