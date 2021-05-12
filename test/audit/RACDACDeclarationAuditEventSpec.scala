@@ -17,7 +17,7 @@
 package audit
 
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.Json
 
 class RACDACDeclarationAuditEventSpec extends WordSpec with MustMatchers {
 
