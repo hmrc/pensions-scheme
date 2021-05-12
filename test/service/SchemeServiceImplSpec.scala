@@ -18,17 +18,17 @@ package service
 
 import audit.SchemeList
 import audit.testdoubles.StubSuccessfulAuditService
-import base.{JsonFileReader, SpecBase}
+import base.{SpecBase, JsonFileReader}
 import connector.{BarsConnector, SchemeConnector}
 import models._
 import models.userAnswersToEtmp.BankAccount
-import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
+import org.scalatest.{AsyncFlatSpec, Matchers, EitherValues}
 import play.api.http.Status
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
+import play.api.libs.json.{Json, JsValue, JsNull}
+import play.api.mvc.{RequestHeader, AnyContentAsEmpty}
 import play.api.test.FakeRequest
 import service.SchemeServiceSpec.mock
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HeaderCarrier}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -127,6 +127,8 @@ class FakeSchemeConnector extends SchemeConnector {
   private var listOfSchemesResponse =
     Future.successful(HttpResponse(Status.OK, listOfSchemesJson.toString()))
 
+  private var registerSchemeData:JsValue = JsNull
+
   def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit =
     this.registerSchemeResponse = response
 
@@ -136,11 +138,16 @@ class FakeSchemeConnector extends SchemeConnector {
   def setListOfSchemesResponse(response: Future[HttpResponse]): Unit =
     this.listOfSchemesResponse = response
 
+  def getRegisterData: JsValue = registerSchemeData
+
   override def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(
     implicit
     headerCarrier: HeaderCarrier,
     ec: ExecutionContext,
-    request: RequestHeader): Future[HttpResponse] = registerSchemeResponse
+    request: RequestHeader): Future[HttpResponse] = {
+    registerSchemeData = registerData
+    registerSchemeResponse
+  }
 
   override def listOfSchemes(psaId: String)(
     implicit

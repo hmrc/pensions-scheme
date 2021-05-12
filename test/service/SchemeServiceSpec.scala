@@ -21,7 +21,7 @@ import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.FeatureToggle.Disabled
 import models.FeatureToggle.Enabled
-import models.FeatureToggleName.{TCMP, RACDAC}
+import models.FeatureToggleName.{RACDAC, TCMP}
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{Partnership, CompanyEstablisher, EstablisherDetails}
@@ -35,9 +35,12 @@ import play.api.http.Status
 import play.api.libs.json.{__, _}
 import play.api.mvc.{RequestHeader, AnyContentAsEmpty}
 import play.api.test.FakeRequest
+import service.SchemeServiceSpec.testFixture
 import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HeaderCarrier}
 import utils.Lens
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyChecks with BeforeAndAfterEach {
@@ -136,12 +139,33 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
 
   "registerScheme (when RAC DAC toggled on)" must "return the result of submitting a RAC/DAC pensions scheme" in {
     when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
-    testFixture().schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
+
+    val fixture = testFixture()
+
+    fixture.schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
       response =>
         response.status mustBe Status.OK
 
         val json = Json.parse(response.body)
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+
+        val expectedDate = formatDate(LocalDate.now)
+
+        val expectedRegisterData = Json.obj(
+          "racdacScheme" -> true,
+          "racDACSchemeDetails" -> Json.obj(
+            "racdacName" -> "test-scheme-name",
+            "contractOrPolicyNumber" -> "121212",
+            "registrationStartDate" -> expectedDate
+          ),
+          "racDACDeclaration" -> Json.obj(
+            "box12" -> true,
+            "box13" -> true,
+            "box14" -> true
+          )
+        )
+
+        fixture.schemeConnector.getRegisterData mustBe expectedRegisterData
     }
   }
 
@@ -408,6 +432,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
 }
 
 object SchemeServiceSpec extends SpecBase with MockitoSugar {
+
+  private def formatDate(date: LocalDate): String = {
+    val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    date.format(dateFormat)
+  }
+
   private val testResponse = Json.obj(
     "testDesResponse" -> "a response"
   )

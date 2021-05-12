@@ -23,7 +23,7 @@ import models.FeatureToggleName.{RACDAC, TCMP}
 import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.{BankAccount, PensionsScheme, RACDACPensionsScheme}
+import models.userAnswersToEtmp.{RACDACPensionsScheme, BankAccount, PensionsScheme}
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
@@ -32,6 +32,8 @@ import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HttpException, HeaderCarrier}
 import utils.ValidationUtils.genResponse
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Failure}
 
@@ -109,6 +111,11 @@ class SchemeServiceImpl @Inject()(
         )
       }
     )
+  }
+
+  private def formatDate(date: LocalDate): String = {
+    val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    date.format(dateFormat)
   }
 
   private def registerRACDACScheme(json:JsValue, psaId: String)(implicit
