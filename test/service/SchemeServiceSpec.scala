@@ -19,8 +19,7 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
-import models.FeatureToggle.Disabled
-import models.FeatureToggle.Enabled
+import models.FeatureToggle.{Enabled, Disabled}
 import models.FeatureToggleName.{RACDAC, TCMP}
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp._
@@ -35,7 +34,6 @@ import play.api.http.Status
 import play.api.libs.json.{__, _}
 import play.api.mvc.{RequestHeader, AnyContentAsEmpty}
 import play.api.test.FakeRequest
-import service.SchemeServiceSpec.testFixture
 import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HeaderCarrier}
 import utils.Lens
 
@@ -55,76 +53,73 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
     super.beforeEach()
   }
 
-  //"haveInvalidBank" must "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
-  //
-  //  val account = bankAccount(invalidAccountNumber)
-  //
-  //  testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
-  //    scheme =>
-  //      scheme.customerAndSchemeDetails.haveInvalidBank mustBe true
-  //  }
-  //
-  //}
-  //
-  //it must "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
-  //
-  //  val account = bankAccount(notInvalidAccountNumber)
-  //
-  //  testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
-  //    scheme =>
-  //      scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
-  //  }
-  //
-  //}
-  //
-  //it must "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
-  //
-  //  testFixture().schemeService.haveInvalidBank(None, pensionsScheme, psaId).map {
-  //    scheme =>
-  //      scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
-  //  }
-  //
-  //}
-  //
-  //"readBankAccount" must "return a bank account where it exists in json" in {
-  //
-  //  val json = bankDetailsJson(notInvalidAccountNumber)
-  //
-  //  val actual = testFixture().schemeService.readBankAccount(json)
-  //  actual mustBe Right(Some(bankAccount(notInvalidAccountNumber)))
-  //
-  //}
-  //
-  //it must "return None where no account exists in json" in {
-  //
-  //  val actual = testFixture().schemeService.readBankAccount(Json.obj())
-  //  actual mustBe Right(None)
-  //
-  //}
-  //
-  //it must "return bad request exception where uKBankDetails present but account invalid" in {
-  //  val actual = testFixture().schemeService.readBankAccount(Json.obj("uKBankDetails" -> "invalid"))
-  //  actual.isLeft mustBe true
-  //  actual.left.toOption.map(_.message).getOrElse("") mustBe "Invalid bank account details"
-  //}
-  //
-  //"registerScheme" must "return the result of submitting the pensions scheme" in {
-  //
-  //  testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
-  //    response =>
-  //      response.status mustBe Status.OK
-  //      val json = Json.parse(response.body)
-  //
-  //      json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
-  //
-  //      json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
-  //
-  //
-  //  }
-  //
-  //}
+  "haveInvalidBank" must "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
 
-  "registerScheme (when RAC DAC toggled on)" must "return the result of submitting a normal (non RAC/DAC) pensions scheme" in {
+    val account = bankAccount(invalidAccountNumber)
+
+    testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
+      scheme =>
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe true
+    }
+
+  }
+
+  it must "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
+
+    val account = bankAccount(notInvalidAccountNumber)
+
+    testFixture().schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
+      scheme =>
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
+    }
+
+  }
+
+  it must "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
+
+    testFixture().schemeService.haveInvalidBank(None, pensionsScheme, psaId).map {
+      scheme =>
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
+    }
+
+  }
+
+  "readBankAccount" must "return a bank account where it exists in json" in {
+
+    val json = bankDetailsJson(notInvalidAccountNumber)
+
+    val actual = testFixture().schemeService.readBankAccount(json)
+    actual mustBe Right(Some(bankAccount(notInvalidAccountNumber)))
+
+  }
+
+  it must "return None where no account exists in json" in {
+
+    val actual = testFixture().schemeService.readBankAccount(Json.obj())
+    actual mustBe Right(None)
+
+  }
+
+  it must "return bad request exception where uKBankDetails present but account invalid" in {
+    val actual = testFixture().schemeService.readBankAccount(Json.obj("uKBankDetails" -> "invalid"))
+    actual.isLeft mustBe true
+    actual.left.toOption.map(_.message).getOrElse("") mustBe "Invalid bank account details"
+  }
+
+  "registerScheme (when RAC/DAC toggled off)" must "return the result of submitting the pensions scheme" in {
+    testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+      response =>
+        response.status mustBe Status.OK
+        val json = Json.parse(response.body)
+
+        json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
+
+        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+        // TODO Check racdacScheme node not present
+    }
+  }
+
+  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a normal (non RAC/DAC) pensions scheme" in {
     when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
     testFixture().schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       response =>
@@ -134,10 +129,11 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
         json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
 
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+      // TODO Check racdacScheme node present
     }
   }
 
-  "registerScheme (when RAC DAC toggled on)" must "return the result of submitting a RAC/DAC pensions scheme" in {
+  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a RAC/DAC pensions scheme" in {
     when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
 
     val fixture = testFixture()
@@ -149,14 +145,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
         val json = Json.parse(response.body)
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
 
-        val expectedDate = formatDate(LocalDate.now)
-
         val expectedRegisterData = Json.obj(
           "racdacScheme" -> true,
           "racDACSchemeDetails" -> Json.obj(
             "racdacName" -> "test-scheme-name",
             "contractOrPolicyNumber" -> "121212",
-            "registrationStartDate" -> expectedDate
+            "registrationStartDate" ->  formatDate(LocalDate.now)
           ),
           "racDACDeclaration" -> Json.obj(
             "box12" -> true,
@@ -169,266 +163,266 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
     }
   }
 
-  //it must "send a SchemeSubscription audit event following a successful submission" in {
-  //  val fixture = testFixture()
-  //  fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
-  //    httpResponse =>
-  //      val expected = schemeSubscription.copy(
-  //        hasIndividualEstablisher = true,
-  //        status = Status.OK,
-  //        request = expectedJsonForAudit,
-  //        response = Some(httpResponse.json)
-  //      )
-  //      fixture.auditService.lastEvent mustBe Some(expected)
-  //  }
-  //}
-  //
-  //it must "not send a SchemeSubscription audit event following an unsuccessful submission" in {
-  //
-  //  val fixture = testFixture()
-  //
-  //  fixture.schemeConnector.setRegisterSchemeResponse(Future.failed(new BadRequestException("bad request")))
-  //
-  //  fixture.schemeService.registerScheme(psaId, pensionsSchemeJson)
-  //    .map(_ => fail("Expected failure"))
-  //    .recover {
-  //      case _: BadRequestException =>
-  //        val expected = schemeSubscription.copy(
-  //          hasIndividualEstablisher = true,
-  //          status = Status.BAD_REQUEST,
-  //          request = expectedJsonForAudit,
-  //          response = None
-  //        )
-  //
-  //        fixture.auditService.lastEvent mustBe Some(expected)
-  //    }
-  //
-  //}
-  //
-  //"translateSchemeSubscriptionEvent" must "translate a master trust scheme" in {
-  //
-  //  val scheme = PensionsSchemeIsSchemeMasterTrust.set(pensionsScheme, true)
-  //
-  //  val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, status = Status.OK, response = None)
-  //
-  //  val expected = schemeSubscription.copy(
-  //    schemeType = Some(AuditSchemeType.masterTrust),
-  //    request = Json.toJson(scheme)
-  //  )
-  //
-  //  actual mustBe expected
-  //
-  //}
-  //
-  //it must "translate a single trust scheme" in {
-  //
-  //  val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.single.value))
-  //
-  //  val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
-  //
-  //  val expected = schemeSubscription.copy(
-  //    request = Json.toJson(scheme)
-  //  )
-  //
-  //  actual mustBe expected
-  //
-  //}
-  //
-  //it must "translate a group Life/Death scheme" in {
-  //
-  //  val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.group.value))
-  //
-  //  val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
-  //
-  //  val expected = schemeSubscription.copy(
-  //    schemeType = Some(AuditSchemeType.groupLifeDeath),
-  //    request = Json.toJson(scheme)
-  //  )
-  //
-  //  actual mustBe expected
-  //
-  //}
-  //
-  //it must "translate a body corporate scheme" in {
-  //
-  //  val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.corp.value))
-  //
-  //  val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
-  //
-  //  val expected = schemeSubscription.copy(
-  //    schemeType = Some(AuditSchemeType.bodyCorporate),
-  //    request = Json.toJson(scheme)
-  //  )
-  //
-  //  actual mustBe expected
-  //
-  //}
-  //
-  //it must "translate an 'other' scheme" in {
-  //
-  //  val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.other.value))
-  //
-  //  val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
-  //
-  //  val expected = schemeSubscription.copy(
-  //    schemeType = Some(AuditSchemeType.other),
-  //    request = Json.toJson(scheme)
-  //  )
-  //
-  //  actual mustBe expected
-  //
-  //}
-  //
-  //it must "translate a scheme with individual establishers" in {
-  //
-  //  forAll(establisherIndividualGenerator()) {
-  //    json =>
-  //      val individual = json.as[Individual](Individual.readsEstablisherIndividual)
-  //      val scheme =
-  //        PensionsSchemeSchemeStructure
-  //          .set(pensionsScheme, Some(SchemeType.single.value))
-  //          .copy(establisherDetails =
-  //            EstablisherDetails(
-  //              companyOrOrganization = Nil,
-  //              individual = Seq(individual),
-  //              partnership = Nil
-  //            )
-  //          )
-  //
-  //      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
-  //
-  //      val expected = schemeSubscription.copy(
-  //        hasIndividualEstablisher = true,
-  //        request = Json.toJson(scheme)
-  //      )
-  //
-  //      actual mustBe expected
-  //
-  //  }
-  //}
-  //
-  //it must "translate a scheme with company establishers" in {
-  //  forAll(establisherCompanyGenerator()) {
-  //    json =>
-  //      val estCom = json.as[CompanyEstablisher](CompanyEstablisher.readsEstablisherCompany)
-  //      val scheme =
-  //        PensionsSchemeSchemeStructure
-  //          .set(pensionsScheme, Some(SchemeType.single.value))
-  //          .copy(establisherDetails =
-  //            EstablisherDetails(
-  //              companyOrOrganization = Seq(estCom),
-  //              individual = Nil,
-  //              partnership = Nil
-  //            )
-  //          )
-  //
-  //      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
-  //
-  //      val expected = schemeSubscription.copy(
-  //        hasCompanyEstablisher = true,
-  //        request = Json.toJson(scheme)
-  //      )
-  //
-  //      actual mustBe expected
-  //
-  //  }
-  //}
-  //
-  //it must "translate a scheme with partnership establishers" in {
-  //  forAll(establisherPartnershipGenerator()) {
-  //    json =>
-  //      val estPart = json.as[Partnership](Partnership.readsEstablisherPartnership)
-  //      val scheme =
-  //        PensionsSchemeSchemeStructure
-  //          .set(pensionsScheme, Some(SchemeType.single.value))
-  //          .copy(establisherDetails =
-  //            EstablisherDetails(
-  //              companyOrOrganization = Nil,
-  //              individual = Nil,
-  //              partnership = Seq(estPart)
-  //            )
-  //          )
-  //
-  //      val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
-  //
-  //      val expected = schemeSubscription.copy(
-  //        hasPartnershipEstablisher = true,
-  //        request = Json.toJson(scheme)
-  //      )
-  //
-  //      actual mustBe expected
-  //  }
-  //}
-  //
-  //it must "translate a scheme with dormant company, bank details, and invalid bank details" in {
-  //
-  //  val declaration = pensionsScheme.pensionSchemeDeclaration.asInstanceOf[PensionSchemeDeclaration]
-  //
-  //  val scheme = pensionsScheme.copy(
-  //    customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = true),
-  //    pensionSchemeDeclaration = declaration.copy(box5 = Some(true))
-  //  )
-  //
-  //  val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = true, Status.OK, None)
-  //
-  //  val expected = schemeSubscription.copy(
-  //    schemeType = Some(AuditSchemeType.singleTrust),
-  //    hasDormantCompany = true,
-  //    hasBankDetails = true,
-  //    hasValidBankDetails = false,
-  //    request = Json.toJson(scheme)
-  //  )
-  //
-  //  actual mustBe expected
-  //
-  //}
-  //
-  //"updateScheme" must "return the result of submitting the pensions scheme and have the right declaration type" in {
-  //  val f = new UpdateTestFixture() {}
-  //
-  //  f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
-  //    response =>
-  //      response.status mustBe Status.OK
-  //      val declaration1Value = f.schemeConnector.lastUpdateSchemeDetailsdata
-  //        .transform((__ \ "pensionSchemeDeclaration" \ "declaration1").json.pick)
-  //      declaration1Value.asOpt mustBe Some(JsBoolean(false))
-  //  }
-  //}
-  //
-  //it must "send a SchemeUpdate audit event following a successful submission" in {
-  //  val f = new UpdateTestFixture() {}
-  //
-  //  f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(Status.OK, testResponse.toString())))
-  //  f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map { _ =>
-  //    val expectedAuditEvent =
-  //      SchemeUpdate(psaIdentifier = "test-psa-id",
-  //        schemeType = Some(audit.SchemeType.singleTrust),
-  //        status = Status.OK,
-  //        request = schemeUpdateRequestJson,
-  //        response = Some(testResponse))
-  //
-  //    f.auditService.lastEvent mustBe Some(expectedAuditEvent)
-  //  }
-  //}
-  //
-  //it must "send a SchemeUpdate audit event following an unsuccessful submission" in {
-  //  val f = new UpdateTestFixture() {}
-  //
-  //  f.schemeConnector.setUpdateSchemeResponse(Future.failed(new BadRequestException("bad request")))
-  //  f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson)
-  //    .map(_ => fail("Expected failure"))
-  //    .recover {
-  //      case _: BadRequestException =>
-  //        val expectedAuditEvent =
-  //          SchemeUpdate(psaIdentifier = "test-psa-id",
-  //            schemeType = Some(audit.SchemeType.singleTrust),
-  //            status = Status.BAD_REQUEST,
-  //            request = schemeUpdateRequestJson,
-  //            response = None
-  //          )
-  //        f.auditService.lastEvent mustBe Some(expectedAuditEvent)
-  //    }
-  //}
+  "register scheme" must "send a SchemeSubscription audit event following a successful submission" in {
+    val fixture = testFixture()
+    fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+      httpResponse =>
+        val expected = schemeSubscription.copy(
+          hasIndividualEstablisher = true,
+          status = Status.OK,
+          request = expectedJsonForAudit,
+          response = Some(httpResponse.json)
+        )
+        fixture.auditService.lastEvent mustBe Some(expected)
+    }
+  }
+
+  it must "not send a SchemeSubscription audit event following an unsuccessful submission" in {
+
+    val fixture = testFixture()
+
+    fixture.schemeConnector.setRegisterSchemeResponse(Future.failed(new BadRequestException("bad request")))
+
+    fixture.schemeService.registerScheme(psaId, pensionsSchemeJson)
+      .map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          val expected = schemeSubscription.copy(
+            hasIndividualEstablisher = true,
+            status = Status.BAD_REQUEST,
+            request = expectedJsonForAudit,
+            response = None
+          )
+
+          fixture.auditService.lastEvent mustBe Some(expected)
+      }
+
+  }
+
+  "translateSchemeSubscriptionEvent" must "translate a master trust scheme" in {
+
+    val scheme = PensionsSchemeIsSchemeMasterTrust.set(pensionsScheme, true)
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, status = Status.OK, response = None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = Some(AuditSchemeType.masterTrust),
+      request = Json.toJson(scheme)
+    )
+
+    actual mustBe expected
+
+  }
+
+  it must "translate a single trust scheme" in {
+
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.single.value))
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      request = Json.toJson(scheme)
+    )
+
+    actual mustBe expected
+
+  }
+
+  it must "translate a group Life/Death scheme" in {
+
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.group.value))
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = Some(AuditSchemeType.groupLifeDeath),
+      request = Json.toJson(scheme)
+    )
+
+    actual mustBe expected
+
+  }
+
+  it must "translate a body corporate scheme" in {
+
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.corp.value))
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = Some(AuditSchemeType.bodyCorporate),
+      request = Json.toJson(scheme)
+    )
+
+    actual mustBe expected
+
+  }
+
+  it must "translate an 'other' scheme" in {
+
+    val scheme = PensionsSchemeSchemeStructure.set(pensionsScheme, Some(SchemeType.other.value))
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = Some(AuditSchemeType.other),
+      request = Json.toJson(scheme)
+    )
+
+    actual mustBe expected
+
+  }
+
+  it must "translate a scheme with individual establishers" in {
+
+    forAll(establisherIndividualGenerator()) {
+      json =>
+        val individual = json.as[Individual](Individual.readsEstablisherIndividual)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Nil,
+                individual = Seq(individual),
+                partnership = Nil
+              )
+            )
+
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasIndividualEstablisher = true,
+          request = Json.toJson(scheme)
+        )
+
+        actual mustBe expected
+
+    }
+  }
+
+  it must "translate a scheme with company establishers" in {
+    forAll(establisherCompanyGenerator()) {
+      json =>
+        val estCom = json.as[CompanyEstablisher](CompanyEstablisher.readsEstablisherCompany)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Seq(estCom),
+                individual = Nil,
+                partnership = Nil
+              )
+            )
+
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasCompanyEstablisher = true,
+          request = Json.toJson(scheme)
+        )
+
+        actual mustBe expected
+
+    }
+  }
+
+  it must "translate a scheme with partnership establishers" in {
+    forAll(establisherPartnershipGenerator()) {
+      json =>
+        val estPart = json.as[Partnership](Partnership.readsEstablisherPartnership)
+        val scheme =
+          PensionsSchemeSchemeStructure
+            .set(pensionsScheme, Some(SchemeType.single.value))
+            .copy(establisherDetails =
+              EstablisherDetails(
+                companyOrOrganization = Nil,
+                individual = Nil,
+                partnership = Seq(estPart)
+              )
+            )
+
+        val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = false, Status.OK, None)
+
+        val expected = schemeSubscription.copy(
+          hasPartnershipEstablisher = true,
+          request = Json.toJson(scheme)
+        )
+
+        actual mustBe expected
+    }
+  }
+
+  it must "translate a scheme with dormant company, bank details, and invalid bank details" in {
+
+    val declaration = pensionsScheme.pensionSchemeDeclaration.asInstanceOf[PensionSchemeDeclaration]
+
+    val scheme = pensionsScheme.copy(
+      customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(haveInvalidBank = true),
+      pensionSchemeDeclaration = declaration.copy(box5 = Some(true))
+    )
+
+    val actual = testFixture().schemeService.translateSchemeSubscriptionEvent(psaId, scheme, hasBankDetails = true, Status.OK, None)
+
+    val expected = schemeSubscription.copy(
+      schemeType = Some(AuditSchemeType.singleTrust),
+      hasDormantCompany = true,
+      hasBankDetails = true,
+      hasValidBankDetails = false,
+      request = Json.toJson(scheme)
+    )
+
+    actual mustBe expected
+
+  }
+
+  "updateScheme" must "return the result of submitting the pensions scheme and have the right declaration type" in {
+    val f = new UpdateTestFixture() {}
+
+    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
+      response =>
+        response.status mustBe Status.OK
+        val declaration1Value = f.schemeConnector.lastUpdateSchemeDetailsdata
+          .transform((__ \ "pensionSchemeDeclaration" \ "declaration1").json.pick)
+        declaration1Value.asOpt mustBe Some(JsBoolean(false))
+    }
+  }
+
+  it must "send a SchemeUpdate audit event following a successful submission" in {
+    val f = new UpdateTestFixture() {}
+
+    f.schemeConnector.setUpdateSchemeResponse(Future.successful(HttpResponse.apply(Status.OK, testResponse.toString())))
+    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map { _ =>
+      val expectedAuditEvent =
+        SchemeUpdate(psaIdentifier = "test-psa-id",
+          schemeType = Some(audit.SchemeType.singleTrust),
+          status = Status.OK,
+          request = schemeUpdateRequestJson,
+          response = Some(testResponse))
+
+      f.auditService.lastEvent mustBe Some(expectedAuditEvent)
+    }
+  }
+
+  it must "send a SchemeUpdate audit event following an unsuccessful submission" in {
+    val f = new UpdateTestFixture() {}
+
+    f.schemeConnector.setUpdateSchemeResponse(Future.failed(new BadRequestException("bad request")))
+    f.schemeService.updateScheme(pstr, psaId, pensionsSchemeJson)
+      .map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          val expectedAuditEvent =
+            SchemeUpdate(psaIdentifier = "test-psa-id",
+              schemeType = Some(audit.SchemeType.singleTrust),
+              status = Status.BAD_REQUEST,
+              request = schemeUpdateRequestJson,
+              response = None
+            )
+          f.auditService.lastEvent mustBe Some(expectedAuditEvent)
+      }
+  }
 }
 
 object SchemeServiceSpec extends SpecBase with MockitoSugar {
