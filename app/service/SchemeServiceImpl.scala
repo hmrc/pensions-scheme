@@ -110,24 +110,22 @@ class SchemeServiceImpl @Inject()(
       }
     )
   }
-  //
-  //private def registerRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled:Boolean)(implicit
-  //  headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
-  //  //// TODO 5364: Create new RACDACPensionsScheme case class with reads etc and use that
-  //  //json.validate[RACDACPensionsScheme](RACDACPensionsScheme.registerApiReads).fold(
-  //  //  invalid = {
-  //  //    errors =>
-  //  //      val ex = JsResultException(errors)
-  //  //      logger.warn("Invalid RAC/DAC pension scheme", ex)
-  //  //      Future.failed(new BadRequestException("Invalid RAC/DAC pension scheme"))
-  //  //  },
-  //  //  valid = { validRACDACPensionsScheme =>
-  //  //    val registerData = Json.toJson(validRACDACPensionsScheme)
-  //  //    schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled)
-  //  //  }
-  //  //)
-  //
-  //}
+
+  private def registerRACDACScheme(json:JsValue, psaId: String)(implicit
+    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+    json.validate[RACDACPensionsScheme](RACDACPensionsScheme.reads).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          logger.warn("Invalid RAC/DAC pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid RAC/DAC pension scheme"))
+      },
+      valid = { validRACDACPensionsScheme =>
+        val registerData = Json.toJson(validRACDACPensionsScheme)
+        schemeConnector.registerScheme(psaId, registerData, tcmpToggle = true)
+      }
+    )
+  }
 
   private def register(json:JsValue, psaId: String, isTCMPEnabled:Boolean, isRACDACEnabled:Boolean)(implicit
     headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
@@ -135,8 +133,8 @@ class SchemeServiceImpl @Inject()(
     def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
 
     if (isRACDACEnabled && isRACDACSchemeDeclaration) {
-      //registerRACDACScheme(json, psaId, isTCMPEnabled)
-      registerNonRACDACScheme(json, psaId, isTCMPEnabled)
+      registerRACDACScheme(json, psaId)
+      //registerNonRACDACScheme(json, psaId, isTCMPEnabled)
     } else {
       registerNonRACDACScheme(json, psaId, isTCMPEnabled)
     }

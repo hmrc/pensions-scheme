@@ -16,8 +16,28 @@
 
 package models.userAnswersToEtmp
 
+import play.api.libs.functional.syntax._
+
 case class RACDACDeclaration(
   box12: Boolean,
   box13: Boolean,
   box14: Boolean
 )
+
+object RACDACDeclaration {
+  import play.api.libs.functional.syntax._
+  import play.api.libs.json._
+
+
+  val reads: Reads[RACDACDeclaration] =
+    (
+      (JsPath \ "racdac" \ "declaration").read[Boolean] and
+        (JsPath \ "racdac" \ "declaration").read[Boolean] and
+        (JsPath \ "racdac" \ "declaration").read[Boolean]
+      ) (
+      (a,b, c) => RACDACDeclaration(a, b, c)
+    )
+
+  implicit val formats: Format[RACDACDeclaration] = Json.format[RACDACDeclaration]
+
+}

@@ -139,11 +139,9 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
     testFixture().schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
       response =>
         response.status mustBe Status.OK
-        //val json = Json.parse(response.body)
-        //
-        //json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
-        //
-        //json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+
+        val json = Json.parse(response.body)
+        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
     }
   }
 

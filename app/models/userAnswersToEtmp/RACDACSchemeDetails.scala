@@ -16,10 +16,23 @@
 
 package models.userAnswersToEtmp
 
+import play.api.libs.json.{Format, Json, JsPath, Reads}
+import play.api.libs.functional.syntax._
+
 case class RACDACSchemeDetails(
   racdacName: String,
   contractOrPolicyNumber: String,
   registrationStartDate: String
 )
 
+object RACDACSchemeDetails {
+  val reads: Reads[RACDACSchemeDetails] =
+    (
+      (JsPath \ "racdac" \ "name").read[String] and
+      (JsPath \ "racdac" \ "contractOrPolicyNumber").read[String]
+    ) (
+      (name, contractOrPolicyNumber) => RACDACSchemeDetails(name, contractOrPolicyNumber, "")
+    )
 
+  implicit val formats: Format[RACDACSchemeDetails] = Json.format[RACDACSchemeDetails]
+}

@@ -16,23 +16,44 @@
 
 package models.userAnswersToEtmp
 
-import play.api.libs.json.Reads
+import play.api.libs.json.{Format, Json, JsPath, Reads, Writes}
+import play.api.libs.functional.syntax._
 
 case class RACDACPensionsScheme(
-  racdacScheme: Boolean = true,
+  racdacScheme: Boolean,
   racDACSchemeDetails: RACDACSchemeDetails,
   racDACDeclaration: RACDACDeclaration
 )
 
-//object RACDACPensionsScheme {
-//  val registerApiReads: Reads[RACDACPensionsScheme] = (
-//    RACDACSchemeDetails.apiReads and
-//      RACDACDeclaration.apiReads
-//    ) ((racDACSchemeDetails, racDACDeclaration) =>
-//    RACDACPensionsScheme(
-//      racdacScheme = true,
-//      racDACSchemeDetails = racDACSchemeDetails,
-//      racDACDeclaration = racDACDeclaration
-//    )
-//  )
-//}
+object RACDACPensionsScheme {
+  val reads: Reads[RACDACPensionsScheme] = (
+    RACDACSchemeDetails.reads and
+      RACDACDeclaration.reads
+    ) ((racDACSchemeDetails, racDACDeclaration) =>
+    RACDACPensionsScheme(
+      racdacScheme = true,
+      racDACSchemeDetails = racDACSchemeDetails,
+      racDACDeclaration = racDACDeclaration
+    )
+  )
+
+  implicit val formats: Format[RACDACPensionsScheme] = Json.format[RACDACPensionsScheme]
+
+  //val writes: Writes[RACDACPensionsScheme] = {
+  //  (
+  //    (JsPath \ "racdacScheme" \ "racdacScheme").write(
+  //  )
+  //}
+
+
+  //private val insuranceCompanyWrite: Writes[(Boolean, Boolean, Option[String], Option[String], Option[Address])] = {
+  //  ((JsPath \ "isInsuranceDetailsChanged").write[Boolean] and
+  //    (JsPath \ "isSchemeBenefitsInsuranceCompany").write[Boolean] and
+  //    (JsPath \ "insuranceCompanyName").writeNullable[String] and
+  //    (JsPath \ "policyNumber").writeNullable[String] and
+  //    (JsPath \ "insuranceCompanyAddressDetails").writeNullable[Address](Address.updateWrites)
+  //    ) (element => element)
+  //}
+
+}
+
