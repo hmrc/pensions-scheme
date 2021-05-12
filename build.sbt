@@ -40,7 +40,8 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     javaOptions in Test += "-Dconfig.file=conf/test.application.conf"
   )
   .settings(resolvers ++= Seq(
-    Resolver.jcenterRepo
+    Resolver.jcenterRepo,
+    "third-party-maven-releases" at "https://artefacts.tax.service.gov.uk/artifactory/third-party-maven-releases/"
   ))
   .settings(majorVersion := 0)
   .settings(scalaVersion := "2.12.11")
