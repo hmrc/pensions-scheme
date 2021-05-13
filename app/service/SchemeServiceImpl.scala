@@ -84,7 +84,7 @@ class SchemeServiceImpl @Inject()(
 
   case object RegisterSchemeToggleOffTransformFailed extends Exception
 
-  private def registerNonRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled: Boolean, isRACDACEnabled: Boolean)(implicit
+  private def registerNonRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled: Boolean)(implicit
     headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
     json.validate[PensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
       invalid = {
@@ -138,7 +138,7 @@ class SchemeServiceImpl @Inject()(
     if (isRACDACEnabled && isRACDACSchemeDeclaration) {
       registerRACDACScheme(json, psaId)
     } else {
-      registerNonRACDACScheme(json, psaId, isTCMPEnabled, isRACDACEnabled)
+      registerNonRACDACScheme(json, psaId, isTCMPEnabled)
     }
   }
 
