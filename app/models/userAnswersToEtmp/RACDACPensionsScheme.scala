@@ -38,22 +38,5 @@ object RACDACPensionsScheme {
   )
 
   implicit val formats: Format[RACDACPensionsScheme] = Json.format[RACDACPensionsScheme]
-
-  //val writes: Writes[RACDACPensionsScheme] = {
-  //  (
-  //    (JsPath \ "racdacScheme" \ "racdacScheme").write(
-  //  )
-  //}
-
-
-  //private val insuranceCompanyWrite: Writes[(Boolean, Boolean, Option[String], Option[String], Option[Address])] = {
-  //  ((JsPath \ "isInsuranceDetailsChanged").write[Boolean] and
-  //    (JsPath \ "isSchemeBenefitsInsuranceCompany").write[Boolean] and
-  //    (JsPath \ "insuranceCompanyName").writeNullable[String] and
-  //    (JsPath \ "policyNumber").writeNullable[String] and
-  //    (JsPath \ "insuranceCompanyAddressDetails").writeNullable[Address](Address.updateWrites)
-  //    ) (element => element)
-  //}
-
 }
 

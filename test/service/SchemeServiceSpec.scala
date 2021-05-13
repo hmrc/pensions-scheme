@@ -122,7 +122,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
   }
 
   "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a normal " +
-    "(non RAC/DAC) pensions scheme and contain the racdacScheme node set to false" in {
+    "(non RAC/DAC) pensions scheme and not contain the racdacScheme node" in {
     when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
     val fixture = testFixture()
     fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
@@ -133,7 +133,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
         json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
 
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
-        (fixture.schemeConnector.getRegisterData \ "racdacScheme").toOption.map(_.as[Boolean]) mustBe Some(false)
+        (fixture.schemeConnector.getRegisterData \ "racdacScheme").toOption.map(_.as[Boolean]) mustBe None
     }
   }
 

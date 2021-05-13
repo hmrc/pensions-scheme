@@ -99,8 +99,7 @@ class SchemeServiceImpl @Inject()(
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
               val registerData = {
-                def fullJson:JsValue = Json.toJson(pensionsScheme).as[JsObject] ++
-                  (if (isRACDACEnabled) Json.obj("racdacScheme" -> false) else Json.obj())
+                def fullJson:JsValue = Json.toJson(pensionsScheme).as[JsObject]
                 if (isTCMPEnabled) fullJson else tcmpToggleOffTranformer(fullJson)
               }
               schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled) andThen {
@@ -114,8 +113,6 @@ class SchemeServiceImpl @Inject()(
       }
     )
   }
-
-
 
   private def registerRACDACScheme(json:JsValue, psaId: String)(implicit
     headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
@@ -141,7 +138,6 @@ class SchemeServiceImpl @Inject()(
     if (isRACDACEnabled && isRACDACSchemeDeclaration) {
       registerRACDACScheme(json, psaId)
     } else {
-      // TODO: Add racdacScheme:false if isRACDACEnabled
       registerNonRACDACScheme(json, psaId, isTCMPEnabled, isRACDACEnabled)
     }
   }
