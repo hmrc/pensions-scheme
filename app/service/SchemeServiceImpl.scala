@@ -84,7 +84,7 @@ class SchemeServiceImpl @Inject()(
 
   case object RegisterSchemeToggleOffTransformFailed extends Exception
 
-  private def registerNonRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled: Boolean)(implicit
+  private def registerNonRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled: Boolean, isRACDACEnabled: Boolean)(implicit
     headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
     json.validate[PensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
       invalid = {
@@ -99,7 +99,8 @@ class SchemeServiceImpl @Inject()(
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
               val registerData = {
-                def fullJson:JsValue = Json.toJson(pensionsScheme).as[JsObject]
+                def fullJson:JsValue = Json.toJson(pensionsScheme).as[JsObject] ++
+                  (if (isRACDACEnabled) Json.obj("racdacScheme" -> false) else Json.obj())
                 if (isTCMPEnabled) fullJson else tcmpToggleOffTranformer(fullJson)
               }
               schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled) andThen {
@@ -138,7 +139,7 @@ class SchemeServiceImpl @Inject()(
     if (isRACDACEnabled && isRACDACSchemeDeclaration) {
       registerRACDACScheme(json, psaId)
     } else {
-      registerNonRACDACScheme(json, psaId, isTCMPEnabled)
+      registerNonRACDACScheme(json, psaId, isTCMPEnabled, isRACDACEnabled)
     }
   }
 
