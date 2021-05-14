@@ -70,7 +70,7 @@ class SchemeDetailsTransformer @Inject()(addressTransformer: AddressTransformer)
 
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
     pspRelationshipDetails and
-      (__ \ 'srn).json.copyFrom((__ \ 'schemeDetails \ 'srn).json.pick) and
+      ((__ \ 'srn).json.copyFrom((__ \ 'schemeDetails \ 'srn).json.pick) orElse doNothing) and
       (__ \ 'pstr).json.copyFrom((__ \ 'schemeDetails \ 'pstr).json.pick) and
       (__ \ 'schemeStatus).json.copyFrom((__ \ 'schemeDetails \ 'schemeStatus).json.pick) and
       (__ \ 'schemeName).json.copyFrom((__ \ 'schemeDetails \ 'schemeName).json.pick) and

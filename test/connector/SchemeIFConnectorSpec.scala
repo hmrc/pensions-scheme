@@ -169,6 +169,23 @@ class SchemeIFConnectorSpec
     }
   }
 
+  "SchemeConnectorIF getSchemeDetails with no SRN" should "return user answer json" in {
+    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseNoSrn.json")
+    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswersNoSrn.json")
+
+    server.stubFor(
+      get(urlEqualTo(schemeDetailsIFUrl))
+        .willReturn(
+          ok
+            .withHeader("Content-Type", "application/json")
+            .withBody(desResponse.toString())
+        )
+    )
+    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
+      response.right.value shouldBe userAnswersResponse
+    }
+  }
+
   it should "return a BadRequestException for a 400 INVALID_IDTYPE response" in {
     server.stubFor(
       get(urlEqualTo(schemeDetailsIFUrl))
