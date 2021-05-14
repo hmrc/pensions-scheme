@@ -40,10 +40,16 @@ class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
     schemeDetailsTransformer, establisherTransformer,
     trusteesTransformer)
 
-  private val ifResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
-  private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
+  private val ifResponse: JsValue =
+    readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+  private val userAnswersResponse: JsValue =
+    readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
+  private val ifResponseNoSrn: JsValue =
+    readJsonFromFile("/data/validGetSchemeDetailsResponseNoSrn.json")
+  private val userAnswersResponseNoSrn: JsValue =
+    readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswersNoSrn.json")
 
-  "A DES payload with full scheme subscription details " must {
+  "A payload with full scheme subscription details " must {
     "have the details transformed correctly to valid user answers format" which {
 
       s"uses generators" in {
@@ -58,6 +64,25 @@ class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
       s"uses request/response json" in {
         val result = ifResponse.transform(transformer.transformToUserAnswers).get
         result mustBe userAnswersResponse
+      }
+    }
+  }
+
+  "A payload with scheme subscription details with no srn" must {
+    "have the details transformed correctly to valid user answers format" which {
+
+      s"uses generators" in {
+        forAll(getSchemeDetailsGen) {
+          case (desScheme, uaScheme) =>
+
+            val result = desScheme.transform(transformer.transformToUserAnswers).get
+            result mustBe uaScheme
+        }
+      }
+
+      s"uses request/response json" in {
+        val result = ifResponseNoSrn.transform(transformer.transformToUserAnswers).get
+        result mustBe userAnswersResponseNoSrn
       }
     }
   }
