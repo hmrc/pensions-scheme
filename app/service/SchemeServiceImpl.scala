@@ -99,7 +99,13 @@ class SchemeServiceImpl @Inject()(
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
               val registerData = {
+
                 def fullJson:JsValue = Json.toJson(pensionsScheme).as[JsObject] ++
+                  /*
+                    Once the rac/dac toggle is removed then the next line can be removed (as this node is
+                    optional for non-RAC/DAC schemes). For now it is required as the stubs looks for this
+                    node to determine whether to validate against the new RAC/DAC schema or the old one.
+                  */
                   (if (isRACDACEnabled) Json.obj("racdacScheme" -> false) else Json.obj())
                 if (isTCMPEnabled) fullJson else tcmpToggleOffTranformer(fullJson)
               }
