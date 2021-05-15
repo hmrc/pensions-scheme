@@ -55,9 +55,9 @@ case class PspSchemeDetailsAuditEvent(
             (__ \ "pensionSchemeTaxReference").json.copyFrom(
               (__ \ "pstr").json.pick
             ) and
-            (__ \ "schemeReferenceNumber").json.copyFrom(
+            ((__ \ "schemeReferenceNumber").json.copyFrom(
               (__ \ "srn").json.pick
-            ) and
+            ) orElse doNothing) and
             (__ \ "pensionSchemePractitionerDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
               (__ \ "pspDetails" \ "authorisingPSAID").json.pick
             ) and
@@ -65,7 +65,8 @@ case class PspSchemeDetailsAuditEvent(
               (__ \ "pspDetails" \ "authorisingPSA").json.pick
             ) and
             ((__ \ "pensionSchemePractitionerDetails" \ "pensionSchemePractitionerClientReference").json.copyFrom(
-              (__ \ "pspDetails" \ "pspClientReference").json.pick) orElse doNothing)
+              (__ \ "pspDetails" \ "pspClientReference").json.pick
+            ) orElse doNothing)
           ) reduce
       ) andThen
         (__ \ "pspDetails").json.prune andThen
