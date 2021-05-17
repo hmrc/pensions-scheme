@@ -16,24 +16,24 @@
 
 package service
 
-import audit.{AuditService, ListOfSchemesAudit, SchemeList, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{SchemeUpdate, AuditService, SchemeSubscription, SchemeList, ListOfSchemesAudit, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
-import models.FeatureToggleName.TCMP
+import models.FeatureToggleName.{RACDAC, TCMP}
 import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.{BankAccount, PensionsScheme}
+import models.userAnswersToEtmp.{RACDACPensionsScheme, BankAccount, PensionsScheme}
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
+import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HttpException, HeaderCarrier}
 import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Success, Failure}
 
 class SchemeServiceImpl @Inject()(
                                    schemeConnector: SchemeConnector,
@@ -84,33 +84,79 @@ class SchemeServiceImpl @Inject()(
 
   case object RegisterSchemeToggleOffTransformFailed extends Exception
 
+  private def registerNonRACDACScheme(json:JsValue, psaId: String, isTCMPEnabled: Boolean, isRACDACEnabled: Boolean)(implicit
+    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+    json.validate[PensionsScheme](PensionsScheme.registerApiReads(isTCMPEnabled)).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          logger.warn("Invalid pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid pension scheme"))
+      },
+      valid = { validPensionsScheme =>
+        readBankAccount(json).fold(
+          error => Future.failed(error),
+          bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
+            pensionsScheme =>
+              val registerData = {
+
+                def fullJson:JsValue = Json.toJson(pensionsScheme).as[JsObject] ++
+                  /*
+                    Once the rac/dac toggle is removed then the next line can be removed (as this node is
+                    optional for non-RAC/DAC schemes). For now it is required as the stubs looks for this
+                    node to determine whether to validate against the new RAC/DAC schema or the old one.
+                  */
+                  (if (isRACDACEnabled) Json.obj("racdacScheme" -> false) else Json.obj())
+                if (isTCMPEnabled) fullJson else tcmpToggleOffTranformer(fullJson)
+              }
+              schemeConnector.registerScheme(psaId, registerData, isTCMPEnabled) andThen {
+                case Success(httpResponse) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
+                case Failure(error: HttpException) =>
+                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
+              }
+          }
+        )
+      }
+    )
+  }
+
+  private def registerRACDACScheme(json:JsValue, psaId: String)(implicit
+    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+    json.validate[RACDACPensionsScheme](RACDACPensionsScheme.reads).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          logger.warn("Invalid RAC/DAC pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid RAC/DAC pension scheme"))
+      },
+      valid = { validRACDACPensionsScheme =>
+        val registerData = Json.toJson(validRACDACPensionsScheme)
+        schemeConnector.registerScheme(psaId, registerData, tcmpToggle = true)
+      }
+    )
+  }
+
+  private def register(json:JsValue, psaId: String, isTCMPEnabled:Boolean, isRACDACEnabled:Boolean)(implicit
+    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+
+    def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
+
+    if (isRACDACEnabled && isRACDACSchemeDeclaration) {
+      registerRACDACScheme(json, psaId)
+    } else {
+      registerNonRACDACScheme(json, psaId, isTCMPEnabled, isRACDACEnabled)
+    }
+  }
+
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-    featureToggleService.get(TCMP).flatMap { tcmpToggle =>
-      json.validate[PensionsScheme](PensionsScheme.registerApiReads(tcmpToggle.isEnabled)).fold(
-        invalid = {
-          errors =>
-            val ex = JsResultException(errors)
-            logger.warn("Invalid pension scheme", ex)
-            Future.failed(new BadRequestException("Invalid pension scheme"))
-        },
-        valid = { validPensionsScheme =>
-          readBankAccount(json).fold(
-            error => Future.failed(error),
-            bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
-              pensionsScheme =>
-                val registerData = if(tcmpToggle.isEnabled) Json.toJson(pensionsScheme) else tcmpToggleOffTranformer(Json.toJson(pensionsScheme))
-                schemeConnector.registerScheme(psaId, registerData, tcmpToggle.isEnabled) andThen {
-                  case Success(httpResponse) =>
-                    sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
-                  case Failure(error: HttpException) =>
-                    sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
-                }
-            }
-          )
-        }
-      )
-    }
+
+    for {
+      tcmpToggle <- featureToggleService.get(TCMP)
+      racDacToggle <- featureToggleService.get(RACDAC)
+      response <- register(json, psaId, tcmpToggle.isEnabled, racDacToggle.isEnabled)
+    } yield response
   }
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
