@@ -34,5 +34,6 @@ POST          /journey-cache/scheme-details/:id                 controllers.cach
 DELETE        /journey-cache/scheme-details/:id                 controllers.cache.SchemeDetailsJourneyCacheController.remove(id: String)
 
 POST          /email-response/*id                               controllers.EmailResponseController.retrieveStatus(id: String)
+POST          /email-response-racdac/*id                        controllers.EmailResponseController.retrieveStatusRacDac(id: String)
 
 GET           /is-psa-associated                                controllers.AssociatedPsaController.isPsaAssociated

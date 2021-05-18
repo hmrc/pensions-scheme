@@ -16,7 +16,7 @@
 
 package controllers
 
-import audit.{AuditService, EmailAuditEvent}
+import audit.{AuditService, EmailAuditEvent, RACDACSubmissionEmailEvent}
 import com.google.inject.Inject
 import models.{EmailEvents, Opened}
 import play.api.Logger
@@ -59,6 +59,26 @@ class EmailResponseController @Inject()(
       }
   }
 
+  def retrieveStatusRacDac(id: String): Action[JsValue] = Action(parsers.tolerantJson) {
+    implicit request =>
+      validatePsaId(id) match {
+        case Right(psaId) =>
+          request.body.validate[EmailEvents].fold(
+            _ => BadRequest("Bad request received for email call back event"),
+            valid => {
+              valid.events.filterNot(
+                _.event == Opened
+              ).foreach { event =>
+                logger.debug(s"Email Audit event is $event")
+                auditService.sendEvent(RACDACSubmissionEmailEvent(psaId, event.event))
+              }
+              Ok
+            }
+          )
+
+        case Left(result) => result
+      }
+  }
   private def validatePsaId(id: String): Either[Result, PsaId] =
     try {
       Right(PsaId {
