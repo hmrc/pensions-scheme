@@ -20,7 +20,7 @@ import models.etmpToUserAnswers.DES._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.JsValue
 
-class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
+class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
 
   private def addressTransformer = new AddressTransformer
 

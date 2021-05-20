@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package models.etmpToUserAnswers
+package models.etmpToUserAnswers.psaSchemeDetails
 
 import com.google.inject.Inject
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
-class SchemeSubscriptionDetailsTransformer @Inject()(schemeDetailsTransformer: SchemeDetailsTransformer,
-                                                     establisherDetailsTransformer: EstablisherDetailsTransformer,
-                                                     trusteeDetailsTransformer: TrusteeDetailsTransformer
-                                                    ) {
+import scala.language.postfixOps
+
+class PsaSchemeDetailsTransformer @Inject()(
+                                             schemeDetailsTransformer: SchemeDetailsTransformer,
+                                             establisherDetailsTransformer: EstablisherDetailsTransformer,
+                                             trusteeDetailsTransformer: TrusteeDetailsTransformer
+                                           ) {
 
   val transformToUserAnswers: Reads[JsObject] =
-      schemeDetailsTransformer.userAnswersSchemeDetailsReads and
+    schemeDetailsTransformer.userAnswersSchemeDetailsReads and
       establisherDetailsTransformer.userAnswersEstablishersReads and
       trusteeDetailsTransformer.userAnswersTrusteesReads reduce
 }

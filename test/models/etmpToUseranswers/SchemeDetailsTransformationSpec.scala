@@ -17,7 +17,7 @@
 package models.etmpToUseranswers
 
 import models.etmpToUserAnswers.AddressTransformer
-import models.etmpToUserAnswers.SchemeDetailsTransformer
+import models.etmpToUserAnswers.psaSchemeDetails.SchemeDetailsTransformer
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 
 class SchemeDetailsTransformationSpec extends TransformationSpec {

@@ -16,7 +16,8 @@
 
 package models.etmpToUseranswers
 
-import models.etmpToUserAnswers.{AddressTransformer, TrusteeDetailsTransformer}
+import models.etmpToUserAnswers.AddressTransformer
+import models.etmpToUserAnswers.psaSchemeDetails.TrusteeDetailsTransformer
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json._
 

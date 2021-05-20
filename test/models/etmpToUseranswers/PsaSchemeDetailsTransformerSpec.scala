@@ -17,10 +17,11 @@
 package models.etmpToUseranswers
 
 import models.etmpToUserAnswers._
+import models.etmpToUserAnswers.psaSchemeDetails.{DirectorsOrPartnersTransformer, EstablisherDetailsTransformer, PsaSchemeDetailsTransformer, SchemeDetailsTransformer, TrusteeDetailsTransformer}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.JsValue
 
-class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
+class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
 
   private def addressTransformer = new AddressTransformer
 
@@ -36,7 +37,7 @@ class SchemeSubscriptionDetailsTransformerSpec extends TransformationSpec {
   private def trusteesTransformer =
     new TrusteeDetailsTransformer(addressTransformer)
 
-  private def transformer = new SchemeSubscriptionDetailsTransformer(
+  private def transformer = new PsaSchemeDetailsTransformer(
     schemeDetailsTransformer, establisherTransformer,
     trusteesTransformer)
 
