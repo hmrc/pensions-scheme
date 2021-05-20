@@ -148,7 +148,8 @@ class SchemeDetailsTransformer @Inject()(
       (__ \ 'isAboutMembersComplete).json.put(JsBoolean(true)) and
       (__ \ 'isBeforeYouStartComplete).json.put(JsBoolean(true)) reduce
 
-  private val racdacSchemeDetailsReads: Reads[JsObject] =
+  private val racdacSchemeDetailsReads: Reads[JsObject] = {
+    (__ \ 'racdacScheme).json.put(JsBoolean(true)) and
     ((__ \ 'srn).json.copyFrom(
       (__ \ 'schemeDetails \ 'srn).json.pick
     ) orElse doNothing) and
@@ -158,19 +159,20 @@ class SchemeDetailsTransformer @Inject()(
       (__ \ 'schemeStatus).json.copyFrom(
         (__ \ 'schemeDetails \ 'schemeStatus).json.pick
       ) and
-      (__ \ 'racdacName).json.copyFrom(
+      (__ \ 'schemeName).json.copyFrom(
         (__ \ 'schemeDetails \ 'racdacName).json.pick
       ) and
-      (__ \ 'contractOrPolicyNumber).json.copyFrom(
+      (__ \ 'racdac \ 'contractOrPolicyNumber).json.copyFrom(
         (__ \ 'schemeDetails \ 'contractOrPolicyNumber).json.pick
       ) and
       (__ \ 'registrationStartDate).json.copyFrom(
         (__ \ 'schemeDetails \ 'registrationStartDate).json.pick
       ) reduce
+  }
 
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
     pspRelationshipDetails and
-      (__ \ 'racdacScheme).readNullable[String].flatMap {
+      (__ \ 'schemeDetails \ 'racdacName).readNullable[String].flatMap {
         case Some(_) =>
           racdacSchemeDetailsReads
         case _ =>

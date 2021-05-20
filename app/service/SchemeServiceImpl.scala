@@ -61,6 +61,7 @@ class SchemeServiceImpl @Inject()(
 
     schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly) andThen {
       case Success(httpResponse) =>
+        logger.debug(s"\n\n\nList of schemes response: ${Json.prettyPrint(httpResponse.json)}\n\n\n")
         auditService.sendEvent(ListOfSchemesAudit(idType, idValue, httpResponse.status, Some(httpResponse.json)))
       case Failure(error: HttpException) =>
         auditService.sendEvent(ListOfSchemesAudit(idType, idValue, error.responseCode, None))

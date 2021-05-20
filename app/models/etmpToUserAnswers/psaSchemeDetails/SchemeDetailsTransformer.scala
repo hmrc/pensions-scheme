@@ -191,29 +191,30 @@ class SchemeDetailsTransformer @Inject()(
       (__ \ 'isBeforeYouStartComplete).json.put(JsBoolean(true)) reduce
 
   private val racdacSchemeDetailsReads: Reads[JsObject] =
+    (__ \ 'racdacScheme).json.put(JsBoolean(true)) and
     ((__ \ 'srn).json.copyFrom(
-      (__ \ 'schemeDetails \ 'srn).json.pick
+      (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'schemeDetails \ 'srn).json.pick
     ) orElse doNothing) and
       ((__ \ 'pstr).json.copyFrom(
-        (__ \ 'schemeDetails \ 'pstr).json.pick
+        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'schemeDetails \ 'pstr).json.pick
       ) orElse doNothing) and
       (__ \ 'schemeStatus).json.copyFrom(
-        (__ \ 'schemeDetails \ 'schemeStatus).json.pick
+        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'schemeStatus).json.pick
       ) and
-      (__ \ 'racdacName).json.copyFrom(
-        (__ \ 'schemeDetails \ 'racdacName).json.pick
+      (__ \ 'schemeName).json.copyFrom(
+        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'racdacName).json.pick
       ) and
-      (__ \ 'contractOrPolicyNumber).json.copyFrom(
-        (__ \ 'schemeDetails \ 'contractOrPolicyNumber).json.pick
+      (__ \ 'racdac \ 'contractOrPolicyNumber).json.copyFrom(
+        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'contractOrPolicyNumber).json.pick
       ) and
       ((__ \ 'registrationStartDate).json.copyFrom(
-        (__ \ 'schemeDetails \ 'registrationStartDate).json.pick
+        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'registrationStartDate).json.pick
       ) orElse doNothing) reduce
 
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
     getPsaIds and
       getPspDetails and
-      (__ \ 'racdacScheme).readNullable[String].flatMap {
+      (__ \ 'psaPspSchemeDetails \ 'racdacScheme).readNullable[String].flatMap {
         case Some(_) =>
           racdacSchemeDetailsReads
         case _ =>
