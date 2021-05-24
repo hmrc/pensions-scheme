@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers
+package models.etmpToUserAnswers
 
 import base.JsonFileReader
-import org.scalatest.MustMatchers
-import org.scalatest.OptionValues
-import org.scalatest.WordSpec
+import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import play.api.{Configuration, Environment}
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.Configuration
-import play.api.Environment
 import utils.PensionSchemeJsValueGenerators
 
 trait TransformationSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {

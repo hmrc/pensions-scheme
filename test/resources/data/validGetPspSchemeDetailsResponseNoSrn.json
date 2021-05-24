@@ -1,0 +1,111 @@
+{
+  "processingDate": "2001-12-17T09:30:47Z",
+  "formBundleNumber": "12345678912",
+  "sapNumber": "010004724300091100032400000000000560000292",
+  "schemeDetails": {
+    "pstr": "24000001IN",
+    "schemeStatus": "Open",
+    "schemeName": "Open Single Trust Scheme with Indiv Establisher and Trustees",
+    "isSchemeMasterTrust": true,
+    "pensionSchemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
+    "otherPensionSchemeStructure": "Pension Scheme Structure Other",
+    "currentSchemeMembers": "0",
+    "futureSchemeMembers": "0",
+    "isRegulatedSchemeInvestment": true,
+    "isOccupationalPensionScheme": true,
+    "schemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
+    "schemeEstablishedCountry": "AD",
+    "isSchemeBenefitsInsuranceCompany": true,
+    "insuranceCompanyName": "AA insurance Company",
+    "policyNumber": "AA12343",
+    "insuranceCompanyAddressDetails": {
+      "nonUKAddress": "false",
+      "line1": "Newhall House",
+      "line2": "Corporation Street",
+      "line3": "Birmingham",
+      "line4": "West Midlands",
+      "postalCode": "B137HR",
+      "countryCode": "GB"
+    },
+    "insuranceCompanyContactDetails": {
+      "telephone": "0044-09876542334",
+      "mobileNumber": "0044-09876542312",
+      "fax": "0044-09876542312",
+      "email": "aaa@gmail.com"
+    }
+  },
+  "establisherDetails": {
+    "individualDetails": [
+      {
+        "title": "Mr",
+        "firstName": "Peter",
+        "middleName": "Joseph",
+        "lastName": "Andrew"
+      },
+      {
+        "title": "Mrs",
+        "firstName": "Tilly",
+        "middleName": "Joseph",
+        "lastName": "Bagshaw"
+      }
+    ],
+    "companyOrOrgDetails": [
+      {
+        "organisationName": "Abc Private limited"
+      },
+      {
+        "organisationName": "XYZ Private limited"
+      }
+    ],
+    "partnershipDetails": [
+      {
+        "partnershipName": "First Partnership Establisher"
+      },
+      {
+        "partnershipName": "Second Partnership Establisher"
+      }
+    ]
+  },
+  "trusteeDetails": {
+    "individualDetails": [
+      {
+        "title": "Mr",
+        "firstName": "Trustee One",
+        "middleName": "Joseph",
+        "lastName": "Individual"
+      },
+      {
+        "title": "Mrs",
+        "firstName": "Trustee Two",
+        "middleName": "Joseph",
+        "lastName": "Individual"
+      }
+    ],
+    "companyOrOrgDetails": [
+      {
+        "organisationName": "Trustee Comp Private limited"
+      },
+      {
+        "organisationName": "Next Trustee Comp Private limited"
+      }
+    ],
+    "partnershipDetails": [
+      {
+        "partnershipName": "First Partnership Trustee"
+      },
+      {
+        "partnershipName": "Second Partnership Trustee"
+      }
+    ]
+  },
+  "pspRelationshipDetails": {
+    "pspid": "21000005",
+    "firstName": "Nigel",
+    "middleName": "Robert",
+    "lastName": "Smith",
+    "relationshipStartDate": "2019-03-29",
+    "authorisedPSAID": "A1090099",
+    "authorisedPSAOrgOrPartName": "Authorised PSA Organisation Name",
+    "clientReference": "1234345"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "processingDate": "2011-12-17T09:30:47Z",
+  "formBundleNumber": "12345678912",
+  "sapNumber": 1.00047243000911e+40,
+  "schemeDetails": {
+    "srn": "S0000000099",
+    "pstr": "20000000AA",
+    "schemeStatus": "Wound-up",
+    "racdacName": "Benefits Scheme",
+    "contractOrPolicyNumber": "AA12343",
+    "registrationStartDate": "2021-02-11"
+  },
+  "pspRelationshipDetails": {
+    "pspid": "01000089",
+    "orgOrPartnershipName": "ICICI Ltd",
+    "firstName": "Mark",
+    "middleName": "K",
+    "lastName": "Renald",
+    "relationshipStartDate": "2019-03-29",
+    "authorisedPSAID": "A1090099",
+    "authorisedPSAOrgOrPartName": "Authorised PSA Organisation Name",
+    "authorisedPSAFirstName": "Ben",
+    "authorisedPSAMiddleName": "M",
+    "authorisedPSALastName": "Curry",
+    "clientReference": "12345678901"
+  }
+}

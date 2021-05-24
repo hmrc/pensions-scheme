@@ -193,10 +193,10 @@ class SchemeDetailsTransformer @Inject()(
   private val racdacSchemeDetailsReads: Reads[JsObject] =
     (__ \ 'racdacScheme).json.put(JsBoolean(true)) and
     ((__ \ 'srn).json.copyFrom(
-      (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'schemeDetails \ 'srn).json.pick
+      (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails  \ 'srn).json.pick
     ) orElse doNothing) and
       ((__ \ 'pstr).json.copyFrom(
-        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'schemeDetails \ 'pstr).json.pick
+        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'pstr).json.pick
       ) orElse doNothing) and
       (__ \ 'schemeStatus).json.copyFrom(
         (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'schemeStatus).json.pick

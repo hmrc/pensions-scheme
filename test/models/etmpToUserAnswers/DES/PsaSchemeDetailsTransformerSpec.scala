@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers
+package models.etmpToUserAnswers.DES
 
-import models.etmpToUserAnswers._
-import models.etmpToUserAnswers.psaSchemeDetails.{DirectorsOrPartnersTransformer, EstablisherDetailsTransformer, PsaSchemeDetailsTransformer, SchemeDetailsTransformer, TrusteeDetailsTransformer}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.JsValue
 
@@ -37,20 +35,14 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
   private def trusteesTransformer =
     new TrusteeDetailsTransformer(addressTransformer)
 
-  private def transformer = new PsaSchemeDetailsTransformer(
+  private def transformer = new SchemeSubscriptionDetailsTransformer(
     schemeDetailsTransformer, establisherTransformer,
     trusteesTransformer)
 
-  private val ifResponse: JsValue =
-    readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
-  private val userAnswersResponse: JsValue =
-    readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
-  private val ifResponseNoSrn: JsValue =
-    readJsonFromFile("/data/validGetSchemeDetailsResponseNoSrn.json")
-  private val userAnswersResponseNoSrn: JsValue =
-    readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswersNoSrn.json")
+  private val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseDES.json")
+  private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
 
-  "A payload with full scheme subscription details " must {
+  "A DES payload with full scheme subscription details " must {
     "have the details transformed correctly to valid user answers format" which {
 
       s"uses generators" in {
@@ -63,27 +55,8 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
       }
 
       s"uses request/response json" in {
-        val result = ifResponse.transform(transformer.transformToUserAnswers).get
+        val result = desResponse.transform(transformer.transformToUserAnswers).get
         result mustBe userAnswersResponse
-      }
-    }
-  }
-
-  "A payload with scheme subscription details with no srn" must {
-    "have the details transformed correctly to valid user answers format" which {
-
-      s"uses generators" in {
-        forAll(getSchemeDetailsGen) {
-          case (desScheme, uaScheme) =>
-
-            val result = desScheme.transform(transformer.transformToUserAnswers).get
-            result mustBe uaScheme
-        }
-      }
-
-      s"uses request/response json" in {
-        val result = ifResponseNoSrn.transform(transformer.transformToUserAnswers).get
-        result mustBe userAnswersResponseNoSrn
       }
     }
   }

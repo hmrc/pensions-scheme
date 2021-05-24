@@ -1,0 +1,23 @@
+{
+  "processingDate": "2001-12-17T09:30:47Z",
+  "formBundleNumber": "12345678912",
+  "sapNumber": 1.00047243000911e+40,
+  "psaPspSchemeDetails": {
+    "racdacScheme": "Yes",
+    "racdacSchemeDetails": {
+      "srn": "S0000000019",
+      "schemeStatus": "Deregistered",
+      "racdacName": "Benefits Scheme",
+      "contractOrPolicyNumber": "12345AD",
+      "registrationStartDate": "2021-04-25"
+    },
+    "psaDetails": [
+      {
+        "psaid": "A0000099",
+        "orgOrPartnershipName": "XYX Ltd",
+        "relationshipType": "01",
+        "relationshipDate": "1977-03-22"
+      }
+    ]
+  }
+}
