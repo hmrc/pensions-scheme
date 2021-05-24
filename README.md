@@ -33,4 +33,4 @@ API
 | ```/is-psa-associated                                   ```  | GET    | Returns boolean indicating whether a PSA is associated with any schemes [More...](docs/is-psa-associated.md) |
 
 ## Note on terminology
-The term scheme reference number and submission reference number (SRN) are interchangeable within the PODS codebase; some downstream APIs use scheme reference number, some use submission reference number, probably because of oversight on part of the technical teams who developed these APIs. This detail means the same thing, the reference number that was returned from ETMP when the scheme details were submitted.
+The terms scheme reference number and submission reference number (SRN) are interchangeable within the PODS codebase; some downstream APIs use scheme reference number, some use submission reference number, probably because of oversight on part of the technical teams who developed these APIs. This detail means the same thing, the reference number that was returned from ETMP when the scheme details were submitted.
