@@ -1,0 +1,129 @@
+{
+  "benefits": "opt1",
+  "pspDetails": {
+    "authorisingPSAID": "A1090099",
+    "individual": {
+      "firstName": "Nigel",
+      "lastName": "Smith",
+      "middleName": "Robert"
+    },
+    "authorisingPSA": {
+      "organisationOrPartnershipName": "Authorised PSA Organisation Name"
+    },
+    "relationshipStartDate": "2019-03-29",
+    "id": "21000005",
+    "pspClientReference": "1234345"
+  },
+  "establishers": [
+    {
+      "establisherDetails": {
+        "firstName": "Peter",
+        "lastName": "Andrew"
+      },
+      "establisherKind": "individual",
+      "isEstablisherComplete": true
+    },
+    {
+      "establisherDetails": {
+        "firstName": "Tilly",
+        "lastName": "Bagshaw"
+      },
+      "establisherKind": "individual",
+      "isEstablisherComplete": true
+    },
+    {
+      "companyDetails": {
+        "companyName": "Abc Private limited"
+      },
+      "establisherKind": "company",
+      "isEstablisherComplete": true
+    },
+    {
+      "companyDetails": {
+        "companyName": "XYZ Private limited"
+      },
+      "establisherKind": "company",
+      "isEstablisherComplete": true
+    },
+    {
+      "establisherKind": "partnership",
+      "partnershipDetails": {
+        "name": "First Partnership Establisher"
+      },
+      "isEstablisherComplete": true
+    },
+    {
+      "establisherKind": "partnership",
+      "partnershipDetails": {
+        "name": "Second Partnership Establisher"
+      },
+      "isEstablisherComplete": true
+    }
+  ],
+  "schemeType": {
+    "schemeTypeDetails": "Pension Scheme Structure Other",
+    "name": "master"
+  },
+  "occupationalPensionScheme": true,
+  "isBeforeYouStartComplete": true,
+  "schemeName": "Open Single Trust Scheme with Indiv Establisher and Trustees",
+  "schemeStatus": "Open",
+  "membership": "opt1",
+  "schemeEstablishedCountry": "AD",
+  "isAboutBenefitsAndInsuranceComplete": true,
+  "insuranceCompanyName": "AA insurance Company",
+  "pstr": "24000001IN",
+  "membershipFuture": "opt1",
+  "insurancePolicyNumber": "AA12343",
+  "securedBenefits": true,
+  "investmentRegulated": true,
+  "trustees": [
+    {
+      "trusteeKind": "individual",
+      "trusteeDetails": {
+        "firstName": "Trustee One",
+        "lastName": "Individual"
+      }
+    },
+    {
+      "trusteeKind": "individual",
+      "trusteeDetails": {
+        "firstName": "Trustee Two",
+        "lastName": "Individual"
+      }
+    },
+    {
+      "companyDetails": {
+        "companyName": "Trustee Comp Private limited"
+      },
+      "trusteeKind": "company"
+    },
+    {
+      "companyDetails": {
+        "companyName": "Next Trustee Comp Private limited"
+      },
+      "trusteeKind": "company"
+    },
+    {
+      "partnershipDetails": {
+        "name": "First Partnership Trustee"
+      },
+      "trusteeKind": "partnership"
+    },
+    {
+      "partnershipDetails": {
+        "name": "Second Partnership Trustee"
+      },
+      "trusteeKind": "partnership"
+    }
+  ],
+  "isAboutMembersComplete": true,
+  "insurerAddress": {
+    "country": "GB",
+    "postcode": "B137HR",
+    "addressLine1": "Newhall House",
+    "addressLine2": "Corporation Street",
+    "addressLine3": "Birmingham",
+    "addressLine4": "West Midlands"
+  }
+}

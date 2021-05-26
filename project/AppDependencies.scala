@@ -26,7 +26,7 @@ object AppDependencies {
     ws,
     "uk.gov.hmrc"             %% "simple-reactivemongo"       % "8.0.0-play-27",
     "com.typesafe.play"       %% "play-json"                  % "2.6.10",
-    "uk.gov.hmrc"             %% "bootstrap-backend-play-27"  % "5.2.0",
+    "uk.gov.hmrc"             %% "bootstrap-backend-play-27"  % "5.3.0",
     "com.networknt"           %  "json-schema-validator"      % "1.0.3",
     "com.eclipsesource"       %% "play-json-schema-validator" % "0.9.4",
     "uk.gov.hmrc"             %% "domain"                     % "5.11.0-play-27",
@@ -34,7 +34,7 @@ object AppDependencies {
   )
 
   def test(scope: String = "test, it"): Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"                 %% "reactivemongo-test"           % "5.0.0-play-27"    % Test,
+    "uk.gov.hmrc"                 %% "reactivemongo-test"           % "5.0.0-play-27"     % Test,
     "org.scalatest"               %% "scalatest"                    % "3.0.8"             % scope,
     "org.pegdown"                  % "pegdown"                      % "1.6.0"             % scope,
     "org.scalacheck"              %% "scalacheck"                   % "1.14.0"            % scope,

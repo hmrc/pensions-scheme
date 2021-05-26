@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers
+package models.etmpToUserAnswers.DES
 
-import models.etmpToUserAnswers.AddressTransformer
-import models.etmpToUserAnswers.DirectorsOrPartnersTransformer
-import models.etmpToUserAnswers.EstablisherDetailsTransformer
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json._
 
@@ -33,9 +30,9 @@ class EstablisherDetailsTransformerSpec extends TransformationSpec {
   "A DES payload containing establisher details" must {
     "have the individual details transformed correctly to valid user answers format" that {
 
-      val desEstablisherIndividualPath = __ \ 'psaPspSchemeDetails \ 'establisherDetails \ 'individualDetails
+      val desEstablisherIndividualPath = __ \ 'psaSchemeDetails \ 'establisherDetails \ 'individualDetails
 
-      def individualValuePath(details: JsObject): JsLookupResult = details \ "psaPspSchemeDetails" \ "establisherDetails" \ "individualDetails"
+      def individualValuePath(details: JsObject): JsLookupResult = details \ "psaSchemeDetails" \ "establisherDetails" \ "individualDetails"
 
       s"has person details in establishers array" in {
         forAll(individualJsValueGen(isEstablisher = true)) {
@@ -101,9 +98,9 @@ class EstablisherDetailsTransformerSpec extends TransformationSpec {
     }
 
     "have the companyOrOrganisationDetails details for company transformed correctly to valid user answers format for first json file" that {
-      val desCompanyPath = __ \ 'psaPspSchemeDetails \ 'establisherDetails \ 'companyOrOrganisationDetails
+      val desCompanyPath = __ \ 'psaSchemeDetails \ 'establisherDetails \ 'companyOrOrganisationDetails
 
-      def companyValuePath(details: JsObject): JsLookupResult = details \ "psaPspSchemeDetails" \ "establisherDetails" \ "companyOrOrganisationDetails"
+      def companyValuePath(details: JsObject): JsLookupResult = details \ "psaSchemeDetails" \ "establisherDetails" \ "companyOrOrganisationDetails"
 
       s"has establisher details in establishers array" in {
         forAll(companyJsValueGen(isEstablisher = true)) {
@@ -191,9 +188,9 @@ class EstablisherDetailsTransformerSpec extends TransformationSpec {
 
     "have the establisherPartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
-      val desPartnershipPath = __ \ 'psaPspSchemeDetails \ 'establisherDetails \ 'partnershipEstablisherDetails
+      val desPartnershipPath = __ \ 'psaSchemeDetails \ 'establisherDetails \ 'partnershipTrusteeDetail
 
-      def partnershipValuePath(details: JsObject): JsLookupResult = details \ "psaPspSchemeDetails" \ "establisherDetails" \ "partnershipEstablisherDetails"
+      def partnershipValuePath(details: JsObject): JsLookupResult = details \ "psaSchemeDetails" \ "establisherDetails" \ "partnershipTrusteeDetail"
 
       s"has establisher details in establishers array" in {
         forAll(partnershipJsValueGen(isEstablisher = true)) {
@@ -278,7 +275,7 @@ class EstablisherDetailsTransformerSpec extends TransformationSpec {
     }
 
     "if no establishers are present" in {
-      val result = Json.obj("psaPspSchemeDetails" -> "").transform(transformer.userAnswersEstablishersReads).get
+      val result = Json.obj("psaSchemeDetails" -> "").transform(transformer.userAnswersEstablishersReads).get
 
       result mustBe Json.obj()
     }
@@ -289,7 +286,7 @@ object EstablisherDetailsTransformerSpec {
 
   private def desIndividualJson(individualDetails: JsValue) = {
     Json.obj(
-      "psaPspSchemeDetails" -> Json.obj(
+      "psaSchemeDetails" -> Json.obj(
         "establisherDetails" -> Json.obj(
           "individualDetails" -> individualDetails
         )
@@ -299,7 +296,7 @@ object EstablisherDetailsTransformerSpec {
 
   private def desCompanyJson(companyDetails: JsValue) = {
     Json.obj(
-      "psaPspSchemeDetails" -> Json.obj(
+      "psaSchemeDetails" -> Json.obj(
         "establisherDetails" -> Json.obj(
           "companyOrOrganisationDetails" -> companyDetails
         )
@@ -309,9 +306,9 @@ object EstablisherDetailsTransformerSpec {
 
   private def desPartnershipJson(partnershipDetails: JsValue) = {
     Json.obj(
-      "psaPspSchemeDetails" -> Json.obj(
+      "psaSchemeDetails" -> Json.obj(
         "establisherDetails" -> Json.obj(
-          "partnershipEstablisherDetails" -> partnershipDetails
+          "partnershipTrusteeDetail" -> partnershipDetails
         )
       )
     )

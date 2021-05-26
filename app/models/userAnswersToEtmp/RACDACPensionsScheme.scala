@@ -16,8 +16,8 @@
 
 package models.userAnswersToEtmp
 
-import play.api.libs.json.{Format, Json, JsPath, Reads, Writes}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, Json, Reads}
 
 case class RACDACPensionsScheme(
   racdacScheme: Boolean,

@@ -120,12 +120,12 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
               "middleName" -> "Middle",
               "lastName" -> "Last",
               "relationshipStartDate" -> "2021-04-01",
-              "authorisedPSAID" ->"A0000000",
+              "authorisedPSAID" -> "A0000000",
               "authorisedPSAOrgOrPartName" -> "Acme Ltd"),
             Json.obj("pspid" -> "A2200001",
               "orgOrPartnershipName" -> "PSP Limited",
               "relationshipStartDate" -> "2021-04-01",
-              "authorisedPSAID" ->"A0000000",
+              "authorisedPSAID" -> "A0000000",
               "authorisedPSAFirstName" -> "First",
               "authorisedPSAMiddleName" -> "Middle",
               "authorisedPSALastName" -> "Last"
@@ -164,14 +164,14 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
               "lastName" -> "Last"
             ),
             "relationshipStartDate" -> "2021-04-01",
-            "authorisingPSAID" ->"A0000000",
+            "authorisingPSAID" -> "A0000000",
             "authorisingPSA" -> Json.obj(
               "organisationOrPartnershipName" -> "Acme Ltd")
           ),
           Json.obj("id" -> "A2200001",
             "organisationOrPartnershipName" -> "PSP Limited",
             "relationshipStartDate" -> "2021-04-01",
-            "authorisingPSAID" ->"A0000000",
+            "authorisingPSAID" -> "A0000000",
             "authorisingPSA" -> Json.obj(
               "firstName" -> "First",
               "middleName" -> "Middle",
@@ -194,6 +194,54 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         statusJs ++
         moreThanTenTrustees.fold(Json.obj())(moreThanTenValue => Json.obj("moreThanTenTrustees" -> moreThanTenValue))
     )
+  }
+
+  val racDacSchemeDetailsGen: Gen[(JsValue, JsValue)] = for {
+    schemeName <- specialCharStringGen
+    schemeStatus <- schemeStatusGen
+    contractOrPolicyNumber <- specialCharStringGen
+    date <- dateGenerator
+  } yield {
+    val fromEtmp = Json.obj(
+      "psaPspSchemeDetails" -> Json.obj(
+        "racdacScheme" -> "Yes",
+        "racdacSchemeDetails" -> Json.obj(
+          "srn" -> "srn",
+          "schemeStatus" -> schemeStatus,
+          "racdacName" -> schemeName,
+          "contractOrPolicyNumber" -> contractOrPolicyNumber,
+          "registrationStartDate" -> date.toString
+        ),
+        "psaDetails" -> Json.arr(
+          Json.obj(
+            "psaid" -> "A0000099",
+            "orgOrPartnershipName" -> "XYX Ltd",
+            "relationshipType" -> "01",
+            "relationshipDate" -> date.toString
+          )
+        )
+      )
+    )
+    val toUaJson = Json.obj(
+      "racdacScheme" -> true,
+      "srn" -> "srn",
+      "schemeStatus" -> schemeStatus,
+      "schemeName" -> schemeName,
+      "racdac" -> Json.obj(
+        "contractOrPolicyNumber" -> contractOrPolicyNumber
+      ),
+      "registrationStartDate" -> date.toString,
+      "pspDetails" -> Json.arr(),
+      "psaDetails" -> Json.arr(
+        Json.obj(
+          "id" -> "A0000099",
+          "organisationOrPartnershipName" -> "XYX Ltd",
+          "relationshipDate" -> date.toString
+        )
+      )
+    )
+
+    (fromEtmp, toUaJson)
   }
 
   def addressJsValueGen(desKey: String = "desAddress", uaKey: String = "userAnswersAddress",
@@ -261,13 +309,13 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         (if (isEstablisher) "contactDetails" else "trusteeContactDetails") -> userAnswersContactDetails
       ) ++ userAnswersAddress.as[JsObject]
         ++ userAnswersPreviousAddress.as[JsObject]
-        ++ (if(isEstablisher) ninoJsValue(referenceOrNino, "establisherNino")
-            else ninoJsValue(referenceOrNino, "trusteeNino"))
+        ++ (if (isEstablisher) ninoJsValue(referenceOrNino, "establisherNino")
+      else ninoJsValue(referenceOrNino, "trusteeNino"))
         ++ utrJsValue(utr) ++
-        (if(!isEstablisher) getPersonName(firstName, lastName, date, "trusteeDetails")
-          else
+        (if (!isEstablisher) getPersonName(firstName, lastName, date, "trusteeDetails")
+        else
           getPersonName(firstName, lastName, date, "establisherDetails")
-        ) ++
+          ) ++
         (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
     )
   }
@@ -380,7 +428,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         ++ uaMoreThanTenPartner
         ++ uaPartners
         ++ utrJsValue(utr)
-      ++ (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
+        ++ (if (isEstablisher) Json.obj("isEstablisherComplete" -> true) else Json.obj())
     )
   }
 
@@ -471,7 +519,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                                 middleName: Option[String],
                                 lastName: String,
                                 date: LocalDate): JsObject = {
-      getPersonName(firstName, lastName, date, s"${directorOrPartner}Details")
+    getPersonName(firstName, lastName, date, s"${directorOrPartner}Details")
   }
 
 
@@ -495,24 +543,40 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       __.read[JsObject].map { o => o ++ desEstablishers.as[JsObject] ++ desTrustee.as[JsObject] }
     ).orElse(__.json.put(Json.obj()))
 
-    (desSchemeDetails.as[JsObject].transform(jsonTransformer).get,
+    (
+      desSchemeDetails.as[JsObject].transform(jsonTransformer).get,
       uaSchemeDetails.as[JsObject] ++ uaEstablisherDetails ++ uaErusteeDetails
     )
   }
 
+  def getRacDacSchemeDetailsGen: Gen[(JsObject, JsObject)] = for {
+    schemeDetails <- racDacSchemeDetailsGen
+  } yield {
+    val (racdacSchemeDetails, uaRadDacSchemeDetails) = schemeDetails
+
+    val jsonTransformer = (__ \ 'psaPspSchemeDetails).json.update(
+      __.read[JsObject]
+    )
+
+    (
+      racdacSchemeDetails.as[JsObject].transform(jsonTransformer).get,
+      uaRadDacSchemeDetails.as[JsObject]
+    )
+  }
+
   private def utrJsValue(utr: Option[String]) =
-      utr.fold(
-        Json.obj("hasUtr" -> false, "noUtrReason" -> "noUtrReason"))(
-        utr => Json.obj("hasUtr" -> true, "utr" -> Json.obj("value" -> utr))
-      )
+    utr.fold(
+      Json.obj("hasUtr" -> false, "noUtrReason" -> "noUtrReason"))(
+      utr => Json.obj("hasUtr" -> true, "utr" -> Json.obj("value" -> utr))
+    )
 
   private def crnJsValue(crn: Option[String], wrapper: String) =
-        crn.fold(Json.obj("hasCrn" -> false, "noCrnReason" -> "noCrnReason"))(crn =>
-          Json.obj("hasCrn" -> true, wrapper -> Json.obj("value" -> crn)))
+    crn.fold(Json.obj("hasCrn" -> false, "noCrnReason" -> "noCrnReason"))(crn =>
+      Json.obj("hasCrn" -> true, wrapper -> Json.obj("value" -> crn)))
 
   private def ninoJsValue(nino: Option[String], wrapper: String) =
-      nino.fold(Json.obj("hasNino" -> false, "noNinoReason" -> "noNinoReason"))(nino =>
-        Json.obj("hasNino" -> true, wrapper -> Json.obj("value" -> nino)))
+    nino.fold(Json.obj("hasNino" -> false, "noNinoReason" -> "noNinoReason"))(nino =>
+      Json.obj("hasNino" -> true, wrapper -> Json.obj("value" -> nino)))
 
   private def vatJsValue(vat: Option[String], wrapper: String) =
     vat.fold(Json.obj("hasVat" -> false))(vat =>

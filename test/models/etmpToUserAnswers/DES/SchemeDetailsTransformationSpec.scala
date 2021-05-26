@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers.DES
+package models.etmpToUserAnswers.DES
 
-import models.etmpToUserAnswers.DES.AddressTransformer
-import models.etmpToUserAnswers.DES.SchemeDetailsTransformer
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 
 class SchemeDetailsTransformationSpec extends TransformationSpec {

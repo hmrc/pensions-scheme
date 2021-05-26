@@ -21,7 +21,7 @@ import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.FeatureToggle.Enabled
 import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
-import models.etmpToUserAnswers.SchemeSubscriptionDetailsTransformer
+import models.etmpToUserAnswers.psaSchemeDetails.PsaSchemeDetailsTransformer
 import models.etmpToUserAnswers.pspSchemeDetails.PspSchemeDetailsTransformer
 import play.api.Logger
 import play.api.http.Status._
@@ -102,7 +102,7 @@ class SchemeConnectorImpl @Inject()(
                                      config: AppConfig,
                                      auditService: AuditService,
                                      invalidPayloadHandler: InvalidPayloadHandler,
-                                     schemeSubscriptionDetailsTransformer: SchemeSubscriptionDetailsTransformer,
+                                     schemeSubscriptionDetailsTransformer: PsaSchemeDetailsTransformer,
                                      pspSchemeDetailsTransformer: PspSchemeDetailsTransformer,
                                      schemeSubscriptionDetailsTransformerDES: models.etmpToUserAnswers.DES.SchemeSubscriptionDetailsTransformer,
                                      schemeAuditService: SchemeAuditService,

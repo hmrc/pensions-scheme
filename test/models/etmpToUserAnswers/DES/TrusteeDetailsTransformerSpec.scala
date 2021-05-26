@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package models.etmpToUseranswers.DES
+package models.etmpToUserAnswers.DES
 
-import models.etmpToUserAnswers.DES.{AddressTransformer, TrusteeDetailsTransformer}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json._
 

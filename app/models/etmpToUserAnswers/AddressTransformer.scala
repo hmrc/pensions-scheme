@@ -16,6 +16,7 @@
 
 package models.etmpToUserAnswers
 
+import models.etmpToUserAnswers.psaSchemeDetails.JsonTransformer
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.__
