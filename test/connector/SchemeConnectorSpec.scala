@@ -61,18 +61,7 @@ class SchemeConnectorSpec
 
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
 
-  private val psaType = "PSA"
-  private val pspType = "PSP"
-  private val pspId = "psp-id"
-  private val validListOfSchemeIFResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
-
-  def listOfSchemesIFUrl(idType: String = psaType): String =
-    s"/pension-online/subscriptions/schemes/list/pods/$idType/$idValue"
-
-  val schemeDetailsIFUrl: String = s"/pension-online/scheme-details/pods/$schemeIdType/$idNumber"
-  val pspSchemeDetailsIFUrl: String = s"/pension-online/psp-scheme-details/pods/$pspId/$pstr"
-
-  "SchemeConnector listOfScheme from IF" should "return OK with the list of schemes response for PSA" in {
+  "SchemeConnector listOfScheme" should "return OK with the list of schemes response for PSA" in {
     server.stubFor(
       get(listOfSchemesIFUrl())
         .willReturn(
@@ -139,7 +128,7 @@ class SchemeConnectorSpec
     }
   }
 
-  "SchemeConnectorIF getSchemeDetails" should "return user answer json" in {
+  "SchemeConnector getSchemeDetails" should "return user answer json" in {
     val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
 
@@ -156,7 +145,7 @@ class SchemeConnectorSpec
     }
   }
 
-  "SchemeConnectorIF getSchemeDetails with no SRN" should "return user answer json" in {
+  "SchemeConnector getSchemeDetails with no SRN" should "return user answer json" in {
     val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseNoSrn.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswersNoSrn.json")
 
@@ -343,7 +332,7 @@ class SchemeConnectorSpec
     }
   }
 
-  "SchemeConnectorIF getPspSchemeDetails" should "return user answer json" in {
+  "SchemeConnector getPspSchemeDetails" should "return user answer json" in {
     val apiResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsResponse.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsUserAnswers.json")
 
@@ -722,6 +711,16 @@ object SchemeConnectorSpec extends JsonFileReader {
   private val schemeIFUrl = s"/pension-online/scheme-subscription/pods/$idValue"
   private val updateSchemeIFUrl = s"/pension-online/scheme-variation/pods/$pstr"
 
+  private val psaType = "PSA"
+  private val pspType = "PSP"
+  private val pspId = "psp-id"
+  private val validListOfSchemeIFResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
+
+  private def listOfSchemesIFUrl(idType: String = psaType): String =
+    s"/pension-online/subscriptions/schemes/list/pods/$idType/$idValue"
+
+  private val schemeDetailsIFUrl: String = s"/pension-online/scheme-details/pods/$schemeIdType/$idNumber"
+  private val pspSchemeDetailsIFUrl: String = s"/pension-online/psp-scheme-details/pods/$pspId/$pstr"
   private val invalidBusinessPartnerResponse =
     Json.stringify(
       Json.obj(

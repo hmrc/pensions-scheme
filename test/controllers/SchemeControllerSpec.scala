@@ -145,7 +145,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
   "list of schemes" must {
     val fakeRequest = FakeRequest("GET", "/").withHeaders(("psaId", "A2000001"))
 
-    "return OK with list of schems when DES/ETMP returns it successfully" in {
+    "return OK with list of schemes when DES/ETMP returns it successfully" in {
       val validResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
       when(mockSchemeService.listOfSchemes(meq("A2000001"))(any(), any(), any())).thenReturn(Future.successful(
         HttpResponse(OK, validResponse.toString())))
