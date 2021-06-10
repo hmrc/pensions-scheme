@@ -71,7 +71,7 @@ class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with 
           schemaNodePath = "#/properties/schemeDetails")
 
         result.isError mustBe true
-        result.asEither.left.toOption.toSeq.flatten.size mustBe 4
+        result.asEither.left.toOption.toSeq.flatten.size mustBe 6
       }
     }
   }
