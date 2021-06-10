@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import utils.{WireMockHelper, StubLogger}
 
 import java.time.LocalDate
-class SchemeIFConnectorSpec
+class SchemeConnectorSpec
   extends AsyncFlatSpec
     with WireMockHelper
     with OptionValues
@@ -45,9 +45,6 @@ class SchemeIFConnectorSpec
     with JsonFileReader {
 
   import SchemeConnectorSpec._
-
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private implicit val rh: RequestHeader = FakeRequest("", "")
 
   override def beforeEach(): Unit = {
     auditService.reset()
@@ -716,21 +713,16 @@ class SchemeIFConnectorSpec
 object SchemeConnectorSpec extends JsonFileReader {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
-  val idValue = "test"
-  val schemeIdType = "srn"
-  val idNumber = "S1234567890"
-  val pstr = "20010010AA"
-  val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
-  val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
-  val schemeUrl = s"/pension-online/scheme-subscription/$idValue"
-  val schemeIFUrl = s"/pension-online/scheme-subscription/pods/$idValue"
-  val listOfSchemeUrl: String = s"/pension-online/subscription/$idValue/list"
-  val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$idNumber"
-  val updateSchemeUrl = s"/pension-online/scheme-variation/pstr/$pstr"
-  val updateSchemeIFUrl = s"/pension-online/scheme-variation/pods/$pstr"
-  val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+  private val idValue = "test"
+  private val schemeIdType = "srn"
+  private val idNumber = "S1234567890"
+  private val pstr = "20010010AA"
+  private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
+  private val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
+  private val schemeIFUrl = s"/pension-online/scheme-subscription/pods/$idValue"
+  private val updateSchemeIFUrl = s"/pension-online/scheme-variation/pods/$pstr"
 
-  val invalidBusinessPartnerResponse =
+  private val invalidBusinessPartnerResponse =
     Json.stringify(
       Json.obj(
         "code" -> "INVALID_BUSINESS_PARTNER",
@@ -738,7 +730,7 @@ object SchemeConnectorSpec extends JsonFileReader {
       )
     )
 
-  val duplicateSubmissionResponse =
+  private val duplicateSubmissionResponse =
     Json.stringify(
       Json.obj(
         "code" -> "DUPLICATE_SUBMISSION",
@@ -746,7 +738,7 @@ object SchemeConnectorSpec extends JsonFileReader {
       )
     )
 
-  def errorResponse(code: String): String = {
+  private def errorResponse(code: String): String = {
     Json.stringify(
       Json.obj(
         "code" -> code,
@@ -755,7 +747,7 @@ object SchemeConnectorSpec extends JsonFileReader {
     )
   }
 
-  val auditService = new StubSuccessfulAuditService()
-  val logger = new StubLogger()
+  private val auditService = new StubSuccessfulAuditService()
+  private val logger = new StubLogger()
 }
 
