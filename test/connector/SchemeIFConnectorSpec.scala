@@ -16,6 +16,7 @@
 
 package connector
 
+import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeDetailsAuditEvent, AuditService, PspSchemeDetailsAuditEvent}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
@@ -31,7 +32,7 @@ import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.WireMockHelper
+import utils.{WireMockHelper, StubLogger}
 
 import java.time.LocalDate
 class SchemeIFConnectorSpec
@@ -712,4 +713,49 @@ class SchemeIFConnectorSpec
   }
 }
 
+object SchemeConnectorSpec extends JsonFileReader {
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val rh: RequestHeader = FakeRequest("", "")
+  val idValue = "test"
+  val schemeIdType = "srn"
+  val idNumber = "S1234567890"
+  val pstr = "20010010AA"
+  val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
+  val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
+  val schemeUrl = s"/pension-online/scheme-subscription/$idValue"
+  val schemeIFUrl = s"/pension-online/scheme-subscription/pods/$idValue"
+  val listOfSchemeUrl: String = s"/pension-online/subscription/$idValue/list"
+  val schemeDetailsUrl = s"/pension-online/scheme-details/$schemeIdType/$idNumber"
+  val updateSchemeUrl = s"/pension-online/scheme-variation/pstr/$pstr"
+  val updateSchemeIFUrl = s"/pension-online/scheme-variation/pods/$pstr"
+  val validListOfSchemeResponse = readJsonFromFile("/data/validListOfSchemesResponse.json")
+
+  val invalidBusinessPartnerResponse =
+    Json.stringify(
+      Json.obj(
+        "code" -> "INVALID_BUSINESS_PARTNER",
+        "reason" -> "test-reason"
+      )
+    )
+
+  val duplicateSubmissionResponse =
+    Json.stringify(
+      Json.obj(
+        "code" -> "DUPLICATE_SUBMISSION",
+        "reason" -> "test-reason"
+      )
+    )
+
+  def errorResponse(code: String): String = {
+    Json.stringify(
+      Json.obj(
+        "code" -> code,
+        "reason" -> s"Reason for $code"
+      )
+    )
+  }
+
+  val auditService = new StubSuccessfulAuditService()
+  val logger = new StubLogger()
+}
 
