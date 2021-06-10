@@ -36,7 +36,7 @@ object CustomerAndSchemeDetails {
       (JsPath \ "schemeTypeDetails").readNullable[String]
     ) ((name, schemeDetails) => (name, schemeDetails))
 
-  def apiReads(tcmpToggle: Boolean): Reads[CustomerAndSchemeDetails] = (
+  def apiReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeName").read[String] and
       (JsPath \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
@@ -51,7 +51,7 @@ object CustomerAndSchemeDetails {
       (JsPath \ "insurerAddress").readNullable[Address] and
       (JsPath \ "isInsuranceDetailsChanged").readNullable[Boolean] and
       (JsPath \ "isTcmpChanged").readNullable[Boolean] and
-      benefitsReads(tcmpToggle)
+      benefitsReads
     ) (
     (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated, occupationalPension, securedBenefits, country,
      insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged, isTcmpChanged, benefits) => {
@@ -84,9 +84,9 @@ object CustomerAndSchemeDetails {
     }
   )
 
-  private def benefitsReads(tcmpToggle: Boolean): Reads[(String, Option[String])] =
+  private def benefitsReads: Reads[(String, Option[String])] =
     (JsPath \ "benefits").read[String] flatMap {
-      case benefits if !benefits.equalsIgnoreCase("opt2") && tcmpToggle =>
+      case benefits if !benefits.equalsIgnoreCase("opt2") =>
         moneyPurchaseBenefits(benefits)
       case _ =>
         (JsPath \ "benefits").read[String].map(benefits =>
@@ -109,48 +109,7 @@ object CustomerAndSchemeDetails {
       ) (element => element)
   }
 
-  def updateWrites(psaid: String, tcmpToggle: Boolean): Writes[CustomerAndSchemeDetails] =
-    if (tcmpToggle) updateWritesTcmpToggleOn(psaid) else updateWritesTcmpToggleOff(psaid)
-
-  def updateWritesTcmpToggleOff(psaid: String): Writes[CustomerAndSchemeDetails] =
-    ((JsPath \ "psaid").write[String] and
-      (JsPath \ "schemeName").write[String] and
-      (JsPath \ "schemeStatus").write[String] and
-      (JsPath \ "isSchemeMasterTrust").write[Boolean] and
-      (JsPath \ "pensionSchemeStructure").writeNullable[String] and
-      (JsPath \ "otherPensionSchemeStructure").writeNullable[String] and
-      (JsPath \ "currentSchemeMembers").write[String] and
-      (JsPath \ "futureSchemeMembers").write[String] and
-      (JsPath \ "isReguledSchemeInvestment").write[Boolean] and
-      (JsPath \ "isOccupationalPensionScheme").write[Boolean] and
-      (JsPath \ "schemeProvideBenefits").write[String] and
-      (JsPath \ "schemeEstablishedCountry").write[String] and
-      (JsPath \ "insuranceCompanyDetails").write(insuranceCompanyWrite)
-      ) (
-      scheme => (
-        psaid,
-        scheme.schemeName,
-        "Open",
-        scheme.isSchemeMasterTrust,
-        scheme.schemeStructure,
-        scheme.otherSchemeStructure,
-        scheme.currentSchemeMembers,
-        scheme.futureSchemeMembers,
-        scheme.isRegulatedSchemeInvestment,
-        scheme.isOccupationalPensionScheme,
-        scheme.doesSchemeProvideBenefits,
-        scheme.schemeEstablishedCountry,
-        (
-          scheme.isInsuranceDetailsChanged.getOrElse(false),
-          scheme.areBenefitsSecuredContractInsuranceCompany,
-          scheme.insuranceCompanyName,
-          scheme.policyNumber,
-          scheme.insuranceCompanyAddress
-        )
-      )
-    )
-
-  def updateWritesTcmpToggleOn(psaid: String): Writes[CustomerAndSchemeDetails] = (
+  def updateWrites(psaid: String): Writes[CustomerAndSchemeDetails] = (
     (JsPath \ "changeOfschemeDetails").write[Boolean] and
       (JsPath \ "psaid").write[String] and
       (JsPath \ "schemeName").write[String] and

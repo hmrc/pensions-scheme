@@ -18,9 +18,9 @@ package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.PensionsScheme
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
-import play.api.libs.json.{JsValue, Json}
-import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
+import org.scalatest.{OptionValues, MustMatchers, WordSpec}
+import play.api.libs.json.{Json, JsValue}
+import utils.{SchemaValidatorForTests, PensionSchemeGenerators}
 
 class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
@@ -28,25 +28,13 @@ class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with O
 
     "map correctly to an update payload for scheme variation details API 1468" when {
 
-      "validate scheme variation details write with schema with toggle on" in {
+      "validate scheme variation details write" in {
 
         forAll(schemeDetailsVariationGen) { pensionsScheme =>
 
-          val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456", tcmpToggle = true))
+          val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456"))
 
           val result = validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schemaIF.json")
-
-          result.isSuccess mustBe true
-        }
-      }
-
-      "validate scheme variation details write with schema with toggle off" in {
-
-        forAll(schemeDetailsVariationGen) { pensionsScheme =>
-
-          val mappedSchemeDetails: JsValue = Json.toJson(pensionsScheme)(PensionsScheme.updateWrite("A0123456", tcmpToggle = false))
-
-          val result = validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schema.json")
 
           result.isSuccess mustBe true
         }
@@ -58,7 +46,7 @@ class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with O
             val invalidPensionsScheme= pensionsScheme.copy(
               customerAndSchemeDetails = pensionsScheme.customerAndSchemeDetails.copy(schemeStructure = Some("INVALID")) )
 
-            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(invalidPensionsScheme)(PensionsScheme.updateWrite("A0123456", tcmpToggle = false))
+            val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(invalidPensionsScheme)(PensionsScheme.updateWrite("A0123456"))
 
             val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
 

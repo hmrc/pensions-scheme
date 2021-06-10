@@ -17,17 +17,14 @@
 package connector
 
 import audit._
-import com.google.inject.{ImplementedBy, Inject}
+import com.google.inject.{Inject, ImplementedBy}
 import config.AppConfig
-import models.FeatureToggle.Enabled
-import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
 import models.etmpToUserAnswers.psaSchemeDetails.PsaSchemeDetailsTransformer
 import models.etmpToUserAnswers.pspSchemeDetails.PspSchemeDetailsTransformer
 import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import service.FeatureToggleService
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HttpClient, _}
 import utils.InvalidPayloadHandler
@@ -39,8 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait SchemeConnector {
   def registerScheme(
                       psaId: String,
-                      registerData: JsValue,
-                      tcmpToggle: Boolean
+                      registerData: JsValue
                     )(
                       implicit
                       headerCarrier: HeaderCarrier,
@@ -90,7 +86,7 @@ trait SchemeConnector {
                            request: RequestHeader
                          ): Future[Either[HttpResponse, JsValue]]
 
-  def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)
+  def updateSchemeDetails(pstr: String, data: JsValue)
                          (implicit headerCarrier: HeaderCarrier,
                           ec: ExecutionContext,
                           request: RequestHeader): Future[HttpResponse]
@@ -104,10 +100,8 @@ class SchemeConnectorImpl @Inject()(
                                      invalidPayloadHandler: InvalidPayloadHandler,
                                      schemeSubscriptionDetailsTransformer: PsaSchemeDetailsTransformer,
                                      pspSchemeDetailsTransformer: PspSchemeDetailsTransformer,
-                                     schemeSubscriptionDetailsTransformerDES: models.etmpToUserAnswers.DES.SchemeSubscriptionDetailsTransformer,
                                      schemeAuditService: SchemeAuditService,
-                                     headerUtils: HeaderUtils,
-                                     featureToggleService: FeatureToggleService
+                                     headerUtils: HeaderUtils
                                    )
   extends SchemeConnector
     with HttpErrorFunctions {
@@ -125,8 +119,7 @@ class SchemeConnectorImpl @Inject()(
 
   override def registerScheme(
                                psaId: String,
-                               registerData: JsValue,
-                               tcmpToggle: Boolean
+                               registerData: JsValue
                              )(
                                implicit
                                headerCarrier: HeaderCarrier,
@@ -134,14 +127,10 @@ class SchemeConnectorImpl @Inject()(
                                request: RequestHeader
                              ): Future[HttpResponse] = {
 
-    val (url, hc, schemaPath) = if (tcmpToggle)
+    val (url, hc, schemaPath) =
       (config.schemeRegistrationIFUrl.format(psaId),
         HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
         "/resources/schemas/schemeSubscriptionIF.json")
-    else
-      (config.schemeRegistrationUrl.format(psaId),
-        HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))),
-        "/resources/schemas/schemeSubscription.json")
 
     logger.debug(s"[PSA-Scheme-Outgoing-Payload] - ${registerData.toString()}")
 
@@ -170,33 +159,17 @@ class SchemeConnectorImpl @Inject()(
                                  ec: ExecutionContext,
                                  request: RequestHeader
                                ): Future[Either[HttpResponse, JsValue]] = {
+      val (url, hc) = (
+        config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
+      )
 
-    featureToggleService.get(IntegrationFrameworkGetSchemeDetails).flatMap {
-      case Enabled(IntegrationFrameworkGetSchemeDetails) =>
-        val (url, hc) = (
-          config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
-          HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
-        )
+      logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
 
-        logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
-
-        http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-          handleSchemeDetailsResponse(response)
-        ) andThen
-          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
-      case _ =>
-        val (url, hc) = (
-          config.schemeDetailsUrl.format(schemeIdType, idNumber),
-          HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
-        )
-
-        logger.debug(s"Calling get scheme details API on DES with url $url and hc $hc")
-
-        http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-          handleSchemeDetailsResponseDES(response)
-        ) andThen
-          schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
-    }
+      http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
+        handleSchemeDetailsResponse(response)
+      ) andThen
+        schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
   }
 
   override def getPspSchemeDetails(
@@ -226,7 +199,7 @@ class SchemeConnectorImpl @Inject()(
                               ec: ExecutionContext,
                               request: RequestHeader
                             ): Future[HttpResponse] = {
-    val listOfSchemesUrl = config.listOfSchemesUrl.format(psaId)
+    val listOfSchemesUrl = config.listOfSchemesIFUrl.format(psaId)
     implicit val hc: HeaderCarrier =
       HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
 
@@ -259,20 +232,15 @@ class SchemeConnectorImpl @Inject()(
     )
   }
 
-  override def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)(implicit
+  override def updateSchemeDetails(pstr: String, data: JsValue)(implicit
                                                                 headerCarrier: HeaderCarrier,
                                                                 ec: ExecutionContext,
                                                                 request: RequestHeader): Future[HttpResponse] = {
 
-    val (url, hc, schemaPath) = if (tcmpToggle)
+    val (url, hc, schemaPath) =
       (config.updateSchemeIFUrl.format(pstr),
         HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
         "/resources/schemas/schemeVariationIFSchema.json")
-        else
-      (config.updateSchemeUrl.format(pstr),
-       HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier))),
-        "/resources/schemas/schemeVariationSchema.json")
-
 
     logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
 
@@ -323,21 +291,6 @@ class SchemeConnectorImpl @Inject()(
             Right(value)
           case JsError(e) => throw JsResultException(e)
         }
-      case _ =>
-        Left(response)
-    }
-  }
-
-  private def handleSchemeDetailsResponseDES(response: HttpResponse): Either[HttpResponse, JsObject] = {
-    logger.debug(s"Get-Scheme-details-response from DES API - $response")
-    response.status match {
-      case OK =>
-        val userAnswersJson =
-          response.json.transform(
-            schemeSubscriptionDetailsTransformerDES.transformToUserAnswers
-          ).getOrElse(throw new SchemeFailedMapToUserAnswersException)
-        logger.debug(s"Get-Scheme-details-UserAnswersJson - $userAnswersJson")
-        Right(userAnswersJson)
       case _ =>
         Left(response)
     }

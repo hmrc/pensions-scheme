@@ -16,30 +16,24 @@
 
 package connector
 
-import audit.{AuditService, PspSchemeDetailsAuditEvent, SchemeDetailsAuditEvent}
+import audit.{SchemeDetailsAuditEvent, AuditService, PspSchemeDetailsAuditEvent}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import models.FeatureToggle.Enabled
-import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
-import org.mockito.Matchers
-import org.mockito.Mockito.when
-import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
+import org.scalatest.Matchers.{include, convertToAnyShouldWrapper}
 import org.scalatest._
 import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.event.Level
 import play.api.LoggerLike
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsObject, Json, JsValue}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import service.FeatureToggleService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.WireMockHelper
 
 import java.time.LocalDate
-import scala.concurrent.Future
 class SchemeIFConnectorSpec
   extends AsyncFlatSpec
     with WireMockHelper
@@ -54,12 +48,8 @@ class SchemeIFConnectorSpec
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
 
-  private val mockFeatureToggleService = mock[FeatureToggleService]
-
   override def beforeEach(): Unit = {
     auditService.reset()
-    when(mockFeatureToggleService.get(Matchers.any())).thenReturn(Future.successful(Enabled(IntegrationFrameworkGetSchemeDetails)))
-
     super.beforeEach()
   }
 
@@ -68,8 +58,7 @@ class SchemeIFConnectorSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
-      bind[LoggerLike].toInstance(logger),
-      bind[FeatureToggleService].toInstance(mockFeatureToggleService)
+      bind[LoggerLike].toInstance(logger)
     )
 
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
@@ -555,7 +544,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe OK
     }
   }
@@ -570,7 +559,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe FORBIDDEN
     }
   }
@@ -586,7 +575,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe CONFLICT
     }
   }
@@ -601,7 +590,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -616,7 +605,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe NOT_FOUND
     }
   }
@@ -633,7 +622,7 @@ class SchemeIFConnectorSpec
 
     logger.reset()
 
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = true).map { response =>
+    connector.registerScheme(idValue, registerSchemeData).map { response =>
       response.status shouldBe BAD_REQUEST
       logger.getLogEntries.size shouldBe 1
       logger.getLogEntries.head.level shouldBe Level.WARN
@@ -652,7 +641,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe OK
     }
   }
@@ -667,7 +656,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe FORBIDDEN
     }
   }
@@ -683,7 +672,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe CONFLICT
     }
   }
@@ -698,7 +687,7 @@ class SchemeIFConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -715,7 +704,7 @@ class SchemeIFConnectorSpec
 
     logger.reset()
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = true).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe BAD_REQUEST
       logger.getLogEntries.size shouldBe 1
       logger.getLogEntries.head.level shouldBe Level.WARN

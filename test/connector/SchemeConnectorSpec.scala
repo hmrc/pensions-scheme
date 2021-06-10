@@ -17,30 +17,24 @@
 package connector
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{AuditService, SchemeDetailsAuditEvent}
+import audit.{SchemeDetailsAuditEvent, AuditService}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import models.FeatureToggle.Disabled
-import models.FeatureToggleName.IntegrationFrameworkGetSchemeDetails
-import org.mockito.Matchers.any
-import org.mockito.Mockito._
-import org.scalatest.Matchers.{convertToAnyShouldWrapper, include}
+import org.scalatest.Matchers.{include, convertToAnyShouldWrapper}
 import org.scalatest._
 import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.event.Level
 import play.api.LoggerLike
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsObject, Json, JsValue}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import service.FeatureToggleService
 import uk.gov.hmrc.http._
 import utils.{StubLogger, WireMockHelper}
 
 import java.time.LocalDate
-import scala.concurrent.Future
 
 class SchemeConnectorSpec
   extends AsyncFlatSpec
@@ -52,12 +46,8 @@ class SchemeConnectorSpec
 
   import SchemeConnectorSpec._
 
-  private val mockFeatureToggleService = mock[FeatureToggleService]
-
   override def beforeEach(): Unit = {
-    org.mockito.Mockito.reset(mockFeatureToggleService)
     auditService.reset()
-    when(mockFeatureToggleService.get(any())).thenReturn(Future.successful(Disabled(IntegrationFrameworkGetSchemeDetails)))
     super.beforeEach()
   }
 
@@ -66,108 +56,10 @@ class SchemeConnectorSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
-      bind[LoggerLike].toInstance(logger),
-      bind[FeatureToggleService].toInstance(mockFeatureToggleService)
+      bind[LoggerLike].toInstance(logger)
     )
 
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
-
-  "SchemeConnector registerScheme with tcmp toggle off" should "handle OK (200)" in {
-    val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
-    server.stubFor(
-      post(urlEqualTo(schemeUrl))
-        .withHeader("Content-Type", equalTo("application/json"))
-        .withRequestBody(equalToJson(Json.stringify(registerSchemeData)))
-        .willReturn(
-          ok(Json.stringify(successResponse))
-            .withHeader("Content-Type", "application/json")
-        )
-    )
-
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
-      response.status shouldBe OK
-    }
-  }
-
-  it should "handle FORBIDDEN (403) - INVALID_BUSINESS_PARTNER" in {
-    server.stubFor(
-      post(urlEqualTo(schemeUrl))
-        .willReturn(
-          forbidden
-            .withHeader("Content-Type", "application/json")
-            .withBody(invalidBusinessPartnerResponse)
-        )
-    )
-
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
-      response.status shouldBe FORBIDDEN
-    }
-  }
-
-  it should "handle CONFLICT (409) - DUPLICATE_SUBMISSION" in {
-    server.stubFor(
-      post(urlEqualTo(schemeUrl))
-        .willReturn(
-          aResponse()
-            .withStatus(CONFLICT)
-            .withHeader("Content-Type", "application/json")
-            .withBody(duplicateSubmissionResponse)
-        )
-    )
-
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
-      response.status shouldBe CONFLICT
-    }
-  }
-
-  it should "handle BAD_REQUEST (400)" in {
-    server.stubFor(
-      post(urlEqualTo(schemeUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody("Bad Request")
-        )
-    )
-
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
-      response.status shouldBe BAD_REQUEST
-    }
-  }
-
-  it should "throw NotFoundException for NOT_FOUND (404) response" in {
-    server.stubFor(
-      post(urlEqualTo(schemeUrl))
-        .willReturn(
-          notFound
-            .withHeader("Content-Type", "application/json")
-            .withBody("Not Found")
-        )
-    )
-
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
-      response.status shouldBe NOT_FOUND
-    }
-  }
-
-  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
-    server.stubFor(
-      post(urlEqualTo(schemeUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody("INVALID_PAYLOAD")
-        )
-    )
-
-    logger.reset()
-
-    connector.registerScheme(idValue, registerSchemeData, tcmpToggle = false).map { response =>
-      response.status shouldBe BAD_REQUEST
-      logger.getLogEntries.size shouldBe 1
-      logger.getLogEntries.head.level shouldBe Level.WARN
-    }
-  }
 
   "SchemeConnector listOfSchemes" should "return OK with the list of schemes response" in {
     server.stubFor(
@@ -425,7 +317,7 @@ class SchemeConnectorSpec
     result shouldBe "4725c81192514c069b8ff1"
   }
 
-  "SchemeConnector updateSchemeDetails with toggle off" should "handle OK (200)" in {
+  "SchemeConnector updateSchemeDetails" should "handle OK (200)" in {
     val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
     server.stubFor(
       post(urlEqualTo(updateSchemeUrl))
@@ -437,7 +329,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe OK
     }
   }
@@ -452,7 +344,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe FORBIDDEN
     }
   }
@@ -468,7 +360,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe CONFLICT
     }
   }
@@ -483,7 +375,7 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe BAD_REQUEST
     }
   }
@@ -500,7 +392,7 @@ class SchemeConnectorSpec
 
     logger.reset()
 
-    connector.updateSchemeDetails(pstr, updateSchemeData, tcmpToggle = false).map { response =>
+    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
       response.status shouldBe BAD_REQUEST
       logger.getLogEntries.size shouldBe 1
       logger.getLogEntries.head.level shouldBe Level.WARN

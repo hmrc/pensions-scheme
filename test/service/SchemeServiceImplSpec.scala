@@ -24,7 +24,7 @@ import models._
 import models.userAnswersToEtmp.BankAccount
 import org.scalatest.{AsyncFlatSpec, Matchers, EitherValues}
 import play.api.http.Status
-import play.api.libs.json.{Json, JsValue, JsNull}
+import play.api.libs.json.{JsNull, Json, JsValue}
 import play.api.mvc.{RequestHeader, AnyContentAsEmpty}
 import play.api.test.FakeRequest
 import service.SchemeServiceSpec.mock
@@ -140,7 +140,7 @@ class FakeSchemeConnector extends SchemeConnector {
 
   def getRegisterData: JsValue = registerSchemeData
 
-  override def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(
+  override def registerScheme(psaId: String, registerData: JsValue)(
     implicit
     headerCarrier: HeaderCarrier,
     ec: ExecutionContext,
@@ -170,7 +170,7 @@ class FakeSchemeConnector extends SchemeConnector {
   override def getCorrelationId(requestId: Option[String]): String =
     "4725c81192514c069b8ff1d84659b2df"
 
-  override def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)(
+  override def updateSchemeDetails(pstr: String, data: JsValue)(
     implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = updateSchemeResponse
 
   override def listOfSchemes(idType: String, idValue: String)

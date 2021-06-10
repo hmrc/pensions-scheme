@@ -16,12 +16,12 @@
 
 package models.userAnswersToEtmp.writes
 
-import models.enumeration.{Benefits, SchemeType}
+import models.enumeration.{SchemeType, Benefits}
 import models.userAnswersToEtmp.CustomerAndSchemeDetails
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.{OptionValues, MustMatchers, WordSpec}
 import play.api.libs.json.Json
-import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
+import utils.{SchemaValidatorForTests, PensionSchemeGenerators}
 
 class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
@@ -29,29 +29,12 @@ class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with 
 
     "map correctly to an update payload for schemeDetails API 1468" when {
 
-      "validate schemeDetails write with schema when tcmp toggle is off" in {
+      "validate schemeDetails write with schema" in {
 
         forAll(CustomerAndSchemeDetailsGen) {
           schemeDetails => {
 
-            val mappedSchemeDetails = Json.toJson(schemeDetails)(CustomerAndSchemeDetails.updateWrites(psaid = "A0012221", tcmpToggle = false))
-            val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
-
-            val result = validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/schemeDetails")
-
-            result.isSuccess mustBe true
-          }
-        }
-      }
-
-      "validate schemeDetails write with schema when tcmp toggle is on" in {
-
-        forAll(CustomerAndSchemeDetailsGen) {
-          schemeDetails => {
-
-            val mappedSchemeDetails = Json.toJson(schemeDetails)(CustomerAndSchemeDetails.updateWrites(psaid = "A0012221", tcmpToggle = true))
+            val mappedSchemeDetails = Json.toJson(schemeDetails)(CustomerAndSchemeDetails.updateWrites(psaid = "A0012221"))
             val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
 
             val result = validateJson(elementToValidate = valid,
@@ -80,7 +63,7 @@ class CustomerAndSchemeDetailsWriteSpec extends WordSpec with MustMatchers with 
           haveInvalidBank = false
         )
 
-        val mappedSchemeDetails = Json.toJson(details)(CustomerAndSchemeDetails.updateWrites(psaid = "INVALID", tcmpToggle = false))
+        val mappedSchemeDetails = Json.toJson(details)(CustomerAndSchemeDetails.updateWrites(psaid = "INVALID"))
         val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
 
         val result = validateJson(elementToValidate = valid,

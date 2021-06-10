@@ -16,7 +16,7 @@
 
 package models.userAnswersToEtmp.reads
 
-import models.userAnswersToEtmp.{CustomerAndSchemeDetails, UkAddress}
+import models.userAnswersToEtmp.{UkAddress, CustomerAndSchemeDetails}
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
 
@@ -33,7 +33,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
           "schemeName" -> "test scheme name",
           "schemeType" -> Json.obj(
             "name" -> "group"
-          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
         result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A group life/death in service scheme")).schemeStructure
       }
@@ -43,7 +43,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
           "schemeName" -> "test scheme name",
           "schemeType" -> Json.obj(
             "name" -> "corp"
-          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
         result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("A body corporate")).schemeStructure
       }
@@ -54,7 +54,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
           "schemeType" -> Json.obj(
             "name" -> "other",
             "schemeTypeDetails" -> "other details"
-          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
         result.schemeStructure mustBe customerDetails.copy(schemeStructure = Some("Other")).schemeStructure
       }
@@ -64,7 +64,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
           "schemeName" -> "test scheme name",
           "schemeType" -> Json.obj(
             "name" -> "master"
-          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
         result.isSchemeMasterTrust mustBe true
       }
@@ -75,7 +75,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
             "schemeName" -> "test scheme name",
             "schemeType" -> Json.obj(
               "name" -> "master"
-            ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+            ))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
           result.schemeStructure mustBe None
         }
@@ -84,14 +84,14 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
       "we have insurance policy name and number" that {
         "is with valid insurance company name but no policy number" in {
           val json = dataJson ++ Json.obj("insuranceCompanyName" -> customerDetails.insuranceCompanyName)
-          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
           result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
           result.policyNumber mustBe None
         }
 
         "is with valid policy number but no company name" in {
           val json = dataJson ++ Json.obj("insurancePolicyNumber" -> customerDetails.policyNumber)
-          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
           result.policyNumber mustBe customerDetails.policyNumber
           result.insuranceCompanyName mustBe None
         }
@@ -99,14 +99,14 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
         "is with valid policy number and insurance company name" in {
           val json = dataJson ++ Json.obj("insuranceCompanyName" -> customerDetails.insuranceCompanyName,
             "insurancePolicyNumber" -> customerDetails.policyNumber)
-          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          val result = json.as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
           result.insuranceCompanyName mustBe customerDetails.insuranceCompanyName
           result.policyNumber mustBe customerDetails.policyNumber
         }
       }
     }
 
-    readsTestsCommon(dataJson, CustomerAndSchemeDetails.apiReads(tcmpToggle))
+    readsTestsCommon(dataJson, CustomerAndSchemeDetails.apiReads)
   }
 
   //scalastyle:off method.length
@@ -210,7 +210,7 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 
       "we have updated insurance details" in {
         val result = (dataJson ++ Json.obj(
-          "isInsuranceDetailsChanged" -> JsBoolean(true))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads(tcmpToggle))
+          "isInsuranceDetailsChanged" -> JsBoolean(true))).as[CustomerAndSchemeDetails](CustomerAndSchemeDetails.apiReads)
 
         result.isInsuranceDetailsChanged mustBe Some(true)
       }
@@ -224,9 +224,6 @@ class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
 }
 
 object CustomerAndSchemeDetailsReadsSpec {
-
-  val tcmpToggle: Boolean = false
-
   val customerDetails: CustomerAndSchemeDetails = CustomerAndSchemeDetails("test scheme name", isSchemeMasterTrust = false, schemeStructure = Some("A single trust under which all" +
     " of the assets are held for the benefit of all members of the scheme"), otherSchemeStructure = Some("other details"),
     haveMoreThanTenTrustee = Some(true), currentSchemeMembers = "2 to 11", futureSchemeMembers = "0", isRegulatedSchemeInvestment = true, isOccupationalPensionScheme = true,
