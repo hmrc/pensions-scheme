@@ -82,7 +82,6 @@ class SchemeServiceImpl @Inject()(
       invalid = {
         errors =>
           val ex = JsResultException(errors)
-          println( "\n>>>>>>" + errors)
           logger.warn("Invalid pension scheme", ex)
           Future.failed(new BadRequestException("Invalid pension scheme"))
       },
