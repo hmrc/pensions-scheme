@@ -118,7 +118,7 @@ class SchemeDetailsControllerSpec
     }
 
 
-    "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_IDTYPE returned from If" in {
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(
           Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE")))
@@ -131,7 +131,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw BadRequestException when bad request with INVALID_SRN returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_SRN returned from If" in {
 
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(
@@ -145,7 +145,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw BadRequestException when bad request with INVALID_PSTR returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_PSTR returned from If" in {
 
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(
@@ -159,7 +159,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw BadRequestException when bad request with INVALID_CORRELATIONID returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_CORRELATIONID returned from If" in {
 
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(
@@ -173,7 +173,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw Upstream4xxResponse when UpStream4XXResponse returned from Des" in {
+    "throw Upstream4xxResponse when UpStream4XXResponse returned from If" in {
 
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND))
@@ -186,7 +186,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from Des" in {
+    "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from If" in {
 
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(
@@ -200,7 +200,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from Des" in {
+    "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from If" in {
 
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(
@@ -214,7 +214,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw generic exception when any other exception returned from Des" in {
+    "throw generic exception when any other exception returned from If" in {
 
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(Future.failed(new Exception("Generic Exception")))
@@ -277,7 +277,7 @@ class SchemeDetailsControllerSpec
     }
 
 
-    "throw BadRequestException when bad request with INVALID_IDTYPE returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_IDTYPE returned from If" in {
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
@@ -288,7 +288,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw BadRequestException when bad request with INVALID_SRN returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_SRN returned from If" in {
 
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_SRN"))))
@@ -300,7 +300,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw BadRequestException when bad request with INVALID_PSTR returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_PSTR returned from If" in {
 
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_PSTR"))))
@@ -312,7 +312,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw BadRequestException when bad request with INVALID_CORRELATIONID returned from Des" in {
+    "throw BadRequestException when bad request with INVALID_CORRELATIONID returned from If" in {
 
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_CORRELATIONID"))))
@@ -324,7 +324,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw Upstream4xxResponse when UpStream4XXResponse returned from Des" in {
+    "throw Upstream4xxResponse when UpStream4XXResponse returned from If" in {
 
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND)))
@@ -336,7 +336,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from Des" in {
+    "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from If" in {
 
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
@@ -348,7 +348,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from Des" in {
+    "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from If" in {
 
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
@@ -360,7 +360,7 @@ class SchemeDetailsControllerSpec
       }
     }
 
-    "throw generic exception when any other exception returned from Des" in {
+    "throw generic exception when any other exception returned from If" in {
 
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(pspId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
