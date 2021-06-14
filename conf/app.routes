@@ -2,8 +2,7 @@
 
 POST          /register-scheme                                  controllers.SchemeController.registerScheme
 POST          /update-scheme                                    controllers.SchemeController.updateScheme
-GET           /list-of-schemes                                  controllers.SchemeController.listOfSchemes
-GET           /if-list-of-schemes                               controllers.SchemeIFController.listOfSchemes
+GET           /if-list-of-schemes                               controllers.SchemeController.listOfSchemes
 
 GET           /scheme                                           controllers.SchemeDetailsController.getSchemeDetails
 GET           /psp-scheme                                       controllers.SchemeDetailsController.getPspSchemeDetails

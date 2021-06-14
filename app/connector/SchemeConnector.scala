@@ -45,15 +45,6 @@ trait SchemeConnector {
                     ): Future[HttpResponse]
 
   def listOfSchemes(
-                     psaId: String
-                   )(
-                     implicit
-                     headerCarrier: HeaderCarrier,
-                     ec: ExecutionContext,
-                     request: RequestHeader
-                   ): Future[HttpResponse]
-
-  def listOfSchemes(
                      idType: String,
                      idValue: String
                    )(
@@ -192,25 +183,6 @@ class SchemeConnectorImpl @Inject()(
   }
 
   override def listOfSchemes(
-                              psaId: String
-                            )(
-                              implicit
-                              headerCarrier: HeaderCarrier,
-                              ec: ExecutionContext,
-                              request: RequestHeader
-                            ): Future[HttpResponse] = {
-    val listOfSchemesUrl = config.listOfSchemesIFUrl.format(psaId)
-    implicit val hc: HeaderCarrier =
-      HeaderCarrier(extraHeaders = ifHeader(implicitly[HeaderCarrier](headerCarrier)))
-
-    http.GET[HttpResponse](listOfSchemesUrl)(
-      implicitly[HttpReads[HttpResponse]],
-      implicitly[HeaderCarrier](hc),
-      implicitly[ExecutionContext]
-    )
-  }
-
-  override def listOfSchemes(
                               idType: String,
                               idValue: String
                             )(
@@ -257,13 +229,6 @@ class SchemeConnectorImpl @Inject()(
       }
       response
     }
-  }
-
-  private def ifHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
-    val requestId = getCorrelationId(hc.requestId.map(_.value))
-
-    Seq("Environment" -> config.ifEnvironment, "Authorization" -> config.authorization,
-      "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
   private def handleSchemeDetailsResponse(response: HttpResponse): Either[HttpResponse, JsObject] = {

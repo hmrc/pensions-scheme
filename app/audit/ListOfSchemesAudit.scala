@@ -18,30 +18,6 @@ package audit
 
 import play.api.libs.json.{Format, JsValue, Json}
 
-case class SchemeList(
-                       psaIdentifier: String,
-                       status: Int,
-                       response: Option[JsValue]
-                     ) extends AuditEvent {
-  override def auditType: String = "SchemeList"
-
-  override def details: Map[String, String] =
-    Map(
-      "psaIdentifier" -> psaIdentifier,
-      "status" -> status.toString,
-      "response" -> {
-        response match {
-          case Some(json) => Json.stringify(json)
-          case _ => ""
-        }
-      }
-    )
-}
-
-object SchemeList {
-  implicit val formatsSchemeList: Format[SchemeList] = Json.format[SchemeList]
-}
-
 case class ListOfSchemesAudit(
                           idType: String,
                           idValue: String,

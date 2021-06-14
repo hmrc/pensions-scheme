@@ -16,7 +16,7 @@
 
 package service
 
-import audit.SchemeList
+import audit.ListOfSchemesAudit
 import audit.testdoubles.StubSuccessfulAuditService
 import base.{SpecBase, JsonFileReader}
 import connector.{BarsConnector, SchemeConnector}
@@ -42,7 +42,7 @@ class SchemeServiceImplSpec
 
   "listOfSchemes" should "return the list of schemes from the connector" in {
 
-    testFixture().schemeService.listOfSchemes(psaId).map { httpResponse =>
+    testFixture().schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
       httpResponse.status shouldBe Status.OK
       httpResponse.json shouldBe listOfSchemesJson
     }
@@ -53,9 +53,9 @@ class SchemeServiceImplSpec
 
     val fixture = testFixture()
 
-    fixture.schemeService.listOfSchemes(psaId).map { httpResponse =>
+    fixture.schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
       fixture.auditService.verifySent(
-        SchemeList(psaId, Status.OK, Some(httpResponse.json))) shouldBe true
+        ListOfSchemesAudit("PSA", psaId, Status.OK, Some(httpResponse.json))) shouldBe true
     }
 
   }
@@ -68,12 +68,12 @@ class SchemeServiceImplSpec
       Future.failed(new BadRequestException("bad request")))
 
     fixture.schemeService
-      .listOfSchemes(psaId)
+      .listOfSchemes("PSA", psaId)
       .map(_ => fail("Expected failure"))
       .recover {
         case _: BadRequestException =>
           fixture.auditService.verifySent(
-            SchemeList(psaId, Status.BAD_REQUEST, None)) shouldBe true
+            ListOfSchemesAudit("PSA", psaId, Status.BAD_REQUEST, None)) shouldBe true
       }
 
   }
@@ -149,7 +149,7 @@ class FakeSchemeConnector extends SchemeConnector {
     registerSchemeResponse
   }
 
-  override def listOfSchemes(psaId: String)(
+  override def listOfSchemes(idType: String, idValue: String)(
     implicit
     headerCarrier: HeaderCarrier,
     ec: ExecutionContext,
@@ -172,10 +172,6 @@ class FakeSchemeConnector extends SchemeConnector {
 
   override def updateSchemeDetails(pstr: String, data: JsValue)(
     implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = updateSchemeResponse
-
-  override def listOfSchemes(idType: String, idValue: String)
-                            (implicit headerCarrier: HeaderCarrier,
-                             ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
   override def getPspSchemeDetails(pspId: String, pstr: String)
                                   (implicit headerCarrier: HeaderCarrier,

@@ -16,7 +16,7 @@
 
 package service
 
-import audit.{SchemeUpdate, AuditService, SchemeSubscription, SchemeList, ListOfSchemesAudit, SchemeType => AuditSchemeType}
+import audit.{SchemeSubscription, ListOfSchemesAudit, SchemeUpdate, AuditService, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
 import models.FeatureToggleName.RACDAC
@@ -44,18 +44,6 @@ class SchemeServiceImpl @Inject()(
 
   private val logger = Logger(classOf[SchemeServiceImpl])
 
-  override def listOfSchemes(psaId: String)
-                            (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-
-    schemeConnector.listOfSchemes(psaId) andThen {
-      case Success(httpResponse) =>
-        sendSchemeListEvent(psaId, httpResponse.status, Some(httpResponse.json))
-      case Failure(error: HttpException) =>
-        sendSchemeListEvent(psaId, error.responseCode, None)
-    }
-
-  }
-
   override def listOfSchemes(idType: String, idValue: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
 
@@ -66,12 +54,6 @@ class SchemeServiceImpl @Inject()(
       case Failure(error: HttpException) =>
         auditService.sendEvent(ListOfSchemesAudit(idType, idValue, error.responseCode, None))
     }
-  }
-
-  private def sendSchemeListEvent(psaId: String, status: Int, response: Option[JsValue])(implicit request: RequestHeader, ec: ExecutionContext): Unit = {
-
-    auditService.sendEvent(SchemeList(psaId, status, response))
-
   }
 
   case object RegisterSchemeToggleOffTransformFailed extends Exception
