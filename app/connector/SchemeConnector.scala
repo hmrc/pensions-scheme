@@ -201,7 +201,7 @@ class SchemeConnectorImpl @Inject()(
                             ): Future[HttpResponse] = {
     val listOfSchemesUrl = config.listOfSchemesIFUrl.format(psaId)
     implicit val hc: HeaderCarrier =
-      HeaderCarrier(extraHeaders = desHeader(implicitly[HeaderCarrier](headerCarrier)))
+      HeaderCarrier(extraHeaders = ifHeader(implicitly[HeaderCarrier](headerCarrier)))
 
     http.GET[HttpResponse](listOfSchemesUrl)(
       implicitly[HttpReads[HttpResponse]],
@@ -259,10 +259,10 @@ class SchemeConnectorImpl @Inject()(
     }
   }
 
-  private def desHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
+  private def ifHeader(implicit hc: HeaderCarrier): Seq[(String, String)] = {
     val requestId = getCorrelationId(hc.requestId.map(_.value))
 
-    Seq("Environment" -> config.desEnvironment, "Authorization" -> config.authorization,
+    Seq("Environment" -> config.ifEnvironment, "Authorization" -> config.authorization,
       "Content-Type" -> "application/json", "CorrelationId" -> requestId)
   }
 
