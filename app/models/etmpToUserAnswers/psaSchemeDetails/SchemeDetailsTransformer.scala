@@ -30,8 +30,8 @@ class SchemeDetailsTransformer @Inject()(
                                         )
   extends JsonTransformer {
 
-  private def membersReads(desPath: String, uaPath: String): Reads[JsObject] =
-    (__ \ 'psaPspSchemeDetails \ 'schemeDetails \ desPath).read[String].flatMap {
+  private def membersReads(ifPath: String, uaPath: String): Reads[JsObject] =
+    (__ \ 'psaPspSchemeDetails \ 'schemeDetails \ ifPath).read[String].flatMap {
       members =>
         (__ \ uaPath).json.put(JsString(SchemeMembers.nameWithValue(members)))
     }
@@ -161,8 +161,8 @@ class SchemeDetailsTransformer @Inject()(
       ((__ \ "moreThanTenTrustees").json.copyFrom(
         (__ \ 'psaPspSchemeDetails \ 'schemeDetails \ 'hasMoreThanTenTrustees).json.pick
       ) orElse doNothing) and
-      membersReads(desPath = "currentSchemeMembers", uaPath = "membership") and
-      membersReads(desPath = "futureSchemeMembers", uaPath = "membershipFuture") and
+      membersReads(ifPath = "currentSchemeMembers", uaPath = "membership") and
+      membersReads(ifPath = "futureSchemeMembers", uaPath = "membershipFuture") and
       (__ \ 'investmentRegulated).json.copyFrom(
         (__ \ 'psaPspSchemeDetails \ 'schemeDetails \ 'isRegulatedSchemeInvestment).json.pick
       ) and

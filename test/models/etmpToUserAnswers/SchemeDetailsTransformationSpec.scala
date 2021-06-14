@@ -29,8 +29,8 @@ class SchemeDetailsTransformationSpec extends TransformationSpec {
 
       forAll(schemeDetailsGen) {
         schemeDetails =>
-          val (desSchemeDetails, userAnswersSchemeDetails) = schemeDetails
-          val result = desSchemeDetails.transform(schemeDetailsTransformer.userAnswersSchemeDetailsReads).get
+          val (ifSchemeDetails, userAnswersSchemeDetails) = schemeDetails
+          val result = ifSchemeDetails.transform(schemeDetailsTransformer.userAnswersSchemeDetailsReads).get
           result mustBe userAnswersSchemeDetails
       }
     }

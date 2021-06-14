@@ -25,7 +25,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
   "A JSON Payload with an address" should {
     "Map correctly to an Address type" when {
 
-      "we have an incoming address coming from DES" when {
+      "we have an incoming address coming from if" when {
         val address = Json.obj("line1" -> JsString("line1"), "line2" -> JsString("line2"), "line3" -> JsString("line3"), "line4" -> JsString("line4"),
           "postalCode" -> JsString("NE1"), "countryCode" -> JsString("GB"))
         val result = address.as[CorrespondenceAddress]

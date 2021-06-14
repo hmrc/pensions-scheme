@@ -89,7 +89,7 @@ class SchemeConnectorSpec
     }
   }
 
-  it should "throw Bad Request Exception when DES/ETMP throws BadRequestException" in {
+  it should "throw Bad Request Exception when if/ETMP throws BadRequestException" in {
     server.stubFor(
       get(listOfSchemesIFUrl())
         .willReturn(
@@ -102,7 +102,7 @@ class SchemeConnectorSpec
     }
   }
 
-  it should "throw NotFoundException when DES/ETMP throws NotFoundException" in {
+  it should "throw NotFoundException when if/ETMP throws NotFoundException" in {
     server.stubFor(
       get(listOfSchemesIFUrl(pspType))
         .willReturn(
@@ -115,7 +115,7 @@ class SchemeConnectorSpec
     }
   }
 
-  it should "throw UpStream5XXResponse when DES/ETMP throws Server error" in {
+  it should "throw UpStream5XXResponse when if/ETMP throws Server error" in {
     server.stubFor(
       get(listOfSchemesIFUrl(psaType))
         .willReturn(
@@ -129,7 +129,7 @@ class SchemeConnectorSpec
   }
 
   "SchemeConnector getSchemeDetails" should "return user answer json" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val IfResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
 
     server.stubFor(
@@ -137,7 +137,7 @@ class SchemeConnectorSpec
         .willReturn(
           ok
             .withHeader("Content-Type", "application/json")
-            .withBody(desResponse.toString())
+            .withBody(IfResponse.toString())
         )
     )
     connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
@@ -146,7 +146,7 @@ class SchemeConnectorSpec
   }
 
   "SchemeConnector getSchemeDetails with no SRN" should "return user answer json" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseNoSrn.json")
+    val IfResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseNoSrn.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswersNoSrn.json")
 
     server.stubFor(
@@ -154,7 +154,7 @@ class SchemeConnectorSpec
         .willReturn(
           ok
             .withHeader("Content-Type", "application/json")
-            .withBody(desResponse.toString())
+            .withBody(IfResponse.toString())
         )
     )
     connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
@@ -295,7 +295,7 @@ class SchemeConnectorSpec
   }
 
   it should "send audit event for successful response" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
+    val IfResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
 
     server.stubFor(
@@ -303,7 +303,7 @@ class SchemeConnectorSpec
         .willReturn(
           ok
             .withHeader("Content-Type", "application/json")
-            .withBody(desResponse.toString())
+            .withBody(IfResponse.toString())
         )
     )
     connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { _ =>
@@ -482,7 +482,7 @@ class SchemeConnectorSpec
   }
 
   it should "send audit event for successful response" in {
-    val desResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsResponse.json")
+    val IfResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsResponse.json")
     val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsUserAnswers.json")
 
     server.stubFor(
@@ -490,7 +490,7 @@ class SchemeConnectorSpec
         .willReturn(
           ok
             .withHeader("Content-Type", "application/json")
-            .withBody(desResponse.toString())
+            .withBody(IfResponse.toString())
         )
     )
     connector.getPspSchemeDetails(pspId, pstr).map { _ =>

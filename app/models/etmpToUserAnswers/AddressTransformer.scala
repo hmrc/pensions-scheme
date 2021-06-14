@@ -24,31 +24,31 @@ import play.api.libs.json._
 
 class AddressTransformer extends JsonTransformer {
 
-  private def getCommonAddressElements(userAnswersPath: JsPath, desAddressPath: JsPath): Reads[JsObject] = {
-    (userAnswersPath \ 'addressLine1).json.copyFrom((desAddressPath \ 'line1).json.pick) and
-      (userAnswersPath \ 'addressLine2).json.copyFrom((desAddressPath \ 'line2).json.pick) and
-      ((userAnswersPath \ 'addressLine3).json.copyFrom((desAddressPath \ 'line3).json.pick)
+  private def getCommonAddressElements(userAnswersPath: JsPath, ifAddressPath: JsPath): Reads[JsObject] = {
+    (userAnswersPath \ 'addressLine1).json.copyFrom((ifAddressPath \ 'line1).json.pick) and
+      (userAnswersPath \ 'addressLine2).json.copyFrom((ifAddressPath \ 'line2).json.pick) and
+      ((userAnswersPath \ 'addressLine3).json.copyFrom((ifAddressPath \ 'line3).json.pick)
         orElse doNothing) and
-      ((userAnswersPath \ 'addressLine4).json.copyFrom((desAddressPath \ 'line4).json.pick)
+      ((userAnswersPath \ 'addressLine4).json.copyFrom((ifAddressPath \ 'line4).json.pick)
         orElse doNothing) reduce
   }
 
-  def getAddress(userAnswersPath: JsPath, desAddressPath: JsPath): Reads[JsObject] = {
-    getCommonAddressElements(userAnswersPath, desAddressPath) and
-      ((userAnswersPath \ 'postalCode).json.copyFrom((desAddressPath \ 'postalCode).json.pick)
+  def getAddress(userAnswersPath: JsPath, ifAddressPath: JsPath): Reads[JsObject] = {
+    getCommonAddressElements(userAnswersPath, ifAddressPath) and
+      ((userAnswersPath \ 'postalCode).json.copyFrom((ifAddressPath \ 'postalCode).json.pick)
         orElse doNothing) and
-      (userAnswersPath \ 'countryCode).json.copyFrom((desAddressPath \ 'countryCode).json.pick) reduce
+      (userAnswersPath \ 'countryCode).json.copyFrom((ifAddressPath \ 'countryCode).json.pick) reduce
   }
 
-  def getDifferentAddress(userAnswersPath: JsPath, desAddressPath: JsPath): Reads[JsObject] = {
-    getCommonAddressElements(userAnswersPath, desAddressPath) and
-      ((userAnswersPath \ 'postcode).json.copyFrom((desAddressPath \ 'postalCode).json.pick)
+  def getDifferentAddress(userAnswersPath: JsPath, ifAddressPath: JsPath): Reads[JsObject] = {
+    getCommonAddressElements(userAnswersPath, ifAddressPath) and
+      ((userAnswersPath \ 'postcode).json.copyFrom((ifAddressPath \ 'postalCode).json.pick)
         orElse doNothing) and
-      (userAnswersPath \ 'country).json.copyFrom((desAddressPath \ 'countryCode).json.pick) reduce
+      (userAnswersPath \ 'country).json.copyFrom((ifAddressPath \ 'countryCode).json.pick) reduce
   }
 
-  def getAddressYears(desPath: JsPath = __, uaAddressYearsPath: JsPath = __): Reads[JsObject] = {
-    (desPath \ "previousAddressDetails" \ "isPreviousAddressLast12Month").read[Boolean].flatMap { addressYearsValue =>
+  def getAddressYears(ifPath: JsPath = __, uaAddressYearsPath: JsPath = __): Reads[JsObject] = {
+    (ifPath \ "previousAddressDetails" \ "isPreviousAddressLast12Month").read[Boolean].flatMap { addressYearsValue =>
       val value = if (addressYearsValue) {
         JsString("under_a_year")
       } else {
@@ -58,9 +58,9 @@ class AddressTransformer extends JsonTransformer {
     } orElse doNothing
   }
 
-  def getPreviousAddress(desPath: JsPath, userAnswersPath: JsPath): Reads[JsObject] = {
-    (desPath \ 'previousAddressDetails \ 'previousAddress).read[JsObject].flatMap { _ =>
-      getDifferentAddress(userAnswersPath, desPath \ 'previousAddressDetails \ 'previousAddress)
+  def getPreviousAddress(ifPath: JsPath, userAnswersPath: JsPath): Reads[JsObject] = {
+    (ifPath \ 'previousAddressDetails \ 'previousAddress).read[JsObject].flatMap { _ =>
+      getDifferentAddress(userAnswersPath, ifPath \ 'previousAddressDetails \ 'previousAddress)
     } orElse doNothing
   }
 }

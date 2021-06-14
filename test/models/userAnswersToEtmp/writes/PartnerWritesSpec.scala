@@ -26,7 +26,7 @@ class PartnerWritesSpec extends WordSpec with MustMatchers with OptionValues wit
 
   "A partner" should {
 
-    "parse correctly to a valid DES format for variations api - API 1468" when {
+    "parse correctly to a valid If format for variations api - API 1468" when {
       "we have a valid partner" in {
         forAll(individualGen) {
           partner => {
@@ -43,7 +43,7 @@ class PartnerWritesSpec extends WordSpec with MustMatchers with OptionValues wit
     }
   }
 
-  "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+  "return errors when incoming data cannot be parsed to a valid If format for variations api - API 1468" when {
     "we have an invalid partner" in {
       forAll(individualGen) {
         partner => {

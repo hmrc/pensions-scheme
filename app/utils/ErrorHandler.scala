@@ -78,7 +78,7 @@ trait ErrorHandler {
   private val logger = Logger(classOf[ErrorHandler])
 
   protected def logWarning(endpoint: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
-    case Success(Left(e: HttpResponse)) => logger.warn(s"$endpoint received error response from DES", e)
+    case Success(Left(e: HttpResponse)) => logger.warn(s"$endpoint received error response from If", e)
   }
 
 

@@ -34,7 +34,6 @@ class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Envi
   lazy val pspSchemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.psp.scheme.details")}"
   lazy val updateSchemeIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
   lazy val ifEnvironment: String = runModeConfiguration.getOptional[String]("microservice.services.if-hod.env").getOrElse("local")
-  lazy val authorization: String = "Bearer " + runModeConfiguration.getOptional[String]("microservice.services.des-hod.authorizationToken").getOrElse("local")
   lazy val integrationframeworkEnvironment: String = runModeConfiguration.getOptional[String](
     path = "microservice.services.if-hod.env").getOrElse("local")
   lazy val integrationframeworkAuthorization: String = "Bearer " + runModeConfiguration.getOptional[String](
