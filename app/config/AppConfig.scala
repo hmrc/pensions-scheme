@@ -28,14 +28,14 @@ class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Envi
   lazy val barsBaseUrl: String = servicesConfig.baseUrl("bank-account-reputation")
   lazy val appName: String = underlying.getString("appName")
 
-  lazy val schemeRegistrationIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.register")}"
-  lazy val listOfSchemesIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.list.of.schemes")}"
-  lazy val schemeDetailsIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
-  lazy val pspSchemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.psp.scheme.details")}"
-  lazy val updateSchemeIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
-  lazy val ifEnvironment: String = runModeConfiguration.getOptional[String]("microservice.services.if-hod.env").getOrElse("local")
   lazy val integrationframeworkEnvironment: String = runModeConfiguration.getOptional[String](
     path = "microservice.services.if-hod.env").getOrElse("local")
   lazy val integrationframeworkAuthorization: String = "Bearer " + runModeConfiguration.getOptional[String](
     path = "microservice.services.if-hod.authorizationToken").getOrElse("local")
+
+  lazy val schemeRegistrationIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.register")}"
+  lazy val listOfSchemesIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.list.of.schemes")}"
+  lazy val schemeDetailsIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
+  lazy val pspSchemeDetailsIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.psp.scheme.details")}"
+  lazy val updateSchemeIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
 }

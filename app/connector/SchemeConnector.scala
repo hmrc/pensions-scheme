@@ -173,7 +173,7 @@ class SchemeConnectorImpl @Inject()(
                                     request: RequestHeader
                                   ): Future[Either[HttpResponse, JsValue]] = {
 
-    val url = config.pspSchemeDetailsUrl.format(pspId, pstr)
+    val url = config.pspSchemeDetailsIFUrl.format(pspId, pstr)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
     logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
     http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
