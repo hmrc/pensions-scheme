@@ -24,7 +24,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Environment, servicesConfig: ServicesConfig) {
   lazy val underlying: Config = runModeConfiguration.underlying
   lazy val defaultDataExpireAfterDays: Int = underlying.getInt("defaultDataExpireInDays")
-  lazy val baseURL: String = servicesConfig.baseUrl("des-hod")
   lazy val ifURL: String = servicesConfig.baseUrl(serviceName = "if-hod")
   lazy val barsBaseUrl: String = servicesConfig.baseUrl("bank-account-reputation")
   lazy val appName: String = underlying.getString("appName")
