@@ -34,8 +34,8 @@ class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Envi
     path = "microservice.services.if-hod.authorizationToken").getOrElse("local")
 
   lazy val schemeRegistrationIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.register")}"
-  lazy val listOfSchemesIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.list.of.schemes")}"
-  lazy val schemeDetailsIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
-  lazy val pspSchemeDetailsIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.psp.scheme.details")}"
-  lazy val updateSchemeIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
+  lazy val listOfSchemesUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.list.of.schemes")}"
+  lazy val schemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
+  lazy val pspSchemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.psp.scheme.details")}"
+  lazy val updateSchemeUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
 }

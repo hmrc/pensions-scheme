@@ -151,7 +151,7 @@ class SchemeConnectorImpl @Inject()(
                                  request: RequestHeader
                                ): Future[Either[HttpResponse, JsValue]] = {
       val (url, hc) = (
-        config.schemeDetailsIFUrl.format(schemeIdType, idNumber),
+        config.schemeDetailsUrl.format(schemeIdType, idNumber),
         HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
       )
 
@@ -173,7 +173,7 @@ class SchemeConnectorImpl @Inject()(
                                     request: RequestHeader
                                   ): Future[Either[HttpResponse, JsValue]] = {
 
-    val url = config.pspSchemeDetailsIFUrl.format(pspId, pstr)
+    val url = config.pspSchemeDetailsUrl.format(pspId, pstr)
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
     logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
     http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
@@ -191,7 +191,7 @@ class SchemeConnectorImpl @Inject()(
                               ec: ExecutionContext,
                               request: RequestHeader
                             ): Future[HttpResponse] = {
-    val listOfSchemesUrl = config.listOfSchemesIFUrl.format(idType, idValue)
+    val listOfSchemesUrl = config.listOfSchemesUrl.format(idType, idValue)
 
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
       headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
@@ -210,7 +210,7 @@ class SchemeConnectorImpl @Inject()(
                                                                 request: RequestHeader): Future[HttpResponse] = {
 
     val (url, hc, schemaPath) =
-      (config.updateSchemeIFUrl.format(pstr),
+      (config.updateSchemeUrl.format(pstr),
         HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
         "/resources/schemas/schemeVariationIFSchema.json")
 
