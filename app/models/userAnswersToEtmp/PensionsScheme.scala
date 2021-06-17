@@ -41,7 +41,7 @@ object PensionsScheme {
   )
 
   def updateApiReads(tcmpToggle: Boolean): Reads[PensionsScheme] = (
-    CustomerAndSchemeDetails.apiReads(tcmpToggle) and
+    CustomerAndSchemeDetails.updateReads(tcmpToggle) and
       PensionSchemeUpdateDeclaration.reads and
       EstablisherDetails.readsEstablisherDetails and
       TrusteeDetails.readsTrusteeDetails and
