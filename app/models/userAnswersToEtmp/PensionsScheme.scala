@@ -41,7 +41,7 @@ object PensionsScheme {
   )
 
   def updateApiReads: Reads[PensionsScheme] = (
-    CustomerAndSchemeDetails.apiReads and
+    CustomerAndSchemeDetails.updateReads and
       PensionSchemeUpdateDeclaration.reads and
       EstablisherDetails.readsEstablisherDetails and
       TrusteeDetails.readsTrusteeDetails and

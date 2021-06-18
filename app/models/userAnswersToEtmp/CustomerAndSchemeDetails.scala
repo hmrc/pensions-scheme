@@ -16,7 +16,7 @@
 
 package models.userAnswersToEtmp
 
-import models.enumeration.{Benefits, SchemeMembers, SchemeType}
+import models.enumeration.{SchemeType, SchemeMembers, Benefits}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -37,6 +37,52 @@ object CustomerAndSchemeDetails {
     ) ((name, schemeDetails) => (name, schemeDetails))
 
   def apiReads: Reads[CustomerAndSchemeDetails] = (
+    (JsPath \ "schemeName").read[String] and
+      (JsPath \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
+      (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
+      (JsPath \ "membership").read[String] and
+      (JsPath \ "membershipFuture").read[String] and
+      (JsPath \ "investmentRegulated").read[Boolean] and
+      (JsPath \ "occupationalPensionScheme").read[Boolean] and
+      (JsPath \ "securedBenefits").read[Boolean] and
+      (JsPath \ "schemeEstablishedCountry").read[String] and
+      (JsPath \ "insuranceCompanyName").readNullable[String] and
+      (JsPath \ "insurancePolicyNumber").readNullable[String] and
+      (JsPath \ "insurerAddress").readNullable[Address] and
+      (JsPath \ "isInsuranceDetailsChanged").readNullable[Boolean] and
+      benefitsReads
+    ) (
+    (name, schemeType, moreThanTenTrustees, membership, membershipFuture, investmentRegulated, occupationalPension, securedBenefits, country,
+     insuranceCompanyName, insurancePolicyNumber, insurerAddress, isInsuranceDetailsChanged, benefits) => {
+      val (schemeName, otherScheme) = schemeType
+      val isMasterTrust = schemeName == "master"
+
+      val schemeTypeName = if (isMasterTrust) None else Some(SchemeType.valueWithName(schemeName))
+
+      CustomerAndSchemeDetails(
+        schemeName = name,
+        isSchemeMasterTrust = isMasterTrust,
+        schemeStructure = schemeTypeName,
+        otherSchemeStructure = otherScheme,
+        haveMoreThanTenTrustee = moreThanTenTrustees,
+        currentSchemeMembers = SchemeMembers.valueWithName(membership),
+        futureSchemeMembers = SchemeMembers.valueWithName(membershipFuture),
+        isRegulatedSchemeInvestment = investmentRegulated,
+        isOccupationalPensionScheme = occupationalPension,
+        areBenefitsSecuredContractInsuranceCompany = securedBenefits,
+        doesSchemeProvideBenefits = benefits._1,
+        tcmpBenefitType = benefits._2,
+        schemeEstablishedCountry = country,
+        haveInvalidBank = false,
+        insuranceCompanyName = insuranceCompanyName,
+        policyNumber = insurancePolicyNumber,
+        insuranceCompanyAddress = insurerAddress,
+        isInsuranceDetailsChanged = isInsuranceDetailsChanged
+      )
+    }
+  )
+
+  def updateReads: Reads[CustomerAndSchemeDetails] = (
     (JsPath \ "schemeName").read[String] and
       (JsPath \ "schemeType").read[(String, Option[String])](schemeTypeReads) and
       (JsPath \ "moreThanTenTrustees").readNullable[Boolean] and
