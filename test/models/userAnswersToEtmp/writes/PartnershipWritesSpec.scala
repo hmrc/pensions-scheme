@@ -27,7 +27,7 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
 
   "An establisher partnership object" should {
 
-    "parse correctly to a valid DES format for variations api - API 1468" when {
+    "parse correctly to a valid if format for variations api - API 1468" when {
       "we have a valid partnership" in {
         forAll(partnershipGen) {
           partnership => {
@@ -43,7 +43,7 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
       }
     }
 
-    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+    "return errors when incoming data cannot be parsed to a valid if format for variations api - API 1468" when {
       "we have an invalid partnership" in {
         forAll(partnershipGen) {
           partnership => {
@@ -62,7 +62,7 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
   }
 
   "A trustee partnership object" should {
-    "parse correctly to a valid DES format for variations api - API 1468" when {
+    "parse correctly to a valid If format for variations api - API 1468" when {
       "we have a valid trustee partnership" in {
         forAll(partnershipTrusteeGen) {
           partnership => {
@@ -78,7 +78,7 @@ class PartnershipWritesSpec extends WordSpec with MustMatchers with OptionValues
       }
     }
 
-    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+    "return errors when incoming data cannot be parsed to a valid If format for variations api - API 1468" when {
       "we have an invalid trustee partnership" in {
         forAll(partnershipTrusteeGen) {
           partnership => {

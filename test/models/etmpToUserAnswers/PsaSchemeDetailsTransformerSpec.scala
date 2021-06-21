@@ -54,9 +54,9 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
 
       s"uses generators" in {
         forAll(getSchemeDetailsGen) {
-          case (desScheme, uaScheme) =>
+          case (ifScheme, uaScheme) =>
 
-            val result = desScheme.transform(transformer.transformToUserAnswers).get
+            val result = ifScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
         }
       }
@@ -73,9 +73,9 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
 
       s"uses generators" in {
         forAll(getSchemeDetailsGen) {
-          case (desScheme, uaScheme) =>
+          case (ifScheme, uaScheme) =>
 
-            val result = desScheme.transform(transformer.transformToUserAnswers).get
+            val result = ifScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
         }
       }

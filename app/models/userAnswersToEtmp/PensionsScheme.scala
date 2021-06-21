@@ -30,8 +30,8 @@ object PensionsScheme {
 
   implicit val formatsPensionsScheme: Format[PensionsScheme] = Json.format[PensionsScheme]
 
-  def registerApiReads(tcmpToggle: Boolean): Reads[PensionsScheme] = (
-    CustomerAndSchemeDetails.apiReads(tcmpToggle) and
+  def registerApiReads: Reads[PensionsScheme] = (
+    CustomerAndSchemeDetails.apiReads and
       PensionSchemeDeclaration.apiReads and
       EstablisherDetails.readsEstablisherDetails and
       TrusteeDetails.readsTrusteeDetails and
@@ -40,8 +40,8 @@ object PensionsScheme {
     PensionsScheme(custAndSchemeDetails, declaration, estDetails, trusteeDetails, changeFlag)
   )
 
-  def updateApiReads(tcmpToggle: Boolean): Reads[PensionsScheme] = (
-    CustomerAndSchemeDetails.updateReads(tcmpToggle) and
+  def updateApiReads: Reads[PensionsScheme] = (
+    CustomerAndSchemeDetails.updateReads and
       PensionSchemeUpdateDeclaration.reads and
       EstablisherDetails.readsEstablisherDetails and
       TrusteeDetails.readsTrusteeDetails and
@@ -50,8 +50,8 @@ object PensionsScheme {
     PensionsScheme(custAndSchemeDetails, declaration, estDetails, trusteeDetails, changeFlag)
   )
 
-  def updateWrite(psaId: String, tcmpToggle: Boolean): Writes[PensionsScheme] = (
-    (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId, tcmpToggle)) and
+  def updateWrite(psaId: String): Writes[PensionsScheme] = (
+    (JsPath \ "schemeDetails").write(CustomerAndSchemeDetails.updateWrites(psaId)) and
       (JsPath \ "pensionSchemeDeclaration").write(Declaration.writes) and
       (JsPath \ "establisherAndTrustDetailsType").write(updateWriteEstablisherAndTrustDetails)
     ) (schemeDetails => (

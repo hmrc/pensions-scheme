@@ -19,7 +19,7 @@ package service
 import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HttpResponse, HeaderCarrier}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,9 +28,6 @@ trait SchemeService {
 
   def registerScheme(psaId: String, json: JsValue)
                     (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
-
-  def listOfSchemes(psaId: String)
-                   (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]
 
   def listOfSchemes(idType: String, idValue: String)
                    (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse]

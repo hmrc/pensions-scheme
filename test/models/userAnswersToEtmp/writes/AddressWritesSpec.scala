@@ -27,7 +27,7 @@ import scala.util.Random
 class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An updated address" should {
-    "parse correctly to a valid DES format for variations api - API 1468" when {
+    "parse correctly to a valid if format for variations api - API 1468" when {
       "we have a valid UK address" in {
         forAll(ukAddressGen) {
           address => {
@@ -56,7 +56,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
       }
     }
 
-    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+    "return errors when incoming data cannot be parsed to a valid if format for variations api - API 1468" when {
       "we have an invalid UK address" in {
         forAll(ukAddressGen) {
           address => {

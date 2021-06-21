@@ -41,7 +41,7 @@ case class SchemeDetails(name: String, referenceNumber: String, schemeStatus: St
 object SchemeDetails {
   implicit val format: Format[SchemeDetails] = Json.format[SchemeDetails]
 
-  val desReads: Reads[SchemeDetails] = (
+  val ifReads: Reads[SchemeDetails] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "referenceNumber").read[String] and
       (JsPath \ "schemeStatus").read[String] and
@@ -61,10 +61,10 @@ case class ListOfSchemes(processingDate: String, totalSchemesRegistered: String,
 object ListOfSchemes {
   implicit val format: Format[ListOfSchemes] = Json.format[ListOfSchemes]
 
-  val desReads: Reads[ListOfSchemes] = (
+  val ifReads: Reads[ListOfSchemes] = (
     (JsPath \ "processingDate").read[String] and
       (JsPath \ "totalSchemesRegistered").read[String] and
-      (JsPath \ "schemeDetail").readNullable[List[SchemeDetails]](Reads.list(SchemeDetails.desReads))
+      (JsPath \ "schemeDetail").readNullable[List[SchemeDetails]](Reads.list(SchemeDetails.ifReads))
     ) (
     (processingDate, totalSchemesRegistered, schemeDetails) =>
       ListOfSchemes(processingDate, totalSchemesRegistered, schemeDetails)

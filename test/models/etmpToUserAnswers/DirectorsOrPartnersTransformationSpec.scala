@@ -25,14 +25,14 @@ class DirectorsOrPartnersTransformationSpec extends TransformationSpec {
   val addressTransformer = new AddressTransformer
   val directorOrPartnerTransformer = new DirectorsOrPartnersTransformer(addressTransformer)
 
-  "A DES payload with Partner or director" must {
+  "An IF payload with Partner or director" must {
     "have the partner details transformed correctly to valid user answers format" that {
 
       "has person details in partners array" in {
         forAll(directorOrPartnerJsValueGen("partner")) {
           partnerDetails =>
-            val (desPartnerDetails, userAnswersPartnerDetails) = partnerDetails
-            val result = desPartnerDetails.transform(directorOrPartnerTransformer.userAnswersPartnerReads(__)).get
+            val (ifPartnerDetails, userAnswersPartnerDetails) = partnerDetails
+            val result = ifPartnerDetails.transform(directorOrPartnerTransformer.userAnswersPartnerReads(__)).get
 
             result mustBe userAnswersPartnerDetails
         }
@@ -44,8 +44,8 @@ class DirectorsOrPartnersTransformationSpec extends TransformationSpec {
       "has person details in partners array" in {
         forAll(directorOrPartnerJsValueGen("director")) {
           directorDetails =>
-            val (desDirectorDetails, userAnswersDirectorDetails) = directorDetails
-            val result = desDirectorDetails.transform(directorOrPartnerTransformer.userAnswersDirectorReads(__)).get
+            val (ifDirectorDetails, userAnswersDirectorDetails) = directorDetails
+            val result = ifDirectorDetails.transform(directorOrPartnerTransformer.userAnswersDirectorReads(__)).get
 
             result mustBe userAnswersDirectorDetails
         }

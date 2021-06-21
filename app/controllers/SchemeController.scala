@@ -18,14 +18,14 @@ package controllers
 
 import com.google.inject.Inject
 import models.ListOfSchemes
+import utils.ValidationUtils.genResponse
 import play.api.Logger
-import play.api.libs.json._
+import play.api.libs.json.Json
 import play.api.mvc._
 import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
-import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,6 +39,28 @@ class SchemeController @Inject()(
     with ErrorHandler {
 
   private val logger = Logger(classOf[SchemeController])
+
+  def listOfSchemes: Action[AnyContent] = Action.async {
+    implicit request => {
+      val idType = request.headers.get("idType")
+      val idValue = request.headers.get("idValue")
+
+      (idType, idValue) match {
+        case (Some(typeOfId), Some(valueOfId)) =>
+          schemeService.listOfSchemes(typeOfId, valueOfId).map { httpResponse =>
+            httpResponse.status match {
+              case OK =>
+                logger.debug(s"Call to list of schemes API on IF was successful with response ${httpResponse.json}")
+                Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
+              case errorStatus =>
+                logger.error(s"List of schemes call to IF API failed with error $errorStatus and details ${httpResponse.body}")
+                result(httpResponse)
+            }
+          }
+        case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
+      }
+    }
+  }
 
   def registerScheme: Action[AnyContent] = Action.async {
     implicit request => {
@@ -56,27 +78,6 @@ class SchemeController @Inject()(
           }
 
         case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
-      }
-    } recoverWith recoverFromError
-  }
-
-  def listOfSchemes: Action[AnyContent] = Action.async {
-    implicit request => {
-      val psaId = request.headers.get("psaId")
-
-      psaId match {
-        case Some(psa) =>
-          schemeService.listOfSchemes(psa).map { httpResponse =>
-            httpResponse.status match {
-              case OK =>
-                logger.debug(s"Call to list of schemes API on DES was successful with response ${httpResponse.json}")
-                Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes](ListOfSchemes.desReads)))
-              case errorStatus =>
-                logger.error(s"List of schemes call to DES API failed with error $errorStatus and details ${httpResponse.body}")
-                result(httpResponse)
-            }
-          }
-        case _ => Future.failed(new BadRequestException("Bad Request with no Psa Id"))
       }
     } recoverWith recoverFromError
   }

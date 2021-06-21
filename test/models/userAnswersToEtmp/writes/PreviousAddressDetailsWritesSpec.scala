@@ -38,7 +38,7 @@ class PreviousAddressDetailsWritesSpec extends WordSpec with MustMatchers with O
   }
 
   "A partnership object" should {
-    "parse correctly to a valid DES format for variations api - API 1468" when {
+    "parse correctly to a valid If format for variations api - API 1468" when {
       "we have a valid partnership" in {
         val previousAddress = PreviousAddressDetails(true, Some(ukAddressSample))
 
@@ -51,7 +51,7 @@ class PreviousAddressDetailsWritesSpec extends WordSpec with MustMatchers with O
       }
     }
 
-    "return errors when incoming data cannot be parsed to a valid DES format for variations api - API 1468" when {
+    "return errors when incoming data cannot be parsed to a valid If format for variations api - API 1468" when {
       "we have an invalid partnership" in {
         val invalidPreviousAddress = PreviousAddressDetails(true, Some(ukAddressSample.copy(addressLine1 = Random.alphanumeric.take(40).mkString)))
 

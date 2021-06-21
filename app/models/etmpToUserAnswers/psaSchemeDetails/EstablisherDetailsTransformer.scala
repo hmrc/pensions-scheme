@@ -42,52 +42,52 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
     }
   }
 
-  def userAnswersEstablisherIndividualReads(desPath: JsPath): Reads[JsObject] = {
+  def userAnswersEstablisherIndividualReads(ifPath: JsPath): Reads[JsObject] = {
     (__ \ 'establisherKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("establisherDetails", desPath) and
-      userAnswersNinoReads("establisherNino", desPath) and
-      userAnswersUtrReads(desPath) and
-      addressTransformer.getDifferentAddress(__ \ 'address, desPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(desPath, __ \ 'addressYears) and
-      addressTransformer.getPreviousAddress(desPath, __ \ 'previousAddress) and
-      userAnswersContactDetailsReads("contactDetails", desPath) and
+      userAnswersIndividualDetailsReads("establisherDetails", ifPath) and
+      userAnswersNinoReads("establisherNino", ifPath) and
+      userAnswersUtrReads(ifPath) and
+      addressTransformer.getDifferentAddress(__ \ 'address, ifPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(ifPath, __ \ 'addressYears) and
+      addressTransformer.getPreviousAddress(ifPath, __ \ 'previousAddress) and
+      userAnswersContactDetailsReads("contactDetails", ifPath) and
       (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
   }
 
-  def userAnswersEstablisherCompanyReads(desPath: JsPath): Reads[JsObject] =
+  def userAnswersEstablisherCompanyReads(ifPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("company")) and
-      userAnswersCompanyDetailsReads(desPath) and
-      transformVatToUserAnswersReads(desPath, "companyVat") and
-      userAnswersPayeReads(desPath, "companyPaye") and
-      userAnswersCrnReads(desPath) and
-      userAnswersUtrReads(desPath) and
-      addressTransformer.getDifferentAddress(__ \ 'companyAddress, desPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(desPath, __ \ 'companyAddressYears) and
-      addressTransformer.getPreviousAddress(desPath, __ \ 'companyPreviousAddress) and
-      userAnswersContactDetailsReads("companyContactDetails", desPath) and
-      ((__ \ 'otherDirectors).json.copyFrom((desPath \ 'haveMoreThanTenDirectors).json.pick) orElse doNothing) and
-      getDirector(desPath) reduce
+      userAnswersCompanyDetailsReads(ifPath) and
+      transformVatToUserAnswersReads(ifPath, "companyVat") and
+      userAnswersPayeReads(ifPath, "companyPaye") and
+      userAnswersCrnReads(ifPath) and
+      userAnswersUtrReads(ifPath) and
+      addressTransformer.getDifferentAddress(__ \ 'companyAddress, ifPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(ifPath, __ \ 'companyAddressYears) and
+      addressTransformer.getPreviousAddress(ifPath, __ \ 'companyPreviousAddress) and
+      userAnswersContactDetailsReads("companyContactDetails", ifPath) and
+      ((__ \ 'otherDirectors).json.copyFrom((ifPath \ 'haveMoreThanTenDirectors).json.pick) orElse doNothing) and
+      getDirector(ifPath) reduce
 
-  def getDirector(desPath: JsPath): Reads[JsObject] = (desPath \ 'directorsDetails).readNullable(
+  def getDirector(ifPath: JsPath): Reads[JsObject] = (ifPath \ 'directorsDetails).readNullable(
     __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersDirectorReads(__))).map(JsArray(_))).flatMap { directors =>
     directors.map(allDirectors => (__ \ 'director).json.put(allDirectors)).getOrElse(doNothing)
   }
 
-  def userAnswersEstablisherPartnershipReads(desPath: JsPath): Reads[JsObject] =
+  def userAnswersEstablisherPartnershipReads(ifPath: JsPath): Reads[JsObject] =
     (__ \ 'establisherKind).json.put(JsString("partnership")) and
-      userAnswersPartnershipDetailsReads(desPath) and
-      transformVatToUserAnswersReads(desPath, "partnershipVat") and
-      userAnswersPayeReads(desPath, "partnershipPaye") and
-      userAnswersUtrReads(desPath) and
-      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, desPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(desPath, __ \ 'partnershipAddressYears) and
-      addressTransformer.getPreviousAddress(desPath, __ \ 'partnershipPreviousAddress) and
-      userAnswersContactDetailsReads("partnershipContactDetails", desPath) and
-      (__ \ 'otherPartners).json.copyFrom((desPath \ 'areMorethanTenPartners).json.pick) and
+      userAnswersPartnershipDetailsReads(ifPath) and
+      transformVatToUserAnswersReads(ifPath, "partnershipVat") and
+      userAnswersPayeReads(ifPath, "partnershipPaye") and
+      userAnswersUtrReads(ifPath) and
+      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, ifPath \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(ifPath, __ \ 'partnershipAddressYears) and
+      addressTransformer.getPreviousAddress(ifPath, __ \ 'partnershipPreviousAddress) and
+      userAnswersContactDetailsReads("partnershipContactDetails", ifPath) and
+      (__ \ 'otherPartners).json.copyFrom((ifPath \ 'areMorethanTenPartners).json.pick) and
       (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) and
-      getPartner(desPath) reduce
+      getPartner(ifPath) reduce
 
-  def getPartner(desPath: JsPath): Reads[JsObject] = (desPath \ 'partnerDetails).read(
+  def getPartner(ifPath: JsPath): Reads[JsObject] = (ifPath \ 'partnerDetails).read(
     __.read(Reads.seq(directorsOrPartnersTransformer.userAnswersPartnerReads(__))).map(JsArray(_))).flatMap(
     partners => (__ \ 'partner).json.put(partners)
   )

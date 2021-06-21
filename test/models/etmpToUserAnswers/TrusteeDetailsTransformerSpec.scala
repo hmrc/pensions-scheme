@@ -27,7 +27,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
   private val addressTransformer = new AddressTransformer
   private def transformer = new TrusteeDetailsTransformer(addressTransformer)
 
-  "A DES payload containing trustee details" must {
+  "An if payload containing trustee details" must {
     "have the individual details transformed correctly to valid user answers format" that {
       val ifTrusteeIndividualPath = __ \ 'psaPspSchemeDetails \ 'trusteeDetails \ 'individualTrusteeDetails
 

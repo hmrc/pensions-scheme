@@ -20,7 +20,7 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.FeatureToggle.{Enabled, Disabled}
-import models.FeatureToggleName.{RACDAC, TCMP}
+import models.FeatureToggleName.RACDAC
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{Partnership, CompanyEstablisher, EstablisherDetails}
@@ -49,7 +49,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
   override def beforeEach(): Unit = {
     org.mockito.Mockito.reset(featureToggleService)
 
-    when(featureToggleService.get(org.mockito.Matchers.any())).thenReturn(Future.successful(Disabled(TCMP)))
+    when(featureToggleService.get(org.mockito.Matchers.any())).thenReturn(Future.successful(Disabled(RACDAC)))
     super.beforeEach()
   }
 
@@ -108,6 +108,7 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
 
   "registerScheme (when RAC/DAC toggled off)" must "return the result of submitting the pensions scheme and " +
     "NOT contain the racdacScheme node" in {
+    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Disabled(RACDAC)))
     val fixture = testFixture()
     fixture.schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       response =>
@@ -445,7 +446,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
   class FakeSchemeConnectorStoreJson extends FakeSchemeConnector {
     var lastUpdateSchemeDetailsdata: JsValue = JsNull
 
-    override def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)(
+    override def updateSchemeDetails(pstr: String, data: JsValue)(
       implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
       lastUpdateSchemeDetailsdata = data
       updateSchemeResponse
@@ -543,6 +544,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
       "isOccupationalPensionScheme":false,
       "areBenefitsSecuredContractInsuranceCompany":false,
       "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
+      "tcmpBenefitType":"05",
       "schemeEstablishedCountry":"test-scheme-established-country",
       "haveInvalidBank":false,
       "insuranceCompanyName":"Test insurance company name",
@@ -612,6 +614,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
     "occupationalPensionScheme" -> false,
     "securedBenefits" -> false,
     "benefits" -> "opt1",
+    "moneyPurchaseBenefits" -> "05",
     "schemeEstablishedCountry" -> "test-scheme-established-country",
     "uKBankAccount" -> false,
     "declaration" -> false,
@@ -660,6 +663,7 @@ object SchemeServiceSpec extends SpecBase with MockitoSugar {
       |      "isOccupationalPensionScheme":false,
       |      "areBenefitsSecuredContractInsuranceCompany":false,
       |      "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
+      |      "tcmpBenefitType":"05",
       |      "schemeEstablishedCountry":"test-scheme-established-country",
       |      "haveInvalidBank":false,
       |      "insuranceCompanyName":"Test insurance company name",

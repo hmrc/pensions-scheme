@@ -16,7 +16,7 @@
 
 package service
 
-import audit.SchemeList
+import audit.ListOfSchemesAudit
 import audit.testdoubles.StubSuccessfulAuditService
 import base.{SpecBase, JsonFileReader}
 import connector.{BarsConnector, SchemeConnector}
@@ -24,7 +24,7 @@ import models._
 import models.userAnswersToEtmp.BankAccount
 import org.scalatest.{AsyncFlatSpec, Matchers, EitherValues}
 import play.api.http.Status
-import play.api.libs.json.{Json, JsValue, JsNull}
+import play.api.libs.json.{JsNull, Json, JsValue}
 import play.api.mvc.{RequestHeader, AnyContentAsEmpty}
 import play.api.test.FakeRequest
 import service.SchemeServiceSpec.mock
@@ -42,7 +42,7 @@ class SchemeServiceImplSpec
 
   "listOfSchemes" should "return the list of schemes from the connector" in {
 
-    testFixture().schemeService.listOfSchemes(psaId).map { httpResponse =>
+    testFixture().schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
       httpResponse.status shouldBe Status.OK
       httpResponse.json shouldBe listOfSchemesJson
     }
@@ -53,9 +53,9 @@ class SchemeServiceImplSpec
 
     val fixture = testFixture()
 
-    fixture.schemeService.listOfSchemes(psaId).map { httpResponse =>
+    fixture.schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
       fixture.auditService.verifySent(
-        SchemeList(psaId, Status.OK, Some(httpResponse.json))) shouldBe true
+        ListOfSchemesAudit("PSA", psaId, Status.OK, Some(httpResponse.json))) shouldBe true
     }
 
   }
@@ -68,12 +68,12 @@ class SchemeServiceImplSpec
       Future.failed(new BadRequestException("bad request")))
 
     fixture.schemeService
-      .listOfSchemes(psaId)
+      .listOfSchemes("PSA", psaId)
       .map(_ => fail("Expected failure"))
       .recover {
         case _: BadRequestException =>
           fixture.auditService.verifySent(
-            SchemeList(psaId, Status.BAD_REQUEST, None)) shouldBe true
+            ListOfSchemesAudit("PSA", psaId, Status.BAD_REQUEST, None)) shouldBe true
       }
 
   }
@@ -140,7 +140,7 @@ class FakeSchemeConnector extends SchemeConnector {
 
   def getRegisterData: JsValue = registerSchemeData
 
-  override def registerScheme(psaId: String, registerData: JsValue, tcmpToggle: Boolean)(
+  override def registerScheme(psaId: String, registerData: JsValue)(
     implicit
     headerCarrier: HeaderCarrier,
     ec: ExecutionContext,
@@ -149,7 +149,7 @@ class FakeSchemeConnector extends SchemeConnector {
     registerSchemeResponse
   }
 
-  override def listOfSchemes(psaId: String)(
+  override def listOfSchemes(idType: String, idValue: String)(
     implicit
     headerCarrier: HeaderCarrier,
     ec: ExecutionContext,
@@ -170,12 +170,8 @@ class FakeSchemeConnector extends SchemeConnector {
   override def getCorrelationId(requestId: Option[String]): String =
     "4725c81192514c069b8ff1d84659b2df"
 
-  override def updateSchemeDetails(pstr: String, data: JsValue, tcmpToggle: Boolean)(
+  override def updateSchemeDetails(pstr: String, data: JsValue)(
     implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = updateSchemeResponse
-
-  override def listOfSchemes(idType: String, idValue: String)
-                            (implicit headerCarrier: HeaderCarrier,
-                             ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
 
   override def getPspSchemeDetails(pspId: String, pstr: String)
                                   (implicit headerCarrier: HeaderCarrier,

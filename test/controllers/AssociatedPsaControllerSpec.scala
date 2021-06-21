@@ -124,7 +124,7 @@ class AssociatedPsaControllerSpec
       )(any(), any(), any())
     }
 
-    "we receive INVALID_IDTYPE returned from Des" in {
+    "we receive INVALID_IDTYPE returned from If" in {
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(
           Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE")))
