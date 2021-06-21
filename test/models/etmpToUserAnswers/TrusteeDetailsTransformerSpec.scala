@@ -37,7 +37,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val details = ifIndividualJson(individualDetails._1)
-            val result = details.transform(transformer.userAnswersIndividualDetailsReads("trusteeDetails", ifTrusteeIndividualPath)).get
+            val result = details.transform(transformer.userAnswersIndividualDetailsReads("trusteeDetails")).get
             (result \ "trusteeDetails" \ "firstName").as[String] mustBe (individualValuePath(details) \ "personDetails" \ "firstName").as[String]
             (result \ "trusteeDetails" \ "lastName").as[String] mustBe (individualValuePath(details) \ "personDetails" \ "lastName").as[String]
             (result \ "dateOfBirth").as[String] mustBe (individualValuePath(details) \ "personDetails" \ "dateOfBirth").as[String]
@@ -49,7 +49,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
           forAll(individualJsValueGen(isEstablisher = false)) {
             individualDetails => {
               val details = ifIndividualJson(individualDetails._1)
-              val result = details.transform(transformer.userAnswersNinoReads("trusteeNino", ifTrusteeIndividualPath)).get
+              val result = details.transform(transformer.userAnswersNinoReads("trusteeNino")).get
 
               (result \ "trusteeNino" \ "value").asOpt[String] mustBe (individualValuePath(details) \ "nino").asOpt[String]
               (result \ "noNinoReason").asOpt[String] mustBe (individualValuePath(details) \ "noNinoReason").asOpt[String]
@@ -62,7 +62,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
             individualDetails => {
               val details = ifIndividualJson(individualDetails._1)
               val result = details.transform(transformer.
-                userAnswersUtrReads(ifTrusteeIndividualPath)).get
+                userAnswersUtrReads).get
 
               (result \ "utr" \ "value").asOpt[String] mustBe (individualValuePath(details) \ "utr").asOpt[String]
               (result \ "noUtrReason").asOpt[String] mustBe (individualValuePath(details) \ "noUtrReason").asOpt[String]
@@ -75,7 +75,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(individualJsValueGen(isEstablisher = false)) {
           individualDetails => {
             val details = ifIndividualJson(individualDetails._1)
-            val result = details.transform(transformer.userAnswersContactDetailsReads("trusteeContactDetails", ifTrusteeIndividualPath)).get
+            val result = details.transform(transformer.userAnswersContactDetailsReads("trusteeContactDetails")).get
 
             (result \ "trusteeContactDetails" \ "emailAddress").as[String] mustBe
               (individualValuePath(details) \ "correspondenceContactDetails" \ "email").as[String]
@@ -113,7 +113,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = ifCompanyPath(companyDetails._1)
-            val result = details.transform(transformer.userAnswersCompanyDetailsReads(ifTrusteeCompanyPath)).get
+            val result = details.transform(transformer.userAnswersCompanyDetailsReads).get
             (result \ "companyDetails" \ "companyName").as[String] mustBe (companyValuePath(details) \ "organisationName").as[String]
           }
         }
@@ -123,7 +123,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
           forAll(companyJsValueGen(isEstablisher = true)) {
             companyDetails => {
               val details = ifCompanyPath(companyDetails._1)
-              val result = details.transform(transformer.transformVatToUserAnswersReads(ifTrusteeCompanyPath, "companyVat")).get
+              val result = details.transform(transformer.transformVatToUserAnswersReads( "companyVat")).get
 
               (result \ "companyVat" \ "value").asOpt[String] mustBe (companyValuePath(details) \ "vatRegistrationNumber").asOpt[String]
             }
@@ -134,7 +134,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
           forAll(companyJsValueGen(isEstablisher = true)) {
             companyDetails => {
               val details = ifCompanyPath(companyDetails._1)
-              val result = details.transform(transformer.userAnswersPayeReads(ifTrusteeCompanyPath, "companyPaye")).get
+              val result = details.transform(transformer.userAnswersPayeReads( "companyPaye")).get
 
               (result \ "companyPaye" \ "value").asOpt[String] mustBe (companyValuePath(details) \ "payeReference").asOpt[String]
             }
@@ -146,7 +146,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
           forAll(companyJsValueGen(isEstablisher = false)) {
             companyDetails => {
               val details = ifCompanyPath(companyDetails._1)
-              val result = details.transform(transformer.userAnswersCrnReads(ifTrusteeCompanyPath)).get
+              val result = details.transform(transformer.userAnswersCrnReads).get
 
               (result \ "noCrnReason").asOpt[String] mustBe (companyValuePath(details) \ "noCrnReason").asOpt[String]
               (result \ "companyRegistrationNumber" \ "value").asOpt[String] mustBe (companyValuePath(details) \ "crnNumber").asOpt[String]
@@ -158,7 +158,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = ifCompanyPath(companyDetails._1)
-            val result = details.transform(transformer.userAnswersUtrReads(ifTrusteeCompanyPath)).get
+            val result = details.transform(transformer.userAnswersUtrReads).get
 
             (result \ "utr" \ "value").asOpt[String] mustBe (companyValuePath(details) \ "utr").asOpt[String]
             (result \ "noUtrReason").asOpt[String] mustBe (companyValuePath(details) \ "noUtrReason").asOpt[String]
@@ -170,7 +170,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(companyJsValueGen(isEstablisher = false)) {
           companyDetails => {
             val details = ifCompanyPath(companyDetails._1)
-            val result = details.transform(transformer.userAnswersContactDetailsReads("companyContactDetails", ifTrusteeCompanyPath)).get
+            val result = details.transform(transformer.userAnswersContactDetailsReads("companyContactDetails")).get
             (result \ "companyContactDetails" \ "emailAddress").as[String] mustBe
               (companyValuePath(details) \ "correspondenceContactDetails" \ "email").as[String]
             (result \ "companyContactDetails" \ "phoneNumber").as[String] mustBe
@@ -214,7 +214,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
             partnershipDetails => {
               val details = ifPartnershipPath(partnershipDetails._1)
 
-              val result = details.transform(transformer.transformVatToUserAnswersReads(ifTrusteePartnershipPath, "partnershipVat")).get
+              val result = details.transform(transformer.transformVatToUserAnswersReads( "partnershipVat")).get
 
               (result \ "partnershipVat" \ "value").asOpt[String] mustBe (partnershipValuePath(details) \ "vatRegistrationNumber").asOpt[String]
             }
@@ -225,7 +225,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
           forAll(partnershipJsValueGen(isEstablisher = false)) {
             partnershipDetails => {
               val details = ifPartnershipPath(partnershipDetails._1)
-              val result = details.transform(transformer.userAnswersPayeReads(ifTrusteePartnershipPath, "partnershipPaye")).get
+              val result = details.transform(transformer.userAnswersPayeReads( "partnershipPaye")).get
 
               (result \ "partnershipPaye" \ "value").asOpt[String] mustBe (partnershipValuePath(details) \ "payeReference").asOpt[String]
             }
@@ -236,7 +236,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(partnershipJsValueGen(isEstablisher = false)) {
           partnershipDetails => {
             val details = ifPartnershipPath(partnershipDetails._1)
-            val result = details.transform(transformer.userAnswersUtrReads(ifTrusteePartnershipPath)).get
+            val result = details.transform(transformer.userAnswersUtrReads).get
 
             (result \ "utr" \ "value").asOpt[String] mustBe (partnershipValuePath(details) \ "utr").asOpt[String]
             (result \ "noUtrReason").asOpt[String] mustBe (partnershipValuePath(details) \ "noUtrReason").asOpt[String]
@@ -248,7 +248,7 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
         forAll(partnershipJsValueGen(isEstablisher = false)) {
           partnershipDetails => {
             val details = ifPartnershipPath(partnershipDetails._1)
-            val result = details.transform(transformer.userAnswersContactDetailsReads("partnershipContactDetails", ifTrusteePartnershipPath)).get
+            val result = details.transform(transformer.userAnswersContactDetailsReads("partnershipContactDetails")).get
             (result \ "partnershipContactDetails" \ "emailAddress").as[String] mustBe
               (partnershipValuePath(details) \ "correspondenceContactDetails" \ "email").as[String]
             (result \ "partnershipContactDetails" \ "phoneNumber").as[String] mustBe
