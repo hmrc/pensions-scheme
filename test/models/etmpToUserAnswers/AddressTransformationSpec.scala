@@ -57,14 +57,14 @@ class AddressTransformationSpec extends TransformationSpec {
     "transformed using getAddressYears" must {
       "map correctly to user answers address years for under a year" in {
         lazy val transformedJson = ifPayload().transform(addressTransformer.
-          getAddressYears(__, __ \ 'addressYears)).asOpt.value
+          getAddressYears( __ \ 'addressYears)).asOpt.value
 
         (transformedJson \ "addressYears").as[String] mustBe "under_a_year"
       }
 
       "map correctly to user answers address years for over a year" in {
         lazy val transformedJson = ifPayload(false).transform(addressTransformer.
-          getAddressYears(__, __ \ 'addressYears)).asOpt.value
+          getAddressYears( __ \ 'addressYears)).asOpt.value
 
         (transformedJson \ "addressYears").as[String] mustBe "over_a_year"
       }
@@ -73,7 +73,7 @@ class AddressTransformationSpec extends TransformationSpec {
     "transformed using getPreviousAddress" must {
       "map correctly to user answers previous address" in {
         lazy val transformedJson = ifPayload().transform(addressTransformer.
-          getPreviousAddress(__, __ \ 'previousAddress)).asOpt.value
+          getPreviousAddress( __ \ 'previousAddress)).asOpt.value
 
         (transformedJson \ "previousAddress" \ "addressLine1").as[String] mustBe "a1"
         (transformedJson \ "previousAddress" \ "addressLine2").as[String] mustBe "a2"

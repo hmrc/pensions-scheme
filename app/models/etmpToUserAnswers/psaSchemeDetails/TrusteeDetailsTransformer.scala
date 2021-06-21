@@ -42,35 +42,35 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
 
   def userAnswersTrusteeIndividualReads(ifPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("trusteeDetails", ifPath)and
-      userAnswersNinoReads("trusteeNino", ifPath) and
-      userAnswersUtrReads(ifPath) and
+      userAnswersIndividualDetailsReads("trusteeDetails")and
+      userAnswersNinoReads("trusteeNino") and
+      userAnswersUtrReads and
       addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'trusteeAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'trusteePreviousAddress) and
-      userAnswersContactDetailsReads("trusteeContactDetails", ifPath) reduce
+      addressTransformer.getAddressYears( __ \ 'trusteeAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'trusteePreviousAddress) and
+      userAnswersContactDetailsReads("trusteeContactDetails") reduce
 
   def userAnswersTrusteeCompanyReads(ifPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
-      userAnswersCompanyDetailsReads(ifPath) and
-      transformVatToUserAnswersReads(ifPath, "companyVat") and
-      userAnswersPayeReads(ifPath, "companyPaye") and
-      userAnswersCrnReads(ifPath) and
-      userAnswersUtrReads(ifPath) and
+      userAnswersCompanyDetailsReads and
+      transformVatToUserAnswersReads("companyVat") and
+      userAnswersPayeReads("companyPaye") and
+      userAnswersCrnReads and
+      userAnswersUtrReads and
       addressTransformer.getDifferentAddress(__ \ 'companyAddress, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'trusteesCompanyAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'companyPreviousAddress) and
-      userAnswersContactDetailsReads("companyContactDetails", ifPath) reduce
+      addressTransformer.getAddressYears( __ \ 'trusteesCompanyAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'companyPreviousAddress) and
+      userAnswersContactDetailsReads("companyContactDetails") reduce
 
   def userAnswersTrusteePartnershipReads(ifPath: JsPath): Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and
-      userAnswersTrusteePartnershipDetailsReads(ifPath) and
-      transformVatToUserAnswersReads(ifPath, "partnershipVat") and
-      userAnswersPayeReads(ifPath, "partnershipPaye") and
-      userAnswersUtrReads(ifPath) and
+      userAnswersTrusteePartnershipDetailsReads and
+      transformVatToUserAnswersReads("partnershipVat") and
+      userAnswersPayeReads("partnershipPaye") and
+      userAnswersUtrReads and
       addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'partnershipAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'partnershipPreviousAddress) and
-      userAnswersContactDetailsReads("partnershipContactDetails", ifPath) reduce
+      addressTransformer.getAddressYears( __ \ 'partnershipAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'partnershipPreviousAddress) and
+      userAnswersContactDetailsReads("partnershipContactDetails") reduce
 
 }
