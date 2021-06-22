@@ -47,8 +47,8 @@ class AddressTransformer extends JsonTransformer {
       (userAnswersPath \ 'country).json.copyFrom((ifAddressPath \ 'countryCode).json.pick) reduce
   }
 
-  def getAddressYears(ifPath: JsPath = __, uaAddressYearsPath: JsPath = __): Reads[JsObject] = {
-    (ifPath \ "previousAddressDetails" \ "isPreviousAddressLast12Month").read[Boolean].flatMap { addressYearsValue =>
+  def getAddressYears(uaAddressYearsPath: JsPath = __): Reads[JsObject] = {
+    (__ \ "previousAddressDetails" \ "isPreviousAddressLast12Month").read[Boolean].flatMap { addressYearsValue =>
       val value = if (addressYearsValue) {
         JsString("under_a_year")
       } else {
@@ -58,9 +58,9 @@ class AddressTransformer extends JsonTransformer {
     } orElse doNothing
   }
 
-  def getPreviousAddress(ifPath: JsPath, userAnswersPath: JsPath): Reads[JsObject] = {
-    (ifPath \ 'previousAddressDetails \ 'previousAddress).read[JsObject].flatMap { _ =>
-      getDifferentAddress(userAnswersPath, ifPath \ 'previousAddressDetails \ 'previousAddress)
+  def getPreviousAddress(userAnswersPath: JsPath): Reads[JsObject] = {
+    (__ \ 'previousAddressDetails \ 'previousAddress).read[JsObject].flatMap { _ =>
+      getDifferentAddress(userAnswersPath, __ \ 'previousAddressDetails \ 'previousAddress)
     } orElse doNothing
   }
 }

@@ -18,7 +18,6 @@ package models.etmpToUserAnswers
 
 import models.etmpToUserAnswers.psaSchemeDetails.DirectorsOrPartnersTransformer
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import play.api.libs.json._
 
 class DirectorsOrPartnersTransformationSpec extends TransformationSpec {
 
@@ -32,7 +31,7 @@ class DirectorsOrPartnersTransformationSpec extends TransformationSpec {
         forAll(directorOrPartnerJsValueGen("partner")) {
           partnerDetails =>
             val (ifPartnerDetails, userAnswersPartnerDetails) = partnerDetails
-            val result = ifPartnerDetails.transform(directorOrPartnerTransformer.userAnswersPartnerReads(__)).get
+            val result = ifPartnerDetails.transform(directorOrPartnerTransformer.userAnswersPartnerReads).get
 
             result mustBe userAnswersPartnerDetails
         }
@@ -45,7 +44,7 @@ class DirectorsOrPartnersTransformationSpec extends TransformationSpec {
         forAll(directorOrPartnerJsValueGen("director")) {
           directorDetails =>
             val (ifDirectorDetails, userAnswersDirectorDetails) = directorDetails
-            val result = ifDirectorDetails.transform(directorOrPartnerTransformer.userAnswersDirectorReads(__)).get
+            val result = ifDirectorDetails.transform(directorOrPartnerTransformer.userAnswersDirectorReads).get
 
             result mustBe userAnswersDirectorDetails
         }

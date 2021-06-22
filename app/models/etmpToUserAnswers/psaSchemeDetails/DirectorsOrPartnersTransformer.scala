@@ -24,24 +24,24 @@ import play.api.libs.json._
 
 class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
-  def userAnswersDirectorReads(ifPath: JsPath): Reads[JsObject] = {
-    userAnswersIndividualDetailsReads("directorDetails", ifPath) and
-      userAnswersNinoReads("directorNino", ifPath) and
-      userAnswersUtrReads(ifPath) and
-      addressTransformer.getDifferentAddress(__ \ 'directorAddressId, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'companyDirectorAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'previousAddress) and
-      userAnswersContactDetailsReads("directorContactDetails", ifPath) and
+  def userAnswersDirectorReads: Reads[JsObject] = {
+    userAnswersIndividualDetailsReads("directorDetails") and
+      userAnswersNinoReads("directorNino") and
+      userAnswersUtrReads and
+      addressTransformer.getDifferentAddress(__ \ 'directorAddressId, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears(__ \ 'companyDirectorAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'previousAddress) and
+      userAnswersContactDetailsReads("directorContactDetails") and
       (__ \ 'isDirectorComplete).json.put(JsBoolean(true)) reduce
   }
 
-  def userAnswersPartnerReads(ifPath: JsPath): Reads[JsObject] =
-    userAnswersIndividualDetailsReads("partnerDetails", ifPath) and
-      userAnswersNinoReads("partnerNino", ifPath) and
-      userAnswersUtrReads(ifPath) and
-      addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'partnerAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'partnerPreviousAddress) and
-      userAnswersContactDetailsReads("partnerContactDetails", ifPath) and
+  def userAnswersPartnerReads: Reads[JsObject] =
+    userAnswersIndividualDetailsReads("partnerDetails") and
+      userAnswersNinoReads("partnerNino") and
+      userAnswersUtrReads and
+      addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears( __ \ 'partnerAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'partnerPreviousAddress) and
+      userAnswersContactDetailsReads("partnerContactDetails") and
       (__ \ 'isPartnerComplete).json.put(JsBoolean(true)) reduce
 }

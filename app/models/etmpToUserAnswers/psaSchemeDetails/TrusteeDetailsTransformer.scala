@@ -27,11 +27,11 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
   val userAnswersTrusteesReads: Reads[JsObject] = {
     (__ \ 'psaPspSchemeDetails \ 'trusteeDetails).readNullable(__.read(
       (__ \ 'individualTrusteeDetails).readNullable(
-        __.read(Reads.seq(userAnswersTrusteeIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
+        __.read(Reads.seq(userAnswersTrusteeIndividualReads)).map(JsArray(_))).flatMap { individual =>
         (__ \ 'companyTrusteeDetails).readNullable(
-          __.read(Reads.seq(userAnswersTrusteeCompanyReads(__))).map(JsArray(_))).flatMap { company =>
+          __.read(Reads.seq(userAnswersTrusteeCompanyReads)).map(JsArray(_))).flatMap { company =>
           (__ \ 'partnershipTrusteeDetails).readNullable(
-            __.read(Reads.seq(userAnswersTrusteePartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
+            __.read(Reads.seq(userAnswersTrusteePartnershipReads)).map(JsArray(_))).flatMap { partnership =>
             (__ \ 'trustees).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
           }
         }
@@ -40,37 +40,37 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
     }
   }
 
-  def userAnswersTrusteeIndividualReads(ifPath: JsPath): Reads[JsObject] =
+  def userAnswersTrusteeIndividualReads: Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("trusteeDetails", ifPath)and
-      userAnswersNinoReads("trusteeNino", ifPath) and
-      userAnswersUtrReads(ifPath) and
-      addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'trusteeAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'trusteePreviousAddress) and
-      userAnswersContactDetailsReads("trusteeContactDetails", ifPath) reduce
+      userAnswersIndividualDetailsReads("trusteeDetails")and
+      userAnswersNinoReads("trusteeNino") and
+      userAnswersUtrReads and
+      addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears( __ \ 'trusteeAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'trusteePreviousAddress) and
+      userAnswersContactDetailsReads("trusteeContactDetails") reduce
 
-  def userAnswersTrusteeCompanyReads(ifPath: JsPath): Reads[JsObject] =
+  def userAnswersTrusteeCompanyReads: Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("company")) and
-      userAnswersCompanyDetailsReads(ifPath) and
-      transformVatToUserAnswersReads(ifPath, "companyVat") and
-      userAnswersPayeReads(ifPath, "companyPaye") and
-      userAnswersCrnReads(ifPath) and
-      userAnswersUtrReads(ifPath) and
-      addressTransformer.getDifferentAddress(__ \ 'companyAddress, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'trusteesCompanyAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'companyPreviousAddress) and
-      userAnswersContactDetailsReads("companyContactDetails", ifPath) reduce
+      userAnswersCompanyDetailsReads and
+      transformVatToUserAnswersReads("companyVat") and
+      userAnswersPayeReads("companyPaye") and
+      userAnswersCrnReads and
+      userAnswersUtrReads and
+      addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears( __ \ 'trusteesCompanyAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'companyPreviousAddress) and
+      userAnswersContactDetailsReads("companyContactDetails") reduce
 
-  def userAnswersTrusteePartnershipReads(ifPath: JsPath): Reads[JsObject] =
+  def userAnswersTrusteePartnershipReads: Reads[JsObject] =
     (__ \ 'trusteeKind).json.put(JsString("partnership")) and
-      userAnswersTrusteePartnershipDetailsReads(ifPath) and
-      transformVatToUserAnswersReads(ifPath, "partnershipVat") and
-      userAnswersPayeReads(ifPath, "partnershipPaye") and
-      userAnswersUtrReads(ifPath) and
-      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, ifPath \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(ifPath, __ \ 'partnershipAddressYears) and
-      addressTransformer.getPreviousAddress(ifPath, __ \ 'partnershipPreviousAddress) and
-      userAnswersContactDetailsReads("partnershipContactDetails", ifPath) reduce
+      userAnswersTrusteePartnershipDetailsReads and
+      transformVatToUserAnswersReads("partnershipVat") and
+      userAnswersPayeReads("partnershipPaye") and
+      userAnswersUtrReads and
+      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, __ \ 'correspondenceAddressDetails) and
+      addressTransformer.getAddressYears( __ \ 'partnershipAddressYears) and
+      addressTransformer.getPreviousAddress( __ \ 'partnershipPreviousAddress) and
+      userAnswersContactDetailsReads("partnershipContactDetails") reduce
 
 }
