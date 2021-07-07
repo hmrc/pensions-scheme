@@ -53,14 +53,14 @@ class BarsConnectorSpec
     "return invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
     val response =
       """ {
-        "accountNumberWithSortCodeIsValid": false,
+        "accountNumberWithSortCodeIsValid": "no",
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"no",
         "supportsBACS":"yes"
       } """
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -79,14 +79,14 @@ class BarsConnectorSpec
   it should "return not invalid if accountNumberWithSortCode is invalid and sort code is not present on EISCID" in {
     val response =
       """ {
-        "accountNumberWithSortCodeIsValid": true,
+        "accountNumberWithSortCodeIsValid": "yes",
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"no",
         "supportsBACS":"yes"
       } """
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -105,14 +105,14 @@ class BarsConnectorSpec
   it should "return not invalid if accountNumberWithSortCode is notInvalid and can't check sort code on EISCID" in {
     val response =
       """ {
-        "accountNumberWithSortCodeIsValid": true,
+        "accountNumberWithSortCodeIsValid": "yes",
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"error",
         "supportsBACS":"yes"
       } """
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -131,14 +131,14 @@ class BarsConnectorSpec
 
     val response =
       """ {
-        "accountNumberWithSortCodeIsValid": true,
+        "accountNumberWithSortCodeIsValid": "yes",
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"yes",
         "supportsBACS":"yes"
       } """
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -158,7 +158,7 @@ class BarsConnectorSpec
     val errorResponse = "error"
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .willReturn(
           serverError()
             .withStatus(Status.BAD_REQUEST)
@@ -176,7 +176,7 @@ class BarsConnectorSpec
   it should "pass the Content-Type header" in {
     val response =
       """ {
-        "accountNumberWithSortCodeIsValid": true,
+        "accountNumberWithSortCodeIsValid": "yes",
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"yes",
         "supportsBACS":"yes"
@@ -186,7 +186,7 @@ class BarsConnectorSpec
     val headerValue = "application/json"
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .withHeader(headerName, equalTo(headerValue))
         .willReturn(
           serverError()
@@ -217,14 +217,14 @@ class BarsConnectorSpec
 
     val response =
       """ {
-        "accountNumberWithSortCodeIsValid": true,
+        "accountNumberWithSortCodeIsValid": "yes",
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"yes",
         "supportsBACS":"yes"
       } """
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .withRequestBody(equalToJson(request))
         .willReturn(
           serverError()
@@ -246,7 +246,7 @@ class BarsConnectorSpec
 
     val response =
       """ {
-        "accountNumberWithSortCodeIsValid": false,
+        "accountNumberWithSortCodeIsValid": "no",
         "nonStandardAccountDetailsRequiredForBacs": "no",
         "sortCodeIsPresentOnEISCD":"no",
         "supportsBACS":"yes"
@@ -255,7 +255,7 @@ class BarsConnectorSpec
     val bankAccount = BankAccount(sortCode, accountNumber)
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -287,7 +287,7 @@ class BarsConnectorSpec
     val bankAccount = BankAccount(sortCode, accountNumber)
 
     server.stubFor(
-      post(urlEqualTo("/validateBankDetails"))
+      post(urlEqualTo("/v2/validateBankDetails"))
         .willReturn(
           serverError()
             .withStatus(Status.BAD_REQUEST)
