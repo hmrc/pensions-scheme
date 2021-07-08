@@ -13,6 +13,12 @@ POST          /journey-cache/scheme-subscription/:id            controllers.cach
 DELETE        /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.remove(id: String)
 GET           /journey-cache/scheme-subscription/:id/lastUpdated            controllers.cache.SchemeSubscriptionJourneyCacheController.lastUpdated(id: String)
 
+# Racdac ones in protected mongo
+GET           /journey-cache/racdac-scheme-subscription/:id     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.get(id: String)
+POST          /journey-cache/racdac-scheme-subscription/:id     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.save(id: String)
+DELETE        /journey-cache/racdac-scheme-subscription/:id     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.remove(id: String)
+GET           /journey-cache/racdac-scheme-subscription/:id/lastUpdated            controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.lastUpdated(id: String)
+
 
 # answers caching in protected mongo
 GET           /journey-cache/update-scheme/:id                  controllers.cache.UpdateSchemeJourneyCacheController.get(id: String)
