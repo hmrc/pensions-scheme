@@ -16,24 +16,24 @@
 
 package service
 
-import audit.{SchemeSubscription, ListOfSchemesAudit, SchemeUpdate, AuditService, SchemeType => AuditSchemeType}
+import audit.{AuditService, ListOfSchemesAudit, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
 import models.FeatureToggleName.RACDAC
 import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.{RACDACPensionsScheme, BankAccount, PensionsScheme}
+import models.userAnswersToEtmp.{BankAccount, PensionsScheme, RACDACPensionsScheme}
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HttpException, HeaderCarrier}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
 import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 class SchemeServiceImpl @Inject()(
                                    schemeConnector: SchemeConnector,
@@ -81,6 +81,7 @@ class SchemeServiceImpl @Inject()(
                   */
                   (if (isRACDACEnabled) Json.obj("racdacScheme" -> false) else Json.obj())
               }
+
               schemeConnector.registerScheme(psaId, registerData) andThen {
                 case Success(httpResponse) =>
                   sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))

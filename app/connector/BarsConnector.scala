@@ -47,7 +47,7 @@ class BarsConnectorImpl @Inject()(http: HttpClient, appConfig: AppConfig, auditS
 
     val request = ValidateBankDetailsRequest(bankAccount)
 
-    http.POST[ValidateBankDetailsRequest, HttpResponse](s"$barsBaseUrl/validateBankDetails", request).map {
+    http.POST[ValidateBankDetailsRequest, HttpResponse](s"$barsBaseUrl/v2/validateBankDetails", request).map {
       httpResponse =>
 
         auditService.sendEvent(

@@ -24,22 +24,44 @@ class BankDetailsSpec extends MustMatchers with WordSpecLike with OptionValues {
 
   "ValidateBankDetailsResponse reads" must {
 
-    "return true when sortCodeIsPresentOnEISCD returns 'yes'" in {
-      val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "yes")
+    "return true for both sortCodeIsPresentOnEISCD and accountNumberWithSortCodeIsValid when both returns 'yes'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> "yes", "sortCodeIsPresentOnEISCD" -> "yes")
 
       Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, true))
     }
 
-    "return false when sortCodeIsPresentOnEISCD returns 'no'" in {
-      val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "no")
+    "return false for sortCodeIsPresentOnEISCD and true for accountNumberWithSortCodeIsValid when" +
+      "sortCodeIsPresentOnEISCD returns 'no' and accountNumberWithSortCodeIsValid  'yes'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> "yes", "sortCodeIsPresentOnEISCD" -> "no")
 
       Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, false))
     }
 
-    "return true when sortCodeIsPresentOnEISCD returns 'error'" in {
-      val json = Json.obj("accountNumberWithSortCodeIsValid" -> true, "sortCodeIsPresentOnEISCD" -> "error")
+    "return true for accountNumberWithSortCodeIsValid and false for sortCodeIsPresentOnEISCD when " +
+      " returns 'error' and accountNumberWithSortCodeIsValid return 'yes'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> "yes", "sortCodeIsPresentOnEISCD" -> "error")
 
       Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(true, false))
+    }
+
+    "return false for both sortCodeIsPresentOnEISCD and accountNumberWithSortCodeIsValid when both returns 'no'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> "no", "sortCodeIsPresentOnEISCD" -> "no")
+
+      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(false, false))
+    }
+
+    "return false for accountNumberWithSortCodeIsValid and true for sortCodeIsPresentOnEISCD when" +
+      "accountNumberWithSortCodeIsValid returns 'no' and sortCodeIsPresentOnEISCD  'yes'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> "no", "sortCodeIsPresentOnEISCD" -> "yes")
+
+      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(false, true))
+    }
+
+    "return false for accountNumberWithSortCodeIsValid and false for sortCodeIsPresentOnEISCD when " +
+      " sortCodeIsPresentOnEISCD returns 'error' and accountNumberWithSortCodeIsValid return 'indeterminate'" in {
+      val json = Json.obj("accountNumberWithSortCodeIsValid" -> "indeterminate", "sortCodeIsPresentOnEISCD" -> "error")
+
+      Json.fromJson[ValidateBankDetailsResponse](json) mustEqual JsSuccess(ValidateBankDetailsResponse(false, false))
     }
   }
 

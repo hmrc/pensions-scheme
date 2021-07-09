@@ -49,11 +49,8 @@ object ValidateBankDetailsResponse {
     import play.api.libs.json._
 
     (
-      (__ \ "accountNumberWithSortCodeIsValid").read[Boolean] and
-        (__ \ "sortCodeIsPresentOnEISCD").read[String].map {
-          case "yes" => true
-          case _ => false
-        }
+      (__ \ "accountNumberWithSortCodeIsValid").read[String].map(_ == "yes") and
+        (__ \ "sortCodeIsPresentOnEISCD").read[String].map(_ == "yes")
       ) (ValidateBankDetailsResponse.apply _)
   }
 }
