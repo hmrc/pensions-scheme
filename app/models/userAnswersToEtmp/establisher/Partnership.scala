@@ -21,6 +21,7 @@ import models.userAnswersToEtmp.ReadsHelper.readsFiltered
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._
+import utils.UtrHelper.stripUtr
 
 case class Partnership(
                         organizationName: String,
@@ -47,7 +48,7 @@ object Partnership {
     ) ((partnership, otherPartners, partners) =>
     Partnership(
       organizationName = partnership.name,
-      utr = partnership.utr,
+      utr = stripUtr(partnership.utr),
       noUtrReason = partnership.utrReason,
       vatRegistrationNumber = partnership.vat,
       payeReference = partnership.paye,

@@ -24,8 +24,10 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json._
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherCompanyGenerator
+import utils.PensionSchemeGenerators
+import utils.UtrHelper.stripUtr
 
-class ReadsEstablisherCompanySpec extends WordSpec with MustMatchers with OptionValues {
+class ReadsEstablisherCompanySpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
 
   implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 
@@ -58,11 +60,11 @@ class ReadsEstablisherCompanySpec extends WordSpec with MustMatchers with Option
     }
 
     "must read utr when it is present" in {
-      forAll(establisherCompanyGenerator(), arbitrary[String]) {
+      forAll(establisherCompanyGenerator(), utrGeneratorFromUser) {
         (json, utr) =>
           val newJson = json + ("utr" -> Json.obj("value" -> utr))
           val model = newJson.as[CompanyEstablisher](CompanyEstablisher.readsEstablisherCompany)
-          model.utr.value mustBe (newJson \ "utr" \ "value").as[String]
+          model.utr mustBe stripUtr(Some(utr))
       }
     }
 

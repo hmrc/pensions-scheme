@@ -23,8 +23,10 @@ import org.scalacheck.Shrink
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{JsString, Json}
+import utils.PensionSchemeGenerators
+import utils.UtrHelper.stripUtr
 
-class DirectorReadsSpec extends FreeSpec with MustMatchers with ScalaCheckDrivenPropertyChecks with OptionValues {
+class DirectorReadsSpec extends FreeSpec with MustMatchers with ScalaCheckDrivenPropertyChecks with OptionValues with PensionSchemeGenerators {
 
   implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 
@@ -94,11 +96,11 @@ class DirectorReadsSpec extends FreeSpec with MustMatchers with ScalaCheckDriven
     }
 
     "must read utr when it is present" in {
-      forAll(directorGenerator(), arbitrary[String]){
+      forAll(directorGenerator(), utrGeneratorFromUser){
         (json, utr) =>
           val newJson  = json + ("utr" -> Json.obj("value" -> utr))
           val model = newJson.as[Individual](Individual.readsCompanyDirector)
-          model.utr.value mustBe (newJson \ "utr" \ "value").as[String]
+          model.utr mustBe stripUtr(Some(utr))
       }
     }
 
