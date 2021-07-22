@@ -31,6 +31,16 @@ trait PensionSchemeGenerators {
   val optionalNinoGenerator: Gen[Option[String]] = Gen.option("SL221122D")
   val ninoGenerator: Gen[String] = Gen.const("SL221122D")
   val utrGenerator: Gen[String] = Gen.listOfN[Char](10, Gen.numChar).map(_.mkString)
+
+  val utrGeneratorFromUser: Gen[String] = {
+    val utrRange: Gen[String] = Gen.listOfN[Char](randomNumberFromRange(10, 13), Gen.numChar).map(_.mkString)
+    randomNumberFromRange(1, 3) match {
+      case 1 => utrRange
+      case 2 => "k" + utrRange
+      case 3 => utrRange + "k"
+    }
+  }
+
   val crnGenerator: Gen[String] = Gen.const("11111111")
   val vatGenerator: Gen[String] = Gen.const("123456789")
   val payeGenerator: Gen[String] = Gen.const("1111111111111")
