@@ -24,8 +24,10 @@ import org.scalacheck.Shrink
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsString, Json}
+import utils.PensionSchemeGenerators
+import utils.UtrHelper.stripUtr
 
-class ReadsTrusteePartnershipSpec extends WordSpec with MustMatchers with OptionValues {
+class ReadsTrusteePartnershipSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
   private implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 
   "A Json payload containing trustee partnership" must {
@@ -38,11 +40,11 @@ class ReadsTrusteePartnershipSpec extends WordSpec with MustMatchers with Option
     }
 
     "read utr when it is present" in {
-      forAll(trusteePartnershipGenerator(), arbitrary[String]) {
+      forAll(trusteePartnershipGenerator(), utrGeneratorFromUser) {
         (json, utr) =>
           val newJson = json + ("utr" -> Json.obj("value" -> utr))
           val model = newJson.as[PartnershipTrustee](PartnershipTrustee.readsTrusteePartnership)
-          model.utr.value mustBe (newJson \ "utr" \ "value").as[String]
+          model.utr mustBe stripUtr(Some(utr))
       }
     }
 

@@ -17,9 +17,10 @@
 package models.userAnswersToEtmp.trustee
 
 import models.userAnswersToEtmp.ReadsHelper.previousAddressDetails
-import models.userAnswersToEtmp.{Company, CorrespondenceAddressDetails, CorrespondenceContactDetails, PreviousAddressDetails}
+import models.userAnswersToEtmp.{Company, PreviousAddressDetails, CorrespondenceContactDetails, CorrespondenceAddressDetails}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import utils.UtrHelper.stripUtr
 
 case class CompanyTrustee(
                            organizationName: String,
@@ -41,7 +42,7 @@ object CompanyTrustee {
     JsPath.read(Company.companyReads).map(test =>
       CompanyTrustee(
         organizationName = test.name,
-        utr = test.utr,
+        utr = stripUtr(test.utr),
         noUtrReason = test.noUtrReason,
         crnNumber = test.crn,
         noCrnReason = test.noCrnReason,

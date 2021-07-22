@@ -20,6 +20,7 @@ import models.userAnswersToEtmp.ReadsHelper.previousAddressDetails
 import models.userAnswersToEtmp.{CorrespondenceAddressDetails, CorrespondenceContactDetails, PartnershipDetail, PreviousAddressDetails}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import utils.UtrHelper.stripUtr
 
 case class PartnershipTrustee(
                                organizationName: String,
@@ -39,7 +40,7 @@ object PartnershipTrustee {
     JsPath.read(PartnershipDetail.partnershipReads).map(partnership =>
       PartnershipTrustee(
         organizationName = partnership.name,
-        utr = partnership.utr,
+        utr = stripUtr(partnership.utr),
         noUtrReason = partnership.utrReason,
         vatRegistrationNumber = partnership.vat,
         payeReference = partnership.paye,

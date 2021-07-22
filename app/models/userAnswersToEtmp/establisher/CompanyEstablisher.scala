@@ -21,6 +21,7 @@ import models.userAnswersToEtmp._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes.seq
 import play.api.libs.json._
+import utils.UtrHelper.stripUtr
 
 case class CompanyEstablisher(
                                organizationName: String,
@@ -49,7 +50,7 @@ object CompanyEstablisher {
     ) ((company, otherDirectors, directors) =>
     CompanyEstablisher(
       organizationName = company.name,
-      utr = company.utr,
+      utr = stripUtr(company.utr),
       noUtrReason = company.noUtrReason,
       crnNumber = company.crn,
       noCrnReason = company.noCrnReason,
