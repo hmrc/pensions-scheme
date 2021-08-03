@@ -16,10 +16,12 @@
 
 package controllers.cache
 
+import org.joda.time.DateTime
 import play.api.Logger
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.{JsNumber, Writes, JsValue, Json}
+import play.api.mvc.{Action, ControllerComponents, AnyContent}
 import repositories.SchemeCacheRepository
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.auth.core.{AuthorisedFunctions, AuthConnector}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,9 +51,9 @@ abstract class SchemeCacheController(
   def get(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
-        logger.debug("controllers.PensionsSchemeCacheController.get: Authorised Request " + id)
+        logger.debug("controllers.SchemeCacheController.get: Authorised Request " + id)
         repository.get(id).map { response =>
-          logger.debug(s"controllers.PensionsSchemeCacheController.get: Response for request Id $id is $response")
+          logger.debug(s"controllers.SchemeCacheController.get: Response for request Id $id is $response")
           response.map(Ok(_)).getOrElse(NotFound)
         }
       }
@@ -68,6 +70,23 @@ abstract class SchemeCacheController(
     implicit request =>
       authorised() {
         repository.dropCollection.map(_ => Ok)
+      }
+  }
+
+  private val jodaDateTimeNumberWrites = new Writes[DateTime] {
+    def writes(d: DateTime): JsValue = JsNumber(d.getMillis)
+  }
+
+  def lastUpdated(id: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised() {
+        logger.debug("controllers.SchemeCacheController.lastUpdated: Authorised Request " + id)
+        repository.getLastUpdated(id).map { response =>
+          logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
+          response.map {
+            date => Ok(Json.toJson(date)(jodaDateTimeNumberWrites))
+          } getOrElse NotFound
+        }
       }
   }
 }
