@@ -19,6 +19,7 @@ package models.userAnswersToEtmp
 import models.userAnswersToEtmp.ReadsHelper.previousAddressDetails
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import utils.UtrHelper.stripUtr
 
 case class Individual(
                        personalDetails: PersonalDetails,
@@ -49,7 +50,7 @@ object Individual {
       personalDetails = personalDetails,
       referenceOrNino = nino,
       noNinoReason = noNinoReason,
-      utr = utr,
+      utr = stripUtr(utr),
       noUtrReason = noUtrReason,
       correspondenceAddressDetails = CorrespondenceAddressDetails(address),
       correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
@@ -72,7 +73,7 @@ object Individual {
       personalDetails = personalDetails,
       referenceOrNino = nino,
       noNinoReason = noNinoReason,
-      utr = utr,
+      utr = stripUtr(utr),
       noUtrReason = noUtrReason,
       correspondenceAddressDetails = CorrespondenceAddressDetails(address),
       correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
@@ -95,7 +96,7 @@ object Individual {
       personalDetails = personalDetails,
       referenceOrNino = nino,
       noNinoReason = noNinoReason,
-      utr = utr,
+      utr = stripUtr(utr),
       noUtrReason = noUtrReason,
       correspondenceAddressDetails = CorrespondenceAddressDetails(address),
       correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),
@@ -118,7 +119,7 @@ object Individual {
       personalDetails = personalDetails,
       referenceOrNino = nino,
       noNinoReason = noNinoReason,
-      utr = utr,
+      utr = stripUtr(utr),
       noUtrReason = noUtrReason,
       correspondenceAddressDetails = CorrespondenceAddressDetails(address),
       correspondenceContactDetails = CorrespondenceContactDetails(contactDetails),

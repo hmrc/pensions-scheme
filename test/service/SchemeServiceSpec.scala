@@ -152,12 +152,12 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
 
         val expectedRegisterData = Json.obj(
           "racdacScheme" -> true,
-          "racDACSchemeDetails" -> Json.obj(
+          "racdacSchemeDetails" -> Json.obj(
             "racdacName" -> "test-scheme-name",
             "contractOrPolicyNumber" -> "121212",
             "registrationStartDate" ->  formatDate(LocalDate.now)
           ),
-          "racDACDeclaration" -> Json.obj(
+          "racdacSchemeDeclaration" -> Json.obj(
             "box12" -> true,
             "box13" -> true,
             "box14" -> true
