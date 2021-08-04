@@ -21,8 +21,8 @@ import play.api.libs.json.{Format, Json, Reads}
 
 case class RACDACPensionsScheme(
   racdacScheme: Boolean,
-  racDACSchemeDetails: RACDACSchemeDetails,
-  racDACDeclaration: RACDACDeclaration
+  racdacSchemeDetails: RACDACSchemeDetails,
+  racdacSchemeDeclaration: RACDACDeclaration
 )
 
 object RACDACPensionsScheme {
@@ -32,8 +32,8 @@ object RACDACPensionsScheme {
     ) ((racDACSchemeDetails, racDACDeclaration) =>
     RACDACPensionsScheme(
       racdacScheme = true,
-      racDACSchemeDetails = racDACSchemeDetails,
-      racDACDeclaration = racDACDeclaration
+      racdacSchemeDetails = racDACSchemeDetails,
+      racdacSchemeDeclaration = racDACDeclaration
     )
   )
 
