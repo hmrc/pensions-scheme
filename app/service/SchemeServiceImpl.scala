@@ -16,24 +16,24 @@
 
 package service
 
-import audit.{AuditService, ListOfSchemesAudit, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{SchemeUpdate, RACDACDeclarationAuditEvent, AuditService, SchemeSubscription, ListOfSchemesAudit, SchemeType => AuditSchemeType}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
 import models.FeatureToggleName.RACDAC
 import models.ListOfSchemes
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.{BankAccount, PensionsScheme, RACDACPensionsScheme}
+import models.userAnswersToEtmp.{RACDACPensionsScheme, BankAccount, PensionsScheme}
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
+import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HttpException, HeaderCarrier}
 import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Success, Failure}
 
 class SchemeServiceImpl @Inject()(
                                    schemeConnector: SchemeConnector,
@@ -107,8 +107,9 @@ class SchemeServiceImpl @Inject()(
         val registerData = Json.toJson(validRACDACPensionsScheme)
         schemeConnector.registerScheme(psaId, registerData).map { response =>
           if (response.status == OK) {
-            auditService.sendEvent(
+            auditService.sendExtendedEvent(RACDACDeclarationAuditEvent(registerData.as[JsObject]))
           }
+          response
         }
       }
     )
