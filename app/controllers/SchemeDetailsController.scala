@@ -62,9 +62,7 @@ class SchemeDetailsController @Inject()(
          schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
 
            schemeConnector.getPspSchemeDetails(pspId, pstr).map {
-             case Right(psaSchemeDetails) =>
-               println(s"\n\n\n\n\n\nPSPSchemeDetails: $psaSchemeDetails")
-               Ok(psaSchemeDetails)
+             case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
              case Left(e) => result(e)
            }
          }
