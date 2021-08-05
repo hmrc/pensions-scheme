@@ -18,7 +18,7 @@ package controllers
 
 
 import com.google.inject.Inject
-import connector.SchemeConnector
+import connector.{SchemeConnector, SchemeDetailsConnector}
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.http._
@@ -28,7 +28,7 @@ import utils.ErrorHandler
 import scala.concurrent.{ExecutionContext, Future}
 
 class AssociatedPsaController @Inject()(
-                                         schemeConnector: SchemeConnector,
+                                         schemeDetailsConnector: SchemeDetailsConnector,
                                          cc: ControllerComponents
                                        )(
                                          implicit ec: ExecutionContext
@@ -49,7 +49,7 @@ class AssociatedPsaController @Inject()(
 
       srn match {
         case Some(schemeReferenceNumber) =>
-          schemeConnector.getSchemeDetails(
+          schemeDetailsConnector.getSchemeDetails(
             userIdNumber = userId,
             schemeIdNumber = srnRequest,
             schemeIdType = schemeReferenceNumber

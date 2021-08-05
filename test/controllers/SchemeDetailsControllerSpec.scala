@@ -17,14 +17,14 @@
 package controllers
 
 import base.SpecBase
-import connector.SchemeConnector
+import connector.{SchemeConnector, SchemeDetailsConnector}
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsObject, JsValue}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -42,7 +42,7 @@ class SchemeDetailsControllerSpec
 
 
   private val mockSchemeService: SchemeService = mock[SchemeService]
-  private val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
+  private val mockSchemeConnector: SchemeDetailsConnector = mock[SchemeDetailsConnector]
   private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeService, stubControllerComponents())
   private val schemeIdType = "srn"
   private val idNumber = "00000000AA"
@@ -68,7 +68,7 @@ class SchemeDetailsControllerSpec
 
       val successResponse = userAnswersResponse
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
-        .thenReturn(Future.successful(Right(successResponse)))
+        .thenReturn(Future.successful(Right(successResponse.as[JsObject])))
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
 
@@ -236,7 +236,7 @@ class SchemeDetailsControllerSpec
 
       val successResponse = userAnswersResponse
       when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(pspId), Matchers.eq("00000000AA"))(any(), any(), any())).thenReturn(
-        Future.successful(Right(successResponse)))
+        Future.successful(Right(successResponse.as[JsObject])))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
 

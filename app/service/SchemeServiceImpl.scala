@@ -16,50 +16,44 @@
 
 package service
 
-import audit.{AuditService, ListOfSchemesAudit, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{AuditService, SchemeAuditService}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
 import models.FeatureToggleName.RACDAC
 import models.ListOfSchemes
-import models.enumeration.SchemeType
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
 import models.userAnswersToEtmp.{BankAccount, PensionsScheme, RACDACPensionsScheme}
 import play.api.Logger
-import play.api.http.Status
-import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, HttpResponse}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException}
+import utils.HttpResponseHelper
 import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+
 
 class SchemeServiceImpl @Inject()(
                                    schemeConnector: SchemeConnector,
                                    barsConnector: BarsConnector,
                                    auditService: AuditService,
+                                   schemeAuditService: SchemeAuditService,
                                    featureToggleService: FeatureToggleService
-                                 ) extends SchemeService {
+                                 ) extends SchemeService with HttpResponseHelper {
 
   private val logger = Logger(classOf[SchemeServiceImpl])
 
   override def listOfSchemes(idType: String, idValue: String)
-                            (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-
-    schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly) andThen {
-      case Success(httpResponse) =>
-        logger.debug(s"\n\n\nList of schemes response: ${Json.prettyPrint(httpResponse.json)}\n\n\n")
-        auditService.sendEvent(ListOfSchemesAudit(idType, idValue, httpResponse.status, Some(httpResponse.json)))
-      case Failure(error: HttpException) =>
-        auditService.sendEvent(ListOfSchemesAudit(idType, idValue, error.responseCode, None))
-    }
+                            (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
+  Future[Either[HttpException, JsValue]]= {
+    schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly)
   }
 
   case object RegisterSchemeToggleOffTransformFailed extends Exception
 
-  private def registerNonRACDACScheme(json:JsValue, psaId: String, isRACDACEnabled: Boolean)(implicit
-    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+  private def registerNonRACDACScheme(json: JsValue, psaId: String, isRACDACEnabled: Boolean)
+                                     (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
+  Future[Either[HttpException, JsValue]] = {
     json.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
       invalid = {
         errors =>
@@ -83,10 +77,7 @@ class SchemeServiceImpl @Inject()(
               }
 
               schemeConnector.registerScheme(psaId, registerData) andThen {
-                case Success(httpResponse) =>
-                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, Status.OK, Some(httpResponse.json))
-                case Failure(error: HttpException) =>
-                  sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined, error.responseCode, None)
+                schemeAuditService.sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined)(auditService.sendEvent)
               }
           }
         )
@@ -94,8 +85,9 @@ class SchemeServiceImpl @Inject()(
     )
   }
 
-  private def registerRACDACScheme(json:JsValue, psaId: String)(implicit
-    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+  private def registerRACDACScheme(json: JsValue, psaId: String)(implicit
+                                                                 headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
+  Future[Either[HttpException, JsValue]] = {
     json.validate[RACDACPensionsScheme](RACDACPensionsScheme.reads).fold(
       invalid = {
         errors =>
@@ -110,8 +102,9 @@ class SchemeServiceImpl @Inject()(
     )
   }
 
-  private def register(json:JsValue, psaId: String, isRACDACEnabled:Boolean)(implicit
-    headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):Future[HttpResponse] = {
+  private def register(json: JsValue, psaId: String, isRACDACEnabled: Boolean)
+                      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
+  Future[Either[HttpException, JsValue]] = {
 
     def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
 
@@ -123,7 +116,8 @@ class SchemeServiceImpl @Inject()(
   }
 
   override def registerScheme(psaId: String, json: JsValue)
-                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
+                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
+  Future[Either[HttpException, JsValue]] = {
 
     for {
       racDacToggle <- featureToggleService.get(RACDAC)
@@ -132,24 +126,21 @@ class SchemeServiceImpl @Inject()(
   }
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
-                                                                        ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = {
-      json.validate[PensionsScheme](PensionsScheme.updateApiReads).fold(
-        invalid = {
-          errors =>
-            val ex = JsResultException(errors)
-            logger.warn("Invalid pension scheme", ex)
-            Future.failed(new BadRequestException("Invalid pension scheme"))
-        },
-        valid = { validPensionsScheme =>
-          val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
-          logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
-          schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen {
-            case Success(httpResponse) =>
-              sendSchemeUpdateEvent(psaId, validPensionsScheme, httpResponse.status, Some(httpResponse.json))
-            case Failure(error: HttpException) =>
-              sendSchemeUpdateEvent(psaId, validPensionsScheme, error.responseCode, None)
-          }
-        })
+                                                                        ec: ExecutionContext, request: RequestHeader):
+  Future[Either[HttpException, JsValue]] = {
+    json.validate[PensionsScheme](PensionsScheme.updateApiReads).fold(
+      invalid = {
+        errors =>
+          val ex = JsResultException(errors)
+          logger.warn("Invalid pension scheme", ex)
+          Future.failed(new BadRequestException("Invalid pension scheme"))
+      },
+      valid = { validPensionsScheme =>
+        val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
+        logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
+        schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen
+          schemeAuditService.sendSchemeUpdateEvent(psaId, validPensionsScheme)(auditService.sendEvent)
+      })
   }
 
   private[service] def readBankAccount(json: JsValue): Either[BadRequestException, Option[BankAccount]] = {
@@ -184,73 +175,15 @@ class SchemeServiceImpl @Inject()(
 
   }
 
-  private def translateSchemeType(pensionsScheme: PensionsScheme) = {
-    if (pensionsScheme.customerAndSchemeDetails.isSchemeMasterTrust) {
-      Some(AuditSchemeType.masterTrust)
-    }
-    else {
-      pensionsScheme.customerAndSchemeDetails.schemeStructure.map {
-        case SchemeType.single.value => AuditSchemeType.singleTrust
-        case SchemeType.group.value => AuditSchemeType.groupLifeDeath
-        case SchemeType.corp.value => AuditSchemeType.bodyCorporate
-        case _ => AuditSchemeType.other
-      }
-    }
-  }
-
-  private def sendSchemeUpdateEvent(psaId: String, pensionsScheme: PensionsScheme, status: Int, response: Option[JsValue])
-                                   (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
-    auditService.sendEvent(translateSchemeUpdateEvent(psaId, pensionsScheme, status, response))
-  }
-
-  private[service] def translateSchemeUpdateEvent
-  (psaId: String, pensionsScheme: PensionsScheme, status: Int, response: Option[JsValue]): SchemeUpdate = {
-    SchemeUpdate(
-      psaIdentifier = psaId,
-      schemeType = translateSchemeType(pensionsScheme),
-      status = status,
-      request = Json.toJson(pensionsScheme),
-      response = response
-    )
-  }
-
-  private def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue])
-                                         (implicit request: RequestHeader, ec: ExecutionContext): Unit = {
-    auditService.sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, status, response))
-  }
-
-  private[service] def translateSchemeSubscriptionEvent
-  (psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue]): SchemeSubscription = {
-    SchemeSubscription(
-      psaIdentifier = psaId,
-      schemeType = translateSchemeType(pensionsScheme),
-      hasIndividualEstablisher = pensionsScheme.establisherDetails.individual.nonEmpty,
-      hasCompanyEstablisher = pensionsScheme.establisherDetails.companyOrOrganization.nonEmpty,
-      hasPartnershipEstablisher = pensionsScheme.establisherDetails.partnership.nonEmpty,
-      hasDormantCompany = pensionsScheme.pensionSchemeDeclaration.box5.getOrElse(false),
-      hasBankDetails = hasBankDetails,
-      hasValidBankDetails = hasBankDetails && !pensionsScheme.customerAndSchemeDetails.haveInvalidBank,
-      status = status,
-      request = Json.toJson(pensionsScheme),
-      response = response
-    )
-
-  }
-
   override def getPstrFromSrn(srn: String, idType: String, idValue: String)
                              (implicit headerCarrier: HeaderCarrier,
                               ec: ExecutionContext, request: RequestHeader): Future[String] =
-    listOfSchemes(idType, idValue).map { response =>
-      response.status match {
-        case OK =>
-          response.json.convertTo[ListOfSchemes].schemeDetails.flatMap { listOfSchemes =>
-            listOfSchemes.find(_.referenceNumber == srn).flatMap(_.pstr)
-          }.getOrElse(throw pstrException)
-
-        case _ => throw pstrException
-      }
+    listOfSchemes(idType, idValue).map {
+      case Right(listOfSchemesJsValue) => listOfSchemesJsValue.convertTo[ListOfSchemes].schemeDetails.flatMap { listOfSchemes =>
+        listOfSchemes.find(_.referenceNumber == srn).flatMap(_.pstr)
+      }.getOrElse(throw pstrException)
+      case _ => throw pstrException
     }
 
   val pstrException: BadRequestException = new BadRequestException("PSTR could not be retrieved from SRN to call the get psp scheme details API")
-
 }

@@ -14,183 +14,273 @@
  * limitations under the License.
  */
 
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package service
 
-import audit.ListOfSchemesAudit
 import audit.testdoubles.StubSuccessfulAuditService
-import base.{SpecBase, JsonFileReader}
+import audit.{SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
+import models.FeatureToggle.{Disabled, Enabled}
+import models.FeatureToggleName.RACDAC
 import models._
-import models.userAnswersToEtmp.BankAccount
-import org.scalatest.{AsyncFlatSpec, Matchers, EitherValues}
+import models.enumeration.SchemeType
+import models.userAnswersToEtmp.establisher.EstablisherDetails
+import models.userAnswersToEtmp.trustee.TrusteeDetails
+import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
+import org.mockito.Matchers.{any, eq => eqTo}
+import org.mockito.Mockito._
+import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status
-import play.api.libs.json.{JsNull, Json, JsValue}
-import play.api.mvc.{RequestHeader, AnyContentAsEmpty}
+import play.api.libs.json._
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
-import service.SchemeServiceSpec.mock
-import uk.gov.hmrc.http.{BadRequestException, HttpResponse, HeaderCarrier}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import scala.concurrent.Future
 
 class SchemeServiceImplSpec
   extends AsyncFlatSpec
     with Matchers
     with EitherValues {
 
-  import FakeSchemeConnector._
   import SchemeServiceImplSpec._
 
   "listOfSchemes" should "return the list of schemes from the connector" in {
-
-    testFixture().schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
-      httpResponse.status shouldBe Status.OK
-      httpResponse.json shouldBe listOfSchemesJson
+    when(schemeConnector.listOfSchemes(any(), any())(any(), any(), any())).thenReturn(Future.successful(Right(listOfSchemesJson)))
+    schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
+      httpResponse.right.value shouldBe listOfSchemesJson
     }
-
   }
 
-  it should "send an audit event on success" in {
+  "haveInvalidBank" must "set the pension scheme's haveInvalidBank to true if the bank account is invalid" in {
+    val account = bankAccount(invalidAccountNumber)
+    when(barsConnector.invalidBankAccount(any(), any())(any(), any(), any())).thenReturn(Future.successful(true))
 
-    val fixture = testFixture()
-
-    fixture.schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
-      fixture.auditService.verifySent(
-        ListOfSchemesAudit("PSA", psaId, Status.OK, Some(httpResponse.json))) shouldBe true
+    schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
+      scheme =>
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe true
     }
-
   }
 
-  it should "send an audit event on failure" in {
+  it must "set the pension scheme's haveInvalidBank to false if the bank account is not invalid" in {
+    val account = bankAccount(notInvalidAccountNumber)
+    when(barsConnector.invalidBankAccount(any(), any())(any(), any(), any())).thenReturn(Future.successful(false))
 
-    val fixture = testFixture()
+    schemeService.haveInvalidBank(Some(account), pensionsScheme, psaId).map {
+      scheme =>
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
+    }
+  }
 
-    fixture.schemeConnector.setListOfSchemesResponse(
-      Future.failed(new BadRequestException("bad request")))
+  it must "set the pension scheme's haveInvalidBank to false if the scheme does not have a bank account" in {
 
-    fixture.schemeService
-      .listOfSchemes("PSA", psaId)
+    schemeService.haveInvalidBank(None, pensionsScheme, psaId).map {
+      scheme =>
+        scheme.customerAndSchemeDetails.haveInvalidBank mustBe false
+    }
+  }
+
+  "readBankAccount" must "return a bank account where it exists in json" in {
+    val json = bankDetailsJson(notInvalidAccountNumber)
+
+    val actual = schemeService.readBankAccount(json)
+    actual mustBe Right(Some(bankAccount(notInvalidAccountNumber)))
+  }
+
+  it must "return None where no account exists in json" in {
+    val actual = schemeService.readBankAccount(Json.obj())
+    actual mustBe Right(None)
+  }
+
+  it must "return bad request exception where uKBankDetails present but account invalid" in {
+    val actual = schemeService.readBankAccount(Json.obj("uKBankDetails" -> "invalid"))
+    actual.isLeft mustBe true
+    actual.left.toOption.map(_.message).getOrElse("") mustBe "Invalid bank account details"
+  }
+
+  "registerScheme (when RAC/DAC toggled off)" must "return the result of submitting the pensions scheme and " +
+    "NOT contain the racdacScheme node" in {
+    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Disabled(RACDAC)))
+    when(schemeConnector.registerScheme(any(), eqTo(schemeJsValue))(any(), any(), any())).
+      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
+    schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+      response =>
+        val json = response.right.value
+
+        json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
+
+        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+    }
+  }
+
+  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a normal " +
+    "(non RAC/DAC) pensions scheme and contain the racdacScheme node set to false" in {
+    reset(schemeConnector)
+    val regDataWithRacDacNode = schemeJsValue.as[JsObject] ++ Json.obj("racdacScheme" -> false)
+    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
+    when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
+      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
+    schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+      response =>
+        val json = response.right.value
+
+        json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
+        verify(schemeConnector, times(1)).registerScheme(any(), eqTo(regDataWithRacDacNode))(any(), any(), any())
+        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+    }
+  }
+
+  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a RAC/DAC pensions scheme" in {
+    reset(schemeConnector)
+    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
+    when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
+      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
+    val expectedRegisterData = Json.obj(
+      "racdacScheme" -> true,
+      "racdacSchemeDetails" -> Json.obj(
+        "racdacName" -> "test-scheme-name",
+        "contractOrPolicyNumber" -> "121212",
+        "registrationStartDate" -> formatDate(LocalDate.now)
+      ),
+      "racdacSchemeDeclaration" -> Json.obj(
+        "box12" -> true,
+        "box13" -> true,
+        "box14" -> true
+      )
+    )
+    schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
+      response =>
+        val json = response.right.value
+        verify(schemeConnector, times(1)).registerScheme(any(), eqTo(expectedRegisterData))(any(), any(), any())
+        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+    }
+  }
+
+  "register scheme" must "send a SchemeSubscription audit event following a successful submission" in {
+    reset(schemeConnector)
+    when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
+      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
+    schemeService.registerScheme(psaId, pensionsSchemeJson).map {
+      response =>
+        val json = response.right.value
+        val expected = schemeSubscription.copy(
+          hasIndividualEstablisher = true,
+          status = Status.OK,
+          request = expectedJsonForAudit,
+          response = Some(json)
+        )
+        auditService.verifySent(expected) mustBe true
+    }
+  }
+
+  it must "send a SchemeSubscription audit event following an unsuccessful submission" in {
+    reset(schemeConnector)
+    when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
+      thenReturn(Future.failed(new BadRequestException("bad request")))
+
+    schemeService.registerScheme(psaId, pensionsSchemeJson)
       .map(_ => fail("Expected failure"))
       .recover {
         case _: BadRequestException =>
-          fixture.auditService.verifySent(
-            ListOfSchemesAudit("PSA", psaId, Status.BAD_REQUEST, None)) shouldBe true
+          val expected = schemeSubscription.copy(
+            hasIndividualEstablisher = true,
+            status = Status.BAD_REQUEST,
+            request = expectedJsonForAudit,
+            response = None
+          )
+          auditService.verifySent(expected) mustBe true
       }
-
   }
 
+  "updateScheme" must "return the result of submitting the pensions scheme and have the right declaration type" in {
+    reset(schemeConnector)
+    when(schemeConnector.updateSchemeDetails(any(), any())(any(), any(), any())).
+      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
+    schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
+      response =>
+        val json = response.right.value
+        verify(schemeConnector, times(1)).updateSchemeDetails(
+          any(), eqTo(Json.parse(updateSchemeRegisterData)))(any(), any(), any())
+        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
+    }
+  }
+
+  it must "send a SchemeUpdate audit event following a successful submission" in {
+    reset(schemeConnector)
+    when(schemeConnector.updateSchemeDetails(any(), any())(any(), any(), any())).
+      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
+    schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map { _ =>
+      val expectedAuditEvent =
+        SchemeUpdate(psaIdentifier = psaId,
+          schemeType = Some(audit.SchemeType.singleTrust),
+          status = Status.OK,
+          request = schemeUpdateRequestJson,
+          response = Some(schemeRegistrationResponseJson))
+
+      auditService.verifySent(expectedAuditEvent) mustBe true
+    }
+  }
+
+  it must "send a SchemeUpdate audit event following an unsuccessful submission" in {
+    reset(schemeConnector)
+    when(schemeConnector.updateSchemeDetails(any(), any())(any(), any(), any())).
+      thenReturn(Future.failed(new BadRequestException("bad request")))
+    schemeService.updateScheme(pstr, psaId, pensionsSchemeJson)
+      .map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          val expectedAuditEvent =
+            SchemeUpdate(psaIdentifier = psaId,
+              schemeType = Some(audit.SchemeType.singleTrust),
+              status = Status.BAD_REQUEST,
+              request = schemeUpdateRequestJson,
+              response = None
+            )
+          auditService.verifySent(expectedAuditEvent) mustBe true
+      }
+  }
 }
 
 object SchemeServiceImplSpec extends SpecBase {
 
   private val featureToggleService: FeatureToggleService = mock[FeatureToggleService]
 
-  trait TestFixture {
-    val schemeConnector: FakeSchemeConnector = new FakeSchemeConnector()
-    val barsConnector: FakeBarsConnector = new FakeBarsConnector()
-    val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
+  private val schemeConnector: SchemeConnector = mock[SchemeConnector]
+  private val barsConnector: BarsConnector = mock[BarsConnector]
+  private val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
 
-    val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
-      schemeConnector,
-      barsConnector,
-      auditService,
-      featureToggleService
-    ) {
-      override def registerScheme(psaId: String, json: JsValue)(
-        implicit headerCarrier: HeaderCarrier,
-        ec: ExecutionContext,
-        request: RequestHeader): Future[HttpResponse] = {
-        throw new NotImplementedError()
-      }
-    }
-  }
-
-  def testFixture(): TestFixture = new TestFixture {}
+  private val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
+    schemeConnector,
+    barsConnector,
+    auditService,
+    new SchemeAuditService,
+    featureToggleService
+  )
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", "")
 
   val psaId: String = "test-psa-id"
-
-}
-
-class FakeSchemeConnector extends SchemeConnector {
-
-  import FakeSchemeConnector._
-
-  private var registerSchemeResponse = Future.successful(
-    HttpResponse(Status.OK, schemeRegistrationResponseJson.toString()))
-
-  protected var updateSchemeResponse: Future[AnyRef with HttpResponse] =
-    Future.successful(HttpResponse(Status.OK, ""))
-
-  private var listOfSchemesResponse =
-    Future.successful(HttpResponse(Status.OK, listOfSchemesJson.toString()))
-
-  private var registerSchemeData:JsValue = JsNull
-
-  def setRegisterSchemeResponse(response: Future[HttpResponse]): Unit =
-    this.registerSchemeResponse = response
-
-  def setUpdateSchemeResponse(response: Future[HttpResponse]): Unit =
-    this.updateSchemeResponse = response
-
-  def setListOfSchemesResponse(response: Future[HttpResponse]): Unit =
-    this.listOfSchemesResponse = response
-
-  def getRegisterData: JsValue = registerSchemeData
-
-  override def registerScheme(psaId: String, registerData: JsValue)(
-    implicit
-    headerCarrier: HeaderCarrier,
-    ec: ExecutionContext,
-    request: RequestHeader): Future[HttpResponse] = {
-    registerSchemeData = registerData
-    registerSchemeResponse
-  }
-
-  override def listOfSchemes(idType: String, idValue: String)(
-    implicit
-    headerCarrier: HeaderCarrier,
-    ec: ExecutionContext,
-    request: RequestHeader): Future[HttpResponse] = listOfSchemesResponse
-
-  override def getSchemeDetails(
-                                 userIdNumber: String,
-                                 schemeIdNumber: String,
-                                 schemeIdType: String
-                               )(
-                                 implicit
-                                 headerCarrier: HeaderCarrier,
-                                 ec: ExecutionContext,
-                                 request: RequestHeader
-                               ): Future[Either[HttpResponse, JsValue]] =
-    Future.successful(Right(userAnswersResponse))
-
-  override def getCorrelationId(requestId: Option[String]): String =
-    "4725c81192514c069b8ff1d84659b2df"
-
-  override def updateSchemeDetails(pstr: String, data: JsValue)(
-    implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader): Future[HttpResponse] = updateSchemeResponse
-
-  override def getPspSchemeDetails(pspId: String, pstr: String)
-                                  (implicit headerCarrier: HeaderCarrier,
-                                   ec: ExecutionContext,
-                                   request: RequestHeader): Future[Either[HttpResponse, JsValue]] =
-    Future.successful(Right(userAnswersResponse))
-}
-
-object FakeSchemeConnector extends JsonFileReader {
-
-  val schemeRegistrationResponse: SchemeRegistrationResponse = SchemeRegistrationResponse(
-    "test-processing-date",
-    "test-scheme-reference-number")
-  val schemeRegistrationResponseJson: JsValue =
-    Json.toJson(schemeRegistrationResponse)
-
-  val schemeUpdateResponseJson: JsValue =
-    Json.toJson(schemeRegistrationResponse)
-
   val listOfSchemes: ListOfSchemes =
     ListOfSchemes(
       processingDate = "1969-07-20",
@@ -199,29 +289,401 @@ object FakeSchemeConnector extends JsonFileReader {
     )
 
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
-  val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
+  val pstr: String = "test-pstr"
 
-}
-
-class FakeBarsConnector extends BarsConnector {
-
-  import SchemeServiceSpec._
-
-  override def invalidBankAccount(bankAccount: BankAccount, psaId: String)(
-    implicit ec: ExecutionContext,
-    hc: HeaderCarrier,
-    rh: RequestHeader): Future[Boolean] = {
-    bankAccount match {
-      case BankAccount(_, accountNumber)
-        if accountNumber == invalidAccountNumber =>
-        Future.successful(true)
-      case BankAccount(_, accountNumber)
-        if accountNumber == notInvalidAccountNumber =>
-        Future.successful(false)
-      case _ =>
-        throw new IllegalArgumentException(
-          s"No stub behaviour for bank account: $bankAccount")
-    }
+  private def formatDate(date: LocalDate): String = {
+    val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    date.format(dateFormat)
   }
 
+  def bankDetailsJson(accountNumber: String): JsValue =
+    Json.obj(
+      "uKBankDetails" -> Json.obj(
+        "bankName" -> "my bank name",
+        "accountName" -> "my account name",
+        "sortCode" -> Json.obj(
+          "first" -> "00",
+          "second" -> "11",
+          "third" -> "00"
+        ),
+        "accountNumber" -> accountNumber,
+        "date" -> "2010-02-02"
+      )
+    )
+
+  val pensionsScheme: PensionsScheme = PensionsScheme(
+    CustomerAndSchemeDetails(
+      schemeName = "test-pensions-scheme",
+      isSchemeMasterTrust = false,
+      schemeStructure = Some(SchemeType.single.value),
+      currentSchemeMembers = "test-current-scheme-members",
+      futureSchemeMembers = "test-future-scheme-members",
+      isRegulatedSchemeInvestment = false,
+      isOccupationalPensionScheme = false,
+      areBenefitsSecuredContractInsuranceCompany = false,
+      doesSchemeProvideBenefits = "test-does-scheme-provide-benefits",
+      tcmpBenefitType = Some("01"),
+      schemeEstablishedCountry = "test-scheme-established-country",
+      haveInvalidBank = false
+    ),
+    PensionSchemeDeclaration(
+      box1 = false,
+      box2 = false,
+      box6 = false,
+      box7 = false,
+      box8 = false,
+      box9 = false
+    ),
+    EstablisherDetails(
+      Nil,
+      Nil,
+      Nil
+    ),
+    TrusteeDetails(
+      Nil,
+      Nil,
+      Nil
+    )
+  )
+
+  def bankAccount(accountNumber: String): BankAccount =
+    BankAccount("001100", accountNumber)
+
+  val invalidAccountNumber: String = "111"
+  val notInvalidAccountNumber: String = "112"
+
+  val pensionsSchemeJson: JsValue = Json.obj(
+    "schemeName" -> "test-scheme-name",
+    "isSchemeMasterTrust" -> false,
+    "schemeType" -> Json.obj(
+      "name" -> SchemeType.single.name
+    ),
+    "membership" -> "opt1",
+    "membershipFuture" -> "opt1",
+    "investmentRegulated" -> false,
+    "occupationalPensionScheme" -> false,
+    "securedBenefits" -> false,
+    "benefits" -> "opt1",
+    "moneyPurchaseBenefits" -> "05",
+    "schemeEstablishedCountry" -> "test-scheme-established-country",
+    "uKBankAccount" -> false,
+    "declaration" -> false,
+    "declarationDuties" -> true,
+    "insuranceCompanyName" -> "Test insurance company name",
+    "insurancePolicyNumber" -> "Test insurance policy number",
+    "establishers" -> Json.arr(
+      Json.obj(
+        "establisherDetails" -> Json.obj(
+          "firstName" -> "test-first-name",
+          "lastName" -> "test-last-name"
+        ),
+        "dateOfBirth" -> "1969-07-20",
+        "contactDetails" -> Json.obj(
+          "emailAddress" -> "test-email-address",
+          "phoneNumber" -> "test-phone-number"
+        ),
+        "address" -> Json.obj(
+          "addressLine1" -> "test-address-line-1",
+          "country" -> "test-country"
+        ),
+        "addressYears" -> "test-address-years",
+        "establisherKind" -> "individual"
+      )
+    )
+  )
+
+  private val schemeJsValue: JsValue =
+    Json.parse(
+      """
+        |{
+        |  "establisherDetails": {
+        |    "individual": [
+        |      {
+        |        "personalDetails": {
+        |          "firstName": "test-first-name",
+        |          "lastName": "test-last-name",
+        |          "dateOfBirth": "1969-07-20"
+        |        },
+        |        "correspondenceAddressDetails": {
+        |          "addressDetails": {
+        |            "line1": "test-address-line-1",
+        |            "countryCode": "test-country",
+        |            "addressType": "NON-UK"
+        |          }
+        |        },
+        |        "correspondenceContactDetails": {
+        |          "contactDetails": {
+        |            "telephone": "test-phone-number",
+        |            "email": "test-email-address"
+        |          }
+        |        }
+        |      }
+        |    ],
+        |    "companyOrOrganization": [],
+        |    "partnership": []
+        |  },
+        |  "customerAndSchemeDetails": {
+        |    "schemeName": "test-scheme-name",
+        |    "isSchemeMasterTrust": false,
+        |    "schemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
+        |    "currentSchemeMembers": "0",
+        |    "futureSchemeMembers": "0",
+        |    "isRegulatedSchemeInvestment": false,
+        |    "isOccupationalPensionScheme": false,
+        |    "areBenefitsSecuredContractInsuranceCompany": false,
+        |    "doesSchemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
+        |    "tcmpBenefitType": "05",
+        |    "schemeEstablishedCountry": "test-scheme-established-country",
+        |    "haveInvalidBank": false,
+        |    "insuranceCompanyName": "Test insurance company name",
+        |    "policyNumber": "Test insurance policy number"
+        |  },
+        |  "pensionSchemeDeclaration": {
+        |    "box1": false,
+        |    "box2": false,
+        |    "box6": false,
+        |    "box7": false,
+        |    "box8": false,
+        |    "box9": false,
+        |    "box10": true
+        |  },
+        |  "trusteeDetails": {
+        |    "individualTrusteeDetail": [],
+        |    "companyTrusteeDetail": [],
+        |    "partnershipTrusteeDetail": []
+        |  }
+        |}
+        |""".stripMargin)
+
+  private val racDACPensionsSchemeJson: JsValue = Json.obj(
+    "racdac" -> Json.obj(
+      "name" -> "test-scheme-name",
+      "contractOrPolicyNumber" -> "121212",
+      "declaration" -> true
+    )
+  )
+
+  val schemeRegistrationResponse: SchemeRegistrationResponse = SchemeRegistrationResponse(
+    "test-processing-date",
+    "test-scheme-reference-number")
+  val schemeRegistrationResponseJson: JsValue =
+    Json.toJson(schemeRegistrationResponse)
+
+  val schemeSubscription: SchemeSubscription = SchemeSubscription(
+    psaIdentifier = psaId,
+    schemeType = Some(AuditSchemeType.singleTrust),
+    hasIndividualEstablisher = false,
+    hasCompanyEstablisher = false,
+    hasPartnershipEstablisher = false,
+    hasDormantCompany = false,
+    hasBankDetails = false,
+    hasValidBankDetails = false,
+    status = Status.OK,
+    request = Json.obj(),
+    response = None
+  )
+
+  val expectedJsonForAudit: JsValue = Json.parse(
+    """{
+   "customerAndSchemeDetails":{
+      "schemeName":"test-scheme-name",
+      "isSchemeMasterTrust":false,
+      "schemeStructure":"A single trust under which all of the assets are held for the benefit of all members of the scheme",
+      "currentSchemeMembers":"0",
+      "futureSchemeMembers":"0",
+      "isRegulatedSchemeInvestment":false,
+      "isOccupationalPensionScheme":false,
+      "areBenefitsSecuredContractInsuranceCompany":false,
+      "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
+      "tcmpBenefitType":"05",
+      "schemeEstablishedCountry":"test-scheme-established-country",
+      "haveInvalidBank":false,
+      "insuranceCompanyName":"Test insurance company name",
+      "policyNumber":"Test insurance policy number"
+   },
+   "pensionSchemeDeclaration":{
+      "box1":false,
+      "box2":false,
+      "box6":false,
+      "box7":false,
+      "box8":false,
+      "box9":false,
+      "box10":true
+   },
+   "establisherDetails":{
+      "individual":[
+         {
+            "personalDetails":{
+               "firstName":"test-first-name",
+               "lastName":"test-last-name",
+               "dateOfBirth":"1969-07-20"
+            },
+            "correspondenceAddressDetails":{
+               "addressDetails":{
+                  "line1":"test-address-line-1",
+                  "countryCode":"test-country",
+                  "addressType":"NON-UK"
+               }
+            },
+            "correspondenceContactDetails":{
+               "contactDetails":{
+                  "telephone":"test-phone-number",
+                  "email":"test-email-address"
+               }
+            }
+         }
+      ],
+      "companyOrOrganization":[
+
+      ],
+      "partnership":[
+
+      ]
+   },
+   "trusteeDetails":{
+      "individualTrusteeDetail":[
+
+      ],
+      "companyTrusteeDetail":[
+
+      ],
+      "partnershipTrusteeDetail":[
+
+      ]
+   }
+  }""")
+
+  val schemeUpdateRequestJson: JsValue = Json.parse(
+    """
+      |{
+      |   "customerAndSchemeDetails":{
+      |      "schemeName":"test-scheme-name",
+      |      "isSchemeMasterTrust":false,
+      |      "schemeStructure":"A single trust under which all of the assets are held for the benefit of all members of the scheme",
+      |      "currentSchemeMembers":"0",
+      |      "futureSchemeMembers":"0",
+      |      "isRegulatedSchemeInvestment":false,
+      |      "isOccupationalPensionScheme":false,
+      |      "areBenefitsSecuredContractInsuranceCompany":false,
+      |      "doesSchemeProvideBenefits":"Money Purchase benefits only (defined contribution)",
+      |      "tcmpBenefitType":"05",
+      |      "schemeEstablishedCountry":"test-scheme-established-country",
+      |      "haveInvalidBank":false,
+      |      "insuranceCompanyName":"Test insurance company name",
+      |      "policyNumber":"Test insurance policy number"
+      |   },
+      |   "pensionSchemeDeclaration":{
+      |      "declaration1":false
+      |   },
+      |   "establisherDetails":{
+      |      "individual":[
+      |         {
+      |            "personalDetails":{
+      |               "firstName":"test-first-name",
+      |               "lastName":"test-last-name",
+      |               "dateOfBirth":"1969-07-20"
+      |            },
+      |            "correspondenceAddressDetails":{
+      |               "addressDetails":{
+      |                  "line1":"test-address-line-1",
+      |                  "countryCode":"test-country",
+      |                  "addressType":"NON-UK"
+      |               }
+      |            },
+      |            "correspondenceContactDetails":{
+      |               "contactDetails":{
+      |                  "telephone":"test-phone-number",
+      |                  "email":"test-email-address"
+      |               }
+      |            }
+      |         }
+      |      ],
+      |      "companyOrOrganization":[
+      |
+      |      ],
+      |      "partnership":[
+      |
+      |      ]
+      |   },
+      |   "trusteeDetails":{
+      |      "individualTrusteeDetail":[
+      |
+      |      ],
+      |      "companyTrusteeDetail":[
+      |
+      |      ],
+      |      "partnershipTrusteeDetail":[
+      |
+      |      ]
+      |   }
+      |}
+    """.stripMargin)
+
+  private val updateSchemeRegisterData =
+    """{
+      |  "schemeDetails": {
+      |    "changeOfschemeDetails": false,
+      |    "psaid": "test-psa-id",
+      |    "schemeName": "test-scheme-name",
+      |    "schemeStatus": "Open",
+      |    "isSchemeMasterTrust": false,
+      |    "pensionSchemeStructure": "A single trust under which all of the assets are held for the benefit of all members of the scheme",
+      |    "currentSchemeMembers": "0",
+      |    "futureSchemeMembers": "0",
+      |    "isRegulatedSchemeInvestment": false,
+      |    "isOccupationalPensionScheme": false,
+      |    "schemeProvideBenefits": "Money Purchase benefits only (defined contribution)",
+      |    "tcmpBenefitType": "05",
+      |    "schemeEstablishedCountry": "test-scheme-established-country",
+      |    "insuranceCompanyDetails": {
+      |      "isInsuranceDetailsChanged": false,
+      |      "isSchemeBenefitsInsuranceCompany": false,
+      |      "insuranceCompanyName": "Test insurance company name",
+      |      "policyNumber": "Test insurance policy number"
+      |    }
+      |  },
+      |  "pensionSchemeDeclaration": {
+      |    "declaration1": false
+      |  },
+      |  "establisherAndTrustDetailsType": {
+      |    "changeOfEstablisherOrTrustDetails": false,
+      |    "haveMoreThanTenTrustees": false,
+      |    "establisherDetails": {
+      |      "individualDetails": [
+      |        {
+      |          "personalDetails": {
+      |            "firstName": "test-first-name",
+      |            "lastName": "test-last-name",
+      |            "dateOfBirth": "1969-07-20"
+      |          },
+      |          "previousAddressDetails": {
+      |            "isPreviousAddressLast12Month": false
+      |          },
+      |          "correspondenceContactDetails": {
+      |            "contactDetails": {
+      |              "telephone": "test-phone-number",
+      |              "email": "test-email-address"
+      |            }
+      |          },
+      |          "correspondenceAddressDetails": {
+      |            "addressDetails": {
+      |              "line1": "test-address-line-1",
+      |              "countryCode": "test-country",
+      |              "nonUKAddress": true
+      |            }
+      |          }
+      |        }
+      |      ]
+      |    }
+      |  }
+      |}""".stripMargin
+
 }
+
+case class SchemeRegistrationResponse(processingDate: String, schemeReferenceNumber: String)
+
+object SchemeRegistrationResponse {
+  implicit val formatsSchemeRegistrationResponse: Format[SchemeRegistrationResponse] = Json.format[SchemeRegistrationResponse]
+}
+
+
