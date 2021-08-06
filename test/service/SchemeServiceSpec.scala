@@ -17,7 +17,7 @@
 package service
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{SchemeSubscription, SchemeUpdate, RACDACDeclarationAuditEvent, SchemeType => AuditSchemeType}
 import base.SpecBase
 import models.FeatureToggle.{Enabled, Disabled}
 import models.FeatureToggleName.RACDAC
@@ -165,6 +165,8 @@ class SchemeServiceSpec extends AsyncFlatSpec with ScalaCheckDrivenPropertyCheck
         )
 
         fixture.schemeConnector.getRegisterData mustBe expectedRegisterData
+        val expected = RACDACDeclarationAuditEvent(expectedRegisterData)
+        fixture.auditService.lastExtendedEvent mustBe Some(expected)
     }
   }
 
