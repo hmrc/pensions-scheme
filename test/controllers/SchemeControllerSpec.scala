@@ -20,9 +20,9 @@ import base.SpecBase
 import org.mockito.Matchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
-import org.scalatest.concurrent.{ScalaFutures, PatienceConfiguration}
+import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.json.{JsObject, Json, JsValue, JsResultException}
+import play.api.libs.json.{JsObject, JsResultException, JsValue, Json}
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -50,7 +50,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now, "schemeReferenceNumber" -> "S0123456789")
       when(mockSchemeService.registerScheme(any(), meq(validData))(any(), any(), any())).thenReturn(
-        Future.successful(HttpResponse(OK, successResponse.toString())))
+        Future.successful(Right(successResponse)))
 
       val result = schemeController.registerScheme()(fakeRequest(validData))
       ScalaFutures.whenReady(result) { _ =>
@@ -148,7 +148,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "return OK with list of schemes for PSA when If/ETMP returns it successfully" in {
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
       when(mockSchemeService.listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any()))
-        .thenReturn(Future.successful(HttpResponse(OK, validResponse.toString())))
+        .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
         status(result) mustBe OK
@@ -161,7 +161,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSP"),("idValue", "A2200001"))
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
       when(mockSchemeService.listOfSchemes(meq("PSP"), meq("A2200001"))(any(), any(), any()))
-        .thenReturn(Future.successful(HttpResponse(OK, validResponse.toString())))
+        .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
         status(result) mustBe OK
@@ -182,7 +182,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "throw JsResultException when the invalid data returned from If/ETMP" in {
       val validResponse = Json.obj("invalid" -> "data")
       when(mockSchemeService.listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any()))
-        .thenReturn(Future.successful(HttpResponse(OK, validResponse.toString())))
+        .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[JsResultException]
@@ -243,7 +243,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "return OK when the scheme is updated successfully" in {
       val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
       when(mockSchemeService.updateScheme(any(), any(), meq(validSchemeUpdateData))(any(), any(), any())).thenReturn(
-        Future.successful(HttpResponse(OK, successResponse.toString())))
+        Future.successful(Right(successResponse)))
 
       val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
       ScalaFutures.whenReady(result) { _ =>

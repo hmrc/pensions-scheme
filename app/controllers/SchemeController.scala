@@ -18,7 +18,6 @@ package controllers
 
 import com.google.inject.Inject
 import models.ListOfSchemes
-import utils.ValidationUtils.genResponse
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -26,6 +25,7 @@ import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
+import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,15 +47,9 @@ class SchemeController @Inject()(
 
       (idType, idValue) match {
         case (Some(typeOfId), Some(valueOfId)) =>
-          schemeService.listOfSchemes(typeOfId, valueOfId).map { httpResponse =>
-            httpResponse.status match {
-              case OK =>
-                logger.debug(s"Call to list of schemes API on IF was successful with response ${httpResponse.json}")
-                Ok(Json.toJson(httpResponse.json.convertTo[ListOfSchemes]))
-              case errorStatus =>
-                logger.error(s"List of schemes call to IF API failed with error $errorStatus and details ${httpResponse.body}")
-                result(httpResponse)
-            }
+          schemeService.listOfSchemes(typeOfId, valueOfId).map {
+            case Right(json) => Ok(Json.toJson(json.convertTo[ListOfSchemes]))
+            case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
       }
@@ -70,13 +64,10 @@ class SchemeController @Inject()(
 
       (psaId, feJson) match {
         case (Some(psa), Some(jsValue)) =>
-          schemeService.registerScheme(psa, jsValue).map { response =>
-            response.status match {
-              case OK => Ok(response.body)
-              case _ => result(response)
-            }
+          schemeService.registerScheme(psa, jsValue).map {
+            case Right(json) => Ok(json)
+            case Left(e) => result(e)
           }
-
         case _ => Future.failed(new BadRequestException("Bad Request without PSAId or request body"))
       }
     } recoverWith recoverFromError
@@ -88,11 +79,9 @@ class SchemeController @Inject()(
       logger.debug(s"[Update-Scheme-Incoming-Payload]$json")
       (request.headers.get("pstr"), request.headers.get("psaId"), json) match {
         case (Some(pstr), Some(psaId), Some(jsValue)) =>
-          schemeService.updateScheme(pstr, psaId, jsValue).map { response =>
-            response.status match {
-              case OK => Ok(response.body)
-              case _ => result(response)
-            }
+          schemeService.updateScheme(pstr, psaId, jsValue).map {
+            case Right(json) => Ok(json)
+            case Left(e) => result(e)
           }
 
         case _ => Future.failed(new BadRequestException("Bad Request without PSTR or PSAId or request body"))

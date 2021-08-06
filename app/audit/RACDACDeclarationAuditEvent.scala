@@ -16,12 +16,22 @@
 
 package audit
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, JsValue, Json}
 
-case class RACDACDeclarationAuditEvent(payload: JsObject) extends ExtendedAuditEvent {
+case class RACDACDeclarationAuditEvent(psaIdentifier: String, status: Int, request: JsValue,
+                                       response: Option[JsValue]) extends ExtendedAuditEvent {
 
   override def auditType: String = "RACDACDeclaration"
 
-  override def details: JsObject = payload
-
+  override def details: JsObject = Json.obj(
+    "psaIdentifier" -> psaIdentifier,
+    "status" -> status.toString,
+    "request" -> request,
+    "response" -> {
+      response match {
+        case Some(json) => json
+        case _ => ""
+      }
+    }
+  )
 }

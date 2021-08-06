@@ -17,7 +17,7 @@
 package controllers
 
 import com.google.inject.Inject
-import connector.SchemeConnector
+import connector.SchemeDetailsConnector
 import play.api.mvc._
 import service.SchemeService
 import uk.gov.hmrc.http._
@@ -27,7 +27,7 @@ import utils.ErrorHandler
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeDetailsController @Inject()(
-                                         schemeConnector: SchemeConnector,
+                                         schemeDetailsConnector: SchemeDetailsConnector,
                                          schemeService: SchemeService,
                                          cc: ControllerComponents
                                        )(implicit ec: ExecutionContext)
@@ -42,8 +42,8 @@ class SchemeDetailsController @Inject()(
 
       (idType, id, idPsa) match {
         case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
-          schemeConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
-            case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
+          schemeDetailsConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
+            case Right(json) => Ok(json)
             case Left(e) => result(e)
           }
         case _ =>
@@ -61,8 +61,8 @@ class SchemeDetailsController @Inject()(
         case (Some(srn), Some(pspId)) =>
          schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
 
-           schemeConnector.getPspSchemeDetails(pspId, pstr).map {
-             case Right(psaSchemeDetails) => Ok(psaSchemeDetails)
+           schemeDetailsConnector.getPspSchemeDetails(pspId, pstr).map {
+             case Right(json) => Ok(json)
              case Left(e) => result(e)
            }
          }

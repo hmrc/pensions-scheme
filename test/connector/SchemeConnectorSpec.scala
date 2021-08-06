@@ -16,25 +16,27 @@
 
 package connector
 
+import audit.{AuditService, ListOfSchemesAudit}
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{SchemeDetailsAuditEvent, AuditService, PspSchemeDetailsAuditEvent}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.Matchers.{include, convertToAnyShouldWrapper}
+import org.scalatest.Matchers.convertToAnyShouldWrapper
 import org.scalatest._
 import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.event.Level
 import play.api.LoggerLike
+import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsObject, Json, JsValue}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.HeaderCarrier
-import utils.{WireMockHelper, StubLogger}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, NotFoundException, UpstreamErrorResponse}
+import utils.{StubLogger, WireMockHelper}
 
 import java.time.LocalDate
+
 class SchemeConnectorSpec
   extends AsyncFlatSpec
     with WireMockHelper
@@ -70,8 +72,7 @@ class SchemeConnectorSpec
     )
 
     connector.listOfSchemes(psaType, idValue).map { response =>
-      response.status shouldBe OK
-      response.body shouldBe Json.stringify(validListOfSchemeIFResponse)
+      response.right.value shouldBe validListOfSchemeIFResponse
     }
   }
 
@@ -84,21 +85,7 @@ class SchemeConnectorSpec
     )
 
     connector.listOfSchemes(pspType, idValue).map { response =>
-      response.status shouldBe OK
-      response.body shouldBe Json.stringify(validListOfSchemeIFResponse)
-    }
-  }
-
-  it should "throw Bad Request Exception when if/ETMP throws BadRequestException" in {
-    server.stubFor(
-      get(listOfSchemesIFUrl())
-        .willReturn(
-          badRequest()
-        )
-    )
-
-    connector.listOfSchemes(psaType, idValue).map { response =>
-      response.status shouldBe BAD_REQUEST
+      response.right.value shouldBe validListOfSchemeIFResponse
     }
   }
 
@@ -110,8 +97,10 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.listOfSchemes(pspType, idValue).map { response =>
-      response.status shouldBe NOT_FOUND
+    recoverToExceptionIf[NotFoundException] {
+      connector.listOfSchemes(psaType, idValue)
+    } map {
+      _.responseCode shouldBe NOT_FOUND
     }
   }
 
@@ -123,400 +112,40 @@ class SchemeConnectorSpec
         )
     )
 
+    recoverToExceptionIf[UpstreamErrorResponse] {
+      connector.listOfSchemes(psaType, idValue)
+    } map {
+      _.statusCode shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  it should "send an audit event on success" in {
+    server.stubFor(
+      get(listOfSchemesIFUrl())
+        .willReturn(
+          ok(Json.stringify(validListOfSchemeIFResponse))
+        )
+    )
+
     connector.listOfSchemes(psaType, idValue).map { response =>
-      response.status shouldBe INTERNAL_SERVER_ERROR
-    }
-  }
-
-  "SchemeConnector getSchemeDetails" should "return user answer json" in {
-    val IfResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
-    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          ok
-            .withHeader("Content-Type", "application/json")
-            .withBody(IfResponse.toString())
-        )
-    )
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe userAnswersResponse
-    }
-  }
-
-  "SchemeConnector getSchemeDetails with no SRN" should "return user answer json" in {
-    val IfResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponseNoSrn.json")
-    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswersNoSrn.json")
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          ok
-            .withHeader("Content-Type", "application/json")
-            .withBody(IfResponse.toString())
-        )
-    )
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe userAnswersResponse
-    }
-  }
-
-  it should "return a BadRequestException for a 400 INVALID_IDTYPE response" in {
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_IDTYPE"))
-        )
-    )
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_IDTYPE")
-    }
-  }
-
-  it should "return bad request - 400 if body contains INVALID_SRN" in {
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_SRN"))
-        )
-    )
-
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_SRN")
-    }
-  }
-
-  it should "return bad request - 400 if body contains INVALID_PSTR" in {
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_PSTR"))
-        )
-    )
-
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_PSTR")
-    }
-  }
-
-  it should "return bad request - 400 if body contains INVALID_CORRELATIONID and log the event as warn" in {
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_CORRELATIONID"))
-        )
-    )
-
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_CORRELATIONID")
-    }
-  }
-
-  it should "throw upstream4xx - if any other 400 and log the event as error" in {
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withBody(errorResponse("not valid"))
-        )
-    )
-
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("not valid")
-    }
-  }
-
-  it should "return Not Found - 404" in {
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          notFound
-            .withBody(errorResponse("NOT_FOUND"))
-        )
-    )
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
-      response.left.value.status shouldBe NOT_FOUND
-      response.left.value.body should include("NOT_FOUND")
-    }
-  }
-
-  it should "throw Upstream4XX for server unavailable - 403" in {
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          forbidden
-            .withBody(errorResponse("FORBIDDEN"))
-        )
-    )
-
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
-      response =>
-        response.left.value.status shouldBe FORBIDDEN
-        response.left.value.body should include("FORBIDDEN")
-    }
-  }
-
-  it should "throw Upstream5XX for internal server error - 500 and log the event as error" in {
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          serverError
-            .withBody(errorResponse("SERVER_ERROR"))
-        )
-    )
-
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber) map {
-      response =>
-        response.left.value.status shouldBe INTERNAL_SERVER_ERROR
-        response.left.value.body should include("SERVER_ERROR")
-    }
-  }
-
-  it should "send audit event for successful response" in {
-    val IfResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsResponse.json")
-    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsIFUserAnswers.json")
-
-    server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
-        .willReturn(
-          ok
-            .withHeader("Content-Type", "application/json")
-            .withBody(IfResponse.toString())
-        )
-    )
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { _ =>
       auditService.verifySent(
-        SchemeDetailsAuditEvent(idValue, 200, Some(userAnswersResponse))
-      ) shouldBe true
+        ListOfSchemesAudit("PSA", idValue, Status.OK, Some(response.right.value))) shouldBe true
     }
   }
 
-  it should "send audit event for error response" in {
-
-    val expectedResponse = errorResponse("NOT_FOUND")
-
+  it should "send an audit event on failure" in {
     server.stubFor(
-      get(urlEqualTo(schemeDetailsIFUrl))
+      get(listOfSchemesIFUrl())
         .willReturn(
-          notFound
-            .withBody(expectedResponse)
+          notFound()
         )
     )
-
-    connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
-      auditService.verifySent(
-        SchemeDetailsAuditEvent(idValue, 404, Some(Json.parse(expectedResponse)))
-      ) shouldBe true
-    }
-  }
-
-  "SchemeConnector getPspSchemeDetails" should "return user answer json" in {
-    val apiResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsResponse.json")
-    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsUserAnswers.json")
-
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          ok
-            .withHeader("Content-Type", "application/json")
-            .withBody(apiResponse.toString())
-        )
-    )
-    connector.getPspSchemeDetails(pspId, pstr).map { response =>
-      response.right.value shouldBe userAnswersResponse
-    }
-  }
-
-  it should "return a BadRequestException for a 400 INVALID_IDTYPE response" in {
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_IDTYPE"))
-        )
-    )
-    connector.getPspSchemeDetails(pspId, pstr).map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_IDTYPE")
-    }
-  }
-
-  it should "return bad request - 400 if body contains INVALID_SRN" in {
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_SRN"))
-        )
-    )
-
-    connector.getPspSchemeDetails(pspId, pstr) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_SRN")
-    }
-  }
-
-  it should "return bad request - 400 if body contains INVALID_PSTR" in {
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_PSTR"))
-        )
-    )
-
-    connector.getPspSchemeDetails(pspId, pstr) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_PSTR")
-    }
-  }
-
-  it should "return bad request - 400 if body contains INVALID_CORRELATIONID and log the event as warn" in {
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody(errorResponse("INVALID_CORRELATIONID"))
-        )
-    )
-
-    connector.getPspSchemeDetails(pspId, pstr) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("INVALID_CORRELATIONID")
-    }
-  }
-
-  it should "throw upstream4xx - if any other 400 and log the event as error" in {
-
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          badRequest
-            .withBody(errorResponse("not valid"))
-        )
-    )
-
-    connector.getPspSchemeDetails(pspId, pstr) map {
-      response =>
-        response.left.value.status shouldBe BAD_REQUEST
-        response.left.value.body should include("not valid")
-    }
-  }
-
-  it should "return Not Found - 404" in {
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          notFound
-            .withBody(errorResponse("NOT_FOUND"))
-        )
-    )
-    connector.getPspSchemeDetails(pspId, pstr).map { response =>
-      response.left.value.status shouldBe NOT_FOUND
-      response.left.value.body should include("NOT_FOUND")
-    }
-  }
-
-  it should "throw Upstream4XX for server unavailable - 403" in {
-
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          forbidden
-            .withBody(errorResponse("FORBIDDEN"))
-        )
-    )
-
-    connector.getPspSchemeDetails(pspId, pstr) map {
-      response =>
-        response.left.value.status shouldBe FORBIDDEN
-        response.left.value.body should include("FORBIDDEN")
-    }
-  }
-
-  it should "throw Upstream5XX for internal server error - 500 and log the event as error" in {
-
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          serverError
-            .withBody(errorResponse("SERVER_ERROR"))
-        )
-    )
-
-    connector.getPspSchemeDetails(pspId, pstr) map {
-      response =>
-        response.left.value.status shouldBe INTERNAL_SERVER_ERROR
-        response.left.value.body should include("SERVER_ERROR")
-    }
-  }
-
-  it should "send audit event for successful response" in {
-    val IfResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsResponse.json")
-    val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetPspSchemeDetailsUserAnswers.json")
-
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          ok
-            .withHeader("Content-Type", "application/json")
-            .withBody(IfResponse.toString())
-        )
-    )
-    connector.getPspSchemeDetails(pspId, pstr).map { _ =>
-      auditService.verifyExtendedSent(
-        PspSchemeDetailsAuditEvent(pspId, 200, Some(userAnswersResponse))
-      ) shouldBe true
-    }
-  }
-
-  it should "send audit event for error response" in {
-
-    val expectedResponse = errorResponse("NOT_FOUND")
-
-    server.stubFor(
-      get(urlEqualTo(pspSchemeDetailsIFUrl))
-        .willReturn(
-          notFound
-            .withBody(expectedResponse)
-        )
-    )
-
-    connector.getPspSchemeDetails(pspId, pstr).map { _ =>
-      auditService.verifyExtendedSent(
-        PspSchemeDetailsAuditEvent(pspId, 404, Some(Json.parse(expectedResponse)))
-      ) shouldBe true
-    }
+    connector.listOfSchemes(psaType, idValue) .map(_ => fail("Expected failure"))
+      .recover {
+        case _: NotFoundException =>
+          auditService.verifySent(
+            ListOfSchemesAudit("PSA", idValue, Status.NOT_FOUND, None)) shouldBe true
+      }
   }
 
   "SchemeConnector registerScheme with tcmp toggle on" should "handle OK (200)" in {
@@ -532,11 +161,11 @@ class SchemeConnectorSpec
     )
 
     connector.registerScheme(idValue, registerSchemeData).map { response =>
-      response.status shouldBe OK
+      response.right.value shouldBe successResponse
     }
   }
 
-  it should "handle FORBIDDEN (403) - INVALID_BUSINESS_PARTNER" in {
+  it should "handle FORBIDDEN (403)" in {
     server.stubFor(
       post(urlEqualTo(schemeIFUrl))
         .willReturn(
@@ -545,9 +174,10 @@ class SchemeConnectorSpec
             .withBody(invalidBusinessPartnerResponse)
         )
     )
-
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
-      response.status shouldBe FORBIDDEN
+    recoverToExceptionIf[UpstreamErrorResponse] {
+      connector.registerScheme(idValue, registerSchemeData)
+    } map {
+      _.statusCode shouldBe FORBIDDEN
     }
   }
 
@@ -563,7 +193,7 @@ class SchemeConnectorSpec
     )
 
     connector.registerScheme(idValue, registerSchemeData).map { response =>
-      response.status shouldBe CONFLICT
+      response.left.value.responseCode shouldBe CONFLICT
     }
   }
 
@@ -577,8 +207,10 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
-      response.status shouldBe BAD_REQUEST
+    recoverToExceptionIf[BadRequestException] {
+      connector.registerScheme(idValue, registerSchemeData)
+    } map {
+      _.responseCode shouldBe BAD_REQUEST
     }
   }
 
@@ -592,8 +224,10 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
-      response.status shouldBe NOT_FOUND
+    recoverToExceptionIf[NotFoundException] {
+      connector.registerScheme(idValue, registerSchemeData)
+    } map {
+      _.responseCode shouldBe NOT_FOUND
     }
   }
 
@@ -609,8 +243,10 @@ class SchemeConnectorSpec
 
     logger.reset()
 
-    connector.registerScheme(idValue, registerSchemeData).map { response =>
-      response.status shouldBe BAD_REQUEST
+    recoverToExceptionIf[BadRequestException] {
+      connector.registerScheme(idValue, registerSchemeData)
+    } map { response =>
+      response.responseCode shouldBe BAD_REQUEST
       logger.getLogEntries.size shouldBe 1
       logger.getLogEntries.head.level shouldBe Level.WARN
     }
@@ -629,7 +265,7 @@ class SchemeConnectorSpec
     )
 
     connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
-      response.status shouldBe OK
+      response.right.value shouldBe successResponse
     }
   }
 
@@ -643,8 +279,10 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
-      response.status shouldBe FORBIDDEN
+    recoverToExceptionIf[UpstreamErrorResponse] {
+      connector.updateSchemeDetails(pstr, updateSchemeData)
+    } map {
+      _.statusCode shouldBe FORBIDDEN
     }
   }
 
@@ -660,7 +298,7 @@ class SchemeConnectorSpec
     )
 
     connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
-      response.status shouldBe CONFLICT
+      response.left.value.responseCode shouldBe CONFLICT
     }
   }
 
@@ -674,8 +312,10 @@ class SchemeConnectorSpec
         )
     )
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
-      response.status shouldBe BAD_REQUEST
+    recoverToExceptionIf[BadRequestException] {
+      connector.updateSchemeDetails(pstr, updateSchemeData)
+    } map {
+      _.responseCode shouldBe BAD_REQUEST
     }
   }
 
@@ -691,8 +331,10 @@ class SchemeConnectorSpec
 
     logger.reset()
 
-    connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
-      response.status shouldBe BAD_REQUEST
+    recoverToExceptionIf[BadRequestException] {
+      connector.updateSchemeDetails(pstr, updateSchemeData)
+    } map { response =>
+      response.responseCode shouldBe BAD_REQUEST
       logger.getLogEntries.size shouldBe 1
       logger.getLogEntries.head.level shouldBe Level.WARN
     }
@@ -703,8 +345,6 @@ object SchemeConnectorSpec extends JsonFileReader {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
   private val idValue = "test"
-  private val schemeIdType = "srn"
-  private val idNumber = "S1234567890"
   private val pstr = "20010010AA"
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
   private val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
@@ -713,14 +353,11 @@ object SchemeConnectorSpec extends JsonFileReader {
 
   private val psaType = "PSA"
   private val pspType = "PSP"
-  private val pspId = "psp-id"
   private val validListOfSchemeIFResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
 
   private def listOfSchemesIFUrl(idType: String = psaType): String =
     s"/pension-online/subscriptions/schemes/list/pods/$idType/$idValue"
 
-  private val schemeDetailsIFUrl: String = s"/pension-online/scheme-details/pods/$schemeIdType/$idNumber"
-  private val pspSchemeDetailsIFUrl: String = s"/pension-online/psp-scheme-details/pods/$pspId/$pstr"
   private val invalidBusinessPartnerResponse =
     Json.stringify(
       Json.obj(

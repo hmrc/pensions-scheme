@@ -21,11 +21,11 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.HttpEntity
 import play.api.mvc.{ResponseHeader, Result}
-import uk.gov.hmrc.http.{HttpResponse, NotFoundException, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HttpException, NotFoundException, UpstreamErrorResponse}
 
 class ErrorHandlerSpec extends WordSpec with MustMatchers {
   private val eh = new ErrorHandler {
-    def testResult(res: HttpResponse): Result = result(res)
+    def testResult(res: HttpException): Result = result(res)
   }
 
   "recoverFromError" must {
@@ -54,8 +54,8 @@ class ErrorHandlerSpec extends WordSpec with MustMatchers {
     "return correct result for json" in {
       val testJson = "some json"
       val testMessage = s"Response body: '$testJson'"
-      val res = HttpResponse(433, testMessage)
-      val expectedResult = Result(ResponseHeader(res.status), HttpEntity.Strict(ByteString(testJson), Some("application/json")))
+      val res = new HttpException(testMessage, 433)
+      val expectedResult = Result(ResponseHeader(res.responseCode), HttpEntity.Strict(ByteString(testJson), Some("application/json")))
       val result = eh.testResult(res)
       result.header mustBe expectedResult.header
       result.body mustBe expectedResult.body
@@ -63,8 +63,8 @@ class ErrorHandlerSpec extends WordSpec with MustMatchers {
 
     "return correct result for plain text" in {
       val testJson = "some text"
-      val res = HttpResponse(433, testJson)
-      val expectedResult = Result(ResponseHeader(res.status), HttpEntity.Strict(ByteString(testJson), Some("text/plain")))
+      val res = new HttpException(testJson, 433)
+      val expectedResult = Result(ResponseHeader(res.responseCode), HttpEntity.Strict(ByteString(testJson), Some("text/plain")))
       val result = eh.testResult(res)
       result.header mustBe expectedResult.header
       result.body mustBe expectedResult.body

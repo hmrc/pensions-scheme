@@ -17,7 +17,7 @@
 package controllers
 
 import base.{JsonFileReader, SpecBase}
-import connector.SchemeConnector
+import connector.SchemeDetailsConnector
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{never, reset, verify, when}
@@ -40,7 +40,7 @@ class AssociatedPsaControllerSpec
     with PatienceConfiguration
     with JsonFileReader {
 
-  private val mockSchemeConnector: SchemeConnector = mock[SchemeConnector]
+  private val mockSchemeConnector: SchemeDetailsConnector = mock[SchemeDetailsConnector]
   private val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
   private val schemeIdNumber = "S999999999"
   private val userIdNumber = "A0000001"
@@ -63,7 +63,7 @@ class AssociatedPsaControllerSpec
         )
 
         when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
-          .thenReturn(Future.successful(Right(userAnswersResponse)))
+          .thenReturn(Future.successful(Right(userAnswersResponse.as[JsObject])))
 
         val result = associatedPsaController.isPsaAssociated()(request)
 

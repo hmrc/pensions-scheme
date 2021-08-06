@@ -63,16 +63,18 @@ trait ErrorHandler {
     }
   }
 
-  protected def result(res: HttpResponse): Result = {
+  protected def result(ex: HttpException): Result = {
 
     val responseBodyRegex: Regex = """^.*Response body:? '(.*)'$""".r
 
-    val httpEntity = res.body match {
-      case responseBodyRegex(body) => HttpEntity.Strict(ByteString(body), Some("application/json"))
-      case message: String => HttpEntity.Strict(ByteString(message), Some("text/plain"))
+    val httpEntity = ex.message match {
+      case responseBodyRegex(body) =>
+        HttpEntity.Strict(ByteString(body), Some("application/json"))
+      case message: String =>
+        HttpEntity.Strict(ByteString(message), Some("text/plain"))
     }
 
-    Result(ResponseHeader(res.status), httpEntity)
+    Result(ResponseHeader(ex.responseCode), httpEntity)
   }
 
   private val logger = Logger(classOf[ErrorHandler])
@@ -80,7 +82,5 @@ trait ErrorHandler {
   protected def logWarning(endpoint: String): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
     case Success(Left(e: HttpResponse)) => logger.warn(s"$endpoint received error response from If", e)
   }
-
-
 }
 
