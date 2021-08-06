@@ -207,6 +207,9 @@ class SchemeDetailsTransformer @Inject()(
       (__ \ 'racdac \ 'contractOrPolicyNumber).json.copyFrom(
         (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'contractOrPolicyNumber).json.pick
       ) and
+      (__ \ 'racdac \ 'name).json.copyFrom(
+        (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'racdacName).json.pick
+      ) and
       ((__ \ 'registrationStartDate).json.copyFrom(
         (__ \ 'psaPspSchemeDetails \ 'racdacSchemeDetails \ 'registrationStartDate).json.pick
       ) orElse doNothing) reduce
