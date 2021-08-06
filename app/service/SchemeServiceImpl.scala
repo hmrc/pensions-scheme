@@ -97,7 +97,9 @@ class SchemeServiceImpl @Inject()(
       },
       valid = { validRACDACPensionsScheme =>
         val registerData = Json.toJson(validRACDACPensionsScheme)
-        schemeConnector.registerScheme(psaId, registerData)
+        schemeConnector.registerScheme(psaId, registerData) andThen {
+          schemeAuditService.sendRACDACSchemeSubscriptionEvent(psaId, registerData)(auditService.sendExtendedEvent)
+        }
       }
     )
   }

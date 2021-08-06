@@ -17,6 +17,7 @@
 package audit
 
 import org.scalatest.{MustMatchers, WordSpec}
+import play.api.http.Status
 import play.api.libs.json.Json
 
 class RACDACDeclarationAuditEventSpec extends WordSpec with MustMatchers {
@@ -26,11 +27,13 @@ class RACDACDeclarationAuditEventSpec extends WordSpec with MustMatchers {
     "serialise and deserialise correctly" in {
 
       val auditEvent: RACDACDeclarationAuditEvent =
-        RACDACDeclarationAuditEvent(payload = Json.obj("key" -> "value"))
+        RACDACDeclarationAuditEvent(psaIdentifier = "", status = Status.OK,
+          request = Json.obj("requestKey" -> "requestValue"), response = Some(Json.obj("key" -> "value")))
 
       auditEvent.auditType mustBe "RACDACDeclaration"
 
-      auditEvent.details mustBe Json.parse("""{"key": "value"}""")
+      auditEvent.details mustBe
+        Json.parse("""{"psaIdentifier":"","status":"200","request":{"requestKey":"requestValue"},"response":{"key":"value"}}""")
     }
   }
 }

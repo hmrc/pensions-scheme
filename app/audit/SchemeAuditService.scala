@@ -159,6 +159,25 @@ class SchemeAuditService {
       sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, e.responseCode, None))
   }
 
+  def sendRACDACSchemeSubscriptionEvent(psaId: String, registerData: JsValue)
+                                 (
+                                   sendEvent: RACDACDeclarationAuditEvent => Unit
+                                 )
+                                 (implicit request: RequestHeader, ec: ExecutionContext):
+  PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
+    case Success(Right(outputResponse)) =>
+      sendEvent(RACDACDeclarationAuditEvent(psaId, Status.OK, registerData, Some(outputResponse)))
+
+    case Success(Left(e)) =>
+      sendEvent(RACDACDeclarationAuditEvent(psaId, e.responseCode, registerData, None))
+
+    case Failure(e: UpstreamErrorResponse) =>
+      sendEvent(RACDACDeclarationAuditEvent(psaId, e.statusCode, registerData, None))
+
+    case Failure(e: HttpException) =>
+      sendEvent(RACDACDeclarationAuditEvent(psaId, e.responseCode, registerData, None))
+  }
+
   def translateSchemeSubscriptionEvent
   (psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean, status: Int, response: Option[JsValue]): SchemeSubscription = {
     SchemeSubscription(

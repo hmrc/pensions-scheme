@@ -33,7 +33,7 @@
 package service
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{RACDACDeclarationAuditEvent, SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
 import models.FeatureToggle.{Disabled, Enabled}
@@ -154,23 +154,11 @@ class SchemeServiceImplSpec
     when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
     when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
-    val expectedRegisterData = Json.obj(
-      "racdacScheme" -> true,
-      "racdacSchemeDetails" -> Json.obj(
-        "racdacName" -> "test-scheme-name",
-        "contractOrPolicyNumber" -> "121212",
-        "registrationStartDate" -> formatDate(LocalDate.now)
-      ),
-      "racdacSchemeDeclaration" -> Json.obj(
-        "box12" -> true,
-        "box13" -> true,
-        "box14" -> true
-      )
-    )
+
     schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
       response =>
         val json = response.right.value
-        verify(schemeConnector, times(1)).registerScheme(any(), eqTo(expectedRegisterData))(any(), any(), any())
+        verify(schemeConnector, times(1)).registerScheme(any(), eqTo(racDacRegisterData))(any(), any(), any())
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
     }
   }
@@ -208,6 +196,43 @@ class SchemeServiceImplSpec
             response = None
           )
           auditService.verifySent(expected) mustBe true
+      }
+  }
+
+  "register RAC DAC scheme" must "send a RACDACDeclaration audit event following a successful submission" in {
+    reset(schemeConnector)
+    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
+    when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
+      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
+    schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
+      response =>
+        val json = response.right.value
+        val expected = RACDACDeclarationAuditEvent(
+          psaIdentifier = psaId,
+          status = Status.OK,
+          request = racDacRegisterData,
+          response = Some(json)
+        )
+        auditService.verifyExtendedSent(expected) mustBe true
+    }
+  }
+
+  it must "send a RACDACDeclaration audit event following an unsuccessful submission" in {
+    reset(schemeConnector)
+    when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
+      thenReturn(Future.failed(new BadRequestException("bad request")))
+
+    schemeService.registerScheme(psaId, racDACPensionsSchemeJson)
+      .map(_ => fail("Expected failure"))
+      .recover {
+        case _: BadRequestException =>
+          val expected = RACDACDeclarationAuditEvent(
+            psaIdentifier = psaId,
+            status = Status.BAD_REQUEST,
+            request = racDacRegisterData,
+            response = None
+          )
+          auditService.verifyExtendedSent(expected) mustBe true
       }
   }
 
@@ -310,6 +335,20 @@ object SchemeServiceImplSpec extends SpecBase {
         "date" -> "2010-02-02"
       )
     )
+
+  val racDacRegisterData = Json.obj(
+    "racdacScheme" -> true,
+    "racdacSchemeDetails" -> Json.obj(
+      "racdacName" -> "test-scheme-name",
+      "contractOrPolicyNumber" -> "121212",
+      "registrationStartDate" -> formatDate(LocalDate.now)
+    ),
+    "racdacSchemeDeclaration" -> Json.obj(
+      "box12" -> true,
+      "box13" -> true,
+      "box14" -> true
+    )
+  )
 
   val pensionsScheme: PensionsScheme = PensionsScheme(
     CustomerAndSchemeDetails(
