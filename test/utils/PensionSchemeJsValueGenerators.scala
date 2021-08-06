@@ -226,6 +226,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
       "racdacScheme" -> true,
       "srn" -> "srn",
       "schemeStatus" -> schemeStatus,
+      "schemeName" -> schemeName,
       "racdac" -> Json.obj(
         "name" -> schemeName,
         "contractOrPolicyNumber" -> contractOrPolicyNumber
