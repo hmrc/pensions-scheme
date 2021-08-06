@@ -106,7 +106,7 @@ class SchemeAuditService {
 
   def sendListOfSchemesEvent(
                               idType: String,
-                              idValue: String,
+                              idValue: String
                             )(
                               sendEvent: ListOfSchemesAudit => Unit
                             )(
