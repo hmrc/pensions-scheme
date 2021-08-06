@@ -95,6 +95,7 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
           case (fromEtmp, toUaJson) =>
 
             val result = fromEtmp.transform(transformer.transformToUserAnswers).get
+
             result mustBe toUaJson
         }
       }
