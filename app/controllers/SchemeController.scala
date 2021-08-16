@@ -18,6 +18,7 @@ package controllers
 
 import com.google.inject.Inject
 import models.ListOfSchemes
+import models.enumeration.SchemeJourneyType
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -56,7 +57,7 @@ class SchemeController @Inject()(
     }
   }
 
-  def registerScheme: Action[AnyContent] = Action.async {
+  def registerScheme(schemeJourneyType:SchemeJourneyType.Name): Action[AnyContent] = Action.async {
     implicit request => {
       val psaId = request.headers.get("psaId")
       val feJson = request.body.asJson

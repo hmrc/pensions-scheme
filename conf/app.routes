@@ -1,6 +1,6 @@
 # microservice specific routes
 
-POST          /register-scheme                                  controllers.SchemeController.registerScheme
+POST          /register-scheme/:schemeJourneyType               controllers.SchemeController.registerScheme(schemeJourneyType: SchemeJourneyType.Name)
 POST          /update-scheme                                    controllers.SchemeController.updateScheme
 GET           /list-of-schemes                                  controllers.SchemeController.listOfSchemes
 

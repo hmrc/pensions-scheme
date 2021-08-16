@@ -17,12 +17,13 @@
 package controllers
 
 import base.SpecBase
+import models.enumeration.SchemeJourneyType
 import org.mockito.Matchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
-import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import org.scalatest.concurrent.{ScalaFutures, PatienceConfiguration}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.json.{JsObject, JsResultException, JsValue, Json}
+import play.api.libs.json.{JsObject, JsResultException, Json, JsValue}
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -52,7 +53,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       when(mockSchemeService.registerScheme(any(), meq(validData))(any(), any(), any())).thenReturn(
         Future.successful(Right(successResponse)))
 
-      val result = schemeController.registerScheme()(fakeRequest(validData))
+      val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(fakeRequest(validData))
       ScalaFutures.whenReady(result) { _ =>
         status(result) mustBe OK
         contentAsJson(result) mustBe successResponse
@@ -62,7 +63,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "throw BadRequestException when PSAId is not present in the header" in {
       val validData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
 
-      val result = schemeController.registerScheme()(FakeRequest("POST", "/").withJsonBody(validData))
+      val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(FakeRequest("POST", "/").withJsonBody(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSAId or request body"
@@ -72,7 +73,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     }
 
     "throw BadRequestException when no data is not present in the request" in {
-      val result = schemeController.registerScheme()(FakeRequest("POST", "/").withHeaders(("psaId", "A2000001")))
+      val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(FakeRequest("POST", "/").withHeaders(("psaId", "A2000001")))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSAId or request body"
@@ -90,7 +91,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       when(mockSchemeService.registerScheme(any(), any())(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(invalidPayload.toString())))
 
-      val result = schemeController.registerScheme()(fakeRequest(validData))
+      val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
@@ -106,7 +107,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       when(mockSchemeService.registerScheme(any(), any())(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(invalidSubmission.toString(), CONFLICT, CONFLICT)))
 
-      val result = schemeController.registerScheme()(fakeRequest(validData))
+      val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe invalidSubmission.toString()
@@ -122,7 +123,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       when(mockSchemeService.registerScheme(any(), any())(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
-      val result = schemeController.registerScheme()(fakeRequest(validData))
+      val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe serviceUnavailable.toString()
@@ -134,7 +135,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       when(mockSchemeService.registerScheme(any(), any())(any(), any(), any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
-      val result = schemeController.registerScheme()(fakeRequest(validData))
+      val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(fakeRequest(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
         e.getMessage mustBe "Generic Exception"
