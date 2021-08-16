@@ -29,7 +29,8 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     ScoverageKeys.coverageHighlighting := true,
     parallelExecution in Test := false,
     RoutesKeys.routesImport ++= Seq(
-      "models.FeatureToggleName"
+      "models.FeatureToggleName",
+      "models.enumeration.SchemeJourneyType"
     )
   )
   .configs(IntegrationTest)
