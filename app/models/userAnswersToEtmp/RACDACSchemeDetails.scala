@@ -19,26 +19,18 @@ package models.userAnswersToEtmp
 import play.api.libs.json.{Format, Json, JsPath, Reads}
 import play.api.libs.functional.syntax._
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
 case class RACDACSchemeDetails(
   racdacName: String,
-  contractOrPolicyNumber: String,
-  registrationStartDate: String
+  contractOrPolicyNumber: String
 )
 
 object RACDACSchemeDetails {
-  private def formatDate(date: LocalDate): String = {
-    val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    date.format(dateFormat)
-  }
   val reads: Reads[RACDACSchemeDetails] =
     (
       (JsPath \ "racdac" \ "name").read[String] and
       (JsPath \ "racdac" \ "contractOrPolicyNumber").read[String]
     ) (
-      (name, contractOrPolicyNumber) => RACDACSchemeDetails(name, contractOrPolicyNumber, formatDate(LocalDate.now))
+      (name, contractOrPolicyNumber) => RACDACSchemeDetails(name, contractOrPolicyNumber)
     )
 
   implicit val formats: Format[RACDACSchemeDetails] = Json.format[RACDACSchemeDetails]
