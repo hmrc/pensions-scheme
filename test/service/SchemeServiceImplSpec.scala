@@ -33,19 +33,19 @@
 package service
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{RACDACDeclarationAuditEvent, SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{SchemeSubscription, SchemeUpdate, SchemeAuditService, RACDACDeclarationAuditEvent, SchemeType => AuditSchemeType}
 import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
-import models.FeatureToggle.{Disabled, Enabled}
+import models.FeatureToggle.{Enabled, Disabled}
 import models.FeatureToggleName.RACDAC
 import models._
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.establisher.EstablisherDetails
 import models.userAnswersToEtmp.trustee.TrusteeDetails
-import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
+import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionsScheme, PensionSchemeDeclaration}
 import org.mockito.Matchers.{any, eq => eqTo}
 import org.mockito.Mockito._
-import org.scalatest.{AsyncFlatSpec, EitherValues, Matchers}
+import org.scalatest.{AsyncFlatSpec, Matchers, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status
 import play.api.libs.json._
@@ -53,8 +53,6 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import scala.concurrent.Future
 
 class SchemeServiceImplSpec
@@ -316,11 +314,6 @@ object SchemeServiceImplSpec extends SpecBase {
   val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
   val pstr: String = "test-pstr"
 
-  private def formatDate(date: LocalDate): String = {
-    val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    date.format(dateFormat)
-  }
-
   def bankDetailsJson(accountNumber: String): JsValue =
     Json.obj(
       "uKBankDetails" -> Json.obj(
@@ -340,8 +333,7 @@ object SchemeServiceImplSpec extends SpecBase {
     "racdacScheme" -> true,
     "racdacSchemeDetails" -> Json.obj(
       "racdacName" -> "test-scheme-name",
-      "contractOrPolicyNumber" -> "121212",
-      "registrationStartDate" -> formatDate(LocalDate.now)
+      "contractOrPolicyNumber" -> "121212"
     ),
     "racdacSchemeDeclaration" -> Json.obj(
       "box12" -> true,
