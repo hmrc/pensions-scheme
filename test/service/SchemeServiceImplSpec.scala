@@ -36,8 +36,6 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{SchemeSubscription, SchemeUpdate, SchemeAuditService, RACDACDeclarationAuditEvent, SchemeType => AuditSchemeType}
 import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
-import models.FeatureToggle.{Enabled, Disabled}
-import models.FeatureToggleName.RACDAC
 import models._
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.establisher.EstablisherDetails
@@ -115,26 +113,10 @@ class SchemeServiceImplSpec
     actual.left.toOption.map(_.message).getOrElse("") mustBe "Invalid bank account details"
   }
 
-  "registerScheme (when RAC/DAC toggled off)" must "return the result of submitting the pensions scheme and " +
-    "NOT contain the racdacScheme node" in {
-    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Disabled(RACDAC)))
-    when(schemeConnector.registerScheme(any(), eqTo(schemeJsValue))(any(), any(), any())).
-      thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
-    schemeService.registerScheme(psaId, pensionsSchemeJson).map {
-      response =>
-        val json = response.right.value
-
-        json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
-
-        json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
-    }
-  }
-
-  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a normal " +
+  "registerScheme" must "return the result of submitting a normal " +
     "(non RAC/DAC) pensions scheme and contain the racdacScheme node set to false" in {
     reset(schemeConnector)
     val regDataWithRacDacNode = schemeJsValue.as[JsObject] ++ Json.obj("racdacScheme" -> false)
-    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
     when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
     schemeService.registerScheme(psaId, pensionsSchemeJson).map {
@@ -147,9 +129,8 @@ class SchemeServiceImplSpec
     }
   }
 
-  "registerScheme (when RAC/DAC toggled on)" must "return the result of submitting a RAC/DAC pensions scheme" in {
+  "registerScheme" must "return the result of submitting a RAC/DAC pensions scheme" in {
     reset(schemeConnector)
-    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
     when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
 
@@ -199,7 +180,6 @@ class SchemeServiceImplSpec
 
   "register RAC DAC scheme" must "send a RACDACDeclaration audit event following a successful submission" in {
     reset(schemeConnector)
-    when(featureToggleService.get(org.mockito.Matchers.eq(RACDAC))).thenReturn(Future.successful(Enabled(RACDAC)))
     when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
     schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
@@ -285,8 +265,6 @@ class SchemeServiceImplSpec
 
 object SchemeServiceImplSpec extends SpecBase {
 
-  private val featureToggleService: FeatureToggleService = mock[FeatureToggleService]
-
   private val schemeConnector: SchemeConnector = mock[SchemeConnector]
   private val barsConnector: BarsConnector = mock[BarsConnector]
   private val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
@@ -295,8 +273,7 @@ object SchemeServiceImplSpec extends SpecBase {
     schemeConnector,
     barsConnector,
     auditService,
-    new SchemeAuditService,
-    featureToggleService
+    new SchemeAuditService
   )
 
   implicit val hc: HeaderCarrier = HeaderCarrier()

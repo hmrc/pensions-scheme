@@ -16,17 +16,16 @@
 
 package service
 
-import audit.{AuditService, SchemeAuditService}
+import audit.{SchemeAuditService, AuditService}
 import com.google.inject.Inject
 import connector.{BarsConnector, SchemeConnector}
-import models.FeatureToggleName.RACDAC
 import models.ListOfSchemes
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
-import models.userAnswersToEtmp.{BankAccount, PensionsScheme, RACDACPensionsScheme}
+import models.userAnswersToEtmp.{RACDACPensionsScheme, BankAccount, PensionsScheme}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException}
+import uk.gov.hmrc.http.{BadRequestException, HttpException, HeaderCarrier}
 import utils.HttpResponseHelper
 import utils.ValidationUtils.genResponse
 
@@ -37,8 +36,7 @@ class SchemeServiceImpl @Inject()(
                                    schemeConnector: SchemeConnector,
                                    barsConnector: BarsConnector,
                                    auditService: AuditService,
-                                   schemeAuditService: SchemeAuditService,
-                                   featureToggleService: FeatureToggleService
+                                   schemeAuditService: SchemeAuditService
                                  ) extends SchemeService with HttpResponseHelper {
 
   private val logger = Logger(classOf[SchemeServiceImpl])
@@ -51,7 +49,7 @@ class SchemeServiceImpl @Inject()(
 
   case object RegisterSchemeToggleOffTransformFailed extends Exception
 
-  private def registerNonRACDACScheme(json: JsValue, psaId: String, isRACDACEnabled: Boolean)
+  private def registerNonRACDACScheme(json: JsValue, psaId: String)
                                      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
   Future[Either[HttpException, JsValue]] = {
     json.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
@@ -66,16 +64,7 @@ class SchemeServiceImpl @Inject()(
           error => Future.failed(error),
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
-              val registerData = {
-                Json.toJson(pensionsScheme).as[JsObject] ++
-                  /*
-                    Once the rac/dac toggle is removed then the next line can be removed (as this node is
-                    optional for non-RAC/DAC schemes). For now it is required as the stubs looks for this
-                    node to determine whether to validate against the new RAC/DAC schema or the old one.
-                  */
-                  (if (isRACDACEnabled) Json.obj("racdacScheme" -> false) else Json.obj())
-              }
-
+              val registerData = Json.toJson(pensionsScheme).as[JsObject] ++ Json.obj("racdacScheme" -> false)
               schemeConnector.registerScheme(psaId, registerData) andThen {
                 schemeAuditService.sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined)(auditService.sendEvent)
               }
@@ -104,27 +93,15 @@ class SchemeServiceImpl @Inject()(
     )
   }
 
-  private def register(json: JsValue, psaId: String, isRACDACEnabled: Boolean)
-                      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
-  Future[Either[HttpException, JsValue]] = {
-
-    def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
-
-    if (isRACDACEnabled && isRACDACSchemeDeclaration) {
-      registerRACDACScheme(json, psaId)
-    } else {
-      registerNonRACDACScheme(json, psaId, isRACDACEnabled)
-    }
-  }
-
   override def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
   Future[Either[HttpException, JsValue]] = {
-
-    for {
-      racDacToggle <- featureToggleService.get(RACDAC)
-      response <- register(json, psaId, racDacToggle.isEnabled)
-    } yield response
+    def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
+    if (isRACDACSchemeDeclaration) {
+      registerRACDACScheme(json, psaId)
+    } else {
+      registerNonRACDACScheme(json, psaId)
+    }
   }
 
   override def updateScheme(pstr: String, psaId: String, json: JsValue)(implicit headerCarrier: HeaderCarrier,
