@@ -64,7 +64,7 @@ class SchemeServiceImpl @Inject()(
           error => Future.failed(error),
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
-              val registerData = Json.toJson(pensionsScheme).as[JsObject] ++ Json.obj("racdacScheme" -> false)
+              val registerData = Json.toJson(pensionsScheme).as[JsObject]
               schemeConnector.registerScheme(psaId, registerData) andThen {
                 schemeAuditService.sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined)(auditService.sendEvent)
               }
