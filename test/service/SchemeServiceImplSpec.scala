@@ -114,9 +114,9 @@ class SchemeServiceImplSpec
   }
 
   "registerScheme" must "return the result of submitting a normal " +
-    "(non RAC/DAC) pensions scheme and contain the racdacScheme node set to false" in {
+    "(non RAC/DAC) pensions scheme and contain no racdacScheme node" in {
     reset(schemeConnector)
-    val regDataWithRacDacNode = schemeJsValue.as[JsObject] ++ Json.obj("racdacScheme" -> false)
+    val regDataWithRacDacNode = schemeJsValue.as[JsObject]
     when(schemeConnector.registerScheme(any(), any())(any(), any(), any())).
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
     schemeService.registerScheme(psaId, pensionsSchemeJson).map {
