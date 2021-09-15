@@ -18,7 +18,7 @@ package controllers.admin
 
 import base.SpecBase
 import models.FeatureToggle.Enabled
-import models.FeatureToggleName.RACDAC
+import models.FeatureToggleName.DUMMY_TOGGLE
 import models.OperationSucceeded
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{times, verify, reset, when}
@@ -47,9 +47,9 @@ class FeatureToggleControllerSpec
   override def beforeEach(): Unit = {
     reset(mockAdminDataRepository, mockFeatureToggleService)
     when(mockAdminDataRepository.getFeatureToggles)
-      .thenReturn(Future.successful(Seq(Enabled(RACDAC))))
+      .thenReturn(Future.successful(Seq(Enabled(DUMMY_TOGGLE))))
     when(mockFeatureToggleService.getAll)
-      .thenReturn(Future.successful(Seq(Enabled(RACDAC))))
+      .thenReturn(Future.successful(Seq(Enabled(DUMMY_TOGGLE))))
   }
 
   "FeatureToggleController.getAll" must {
@@ -69,16 +69,16 @@ class FeatureToggleControllerSpec
         .thenReturn(Future.successful(true))
 
       when(mockFeatureToggleService.get(any()))
-        .thenReturn(Future.successful(Enabled(RACDAC)))
+        .thenReturn(Future.successful(Enabled(DUMMY_TOGGLE)))
 
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 
-      val result = controller.get(RACDAC)(fakeRequest)
+      val result = controller.get(DUMMY_TOGGLE)(fakeRequest)
 
       status(result) mustBe OK
 
       verify(mockFeatureToggleService, times(1))
-        .get(name = RACDAC)
+        .get(name = DUMMY_TOGGLE)
     }
   }
 
@@ -92,23 +92,23 @@ class FeatureToggleControllerSpec
 
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 
-      val result = controller.put(RACDAC)(fakeRequest.withJsonBody(JsBoolean(true)))
+      val result = controller.put(DUMMY_TOGGLE)(fakeRequest.withJsonBody(JsBoolean(true)))
 
       status(result) mustBe NO_CONTENT
 
       verify(mockFeatureToggleService, times(1))
-        .set(toggleName = RACDAC, enabled = true)
+        .set(toggleName = DUMMY_TOGGLE, enabled = true)
     }
 
     "not set the feature toggles and return BAD_REQUEST" in {
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 
-      val result = controller.put(RACDAC)(fakeRequest.withJsonBody(Json.obj("blah" -> "blah")))
+      val result = controller.put(DUMMY_TOGGLE)(fakeRequest.withJsonBody(Json.obj("blah" -> "blah")))
 
       status(result) mustBe BAD_REQUEST
 
       verify(mockFeatureToggleService, times(0))
-        .set(toggleName = RACDAC, enabled = true)
+        .set(toggleName = DUMMY_TOGGLE, enabled = true)
     }
   }
 }

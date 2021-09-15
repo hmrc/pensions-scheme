@@ -20,7 +20,6 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 
-
 sealed trait FeatureToggle {
   def name: FeatureToggleName
 
@@ -35,14 +34,14 @@ sealed trait FeatureToggleName {
 
 object FeatureToggleName {
 
-  case object RACDAC extends FeatureToggleName {
-    val asString = "rac-dac"
+  case object DUMMY_TOGGLE extends FeatureToggleName {
+    val asString = "dummy"
   }
 
-  val toggles = Seq(RACDAC)
+  val toggles = Seq(DUMMY_TOGGLE)
 
   implicit val reads: Reads[FeatureToggleName] = Reads {
-    case JsString(RACDAC.asString) => JsSuccess(RACDAC)
+    case JsString(DUMMY_TOGGLE.asString) => JsSuccess(DUMMY_TOGGLE)
     case _ => JsError("Unrecognised feature toggle name")
   }
 
