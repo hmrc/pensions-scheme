@@ -18,8 +18,13 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeDetailsConnector
+import models.FeatureToggle.Enabled
+import models.FeatureToggleName.SchemeDetailsCache
+import models.SchemeWithId
+import play.api.libs.json.JsObject
 import play.api.mvc._
-import service.SchemeService
+import repositories.SchemeDetailsWithIdCacheRepository
+import service.{FeatureToggleService, SchemeService}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
@@ -28,6 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeDetailsController @Inject()(
                                          schemeDetailsConnector: SchemeDetailsConnector,
+                                         schemeDetailsCache: SchemeDetailsWithIdCacheRepository,
+                                         featureToggleService: FeatureToggleService,
                                          schemeService: SchemeService,
                                          cc: ControllerComponents
                                        )(implicit ec: ExecutionContext)
@@ -42,10 +49,9 @@ class SchemeDetailsController @Inject()(
 
       (idType, id, idPsa) match {
         case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
-          schemeDetailsConnector.getSchemeDetails(psaId, schemeIdType, idNumber).map {
-            case Right(json) => Ok(json)
-            case Left(e) => result(e)
-          }
+          fetchFromCacheOrApi(
+            SchemeWithId(idNumber, psaId),
+            schemeDetailsConnector.getSchemeDetails(psaId, schemeIdType, idNumber))
         case _ =>
           Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
@@ -59,15 +65,29 @@ class SchemeDetailsController @Inject()(
 
       (srnOpt, pspIdOpt) match {
         case (Some(srn), Some(pspId)) =>
-         schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
-
-           schemeDetailsConnector.getPspSchemeDetails(pspId, pstr).map {
-             case Right(json) => Ok(json)
-             case Left(e) => result(e)
-           }
-         }
+          schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
+            fetchFromCacheOrApi(
+              SchemeWithId(srn, pspId),
+              schemeDetailsConnector.getPspSchemeDetails(pspId, pstr))
+          }
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }
+
+  private def fetchFromCacheOrApi(id: SchemeWithId, connectorCall: Future[Either[HttpException, JsObject]]): Future[Result] =
+    featureToggleService.get(SchemeDetailsCache).flatMap {
+      case Enabled(_) => schemeDetailsCache.get(id).flatMap {
+        case Some(json) => Future.successful(Ok(json.as[JsObject]))
+        case _ => connectorCall.flatMap {
+          case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
+          case Left(e) => Future.successful(result(e))
+        }
+      }
+      case _ => connectorCall.map {
+        case Right(json) => Ok(json)
+        case Left(e) => result(e)
+      }
+    }
+
 }
