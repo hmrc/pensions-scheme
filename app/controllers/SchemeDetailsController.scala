@@ -46,12 +46,11 @@ class SchemeDetailsController @Inject()(
       val idType = request.headers.get("schemeIdType")
       val id = request.headers.get("idNumber")
       val idPsa = request.headers.get("PSAId")
+      val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
 
       (idType, id, idPsa) match {
         case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
-          fetchFromCacheOrApi(
-            SchemeWithId(idNumber, psaId),
-            schemeDetailsConnector.getSchemeDetails(psaId, schemeIdType, idNumber))
+          fetchFromCacheOrApiForPsa(SchemeWithId(idNumber, psaId), schemeIdType, refreshDataOpt)
         case _ =>
           Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
@@ -62,29 +61,45 @@ class SchemeDetailsController @Inject()(
     implicit request => {
       val srnOpt = request.headers.get("srn")
       val pspIdOpt = request.headers.get("pspId")
+      val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
 
       (srnOpt, pspIdOpt) match {
         case (Some(srn), Some(pspId)) =>
           schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
-            fetchFromCacheOrApi(
-              SchemeWithId(srn, pspId),
-              schemeDetailsConnector.getPspSchemeDetails(pspId, pstr))
+            fetchFromCacheOrApiForPsp(SchemeWithId(pstr, pspId), refreshDataOpt)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }
 
-  private def fetchFromCacheOrApi(id: SchemeWithId, connectorCall: Future[Either[HttpException, JsObject]]): Future[Result] =
+  private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
+                                       (implicit hc: HeaderCarrier, request: RequestHeader): Future[Result] =
     featureToggleService.get(SchemeDetailsCache).flatMap {
       case Enabled(_) => schemeDetailsCache.get(id).flatMap {
-        case Some(json) => Future.successful(Ok(json.as[JsObject]))
-        case _ => connectorCall.flatMap {
+        case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
+        case _ => schemeDetailsConnector.getSchemeDetails(id.userId, id.schemeId, schemeIdType).flatMap {
           case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
           case Left(e) => Future.successful(result(e))
         }
       }
-      case _ => connectorCall.map {
+      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, id.schemeId, schemeIdType).map {
+        case Right(json) => Ok(json)
+        case Left(e) => result(e)
+      }
+    }
+
+  private def fetchFromCacheOrApiForPsp(id: SchemeWithId, refreshData: Option[Boolean])
+                                       (implicit hc: HeaderCarrier, request: RequestHeader): Future[Result] =
+    featureToggleService.get(SchemeDetailsCache).flatMap {
+      case Enabled(_) => schemeDetailsCache.get(id).flatMap {
+        case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
+        case _ => schemeDetailsConnector.getPspSchemeDetails(id.userId, id.schemeId).flatMap {
+          case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
+          case Left(e) => Future.successful(result(e))
+        }
+      }
+      case _ => schemeDetailsConnector.getPspSchemeDetails(id.userId, id.schemeId).map {
         case Right(json) => Ok(json)
         case Left(e) => result(e)
       }
