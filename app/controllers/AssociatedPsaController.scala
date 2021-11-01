@@ -49,11 +49,7 @@ class AssociatedPsaController @Inject()(
 
       srn match {
         case Some(schemeReferenceNumber) =>
-          schemeDetailsConnector.getSchemeDetails(
-            userIdNumber = userId,
-            schemeIdNumber = srnRequest,
-            schemeIdType = schemeReferenceNumber
-          ).map {
+          schemeDetailsConnector.getSchemeDetails(userId, srnRequest, schemeReferenceNumber).map {
             case Right(json) =>
 
               val isAssociated =
