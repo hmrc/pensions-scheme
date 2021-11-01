@@ -78,7 +78,7 @@ class SchemeDetailsController @Inject()(
     featureToggleService.get(SchemeDetailsCache).flatMap {
       case Enabled(_) => schemeDetailsCache.get(id).flatMap {
         case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
-        case _ => schemeDetailsConnector.getSchemeDetails(id.userId, id.schemeId, schemeIdType).flatMap {
+        case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
           case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
           case Left(e) => Future.successful(result(e))
         }
