@@ -17,13 +17,15 @@
 package models.etmpToUserAnswers
 
 import base.JsonFileReader
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import play.api.{Configuration, Environment}
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import utils.PensionSchemeJsValueGenerators
 
-trait TransformationSpec extends WordSpec with MustMatchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
+trait TransformationSpec extends AnyWordSpec with Matchers with OptionValues with JsonFileReader with PensionSchemeJsValueGenerators {
 
   val injector: Injector = new GuiceApplicationBuilder().build().injector
   val config: Configuration = injector.instanceOf[Configuration]

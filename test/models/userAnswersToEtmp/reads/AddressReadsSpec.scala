@@ -18,10 +18,12 @@ package models.userAnswersToEtmp.reads
 
 import models._
 import models.userAnswersToEtmp.{Address, CorrespondenceAddress, InternationalAddress, UkAddress}
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.OptionValues
 import play.api.libs.json._
 
-class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
+class AddressReadsSpec extends AnyWordSpec with Matchers with OptionValues with Samples {
   "A JSON Payload with an address" should {
     "Map correctly to an Address type" when {
 
@@ -138,7 +140,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
         }
 
         "with postal code" in {
-          val input = (address + ("postalCode" -> JsString("NE1")))
+          val input = address + ("postalCode" -> JsString("NE1"))
 
           val result = input.as[Address]
 
@@ -146,7 +148,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
         }
 
         "with postal code defined as `postcode`" in {
-          val input = (address + ("postcode" -> JsString("NE1")))
+          val input = address + ("postcode" -> JsString("NE1"))
 
           val result = input.as[Address]
 
@@ -154,7 +156,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
         }
 
         "with territory defined as country code" in {
-          val input = (address + ("countryCode" -> JsString("territory:IT")))
+          val input = address + ("countryCode" -> JsString("territory:IT"))
 
           val result = input.as[Address]
 
@@ -162,7 +164,7 @@ class AddressReadsSpec extends WordSpec with MustMatchers with OptionValues with
         }
 
         "with territory defined as country code with leading space" in {
-          val input = (address + ("countryCode" -> JsString("territory: IT")))
+          val input = address + ("countryCode" -> JsString("territory: IT"))
 
           val result = input.as[Address]
 

@@ -33,18 +33,19 @@
 package service
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{SchemeSubscription, SchemeUpdate, SchemeAuditService, RACDACDeclarationAuditEvent, SchemeType => AuditSchemeType}
+import audit.{RACDACDeclarationAuditEvent, SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
 import connector.{BarsConnector, SchemeConnector}
 import models._
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.establisher.EstablisherDetails
 import models.userAnswersToEtmp.trustee.TrusteeDetails
-import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionsScheme, PensionSchemeDeclaration}
-import org.mockito.Matchers.{any, eq => eqTo}
-import org.mockito.Mockito._
-import org.scalatest.{AsyncFlatSpec, Matchers, EitherValues}
-import org.scalatestplus.mockito.MockitoSugar.mock
+import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.MockitoSugar._
+import org.scalatest.EitherValues
+import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.matchers.should.Matchers
 import play.api.http.Status
 import play.api.libs.json._
 import play.api.mvc.AnyContentAsEmpty

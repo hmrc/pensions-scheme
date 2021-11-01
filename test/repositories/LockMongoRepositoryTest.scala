@@ -18,14 +18,15 @@ package repositories
 
 import config.AppConfig
 import models._
-import org.mockito.Mockito._
+import org.mockito.MockitoSugar
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.ScalaFutures._
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers, WordSpec}
-import reactivemongo.api.{DB, ReadConcern}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach}
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
+import reactivemongo.api.{DB, ReadConcern}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.mongo.MongoSpecSupport
@@ -33,14 +34,14 @@ import uk.gov.hmrc.mongo.MongoSpecSupport
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class LockMongoRepositoryTest
-  extends WordSpec
+  extends AnyWordSpec
     with MongoUnitSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with MongoSpecSupport
     with Eventually
     with MockitoSugar
-    with MustMatchers {
+    with Matchers {
   self =>
 
   private val provider: MongoDbProvider = new MongoDbProvider {

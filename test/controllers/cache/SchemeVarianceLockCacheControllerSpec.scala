@@ -18,10 +18,10 @@ package controllers.cache
 
 import akka.stream.Materializer
 import models.{SchemeLock, SchemeVariance, VarianceLock}
-import org.mockito.Matchers.{eq => eqTo, _}
-import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{MustMatchers, WordSpec}
+import org.mockito.ArgumentMatchers.{eq => eqTo, _}
+import org.mockito.MockitoSugar
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.libs.json.Json
@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.UnauthorizedException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SchemeVarianceLockCacheControllerSpec extends WordSpec with MustMatchers with MockitoSugar with GuiceOneAppPerSuite {
+class SchemeVarianceLockCacheControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite {
 
   implicit lazy val mat: Materializer = app.materializer
 
@@ -69,7 +69,7 @@ class SchemeVarianceLockCacheControllerSpec extends WordSpec with MustMatchers w
         val result = controller(lockRepo, authConnector).lock()(getRequest(FakeRequest("POST", "/")))
 
         status(result) mustEqual OK
-        contentAsString(result) mustEqual Json.toJson(VarianceLock).toString()
+        contentAsString(result) mustEqual Json.toJson("SuccessfulVarianceLock").toString()
       }
 
       "return 200 when lock is not obtained" in {
@@ -80,7 +80,7 @@ class SchemeVarianceLockCacheControllerSpec extends WordSpec with MustMatchers w
         val result = controller(lockRepo, authConnector).lock()(getRequest(FakeRequest("POST", "/")))
 
         status(result) mustEqual OK
-        contentAsString(result) mustEqual Json.toJson(SchemeLock).toString()
+        contentAsString(result) mustEqual Json.toJson("AnotherPsaHasLockedScheme").toString()
       }
 
       "throw an exception when the repository call fails" in {

@@ -16,10 +16,11 @@
 
 package audit
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import play.api.libs.json.{JsString, Json}
 
-class SchemeUpdateSpec extends WordSpec with MustMatchers {
+class SchemeUpdateSpec extends AnyWordSpec with Matchers {
   val psaId = "A0000000"
   val requestJsValue = JsString("test request")
   val responseJsValue = JsString("test response")

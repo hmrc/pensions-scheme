@@ -20,13 +20,15 @@ import models.userAnswersToEtmp.reads.CommonGenerator.directorGenerator
 import models.userAnswersToEtmp.{Address, Individual}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Shrink
-import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.OptionValues
+import org.scalatest.matchers.must.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{JsString, Json}
 import utils.PensionSchemeGenerators
 import utils.UtrHelper.stripUtr
 
-class DirectorReadsSpec extends FreeSpec with MustMatchers with ScalaCheckDrivenPropertyChecks with OptionValues with PensionSchemeGenerators {
+class DirectorReadsSpec extends AnyFreeSpec with Matchers with ScalaCheckDrivenPropertyChecks with OptionValues with PensionSchemeGenerators {
 
   implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 

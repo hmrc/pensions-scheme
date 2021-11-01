@@ -17,13 +17,12 @@
 package controllers
 
 import base.SpecBase
-import connector.{SchemeConnector, SchemeDetailsConnector}
-import org.mockito.Matchers
-import org.mockito.Matchers._
-import org.mockito.Mockito._
+import connector.SchemeDetailsConnector
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsValue}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
@@ -85,7 +84,7 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
+        verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
@@ -99,7 +98,7 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
+        verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
@@ -113,7 +112,7 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getSchemeDetails(any(), any(), any())(any(), any(), any())
+        verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
 
@@ -235,7 +234,7 @@ class SchemeDetailsControllerSpec
     "return OK when the scheme is registered successfully" in {
 
       val successResponse = userAnswersResponse
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(pspId), Matchers.eq("00000000AA"))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(pspId), ArgumentMatchers.eq("00000000AA"))(any(), any(), any())).thenReturn(
         Future.successful(Right(successResponse.as[JsObject])))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -249,8 +248,8 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getPspSchemeDetails(Matchers.any(),
-          Matchers.any())(any(), any(), any())
+        verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
+          ArgumentMatchers.any())(any(), any(), any())
       }
     }
 
@@ -260,8 +259,8 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getPspSchemeDetails(Matchers.any(),
-          Matchers.any())(any(), any(), any())
+        verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
+          ArgumentMatchers.any())(any(), any(), any())
       }
     }
 
@@ -271,14 +270,14 @@ class SchemeDetailsControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
-        verify(mockSchemeConnector, never()).getPspSchemeDetails(Matchers.any(),
-          Matchers.any())(any(), any(), any())
+        verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
+          ArgumentMatchers.any())(any(), any(), any())
       }
     }
 
 
     "throw BadRequestException when bad request with INVALID_IDTYPE returned from If" in {
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(psaId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_IDTYPE"))))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -290,7 +289,7 @@ class SchemeDetailsControllerSpec
 
     "throw BadRequestException when bad request with INVALID_SRN returned from If" in {
 
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(psaId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_SRN"))))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -302,7 +301,7 @@ class SchemeDetailsControllerSpec
 
     "throw BadRequestException when bad request with INVALID_PSTR returned from If" in {
 
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(psaId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_PSTR"))))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -314,7 +313,7 @@ class SchemeDetailsControllerSpec
 
     "throw BadRequestException when bad request with INVALID_CORRELATIONID returned from If" in {
 
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(psaId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(errorResponse("INVALID_CORRELATIONID"))))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -326,7 +325,7 @@ class SchemeDetailsControllerSpec
 
     "throw Upstream4xxResponse when UpStream4XXResponse returned from If" in {
 
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(psaId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), NOT_FOUND, NOT_FOUND)))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -338,7 +337,7 @@ class SchemeDetailsControllerSpec
 
     "throw Upstream5xxResponse when UpStream5XXResponse with SERVICE_UNAVAILABLE returned from If" in {
 
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(psaId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -350,7 +349,7 @@ class SchemeDetailsControllerSpec
 
     "throw Upstream5xxResponse when UpStream5XXResponse with INTERNAL_SERVER_ERROR returned from If" in {
 
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(psaId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(psaId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(errorResponse("NOT_FOUND"), INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
@@ -362,7 +361,7 @@ class SchemeDetailsControllerSpec
 
     "throw generic exception when any other exception returned from If" in {
 
-      when(mockSchemeConnector.getPspSchemeDetails(Matchers.eq(pspId), Matchers.eq(idNumber))(any(), any(), any())).thenReturn(
+      when(mockSchemeConnector.getPspSchemeDetails(ArgumentMatchers.eq(pspId), ArgumentMatchers.eq(idNumber))(any(), any(), any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)

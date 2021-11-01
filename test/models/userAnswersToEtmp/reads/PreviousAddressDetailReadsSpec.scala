@@ -18,10 +18,12 @@ package models.userAnswersToEtmp.reads
 
 import models._
 import models.userAnswersToEtmp.{InternationalAddress, PreviousAddressDetails, UkAddress}
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.OptionValues
 import play.api.libs.json.{JsString, Json}
 
-class PreviousAddressDetailReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
+class PreviousAddressDetailReadsSpec extends AnyWordSpec with Matchers with OptionValues with Samples {
   "JSON payload with previous address details" should {
     "Map to a valid previousAddressDetails payload correctly" when {
       "we have a companyAddressYears flag as true" in {

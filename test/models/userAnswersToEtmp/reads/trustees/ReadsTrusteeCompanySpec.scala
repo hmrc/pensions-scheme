@@ -22,12 +22,14 @@ import models.userAnswersToEtmp.trustee.CompanyTrustee
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Gen, Shrink}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import play.api.libs.json.{JsArray, JsString, Json}
 import utils.PensionSchemeGenerators
 import utils.UtrHelper.stripUtr
 
-class ReadsTrusteeCompanySpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+class ReadsTrusteeCompanySpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators {
 
   implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 

@@ -18,12 +18,13 @@ package utils
 
 import akka.util.ByteString
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.HttpEntity
 import play.api.mvc.{ResponseHeader, Result}
 import uk.gov.hmrc.http.{HttpException, NotFoundException, UpstreamErrorResponse}
 
-class ErrorHandlerSpec extends WordSpec with MustMatchers {
+class ErrorHandlerSpec extends AnyWordSpec with Matchers {
   private val eh = new ErrorHandler {
     def testResult(res: HttpException): Result = result(res)
   }

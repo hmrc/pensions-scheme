@@ -17,10 +17,12 @@
 package models
 
 import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsResponse}
-import org.scalatest.{MustMatchers, OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsSuccess, Json}
 
-class BankDetailsSpec extends MustMatchers with WordSpecLike with OptionValues {
+class BankDetailsSpec extends Matchers with AnyWordSpecLike with OptionValues {
 
   "ValidateBankDetailsResponse reads" must {
 

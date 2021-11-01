@@ -17,11 +17,13 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.PensionSchemeUpdateDeclaration
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import play.api.libs.json.Json
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-class PensionSchemeDeclarationWriteSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+class PensionSchemeDeclarationWriteSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "PensionSchemeDeclaration" must{
 

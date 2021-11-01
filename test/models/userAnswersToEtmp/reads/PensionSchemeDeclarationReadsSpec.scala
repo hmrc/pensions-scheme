@@ -18,10 +18,12 @@ package models.userAnswersToEtmp.reads
 
 import models._
 import models.userAnswersToEtmp.{AddressAndContactDetails, ContactDetails, PensionSchemeDeclaration, UkAddress}
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import play.api.libs.json.{JsBoolean, JsString, Json}
 
-class PensionSchemeDeclarationReadsSpec extends WordSpec with MustMatchers with OptionValues with Samples {
+class PensionSchemeDeclarationReadsSpec extends AnyWordSpec with Matchers with OptionValues with Samples {
   "A json payload containing declarations" should {
 
     "Map correctly to a Declaration model" when {

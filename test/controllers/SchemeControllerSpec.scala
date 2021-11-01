@@ -18,11 +18,10 @@ package controllers
 
 import base.SpecBase
 import models.enumeration.SchemeJourneyType
-import org.mockito.Matchers.{any, eq => meq}
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{ScalaFutures, PatienceConfiguration}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsResultException, Json, JsValue}
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
@@ -67,7 +66,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSAId or request body"
-        verify(mockSchemeService, never()).registerScheme(any(),
+        verify(mockSchemeService, never).registerScheme(any(),
           any())(any(), any(), any())
       }
     }
@@ -77,7 +76,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSAId or request body"
-        verify(mockSchemeService, never()).registerScheme(any(),
+        verify(mockSchemeService, never).registerScheme(any(),
           any())(any(), any(), any())
       }
     }
@@ -176,7 +175,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with no ID type or value"
-        verify(mockSchemeService, never()).listOfSchemes(any(), any())(any(), any(), any())
+        verify(mockSchemeService, never).listOfSchemes(any(), any())(any(), any(), any())
       }
     }
 
@@ -259,7 +258,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSTR or PSAId or request body"
-        verify(mockSchemeService, never()).updateScheme(any(), any(), any())(any(), any(), any())
+        verify(mockSchemeService, never).updateScheme(any(), any(), any())(any(), any(), any())
       }
     }
 
@@ -268,7 +267,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request without PSTR or PSAId or request body"
-        verify(mockSchemeService, never()).updateScheme(any(), any(), any())(any(), any(), any())
+        verify(mockSchemeService, never).updateScheme(any(), any(), any())(any(), any(), any())
       }
     }
 

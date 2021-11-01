@@ -20,7 +20,9 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, BarsCheck}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsRequest}
-import org.scalatest.{AsyncFlatSpec, Matchers, OptionValues}
+import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.OptionValues
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule

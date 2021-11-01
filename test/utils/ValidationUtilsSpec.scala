@@ -16,13 +16,15 @@
 
 package utils
 
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import play.api.libs.json.{JsResultException, Json, OFormat}
 import utils.ValidationUtils.{genOptResponse, genResponse}
 
 class ValidationUtilsSpec
-  extends WordSpec
-    with MustMatchers
+  extends AnyWordSpec
+    with Matchers
     with OptionValues {
 
   case class TestDetails(first: String, second: Option[String])

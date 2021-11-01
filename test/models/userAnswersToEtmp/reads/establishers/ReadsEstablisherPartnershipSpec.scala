@@ -22,12 +22,14 @@ import models.userAnswersToEtmp.establisher.Partnership
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Shrink
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.OptionValues
 import play.api.libs.json._
 import utils.PensionSchemeGenerators
 import utils.UtrHelper.stripUtr
 
-class ReadsEstablisherPartnershipSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators {
+class ReadsEstablisherPartnershipSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators {
   private implicit def dontShrink[A]: Shrink[A] = Shrink.shrinkAny
 
   "A Json payload containing trustee partnership" should {

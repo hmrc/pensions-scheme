@@ -18,13 +18,15 @@ package models.userAnswersToEtmp.writes
 
 import models.Samples
 import models.userAnswersToEtmp.PreviousAddressDetails
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import play.api.libs.json.{JsValue, Json}
 import utils.SchemaValidatorForTests
 
 import scala.util.Random
 
-class PreviousAddressDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with Samples with SchemaValidatorForTests {
+class PreviousAddressDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with Samples with SchemaValidatorForTests {
 
   "A previous address details object" should {
     "Map previous address details inner object as `previousaddresdetail`" when {

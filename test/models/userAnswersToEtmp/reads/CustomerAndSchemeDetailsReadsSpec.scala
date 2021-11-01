@@ -17,10 +17,11 @@
 package models.userAnswersToEtmp.reads
 
 import models.userAnswersToEtmp.{UkAddress, CustomerAndSchemeDetails}
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import play.api.libs.json._
 
-class CustomerAndSchemeDetailsReadsSpec extends WordSpec with MustMatchers {
+class CustomerAndSchemeDetailsReadsSpec extends AnyWordSpec with Matchers {
 
   import CustomerAndSchemeDetailsReadsSpec._
 
