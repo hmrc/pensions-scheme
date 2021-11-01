@@ -83,7 +83,7 @@ class SchemeDetailsController @Inject()(
           case Left(e) => Future.successful(result(e))
         }
       }
-      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, id.schemeId, schemeIdType).map {
+      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).map {
         case Right(json) => Ok(json)
         case Left(e) => result(e)
       }
