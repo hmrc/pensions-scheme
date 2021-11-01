@@ -47,9 +47,7 @@ class SchemeDetailsController @Inject()(
       val id = request.headers.get("idNumber")
       val idPsa = request.headers.get("PSAId")
       val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
-println("\n\n >>>>>>>> idType "+idType)
-println("\n\n >>>>>>>> id "+id)
-println("\n\n >>>>>>>> idPsa "+idPsa)
+
       (idType, id, idPsa) match {
         case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
           fetchFromCacheOrApiForPsa(SchemeWithId(idNumber, psaId), schemeIdType, refreshDataOpt)
