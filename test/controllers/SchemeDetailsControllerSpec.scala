@@ -18,16 +18,18 @@ package controllers
 
 import base.SpecBase
 import connector.SchemeDetailsConnector
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar
+import org.mockito.{ArgumentMatchers, MockitoSugar}
+import models.FeatureToggle.{Enabled, Disabled}
+import models.FeatureToggleName.SchemeDetailsCache
 import org.scalatest.BeforeAndAfter
-import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import org.scalatest.concurrent.{ScalaFutures, PatienceConfiguration}
 import play.api.libs.json.{JsObject, JsValue}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import service.SchemeService
+import repositories.SchemeDetailsWithIdCacheRepository
+import service.{FeatureToggleService, SchemeService}
 import uk.gov.hmrc.http._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,7 +44,10 @@ class SchemeDetailsControllerSpec
 
   private val mockSchemeService: SchemeService = mock[SchemeService]
   private val mockSchemeConnector: SchemeDetailsConnector = mock[SchemeDetailsConnector]
-  private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeService, stubControllerComponents())
+  private val mockSchemeDetailsCache: SchemeDetailsWithIdCacheRepository = mock[SchemeDetailsWithIdCacheRepository]
+  private val mockFeatureToggleService: FeatureToggleService = mock[FeatureToggleService]
+  private val schemeDetailsController = new SchemeDetailsController(mockSchemeConnector, mockSchemeDetailsCache,
+    mockFeatureToggleService, mockSchemeService, stubControllerComponents())
   private val schemeIdType = "srn"
   private val idNumber = "00000000AA"
   private val psaId = "000"
@@ -52,6 +57,9 @@ class SchemeDetailsControllerSpec
   before {
     reset(mockSchemeConnector)
     when(mockSchemeService.getPstrFromSrn(any(), any(), any())(any(), any(), any())).thenReturn(Future.successful(idNumber))
+    when(mockSchemeDetailsCache.get(any())).thenReturn(Future.successful(None))
+    when(mockSchemeDetailsCache.save(any(), any())).thenReturn(Future.successful(true))
+    when(mockFeatureToggleService.get(any())).thenReturn(Future.successful(Enabled(SchemeDetailsCache)))
   }
 
   "getSchemeDetails" must {
@@ -63,9 +71,32 @@ class SchemeDetailsControllerSpec
         ("PSAId", psaId)
       )
 
-    "return OK when the scheme is registered successfully" in {
+    "return OK when the scheme is registered successfully, no data is found in cache and caching toggle is on" in {
 
       val successResponse = userAnswersResponse
+      when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
+        .thenReturn(Future.successful(Right(successResponse.as[JsObject])))
+
+      val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe successResponse
+    }
+
+    "return OK when the scheme is registered successfully, data is found in cache and caching toggle is on" in {
+
+      val successResponse = userAnswersResponse
+      when(mockSchemeDetailsCache.get(any())).thenReturn(Future.successful(Some(successResponse)))
+      val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe successResponse
+    }
+
+    "return OK when the scheme is registered successfully and caching toggle is off" in {
+
+      val successResponse = userAnswersResponse
+      when(mockFeatureToggleService.get(any())).thenReturn(Future.successful(Disabled(SchemeDetailsCache)))
       when(mockSchemeConnector.getSchemeDetails(any(), any(), any())(any(), any(), any()))
         .thenReturn(Future.successful(Right(successResponse.as[JsObject])))
 

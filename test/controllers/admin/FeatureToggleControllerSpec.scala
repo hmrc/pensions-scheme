@@ -18,7 +18,7 @@ package controllers.admin
 
 import base.SpecBase
 import models.FeatureToggle.Enabled
-import models.FeatureToggleName.DUMMY_TOGGLE
+import models.FeatureToggleName.SchemeDetailsCache
 import models.OperationSucceeded
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
@@ -46,9 +46,9 @@ class FeatureToggleControllerSpec
   override def beforeEach(): Unit = {
     reset(mockAdminDataRepository, mockFeatureToggleService)
     when(mockAdminDataRepository.getFeatureToggles)
-      .thenReturn(Future.successful(Seq(Enabled(DUMMY_TOGGLE))))
+      .thenReturn(Future.successful(Seq(Enabled(SchemeDetailsCache))))
     when(mockFeatureToggleService.getAll)
-      .thenReturn(Future.successful(Seq(Enabled(DUMMY_TOGGLE))))
+      .thenReturn(Future.successful(Seq(Enabled(SchemeDetailsCache))))
   }
 
   "FeatureToggleController.getAll" must {
@@ -68,16 +68,16 @@ class FeatureToggleControllerSpec
         .thenReturn(Future.successful(true))
 
       when(mockFeatureToggleService.get(any()))
-        .thenReturn(Future.successful(Enabled(DUMMY_TOGGLE)))
+        .thenReturn(Future.successful(Enabled(SchemeDetailsCache)))
 
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 
-      val result = controller.get(DUMMY_TOGGLE)(fakeRequest)
+      val result = controller.get(SchemeDetailsCache)(fakeRequest)
 
       status(result) mustBe OK
 
       verify(mockFeatureToggleService, times(1))
-        .get(name = DUMMY_TOGGLE)
+        .get(name = SchemeDetailsCache)
     }
   }
 
@@ -91,23 +91,23 @@ class FeatureToggleControllerSpec
 
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 
-      val result = controller.put(DUMMY_TOGGLE)(fakeRequest.withJsonBody(JsBoolean(true)))
+      val result = controller.put(SchemeDetailsCache)(fakeRequest.withJsonBody(JsBoolean(true)))
 
       status(result) mustBe NO_CONTENT
 
       verify(mockFeatureToggleService, times(1))
-        .set(toggleName = DUMMY_TOGGLE, enabled = true)
+        .set(toggleName = SchemeDetailsCache, enabled = true)
     }
 
     "not set the feature toggles and return BAD_REQUEST" in {
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 
-      val result = controller.put(DUMMY_TOGGLE)(fakeRequest.withJsonBody(Json.obj("blah" -> "blah")))
+      val result = controller.put(SchemeDetailsCache)(fakeRequest.withJsonBody(Json.obj("blah" -> "blah")))
 
       status(result) mustBe BAD_REQUEST
 
       verify(mockFeatureToggleService, times(0))
-        .set(toggleName = DUMMY_TOGGLE, enabled = true)
+        .set(toggleName = SchemeDetailsCache, enabled = true)
     }
   }
 }

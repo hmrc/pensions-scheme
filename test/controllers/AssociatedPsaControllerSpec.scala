@@ -102,8 +102,8 @@ class AssociatedPsaControllerSpec
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
         verify(mockSchemeConnector, never).getSchemeDetails(
           userIdNumber = ArgumentMatchers.any(),
-          schemeIdNumber = ArgumentMatchers.any(),
-          schemeIdType = ArgumentMatchers.any()
+          schemeIdType = ArgumentMatchers.any(),
+            schemeIdNumber = ArgumentMatchers.any()
         )(any(), any(), any())
       }
     }
@@ -118,8 +118,8 @@ class AssociatedPsaControllerSpec
 
       verify(mockSchemeConnector, never).getSchemeDetails(
         userIdNumber = ArgumentMatchers.any(),
-        schemeIdNumber = ArgumentMatchers.any(),
-        schemeIdType = ArgumentMatchers.any()
+        schemeIdType = ArgumentMatchers.any(),
+          schemeIdNumber = ArgumentMatchers.any()
       )(any(), any(), any())
     }
 
