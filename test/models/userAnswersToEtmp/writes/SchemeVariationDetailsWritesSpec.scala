@@ -18,11 +18,13 @@ package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.PensionsScheme
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.{OptionValues, MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import play.api.libs.json.{Json, JsValue}
 import utils.{SchemaValidatorForTests, PensionSchemeGenerators}
 
-class SchemeVariationDetailsWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+class SchemeVariationDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An PensionsScheme object" should {
 

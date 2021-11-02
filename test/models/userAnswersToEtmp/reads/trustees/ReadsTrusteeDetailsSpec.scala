@@ -20,12 +20,12 @@ import models.userAnswersToEtmp.reads.CommonGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.trusteesGen
 import models.userAnswersToEtmp.trustee.TrusteeDetails
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.MustMatchers
+import org.scalatest.matchers.must.Matchers
 import org.scalatest.OptionValues
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 
-class ReadsTrusteeDetailsSpec extends WordSpec with MustMatchers with OptionValues {
+class ReadsTrusteeDetailsSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "ReadsTrusteeDetails" must {
 

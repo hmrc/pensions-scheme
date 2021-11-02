@@ -16,11 +16,12 @@
 
 package audit
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import play.api.http.Status
 import play.api.libs.json.Json
 
-class RACDACDeclarationAuditEventSpec extends WordSpec with MustMatchers {
+class RACDACDeclarationAuditEventSpec extends AnyWordSpec with Matchers {
 
   "RACDACDeclarationAuditEvent" must {
 

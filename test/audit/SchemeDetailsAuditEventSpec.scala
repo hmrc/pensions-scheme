@@ -16,10 +16,11 @@
 
 package audit
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import play.api.libs.json.Json
 
-class SchemeDetailsAuditEventSpec extends WordSpec with MustMatchers {
+class SchemeDetailsAuditEventSpec extends AnyWordSpec with Matchers {
 
   private val userIdNumber = "A2500001"
   private val status = 200

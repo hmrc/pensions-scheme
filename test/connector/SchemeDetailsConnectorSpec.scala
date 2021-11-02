@@ -20,10 +20,9 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, PspSchemeDetailsAuditEvent, SchemeDetailsAuditEvent}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.mockito.MockitoSugar
 import org.scalatest._
-import org.scalatestplus.mockito.MockitoSugar
-import play.api.LoggerLike
+import org.scalatest.matchers.should.Matchers._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsValue, Json}
@@ -31,7 +30,8 @@ import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException, UpstreamErrorResponse}
-import utils.{StubLogger, WireMockHelper}
+import utils.WireMockHelper
+import org.scalatest.flatspec.AsyncFlatSpec
 
 class SchemeDetailsConnectorSpec
   extends AsyncFlatSpec
@@ -54,7 +54,6 @@ class SchemeDetailsConnectorSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
-      bind[LoggerLike].toInstance(logger)
     )
 
   def connector: SchemeDetailsConnector = app.injector.instanceOf[SchemeDetailsConnector]
@@ -265,8 +264,6 @@ object SchemeDetailsConnectorSpec extends JsonFileReader {
   private val idNumber = "S1234567890"
   private val pstr = "20010010AA"
 
-  private val psaType = "PSA"
-  private val pspType = "PSP"
   private val pspId = "psp-id"
 
   private val schemeDetailsIFUrl: String = s"/pension-online/scheme-details/pods/$schemeIdType/$idNumber"
@@ -282,7 +279,6 @@ object SchemeDetailsConnectorSpec extends JsonFileReader {
   }
 
   private val auditService = new StubSuccessfulAuditService()
-  private val logger = new StubLogger()
 }
 
 

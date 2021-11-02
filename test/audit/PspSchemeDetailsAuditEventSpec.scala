@@ -16,12 +16,13 @@
 
 package audit
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 class PspSchemeDetailsAuditEventSpec
-  extends WordSpec
-    with MustMatchers {
+  extends AnyWordSpec
+    with Matchers {
 
   private val pspId = "pspId"
   private val status = 200

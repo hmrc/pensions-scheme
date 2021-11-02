@@ -22,14 +22,14 @@ import models.userAnswersToEtmp.reads.CommonGenerator.establisherCompanyGenerato
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherPartnershipGenerator
 import models.userAnswersToEtmp.reads.CommonGenerator.establisherIndividualGenerator
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.MustMatchers
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.OptionValues
-import org.scalatest.WordSpec
 import play.api.libs.json.Json
 
 class ReadsEstablisherDetailsSpec
-  extends WordSpec
-    with MustMatchers
+  extends AnyWordSpec
+    with Matchers
     with OptionValues {
 
   "ReadsEstablisherDetails" must {

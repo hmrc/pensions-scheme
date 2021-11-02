@@ -179,8 +179,6 @@ class TrusteeDetailsTransformerSpec extends TransformationSpec {
 
     "have the trusteePartnershipDetailsType details for partnership transformed correctly to valid user answers format for first json file" that {
 
-      val ifTrusteePartnershipPath = __ \ 'psaPspSchemeDetails \ 'trusteeDetails \ 'partnershipTrusteeDetails
-
       s"has trustee details in trustees array" in {
         forAll(partnershipJsValueGen(isEstablisher = false)) {
           partnershipDetails => {

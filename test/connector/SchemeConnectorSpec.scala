@@ -16,24 +16,23 @@
 
 package connector
 
-import audit.{AuditService, ListOfSchemesAudit}
 import audit.testdoubles.StubSuccessfulAuditService
+import audit.{AuditService, ListOfSchemesAudit}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.Matchers.convertToAnyShouldWrapper
-import org.scalatest._
-import org.scalatestplus.mockito.MockitoSugar
-import org.slf4j.event.Level
-import play.api.LoggerLike
+import org.mockito.MockitoSugar
+import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.{EitherValues, OptionValues, RecoverMethods}
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException, NotFoundException, UpstreamErrorResponse}
-import utils.{StubLogger, WireMockHelper}
+import play.api.test.Helpers.{NOT_FOUND, _}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException, UpstreamErrorResponse}
+import utils.WireMockHelper
 
 import java.time.LocalDate
 
@@ -48,6 +47,7 @@ class SchemeConnectorSpec
 
   import SchemeConnectorSpec._
 
+
   override def beforeEach(): Unit = {
     auditService.reset()
     super.beforeEach()
@@ -58,7 +58,6 @@ class SchemeConnectorSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
-      bind[LoggerLike].toInstance(logger)
     )
 
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
@@ -231,27 +230,6 @@ class SchemeConnectorSpec
     }
   }
 
-  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
-    server.stubFor(
-      post(urlEqualTo(schemeIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody("INVALID_PAYLOAD")
-        )
-    )
-
-    logger.reset()
-
-    recoverToExceptionIf[BadRequestException] {
-      connector.registerScheme(idValue, registerSchemeData)
-    } map { response =>
-      response.responseCode shouldBe BAD_REQUEST
-      logger.getLogEntries.size shouldBe 1
-      logger.getLogEntries.head.level shouldBe Level.WARN
-    }
-  }
-
   "SchemeConnector updateSchemeDetails with toggle on" should "handle OK (200)" in {
     val successResponse: JsObject = Json.obj("processingDate" -> LocalDate.now)
     server.stubFor(
@@ -318,27 +296,6 @@ class SchemeConnectorSpec
       _.responseCode shouldBe BAD_REQUEST
     }
   }
-
-  it should "log details of an INVALID_PAYLOAD for a BAD request (400) response" in {
-    server.stubFor(
-      post(urlEqualTo(updateSchemeIFUrl))
-        .willReturn(
-          badRequest
-            .withHeader("Content-Type", "application/json")
-            .withBody("INVALID_PAYLOAD")
-        )
-    )
-
-    logger.reset()
-
-    recoverToExceptionIf[BadRequestException] {
-      connector.updateSchemeDetails(pstr, updateSchemeData)
-    } map { response =>
-      response.responseCode shouldBe BAD_REQUEST
-      logger.getLogEntries.size shouldBe 1
-      logger.getLogEntries.head.level shouldBe Level.WARN
-    }
-  }
 }
 
 object SchemeConnectorSpec extends JsonFileReader {
@@ -384,6 +341,5 @@ object SchemeConnectorSpec extends JsonFileReader {
   }
 
   private val auditService = new StubSuccessfulAuditService()
-  private val logger = new StubLogger()
 }
 

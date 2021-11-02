@@ -17,10 +17,11 @@
 package audit
 
 import models.Sent
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import uk.gov.hmrc.domain.PsaId
 
-class EmailAuditEventSpec extends WordSpec with MustMatchers {
+class EmailAuditEventSpec extends AnyWordSpec with Matchers {
   val psaId = "A0000000"
   "EmailAuditEvent" must {
     "have correct audit type and details" in {

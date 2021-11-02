@@ -18,12 +18,11 @@ package controllers
 
 import base.{JsonFileReader, SpecBase}
 import connector.SchemeDetailsConnector
-import org.mockito.Matchers
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{never, reset, verify, when}
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -101,10 +100,10 @@ class AssociatedPsaControllerSpec
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
-        verify(mockSchemeConnector, never()).getSchemeDetails(
-          userIdNumber = Matchers.any(),
-          schemeIdType = Matchers.any(),
-            schemeIdNumber = Matchers.any()
+        verify(mockSchemeConnector, never).getSchemeDetails(
+          userIdNumber = ArgumentMatchers.any(),
+          schemeIdType = ArgumentMatchers.any(),
+            schemeIdNumber = ArgumentMatchers.any()
         )(any(), any(), any())
       }
     }
@@ -117,10 +116,10 @@ class AssociatedPsaControllerSpec
 
       the[Exception] thrownBy result must have message "Unable to retrieve either PSA or PSP from request"
 
-      verify(mockSchemeConnector, never()).getSchemeDetails(
-        userIdNumber = Matchers.any(),
-        schemeIdType = Matchers.any(),
-          schemeIdNumber = Matchers.any()
+      verify(mockSchemeConnector, never).getSchemeDetails(
+        userIdNumber = ArgumentMatchers.any(),
+        schemeIdType = ArgumentMatchers.any(),
+          schemeIdNumber = ArgumentMatchers.any()
       )(any(), any(), any())
     }
 

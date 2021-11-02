@@ -19,14 +19,12 @@ package connector
 import audit.{AuditService, SchemeAuditService}
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
-import models.ListOfSchemes
 import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{BadRequestException, HttpClient, _}
-import utils.ValidationUtils.genResponse
 import utils.{HttpResponseHelper, InvalidPayloadHandler}
 
 import scala.concurrent.{ExecutionContext, Future}

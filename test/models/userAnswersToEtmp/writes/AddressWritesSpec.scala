@@ -16,22 +16,24 @@
 
 package models.userAnswersToEtmp.writes
 
-import models.userAnswersToEtmp.Address
+import models.userAnswersToEtmp.{InternationalAddress, UkAddress}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 import scala.util.Random
 
-class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An updated address" should {
     "parse correctly to a valid if format for variations api - API 1468" when {
       "we have a valid UK address" in {
         forAll(ukAddressGen) {
           address => {
-            val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
+            val mappedAddress: JsValue = Json.toJson(address)(UkAddress.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
             validateJson(elementToValidate = testJsValue,
@@ -45,7 +47,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
         forAll(internationalAddressGen) {
           address => {
 
-            val mappedAddress: JsValue = Json.toJson(address)(Address.updateWrites)
+            val mappedAddress: JsValue = Json.toJson(address)(InternationalAddress.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
             validateJson(elementToValidate = testJsValue,
@@ -62,7 +64,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
           address => {
             val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
 
-            val mappedAddress: JsValue = Json.toJson(invalidAddress)(Address.updateWrites)
+            val mappedAddress: JsValue = Json.toJson(invalidAddress)(UkAddress.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
             validateJson(elementToValidate = testJsValue,
@@ -77,7 +79,7 @@ class AddressWritesSpec extends WordSpec with MustMatchers with OptionValues wit
           address => {
             val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
 
-            val mappedAddress: JsValue = Json.toJson(invalidAddress)(Address.updateWrites)
+            val mappedAddress: JsValue = Json.toJson(invalidAddress)(InternationalAddress.updateWrites)
             val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
 
             validateJson(elementToValidate = testJsValue,

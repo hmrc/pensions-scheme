@@ -17,10 +17,11 @@
 package audit
 
 import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsRequest}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
-class BarsCheckSpec extends FlatSpec with Matchers {
+class BarsCheckSpec extends AnyFlatSpec with Matchers {
 
   "BarsCheck.details" should "output the correct map of data" in {
 
