@@ -36,9 +36,9 @@ trait SchemeDetailsConnector {
 
   def getSchemeDetails(
                         userIdNumber: String,
-                        schemeIdNumber: String,
-                        schemeIdType: String
-                      )(
+                        schemeIdType: String,
+                        schemeIdNumber: String
+  )(
                         implicit
                         headerCarrier: HeaderCarrier,
                         ec: ExecutionContext,
