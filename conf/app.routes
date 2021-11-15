@@ -40,7 +40,7 @@ GET           /journey-cache/scheme-details/:id                 controllers.cach
 POST          /journey-cache/scheme-details/:id                 controllers.cache.SchemeDetailsJourneyCacheController.save(id: String)
 DELETE        /journey-cache/scheme-details/:id                 controllers.cache.SchemeDetailsJourneyCacheController.remove(id: String)
 
-POST          /email-response/*id                               controllers.EmailResponseController.retrieveStatus(id: String)
-POST          /email-response-racdac/*id                        controllers.EmailResponseController.retrieveStatusRacDac(id: String)
+POST          /email-response/:id                               controllers.EmailResponseController.retrieveStatus(id: String)
+POST          /email-response-racdac/:id                        controllers.EmailResponseController.retrieveStatusRacDac(id: String)
 
 GET           /is-psa-associated                                controllers.AssociatedPsaController.isPsaAssociated
