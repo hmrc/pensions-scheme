@@ -132,6 +132,9 @@ class SchemeDetailsTransformer @Inject()(
         ) orElse doNothing) and
         ((__ \ 'authorisingPSA \ 'organisationOrPartnershipName).json.copyFrom(
           (__ \ 'authorisedPSAOrgOrPartName).json.pick
+        ) orElse doNothing) and
+        ((__ \ 'clientReference).json.copyFrom(
+          (__ \ 'clientReference).json.pick
         ) orElse doNothing)
       ) reduce
 
