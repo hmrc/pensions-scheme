@@ -2,7 +2,7 @@ Pensions Scheme
 ===============
 
 Microservice to support the registration and post-registration update (variations) of pension schemes.
-// TODO: Table isn't exhaustive?
+
 API
 ---
   
