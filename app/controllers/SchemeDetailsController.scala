@@ -18,13 +18,11 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeDetailsConnector
-import models.FeatureToggle.Enabled
-import models.FeatureToggleName.SchemeDetailsCache
 import models.SchemeWithId
 import play.api.libs.json.JsObject
 import play.api.mvc._
 import repositories.SchemeDetailsWithIdCacheRepository
-import service.{FeatureToggleService, SchemeService}
+import service.SchemeService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
@@ -34,7 +32,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class SchemeDetailsController @Inject()(
                                          schemeDetailsConnector: SchemeDetailsConnector,
                                          schemeDetailsCache: SchemeDetailsWithIdCacheRepository,
-                                         featureToggleService: FeatureToggleService,
                                          schemeService: SchemeService,
                                          cc: ControllerComponents
                                        )(implicit ec: ExecutionContext)
@@ -75,34 +72,23 @@ class SchemeDetailsController @Inject()(
 
   private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
                                        (implicit hc: HeaderCarrier, request: RequestHeader): Future[Result] =
-    featureToggleService.get(SchemeDetailsCache).flatMap {
-      case Enabled(_) => schemeDetailsCache.get(id).flatMap {
-        case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
-        case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
-          case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
-          case Left(e) => Future.successful(result(e))
-        }
-      }
-      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).map {
-        case Right(json) => Ok(json)
-        case Left(e) => result(e)
+    schemeDetailsCache.get(id).flatMap {
+      case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
+      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
+        case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
+        case Left(e) => Future.successful(result(e))
       }
     }
 
   private def fetchFromCacheOrApiForPsp(id: SchemeWithId, refreshData: Option[Boolean])
                                        (implicit hc: HeaderCarrier, request: RequestHeader): Future[Result] =
-    featureToggleService.get(SchemeDetailsCache).flatMap {
-      case Enabled(_) => schemeDetailsCache.get(id).flatMap {
-        case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
-        case _ => schemeDetailsConnector.getPspSchemeDetails(id.userId, id.schemeId).flatMap {
-          case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
-          case Left(e) => Future.successful(result(e))
+    schemeDetailsCache.get(id).flatMap {
+      case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
+      case _ => schemeDetailsConnector.getPspSchemeDetails(id.userId, id.schemeId).flatMap {
+        case Right(json) => schemeDetailsCache.save(id, json).map {
+          _ => Ok(json)
         }
-      }
-      case _ => schemeDetailsConnector.getPspSchemeDetails(id.userId, id.schemeId).map {
-        case Right(json) => Ok(json)
-        case Left(e) => result(e)
+        case Left(e) => Future.successful(result(e))
       }
     }
-
 }

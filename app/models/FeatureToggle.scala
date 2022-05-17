@@ -34,14 +34,14 @@ sealed trait FeatureToggleName {
 
 object FeatureToggleName {
 
-  case object SchemeDetailsCache extends FeatureToggleName {
-    val asString = "scheme-details-cache"
+  case object DummyToggle extends FeatureToggleName {
+    val asString = "dummy"
   }
 
-  val toggles = Seq(SchemeDetailsCache)
+  val toggles = Seq(DummyToggle)
 
   implicit val reads: Reads[FeatureToggleName] = Reads {
-    case JsString(SchemeDetailsCache.asString) => JsSuccess(SchemeDetailsCache)
+    case JsString(DummyToggle.asString) => JsSuccess(DummyToggle)
     case _ => JsError("Unrecognised feature toggle name")
   }
 
