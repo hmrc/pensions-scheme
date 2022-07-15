@@ -24,7 +24,7 @@ object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
     ws,
-    "uk.gov.hmrc"             %% "simple-reactivemongo"       % "8.0.0-play-28",
+    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-28"         % "0.67.0",
     "com.typesafe.play"       %% "play-json"                  % "2.9.2",
     "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % "5.16.0",
     "com.networknt"           %  "json-schema-validator"      % "1.0.3",
@@ -35,7 +35,7 @@ object AppDependencies {
 
   def test(scope: String = "test, it"): Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                 %% "bootstrap-test-play-28"       % "5.16.0"            % Test,
-    "uk.gov.hmrc"                 %% "reactivemongo-test"           % "5.0.0-play-28"     % Test,
+    "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-28"      % "0.67.0"            % Test,
     "org.pegdown"                  % "pegdown"                      % "1.6.0"             % scope,
     "org.scalacheck"              %% "scalacheck"                   % "1.15.2"            % scope,
     "com.typesafe.play"           %% "play-test"                    % PlayVersion.current % scope,
