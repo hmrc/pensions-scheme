@@ -35,7 +35,7 @@ object PSPDetails {
   implicit val format: Format[PSPDetails] = Json.format[PSPDetails]
 }
 
-case class SchemeDetails(name: String, referenceNumber: String, schemeStatus: String, openDate: Option[String], pstr: Option[String] = None,
+case class SchemeDetails(name: String, referenceNumber: String, schemeStatus: String, openDate: Option[String], windUpDate: Option[String], pstr: Option[String] = None,
                          relationship: Option[String], pspDetails: Option[List[PSPDetails]] = None, underAppeal: Option[String] = None)
 
 object SchemeDetails {
@@ -46,12 +46,13 @@ object SchemeDetails {
       (JsPath \ "referenceNumber").read[String] and
       (JsPath \ "schemeStatus").read[String] and
       (JsPath \ "openDate").readNullable[String] and
+      (JsPath \ "windUpDate").readNullable[String] and
       (JsPath \ "pstr").readNullable[String] and
       (JsPath \ "relationShip").readNullable[String] and
       (JsPath \ "underAppeal").readNullable[String]
     ) (
-    (name, srn, status, openDate, pstr, relationship, underAppeal) =>
-      SchemeDetails(name, srn, status, openDate, pstr, relationship, None, underAppeal)
+    (name, srn, status, openDate, windUpDate, pstr, relationship, underAppeal) =>
+      SchemeDetails(name, srn, status, openDate, windUpDate, pstr, relationship, None, underAppeal)
   )
 }
 
