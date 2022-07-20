@@ -23,6 +23,7 @@ import org.mongodb.scala.bson.BsonBinary
 import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
+import repositories.SchemeCacheRepository.SchemeCacheRepositoryFormats.{dataKey, expireAtKey, idField, lastUpdatedKey}
 import repositories.SchemeCacheRepository._
 import uk.gov.hmrc.crypto.{Crypted, CryptoWithKeysFromConfig, PlainText}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -65,12 +66,12 @@ object SchemeCacheRepository {
   object SchemeCacheRepositoryFormats {
     implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
     implicit val format: Format[SchemeCacheRepository] = Json.format[SchemeCacheRepository]
-  }
 
-  val dataKey: String = "data"
-  val idField: String = "id"
-  val lastUpdatedKey: String = "lastUpdated"
-  val expireAtKey: String = "expireAt"
+    val dataKey: String = "data"
+    val idField: String = "id"
+    val lastUpdatedKey: String = "lastUpdated"
+    val expireAtKey: String = "expireAt"
+  }
 }
 
 class SchemeCacheRepository @Inject()(
