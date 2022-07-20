@@ -21,15 +21,7 @@ import config.AppConfig
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.LastError
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{Cursor, DB, WriteConcern}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,8 +31,8 @@ trait MongoDbProvider {
 }
 
 @Singleton
-class MongoDb @Inject()(component: ReactiveMongoComponent) extends MongoDbProvider {
-  override val mongo: () => DB = component.mongoConnector.db
+class MongoDb @Inject()(mongoComponent: MongoComponent) extends MongoDbProvider {
+  override val mongo: () => DB = mongoComponent.mongoConnector.db
 }
 
 
