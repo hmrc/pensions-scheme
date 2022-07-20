@@ -66,13 +66,6 @@ abstract class SchemeCacheController(
       }
   }
 
-  def dropCollection(): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised() {
-        repository.dropCollection.map(_ => Ok)
-      }
-  }
-
   private val jodaDateTimeNumberWrites = new Writes[DateTime] {
     def writes(d: DateTime): JsValue = JsNumber(d.getMillis)
   }

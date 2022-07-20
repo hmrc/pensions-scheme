@@ -18,45 +18,95 @@ package repositories
 
 import com.google.inject.Inject
 import org.joda.time.{DateTime, DateTimeZone}
-import org.slf4j.{Logger, LoggerFactory}
-import play.api.Configuration
-import play.api.libs.json.{Format, JsValue, Json, _}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.Subtype.GenericBinarySubtype
-import reactivemongo.bson.{BSONBinary, BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers._
+import com.mongodb.client.model.FindOneAndUpdateOptions
+import org.mongodb.scala.bson.BsonBinary
+import org.mongodb.scala.model._
+import play.api.libs.json._
+import play.api.{Configuration, Logging}
+import repositories.SchemeCacheRepository._
 import uk.gov.hmrc.crypto.{Crypted, CryptoWithKeysFromConfig, PlainText}
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.formats.MongoBinaryFormats.{byteArrayReads, byteArrayWrites}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
+
+object SchemeCacheRepository {
+
+  sealed trait SchemeCacheRepository
+
+  case class DataEntry(id: String, data: Array[Byte], lastUpdated: DateTime, expireAt: DateTime) extends SchemeCacheRepository
+
+  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime) extends SchemeCacheRepository
+
+  implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+
+
+  object DataEntry {
+    def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC), expireAt: DateTime): DataEntry =
+      DataEntry(id, data, lastUpdated, expireAt)
+
+    final val bsonBinaryReads: Reads[BsonBinary] = byteArrayReads.map(t => BsonBinary(t))
+    final val bsonBinaryWrites: Writes[BsonBinary] = byteArrayWrites.contramap(t => t.getData)
+    implicit val bsonBinaryFormat: Format[BsonBinary] = Format(bsonBinaryReads, bsonBinaryWrites)
+
+    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+    implicit val format: Format[DataEntry] = Json.format[DataEntry]
+  }
+
+  object JsonDataEntry {
+    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+    implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
+  }
+
+  object SchemeCacheRepositoryFormats {
+    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+    implicit val format: Format[SchemeCacheRepository] = Json.format[SchemeCacheRepository]
+  }
+
+  val dataKey: String = "data"
+  val idField: String = "id"
+  val lastUpdatedKey: String = "lastUpdated"
+  val expireAtKey: String = "expireAt"
+}
 
 class SchemeCacheRepository @Inject()(
                                        collectionName: String,
+                                       mongoComponent: MongoComponent,
+                                       config: Configuration,
                                        encryptionKey: String,
                                        expireInSeconds: Option[Int],
-                                       config: Configuration,
-                                       component: ReactiveMongoComponent,
-                                       expireInDays: Option[Int]
+                                       expireInDays: Int,
                                      )(
                                        implicit ec: ExecutionContext
                                      )
-  extends ReactiveRepository[JsValue, BSONObjectID](
-    collectionName,
-    component.mongoConnector.db,
-    implicitly
-  ) {
+  extends PlayMongoRepository[SchemeCacheRepository](
+    collectionName = collectionName,
+    mongoComponent = mongoComponent,
+    domainFormat = SchemeCacheRepositoryFormats.format,
+    extraCodecs = Seq(
+      Codecs.playFormatCodec(JsonDataEntry.format),
+      Codecs.playFormatCodec(DataEntry.format)
+    ),
+    indexes = Seq(
+      IndexModel(
+        Indexes.ascending(lastUpdatedKey),
+        IndexOptions().name(expireAtKey).expireAfter(expireInDays, TimeUnit.SECONDS).background(true)
+      )
+    )
+  ) with Logging {
 
-  override val logger: Logger = LoggerFactory.getLogger("SchemeCacheRepository")
+  import SchemeCacheRepository._
 
   private def getExpireAt: DateTime = if (expireInSeconds.isEmpty) {
     DateTime
       .now(DateTimeZone.UTC)
       .toLocalDate
       .plusDays(
-        expireInDays.getOrElse(config.underlying.getInt("defaultDataExpireInDays")) + 1
+        expireInDays + 1
       ).toDateTimeAtStartOfDay()
   } else {
     DateTime
@@ -66,139 +116,57 @@ class SchemeCacheRepository @Inject()(
       )
   }
 
+
   private val jsonCrypto: CryptoWithKeysFromConfig =
     new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
 
   private val encrypted: Boolean =
     config.get[Boolean]("encrypted")
 
-  private case class DataEntry(
-                                id: String,
-                                data: BSONBinary,
-                                lastUpdated: DateTime,
-                                expireAt: DateTime
-                              )
-
-  private object DataEntry {
-
-    def apply(
-               id: String,
-               data: Array[Byte],
-               lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC),
-               expireAt: DateTime = getExpireAt
-             ): DataEntry =
-      DataEntry(id, BSONBinary(data, GenericBinarySubtype), lastUpdated, expireAt)
-
-    private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
-    implicit val reads: OFormat[DataEntry] = Json.format[DataEntry]
-    implicit val writes: OWrites[DataEntry] = Json.format[DataEntry]
-  }
-
-  private case class JsonDataEntry(
-                                    id: String,
-                                    data: JsValue,
-                                    lastUpdated: DateTime,
-                                    expireAt: DateTime
-                                  )
-
-  private object JsonDataEntry {
-    private implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
-    implicit val reads: OFormat[JsonDataEntry] = Json.format[JsonDataEntry]
-    implicit val writes: OWrites[JsonDataEntry] = Json.format[JsonDataEntry]
-  }
-
-  private val ttl = 0
-  private val expireAt = "expireAt"
-  private val dataExpiry = "dataExpiry"
-  private val expireAfterSeconds = "expireAfterSeconds"
-
-  (for {
-    _ <- checkIndexTtl(dataExpiry, Some(ttl))
-    _ <- ensureIndex(expireAt, dataExpiry, Some(ttl))
-  } yield {
-    ()
-  }) recoverWith {
-    case t: Throwable =>
-      Future.successful(logger.error(s"Error ensuring indexes on collection ${collection.name}", t))
-  } andThen {
-    case _ =>
-      CollectionDiagnostics.logCollectionInfo(collection)
-  }
-
-  private def checkIndexTtl(indexName: String, ttl: Option[Int]): Future[Unit] = {
-
-    CollectionDiagnostics.indexInfo(collection)
-      .flatMap { seqIndexes =>
-        seqIndexes
-          .find(index => index.name == indexName && index.ttl != ttl)
-          .map {
-            index =>
-              logger.warn(s"Index $indexName on collection ${collection.name} is not required")
-              collection.indexesManager.drop(index.name) map {
-                case n if n > 0 =>
-                  logger.warn(s"Dropped index $indexName on collection ${collection.name} as index not required")
-                case _ =>
-                  logger.warn(s"Index index $indexName on collection ${collection.name} had already been dropped (possible race condition)")
-              }
-          } getOrElse Future.successful(logger.info(s"Index $indexName on collection ${collection.name} is not available"))
-      }
-
-  }
-
-  private def ensureIndex(field: String, indexName: String, ttl: Option[Int]): Future[Boolean] = {
-    val defaultIndex: Index = Index(Seq((field, IndexType.Ascending)), Some(indexName))
-
-    val index: Index = ttl.fold(defaultIndex) { ttl =>
-      Index(
-        Seq((field, IndexType.Ascending)),
-        Some(indexName),
-        background = true,
-        options = BSONDocument(expireAfterSeconds -> ttl)
-      )
-    }
-
-    collection.indexesManager.ensure(index) map {
-      result => {
-        logger.warn(s"Created index $indexName on collection ${collection.name} with TTL value $ttl -> result: $result")
-        result
-      }
-    } recover {
-      case e =>
-        logger.error("Failed to set TTL index", e)
-        false
-    }
-  }
-
   def upsert(id: String, data: JsValue)
-            (implicit ec: ExecutionContext): Future[Boolean] = {
-    val document: JsValue = {
-      if (encrypted) {
-        val unencrypted = PlainText(Json.stringify(data))
-        val encryptedData = jsonCrypto.encrypt(unencrypted).value
-        val dataAsByteArray: Array[Byte] = encryptedData.getBytes("UTF-8")
-        Json.toJson(DataEntry(id, dataAsByteArray))
-      } else
-        Json.toJson(JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC), getExpireAt))
+            (implicit ec: ExecutionContext): Future[Unit] = {
+    if (encrypted) {
+      val unencrypted = PlainText(Json.stringify(data))
+      val encryptedData = jsonCrypto.encrypt(unencrypted).value
+      val dataAsByteArray: Array[Byte] = encryptedData.getBytes("UTF-8")
+      val expireAt = getExpireAt
+      val lastUpdatedAt = DateTime.now(DateTimeZone.UTC)
+      val entry = DataEntry.apply(id, dataAsByteArray, lastUpdatedAt, expireAt)
+      val setOperation = Updates.combine(
+        Updates.set(idField, entry.id),
+        Updates.set(dataKey, entry.data),
+        Updates.set(lastUpdatedKey, Codecs.toBson(entry.lastUpdated)),
+        Updates.set(expireAtKey, Codecs.toBson(entry.expireAt))
+      )
+      collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
+        filter = Filters.eq(idField, id),
+        update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
+    } else {
+      val setOperation = Updates.combine(
+        Updates.set(idField, id),
+        Updates.set(dataKey, Codecs.toBson(data)),
+        Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
+        Updates.set(expireAtKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC)))
+      )
+      collection.withDocumentClass[JsonDataEntry].findOneAndUpdate(
+        filter = Filters.eq(idField, id),
+        update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
     }
-    val selector = BSONDocument("id" -> id)
-    val modifier = BSONDocument("$set" -> document)
-    collection.update(ordered = false).one(selector, modifier, upsert = true)
-      .map(_.ok)
   }
 
   def get(id: String)
          (implicit ec: ExecutionContext): Future[Option[JsValue]] = {
     if (encrypted) {
-      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[DataEntry].map {
+      collection.find[DataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {
           dataEntry =>
-            val dataAsString = new String(dataEntry.data.byteArray, StandardCharsets.UTF_8)
+            val dataAsString = new String(dataEntry.data, StandardCharsets.UTF_8)
             val decrypted: PlainText = jsonCrypto.decrypt(Crypted(dataAsString))
             Json.parse(decrypted.value)
         }
       }
     } else {
-      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[JsonDataEntry].map {
+      collection.find[JsonDataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {
           dataEntry =>
             dataEntry.data
@@ -210,14 +178,14 @@ class SchemeCacheRepository @Inject()(
   def getLastUpdated(id: String)
                     (implicit ec: ExecutionContext): Future[Option[DateTime]] = {
     if (encrypted) {
-      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[DataEntry].map {
+      collection.find[DataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {
           dataEntry =>
             dataEntry.lastUpdated
         }
       }
     } else {
-      collection.find(BSONDocument("id" -> id), Option.empty[JsObject]).one[JsonDataEntry].map {
+      collection.find[JsonDataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {
           dataEntry =>
             dataEntry.lastUpdated
@@ -226,16 +194,13 @@ class SchemeCacheRepository @Inject()(
     }
   }
 
+
   def remove(id: String)
             (implicit ec: ExecutionContext): Future[Boolean] = {
-    logger.warn(s"Removing row from collection ${collection.name} externalId:$id")
-    val selector = BSONDocument("id" -> id)
-    collection.delete().one(selector).map(_.ok)
-  }
-
-  def dropCollection()
-                    (implicit ec: ExecutionContext): Future[Unit] = {
-    collection.drop(failIfNotFound = false).map(_ => ())
+    collection.deleteOne(Filters.equal(idField, id)).toFuture().map { result =>
+      logger.info(s"Removing row from collection ${collectionName} externalId:$id")
+      result.wasAcknowledged
+    }
   }
 
 }
