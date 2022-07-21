@@ -37,11 +37,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeCacheRepository {
 
-  sealed trait SchemeCacheRepository
+  sealed trait SchemeDataEntry
 
-  case class DataEntry(id: String, data: Array[Byte], lastUpdated: DateTime, expireAt: DateTime) extends SchemeCacheRepository
+  case class DataEntry(id: String, data: Array[Byte], lastUpdated: DateTime, expireAt: DateTime) extends SchemeDataEntry
 
-  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime) extends SchemeCacheRepository
+  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime) extends SchemeDataEntry
 
   implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
 
@@ -65,7 +65,7 @@ object SchemeCacheRepository {
 
   object SchemeCacheRepositoryFormats {
     implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-    implicit val format: Format[SchemeCacheRepository] = Json.format[SchemeCacheRepository]
+    implicit val format: Format[SchemeDataEntry] = Json.format[SchemeDataEntry]
 
     val dataKey: String = "data"
     val idField: String = "id"
@@ -84,7 +84,7 @@ class SchemeCacheRepository @Inject()(
                                      )(
                                        implicit ec: ExecutionContext
                                      )
-  extends PlayMongoRepository[SchemeCacheRepository](
+  extends PlayMongoRepository[SchemeDataEntry](
     collectionName = collectionName,
     mongoComponent = mongoComponent,
     domainFormat = SchemeCacheRepositoryFormats.format,
