@@ -20,54 +20,79 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import config.AppConfig
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
+import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes}
 import play.api.libs.json._
-import uk.gov.hmrc.mongo.MongoComponent
+import play.modules.reactivemongo.ReactiveMongoComponent
+import repositories.FeatureToggleMongoFormatter.featureToggles
+import uk.gov.hmrc.mongo.{MongoComponent, ReactiveRepository}
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import scala.concurrent.{ExecutionContext, Future}
+//
+//@ImplementedBy(classOf[MongoDb])
+//trait MongoDbProvider {
+//  def mongo: () => DB
+//}
+//
+//@Singleton
+//class MongoDb @Inject()(mongoComponent: MongoComponent) extends MongoDbProvider {
+//  override val mongo: () => DB = mongoComponent.mongoConnector.db
+//}
+//
+//
+//@ImplementedBy(classOf[LockMongoRepository])
+//trait LockRepository {
+//
+//  def releaseLock(lock: SchemeVariance): Future[Unit]
+//
+//  def releaseLockByPSA(psaId: String): Future[Unit]
+//
+//  def releaseLockBySRN(id: String): Future[Unit]
+//
+//  def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]]
+//
+//  def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]]
+//
+//  def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]]
+//
+//  def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]]
+//
+//  def list: Future[List[SchemeVariance]]
+//
+//  def replaceLock(newLock: SchemeVariance): Future[Boolean]
+//
+//  def lock(newLock: SchemeVariance): Future[Lock]
+//}
 
-@ImplementedBy(classOf[MongoDb])
-trait MongoDbProvider {
-  def mongo: () => DB
-}
+//@Singleton
+//class MyRepo @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext
+//) extends PlayMongoRepository[MyModel](
+//  mongoComponent = mongo,
+//  collectionName = "mycollection",
+//  domainFormat   = MyModel.mongoFormat,
+//  indexes        = Seq(/* IndexModel() instances, see Migrate index definitions below  */)
+//)
 
 @Singleton
-class MongoDb @Inject()(mongoComponent: MongoComponent) extends MongoDbProvider {
-  override val mongo: () => DB = mongoComponent.mongoConnector.db
-}
-
-
-@ImplementedBy(classOf[LockMongoRepository])
-trait LockRepository {
-
-  def releaseLock(lock: SchemeVariance): Future[Unit]
-
-  def releaseLockByPSA(psaId: String): Future[Unit]
-
-  def releaseLockBySRN(id: String): Future[Unit]
-
-  def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]]
-
-  def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]]
-
-  def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]]
-
-  def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]]
-
-  def list: Future[List[SchemeVariance]]
-
-  def replaceLock(newLock: SchemeVariance): Future[Boolean]
-
-  def lock(newLock: SchemeVariance): Future[Lock]
-}
-
-@Singleton
-class LockMongoRepository @Inject()(config: AppConfig,
-                                    mongoDbProvider: MongoDbProvider)
+class LockMongoRepository @Inject()(appConfig: AppConfig,
+                                    mongoComponent: MongoComponent)
                                    (implicit ec: ExecutionContext)
-  extends ReactiveRepository[SchemeVariance, BSONObjectID](
-    collectionName = "scheme_variation_lock",
-    mongo = mongoDbProvider.mongo,
-    domainFormat = SchemeVariance.format) with LockRepository {
+  extends PlayMongoRepository[SchemeVariance](
+    collectionName = appConfig..get[String](path = "mongodb.pensions-scheme-cache.admin-data.name"),
+    mongoComponent = mongoComponent,
+    domainFormat = FeatureToggleMongoFormatter.featureToggleMongoFormatter,
+    indexes = Seq(IndexModel(
+      Indexes.ascending(featureToggles),
+      IndexOptions().name(featureToggles).unique(true).background(true)
+    ))
+
+//
+//    collectionName = "scheme_variation_lock",
+//    mongo = mongoDbProvider.mongo,
+//    domainFormat = SchemeVariance.format)
+
+    {
   //scalastyle:off magic.number
   private lazy val documentExistsErrorCode = Some(11000)
 
