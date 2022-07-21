@@ -18,18 +18,16 @@ package repositories
 
 import com.google.inject.Inject
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
+import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext
 
 class RacdacSchemeSubscriptionCacheRepository @Inject()(
                                              config: Configuration,
-                                             component: ReactiveMongoComponent
                                            )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
   config.underlying.getString("mongodb.pensions-scheme-cache.register-racdac-scheme.name"),
   "scheme.json.encryption",
   None,
   config,
-  component,
-  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays"))
+  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays")),
 )
