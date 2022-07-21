@@ -45,7 +45,6 @@ object SchemeCacheRepository {
 
   implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
 
-
   object DataEntry {
     def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC), expireAt: DateTime): DataEntry =
       DataEntry(id, data, lastUpdated, expireAt)
@@ -80,7 +79,7 @@ class SchemeCacheRepository @Inject()(
                                        config: Configuration,
                                        encryptionKey: String,
                                        expireInSeconds: Option[Int],
-                                       expireInDays: Int,
+                                       expireInDays: Option[Int]
                                      )(
                                        implicit ec: ExecutionContext
                                      )
@@ -95,7 +94,7 @@ class SchemeCacheRepository @Inject()(
     indexes = Seq(
       IndexModel(
         Indexes.ascending(lastUpdatedKey),
-        IndexOptions().name(expireAtKey).expireAfter(expireInDays, TimeUnit.SECONDS).background(true)
+        IndexOptions().name(expireAtKey).expireAfter(expireInDays.get, TimeUnit.SECONDS).background(true)
       )
     )
   ) with Logging {
@@ -107,7 +106,7 @@ class SchemeCacheRepository @Inject()(
       .now(DateTimeZone.UTC)
       .toLocalDate
       .plusDays(
-        expireInDays + 1
+        expireInDays.getOrElse(config.underlying.getInt("defaultDataExpireInDays")) + 1
       ).toDateTimeAtStartOfDay()
   } else {
     DateTime
@@ -116,7 +115,6 @@ class SchemeCacheRepository @Inject()(
         expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds"))
       )
   }
-
 
   private val jsonCrypto: CryptoWithKeysFromConfig =
     new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
@@ -203,6 +201,4 @@ class SchemeCacheRepository @Inject()(
       result.wasAcknowledged
     }
   }
-
 }
-

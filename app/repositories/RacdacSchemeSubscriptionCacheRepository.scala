@@ -24,10 +24,12 @@ import scala.concurrent.ExecutionContext
 
 class RacdacSchemeSubscriptionCacheRepository @Inject()(
                                              config: Configuration,
-                                           )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository(
-  config.underlying.getString("mongodb.pensions-scheme-cache.register-racdac-scheme.name"),
-  "scheme.json.encryption",
-  None,
-  config,
-  Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays")),
+                                             mongoComponent: MongoComponent
+                                           )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository (
+  collectionName = config.underlying.getString("mongodb.pensions-scheme-cache.register-racdac-scheme.name"),
+  mongoComponent = mongoComponent,
+  config = config,
+  encryptionKey = "scheme.json.encryption",
+  expireInSeconds = None,
+  expireInDays = Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays"))
 )
