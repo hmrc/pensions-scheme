@@ -138,34 +138,6 @@ class LockMongoRepositoryTest
     }
   }
 
-  "replaceLock" must {
-    "return true for existing lock" in {
-      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-
-      await(repository.replaceLock(SchemeVariance("psa2", "srn2"))) mustBe true
-    }
-
-    "return true and new lock if its not exist lock" in {
-      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-
-      await(repository.replaceLock(SchemeVariance("psa3", "srn3"))) mustBe true
-    }
-
-    "throw exception if failed to find the lock which doesn't allow" in {
-      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-
-      val result = repository.replaceLock(SchemeVariance("psa2", "srn1"))
-
-      whenReady(result.failed) { e =>
-        e mustBe a[Exception]
-        e.getMessage mustBe "Expected SchemeVariance to be locked, but no lock was found with psaId: psa2 and srn: srn1"
-      }
-    }
-  }
-
   "lock" should {
 
     "return locked if its new and unique combination for psaId and srn" in {
