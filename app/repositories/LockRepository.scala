@@ -118,29 +118,29 @@ class LockRepository @Inject()(config: Configuration,
     )
 
     collection.findOneAndUpdate(Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)), modifier).toFuture().map(_ => VarianceLock)
-        recoverWith {
-          case e: LastError if e.code == documentExistsErrorCode =>
-            findLock(newLock.psaId, newLock.srn)
-        }
-          update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
-          .map[Lock](_ => VarianceLock) recoverWith {
-          case e: LastError if e.code == documentExistsErrorCode =>
-            findLock(newLock.psaId, newLock.srn)
-        }
+//        recoverWith {
+//          case e: LastError if e.code == documentExistsErrorCode =>
+//            findLock(newLock.psaId, newLock.srn)
+//        }
+//          update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
+//          .map[Lock](_ => VarianceLock) recoverWith {
+//          case e: LastError if e.code == documentExistsErrorCode =>
+//            findLock(newLock.psaId, newLock.srn)
+//        }
   }
 
-    private def findLock(psaId: String, srn: String): Future[Lock] = {
-      for {
-        psaLock <- getExistingLockByPSA(psaId)
-        srnLock <- getExistingLockBySRN(srn)
-      } yield {
-        (psaLock, srnLock) match {
-          case (Some(_), None) => PsaLock
-          case (None, Some(_)) => SchemeLock
-          case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
-          case (Some(_), Some(_)) => VarianceLock
-          case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
-        }
-      }
-    }
+//    private def findLock(psaId: String, srn: String): Future[Lock] = {
+//      for {
+//        psaLock <- getExistingLockByPSA(psaId)
+//        srnLock <- getExistingLockBySRN(srn)
+//      } yield {
+//        (psaLock, srnLock) match {
+//          case (Some(_), None) => PsaLock
+//          case (None, Some(_)) => SchemeLock
+//          case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
+//          case (Some(_), Some(_)) => VarianceLock
+//          case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
+//        }
+//      }
+//    }
 }
