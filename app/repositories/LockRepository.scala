@@ -110,6 +110,17 @@ class LockRepository @Inject()(config: Configuration,
     }
   }
 
+  /*
+  def lock(newLock: SchemeVariance): Future[Lock] = {
+
+    collection.update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
+      .map[Lock](_ => VarianceLock) recoverWith {
+      case e: LastError if e.code == documentExistsErrorCode =>
+        findLock(newLock.psaId, newLock.srn)
+    }
+  }
+   */
+
   def lock(newLock: SchemeVariance): Future[Lock] = {
 
     val modifier = Updates.combine(
@@ -129,18 +140,18 @@ class LockRepository @Inject()(config: Configuration,
         }
   }
 
-//    private def findLock(psaId: String, srn: String): Future[Lock] = {
-//      for {
-//        psaLock <- getExistingLockByPSA(psaId)
-//        srnLock <- getExistingLockBySRN(srn)
-//      } yield {
-//        (psaLock, srnLock) match {
-//          case (Some(_), None) => PsaLock
-//          case (None, Some(_)) => SchemeLock
-//          case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
-//          case (Some(_), Some(_)) => VarianceLock
-//          case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
-//        }
-//      }
-//    }
+    private def findLock(psaId: String, srn: String): Future[Lock] = {
+      for {
+        psaLock <- getExistingLockByPSA(psaId) // has this psa got any scheme locked
+        srnLock <- getExistingLockBySRN(srn) // is this scheme locked to any psa
+      } yield {
+        (psaLock, srnLock) match {
+          case (Some(_), None) => PsaLock // this psa has locked a scheme
+          case (None, Some(_)) => SchemeLock // this scheme is locked to a psa
+          case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock // this psa has locked a scheme and this scheme is locked
+//          case (Some(_), Some(_)) => VarianceLock <- Impossible!
+          case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
+        }
+      }
+    }
 }
