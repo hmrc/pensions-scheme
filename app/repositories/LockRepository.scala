@@ -17,6 +17,7 @@
 package repositories
 
 import com.google.inject.{Inject, Singleton}
+import com.mongodb.client.model.FindOneAndUpdateOptions
 import config.AppConfig
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
@@ -118,7 +119,11 @@ class LockRepository @Inject()(config: Configuration,
       Updates.set(srnKey, newLock.srn)
     )
 
-    collection.findOneAndUpdate(Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)), modifier).toFuture().map(_ => VarianceLock)
+    collection.findOneAndUpdate(
+      Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)),
+      modifier,
+      new FindOneAndUpdateOptions().upsert(true)
+    ).toFuture().map(_ => VarianceLock)
     recoverWith {
       case e: MongoException if e.getCode == documentExistsErrorCode =>
         //          case e: LastError if e.code == documentExistsErrorCode =>
