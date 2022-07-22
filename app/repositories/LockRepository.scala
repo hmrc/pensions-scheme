@@ -118,15 +118,15 @@ class LockRepository @Inject()(config: Configuration,
     )
 
     collection.findOneAndUpdate(Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)), modifier).toFuture().map(_ => VarianceLock)
-//        recoverWith {
-//          case e: LastError if e.code == documentExistsErrorCode =>
-//            findLock(newLock.psaId, newLock.srn)
-//        }
-//          update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
-//          .map[Lock](_ => VarianceLock) recoverWith {
-//          case e: LastError if e.code == documentExistsErrorCode =>
-//            findLock(newLock.psaId, newLock.srn)
-//        }
+        recoverWith {
+          case e: LastError if e.code == documentExistsErrorCode =>
+            findLock(newLock.psaId, newLock.srn)
+        }
+          update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
+          .map[Lock](_ => VarianceLock) recoverWith {
+          case e: LastError if e.code == documentExistsErrorCode =>
+            findLock(newLock.psaId, newLock.srn)
+        }
   }
 
 //    private def findLock(psaId: String, srn: String): Future[Lock] = {
