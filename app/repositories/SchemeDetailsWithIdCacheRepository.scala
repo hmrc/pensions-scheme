@@ -48,7 +48,7 @@ object SchemeDetailsWithIdCacheRepository {
 class SchemeDetailsWithIdCacheRepository @Inject()(
                                                     mongoComponent: MongoComponent,
                                                     configuration: Configuration
-                                   )(implicit val ec: ExecutionContext)
+                                                  )(implicit val ec: ExecutionContext)
   extends PlayMongoRepository[JsonDataEntry](
     mongoComponent = mongoComponent,
     collectionName = configuration.get[String](path = "mongodb.pensions-scheme-cache.scheme-with-id.name"),
@@ -77,23 +77,21 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
-      Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC)))
+      Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
+      Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
     )
     collection.findOneAndUpdate(filterScheme(id), modifier).toFuture().map(_ => true)
 
   }
 
   def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
-    collection.find[JsonDataEntry](Filters.equal(idField, schemeWithId)).headOption().map{
-      _.map {
-        dataEntry =>
-          dataEntry.data
-      }
+    collection.find[JsonDataEntry](Filters.equal(idField, schemeWithId)).headOption().map {
+      _.map(_.data)
     }
   }
 
   def remove(schemeWithId: SchemeWithId): Future[Boolean] = {
-    collection.deleteOne(Filters.equal(idField,SchemeWithId)).toFuture().map { result =>
+    collection.deleteOne(Filters.equal(idField, SchemeWithId)).toFuture().map { result =>
       logger.info(s"Removing row from collection $collectionName externalId:${schemeWithId.schemeId}")
       result.wasAcknowledged
     }
