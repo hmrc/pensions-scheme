@@ -22,7 +22,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
-import repositories.SchemeDetailsWithIdCacheRepository.{JsonDataEntry, dataKey, expireAtKey, idField, lastUpdatedKey}
+import repositories.SchemeDetailsWithIdCacheRepository._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
@@ -43,16 +43,6 @@ object SchemeDetailsWithIdCacheRepository {
     implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
 
   }
-
-//  object SchemeDetailsWithIdCacheRepositoryFormats {
-//    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-//    implicit val format: Format[SchemeDetailsWithIdDataEntry] = Json.format[SchemeDetailsWithIdDataEntry]
-//
-//    val dataKey: String = "data"
-//    val idField: String = "id"
-//    val lastUpdatedKey: String = "lastUpdated"
-//    val expireAtKey: String = "expireAt"
-//  }
 }
 
 class SchemeDetailsWithIdCacheRepository @Inject()(
@@ -81,17 +71,6 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
   private def expireInSeconds: DateTime = DateTime.now(DateTimeZone.UTC).
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
 
-//  override lazy val indexes: Seq[Index] = Seq(
-//    Index(key = Seq("uniqueSchemeWithId" -> Ascending), name = Some("schemeId_userId_index"), unique = true),
-//    Index(key = Seq("expireAt" -> Ascending), name = Some("dataExpiry"), options = BSONDocument("expireAfterSeconds" -> 0))
-//  )
-
-//  private val selector: SchemeWithId => BSONDocument = schemeWithId =>
-//    BSONDocument("uniqueSchemeWithId" -> (schemeWithId.schemeId + schemeWithId.userId))
-//
-//  private val modifier: JsValue => BSONDocument = document =>
-//    BSONDocument("$set" -> document)
-
   def save(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
     val id: String = schemeWithId.schemeId + schemeWithId.userId
 
@@ -102,13 +81,6 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     )
     collection.findOneAndUpdate(filterScheme(id), modifier).toFuture().map(_ => true)
 
-    /*
-    def save(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
-    val id: String = schemeWithId.schemeId + schemeWithId.userId
-    val document: JsValue = Json.toJson(DataCache.applyDataCache(id, schemeDetails, expireAt = expireInSeconds))
-    collection.update(true).one(selector(schemeWithId), modifier(document), upsert = true).map(_.ok)
-  }
-     */
   }
 
   def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
