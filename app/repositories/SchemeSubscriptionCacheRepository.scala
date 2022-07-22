@@ -31,5 +31,5 @@ class SchemeSubscriptionCacheRepository @Inject()(
   config = config,
   encryptionKey = "scheme.json.encryption",
   expireInSeconds = None,
-  expireInDays = Some(config.underlying.getInt("ongodb.pensions-scheme-cache.register-scheme.timeToLiveInDays"))
+  expireInDays = Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-scheme.timeToLiveInDays"))
 )

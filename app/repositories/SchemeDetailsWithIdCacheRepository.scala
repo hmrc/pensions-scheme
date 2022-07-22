@@ -17,6 +17,7 @@
 package repositories
 
 import com.google.inject.Inject
+import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.SchemeWithId
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.model._
@@ -32,11 +33,11 @@ import scala.concurrent.{ExecutionContext, Future}
 object SchemeDetailsWithIdCacheRepository {
 
   private val dataKey: String = "data"
-  private val idField: String = "id"
+  private val idField: String = "uniqueSchemeWithId"
   private val lastUpdatedKey: String = "lastUpdated"
   private val expireAtKey: String = "expireAt"
 
-  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+  case class JsonDataEntry(uniqueSchemeWithId: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
 
   object JsonDataEntry {
     implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
@@ -73,25 +74,56 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
 
   def save(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
     val id: String = schemeWithId.schemeId + schemeWithId.userId
-
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
       Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
       Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
     )
-    collection.findOneAndUpdate(filterScheme(id), modifier).toFuture().map(_ => true)
+//
+//    collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
+//      filter = Filters.eq(idField, id),
+//      update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
+
+    collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(filterScheme(id), modifier,
+      new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => true)
 
   }
 
+  /*
+  {
+   "_id":{
+      "$oid":"62da9dfc70fa3d765b416a7d"
+   },
+   "uniqueSchemeWithId":"S2400000001A2100005",
+   "data":{
+      "benefits":"opt1",
+      "pspDetails":[
+
+...
+
+   },
+   "expireAt":{
+      "$date":{
+         "$numberLong":"1658498060670"
+      }
+   },
+   "lastUpdated":{
+      "$date":{
+         "$numberLong":"1658494460670"
+      }
+   }
+}
+   */
+
   def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
-    collection.find[JsonDataEntry](Filters.equal(idField, schemeWithId)).headOption().map {
+    collection.find[JsonDataEntry](Filters.equal(idField, schemeWithId.schemeId + schemeWithId.userId)).headOption().map {
       _.map(_.data)
     }
   }
 
   def remove(schemeWithId: SchemeWithId): Future[Boolean] = {
-    collection.deleteOne(Filters.equal(idField, SchemeWithId)).toFuture().map { result =>
+    collection.deleteOne(Filters.equal(idField, schemeWithId.schemeId + schemeWithId.userId)).toFuture().map { result =>
       logger.info(s"Removing row from collection $collectionName externalId:${schemeWithId.schemeId}")
       result.wasAcknowledged
     }
