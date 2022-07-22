@@ -19,15 +19,11 @@ package repositories
 import com.google.inject.Inject
 import models.SchemeWithId
 import org.joda.time.{DateTime, DateTimeZone}
-import org.mongodb.scala.bson.BsonBinary
 import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
-import repositories.SchemeCacheRepository.JsonDataEntry
-import repositories.SchemeDetailsWithIdCacheRepository.SchemeDetailsWithIdCacheRepositoryFormats.{dataKey, expireAtKey, idField, lastUpdatedKey}
-import repositories.SchemeDetailsWithIdCacheRepository.{DataEntry, JsonDataEntry, SchemeDetailsWithIdCacheRepositoryFormats, SchemeDetailsWithIdDataEntry}
+import repositories.SchemeDetailsWithIdCacheRepository.{JsonDataEntry, dataKey, expireAtKey, idField, lastUpdatedKey}
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.formats.MongoBinaryFormats.{byteArrayReads, byteArrayWrites}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
@@ -35,38 +31,40 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeDetailsWithIdCacheRepository {
 
-//  sealed trait SchemeDetailsWithIdDataEntry
+  private val dataKey: String = "data"
+  private val idField: String = "id"
+  private val lastUpdatedKey: String = "lastUpdated"
+  private val expireAtKey: String = "expireAt"
 
-//  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime) extends SchemeDetailsWithIdDataEntry
-
+  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
 
   object JsonDataEntry {
     implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
     implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
+
   }
 
-  object SchemeDetailsWithIdCacheRepositoryFormats {
-    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-    implicit val format: Format[SchemeDetailsWithIdDataEntry] = Json.format[SchemeDetailsWithIdDataEntry]
-
-    val dataKey: String = "data"
-    val idField: String = "id"
-    val lastUpdatedKey: String = "lastUpdated"
-    val expireAtKey: String = "expireAt"
-  }
+//  object SchemeDetailsWithIdCacheRepositoryFormats {
+//    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+//    implicit val format: Format[SchemeDetailsWithIdDataEntry] = Json.format[SchemeDetailsWithIdDataEntry]
+//
+//    val dataKey: String = "data"
+//    val idField: String = "id"
+//    val lastUpdatedKey: String = "lastUpdated"
+//    val expireAtKey: String = "expireAt"
+//  }
 }
 
 class SchemeDetailsWithIdCacheRepository @Inject()(
                                                     mongoComponent: MongoComponent,
                                                     configuration: Configuration
                                    )(implicit val ec: ExecutionContext)
-  extends PlayMongoRepository[SchemeDetailsWithIdDataEntry](
+  extends PlayMongoRepository[JsonDataEntry](
     mongoComponent = mongoComponent,
     collectionName = configuration.get[String](path = "mongodb.pensions-scheme-cache.scheme-with-id.name"),
-    domainFormat = SchemeDetailsWithIdCacheRepositoryFormats.format,
+    domainFormat = JsonDataEntry.format,
     extraCodecs = Seq(
-      Codecs.playFormatCodec(JsonDataEntry.format),
-      Codecs.playFormatCodec(DataEntry.format)
+      Codecs.playFormatCodec(JsonDataEntry.format)
     ),
     indexes = Seq(
       IndexModel(
@@ -77,7 +75,6 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
   ) with Logging {
 
   private val filterScheme = Filters.equal("uniqueSchemeWithId", _: String)
-
 
   private def expireInSeconds: DateTime = DateTime.now(DateTimeZone.UTC).
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
@@ -99,7 +96,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
-      Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC)))
+      Updates.set[JsonDataEntry](lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC)))
     )
     collection.findOneAndUpdate(filterScheme(id), modifier).toFuture().map(_ => true)
 
