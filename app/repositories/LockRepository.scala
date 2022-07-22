@@ -72,16 +72,9 @@ class LockRepository @Inject()(config: Configuration,
   private val filterPsa = Filters.equal("psaId", _: String)
   private val filterSrn = Filters.equal("srn", _: String)
 
-  //  override lazy val indexes: Seq[Index] = Seq(
-  //    Index(key = Seq("psaId" -> Ascending), name = Some("psaId_Index"), unique = true),
-  //    Index(key = Seq("srn" -> Ascending), name = Some("srn_Index"), unique = true),
-  //    Index(key = Seq("expireAt" -> Ascending), name = Some("dataExpiry"), options = BSONDocument("expireAfterSeconds" -> 0))
-  //  )
-
   def releaseLock(lock: SchemeVariance): Future[Unit] = {
     collection.deleteOne(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).toFuture().map(_ => ())
   }
-  //  findAndRemove(byLock(lock.psaId, lock.srn), None, None, WriteConcern.Default, None, None, Nil).map(_ => ())
 
   def releaseLockByPSA(psaId: String): Future[Unit] =
     collection.deleteOne(filterPsa(psaId)).toFuture().map(_ => ())
@@ -117,28 +110,13 @@ class LockRepository @Inject()(config: Configuration,
     }
   }
 
-  //  def list: Future[List[SchemeVariance]] = {
-  //    //scalastyle:off magic.number
-  //    val arbitraryLimit = 10000
-  //    collection.find[JsObject, JsObject](Json.obj(), None)
-  //      .cursor[SchemeVariance]()
-  //      .collect[List](arbitraryLimit, Cursor.FailOnError())
-  //  }
-
-  //  def replaceLock(newLock: SchemeVariance): Future[Boolean] = {
-  //            val modifier = Updates.combine(
-  //              Updates.set(psaIdKey, newLock.psaId),
-  //              Updates.set(srnKey, newLock.srn)
-  //            )
-  //    val x = collection.findOneAndUpdate(Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)),modifier,
-  //      new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ()).map(_ => true) recoverWith {
-  //      case e: LastError if e.code == documentExistsErrorCode =>
-  //        getExistingLock(newLock).map {
-  //          case Some(existingLock) => existingLock.psaId == newLock.psaId && existingLock.srn == newLock.srn
-  //          case None => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
-  //        }
-  //    }
-  //  }
+//    def list: Future[List[SchemeVariance]] = {
+//      //scalastyle:off magic.number
+//      val arbitraryLimit = 10000
+//      collection.find[JsObject, JsObject](Json.obj(), None)
+//        .cursor[SchemeVariance]()
+//        .collect[List](arbitraryLimit, Cursor.FailOnError())
+//    }
 
   def lock(newLock: SchemeVariance): Future[Lock] = {
 
