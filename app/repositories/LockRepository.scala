@@ -20,7 +20,8 @@ import com.google.inject.{Inject, Singleton}
 import config.AppConfig
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, Updates}
+import org.mongodb.scala.MongoException
+import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -28,6 +29,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 import java.util.concurrent.TimeUnit
+import scala.concurrent.Future.never.recoverWith
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -55,7 +57,7 @@ class LockRepository @Inject()(config: Configuration,
     )
   ) with Logging {
   //scalastyle:off magic.number
-  private lazy val documentExistsErrorCode = Some(11000)
+  private lazy val documentExistsErrorCode = 11000
   val srnKey = "srn"
   val psaIdKey = "psaId"
 
@@ -110,48 +112,32 @@ class LockRepository @Inject()(config: Configuration,
     }
   }
 
-  /*
   def lock(newLock: SchemeVariance): Future[Lock] = {
-
-    collection.update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
-      .map[Lock](_ => VarianceLock) recoverWith {
-      case e: LastError if e.code == documentExistsErrorCode =>
-        findLock(newLock.psaId, newLock.srn)
-    }
-  }
-   */
-
-  def lock(newLock: SchemeVariance): Future[Lock] = {
-
     val modifier = Updates.combine(
       Updates.set(psaIdKey, newLock.psaId),
       Updates.set(srnKey, newLock.srn)
     )
 
     collection.findOneAndUpdate(Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)), modifier).toFuture().map(_ => VarianceLock)
-        recoverWith {
-          case e: LastError if e.code == documentExistsErrorCode =>
-            findLock(newLock.psaId, newLock.srn)
-        }
-          update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
-          .map[Lock](_ => VarianceLock) recoverWith {
-          case e: LastError if e.code == documentExistsErrorCode =>
-            findLock(newLock.psaId, newLock.srn)
-        }
+    recoverWith {
+      case e: MongoException if e.getCode == documentExistsErrorCode =>
+        //          case e: LastError if e.code == documentExistsErrorCode =>
+        findLock(newLock.psaId, newLock.srn)
+    }
   }
 
-    private def findLock(psaId: String, srn: String): Future[Lock] = {
-      for {
-        psaLock <- getExistingLockByPSA(psaId) // has this psa got any scheme locked
-        srnLock <- getExistingLockBySRN(srn) // is this scheme locked to any psa
-      } yield {
-        (psaLock, srnLock) match {
-          case (Some(_), None) => PsaLock // this psa has locked a scheme
-          case (None, Some(_)) => SchemeLock // this scheme is locked to a psa
-          case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock // this psa has locked a scheme and this scheme is locked
-//          case (Some(_), Some(_)) => VarianceLock <- Impossible!
-          case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
-        }
+  private def findLock(psaId: String, srn: String): Future[Lock] = {
+    for {
+      psaLock <- getExistingLockByPSA(psaId) // has this psa got any scheme locked
+      srnLock <- getExistingLockBySRN(srn) // is this scheme locked to any psa
+    } yield {
+      (psaLock, srnLock) match {
+        case (Some(_), None) => PsaLock // this psa has locked a scheme
+        case (None, Some(_)) => SchemeLock // this scheme is locked to a psa
+        case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock // this psa has locked a scheme and this scheme is locked
+        case (Some(_), Some(_)) => VarianceLock // <- Impossible ??
+        case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
       }
     }
+  }
 }
