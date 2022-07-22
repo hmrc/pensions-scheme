@@ -74,6 +74,8 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     )
   ) with Logging {
 
+  import JsonDataEntry._
+
   private val filterScheme = Filters.equal("uniqueSchemeWithId", _: String)
 
   private def expireInSeconds: DateTime = DateTime.now(DateTimeZone.UTC).
@@ -96,7 +98,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
-      Updates.set[JsonDataEntry](lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC)))
+      Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC)))
     )
     collection.findOneAndUpdate(filterScheme(id), modifier).toFuture().map(_ => true)
 
