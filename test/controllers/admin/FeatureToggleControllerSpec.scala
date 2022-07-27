@@ -19,7 +19,6 @@ package controllers.admin
 import base.SpecBase
 import models.FeatureToggle.Enabled
 import models.FeatureToggleName.DummyToggle
-import models.OperationSucceeded
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
@@ -87,7 +86,7 @@ class FeatureToggleControllerSpec
         .thenReturn(Future.successful(true))
 
       when(mockFeatureToggleService.set(any(), any()))
-        .thenReturn(Future.successful(OperationSucceeded))
+        .thenReturn(Future.successful(()))
 
       val controller = new FeatureToggleController(controllerComponents, mockFeatureToggleService)
 

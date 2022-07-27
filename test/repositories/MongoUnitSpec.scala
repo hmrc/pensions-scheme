@@ -16,17 +16,12 @@
 
 package repositories
 
-import reactivemongo.api.indexes.Index
-import reactivemongo.play.json.collection.JSONCollection
-
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{Await, Future}
 
 trait MongoUnitSpec {
 
-  implicit val defaultTimeout: FiniteDuration = 5 seconds
+  /*implicit val defaultTimeout: FiniteDuration = 5 seconds
 
   protected implicit val ordering: Ordering[Index] =
     Ordering.by { i: Index => i.name }
@@ -42,5 +37,5 @@ trait MongoUnitSpec {
 
   protected def getIndex(name: String): Option[Index] =
     getIndexes.find(_.name.contains(name))
-
+*/
 }
