@@ -26,8 +26,8 @@ import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future.never.recoverWith
@@ -45,15 +45,15 @@ class LockRepository @Inject()(config: Configuration,
     indexes = Seq(
       IndexModel(
         Indexes.ascending("psaId"),
-        IndexOptions().name("expireAt").unique(true)
+        IndexOptions().name("psaId_Index").unique(true)
       ),
       IndexModel(
         Indexes.ascending("srn"),
-        IndexOptions().name("expireAt").unique(true)
+        IndexOptions().name("srn_Index").unique(true)
       ),
       IndexModel(
         Indexes.ascending("expireAt"),
-        IndexOptions().name("expireAt").expireAfter(0, TimeUnit.SECONDS).background(true)
+        IndexOptions().name("dataExpiry2").expireAfter(0, TimeUnit.SECONDS).background(true)
       )
     )
   ) with Logging {
@@ -72,8 +72,8 @@ class LockRepository @Inject()(config: Configuration,
     implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
   }
 
-  private val filterPsa = Filters.equal("psaId", _: String)
-  private val filterSrn = Filters.equal("srn", _: String)
+  private val filterPsa = Filters.eq("psaId", _: String)
+  private val filterSrn = Filters.eq("srn", _: String)
 
   def releaseLock(lock: SchemeVariance): Future[Unit] = {
     collection.deleteOne(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).toFuture().map(_ => ())
@@ -114,17 +114,21 @@ class LockRepository @Inject()(config: Configuration,
   }
 
   def lock(newLock: SchemeVariance): Future[Lock] = {
+    val dataKey = "data"
+    val data: JsValue = Json.toJson(JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), DateTime.now(DateTimeZone.UTC), getExpireAt))
     val modifier = Updates.combine(
       Updates.set(psaIdKey, newLock.psaId),
-      Updates.set(srnKey, newLock.srn)
+      Updates.set(srnKey, newLock.srn),
+      Updates.set(dataKey, Codecs.toBson(data))
     )
 
     collection.findOneAndUpdate(
       Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)),
       modifier,
       new FindOneAndUpdateOptions().upsert(true)
-    ).toFuture().map(_ => VarianceLock)
-    recoverWith {
+    ).toFuture().map { _ =>
+            VarianceLock
+    } .recoverWith {
       case e: MongoException if e.getCode == documentExistsErrorCode =>
         //          case e: LastError if e.code == documentExistsErrorCode =>
         findLock(newLock.psaId, newLock.srn)

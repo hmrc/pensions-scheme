@@ -28,6 +28,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeDetailsWithIdCacheRepository {
@@ -59,8 +60,13 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     ),
     indexes = Seq(
       IndexModel(
-        Indexes.ascending(lastUpdatedKey),
-        IndexOptions().name(expireAtKey).background(true)
+        Indexes.ascending(idField),
+        IndexOptions().name("schemeId_userId_index").background(true)
+      ),
+      IndexModel(
+        Indexes.ascending(expireAtKey),
+        IndexOptions().name("dataExpiry").background(true)
+          .expireAfter(0L, TimeUnit.SECONDS)
       )
     )
   ) with Logging {
@@ -80,41 +86,11 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
       Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
       Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
     )
-//
-//    collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
-//      filter = Filters.eq(idField, id),
-//      update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
 
     collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(filterScheme(id), modifier,
       new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => true)
 
   }
-
-  /*
-  {
-   "_id":{
-      "$oid":"62da9dfc70fa3d765b416a7d"
-   },
-   "uniqueSchemeWithId":"S2400000001A2100005",
-   "data":{
-      "benefits":"opt1",
-      "pspDetails":[
-
-...
-
-   },
-   "expireAt":{
-      "$date":{
-         "$numberLong":"1658498060670"
-      }
-   },
-   "lastUpdated":{
-      "$date":{
-         "$numberLong":"1658494460670"
-      }
-   }
-}
-   */
 
   def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
     collection.find[JsonDataEntry](Filters.equal(idField, schemeWithId.schemeId + schemeWithId.userId)).headOption().map {
