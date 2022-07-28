@@ -31,19 +31,20 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
+
 object SchemeDetailsWithIdCacheRepository {
 
   private val dataKey: String = "data"
-  private val idField: String = "uniqueSchemeWithId"
+  private val idField: String = "id"
+  private val uniqueSchemeWithId: String = "uniqueSchemeWithId"
   private val lastUpdatedKey: String = "lastUpdated"
   private val expireAtKey: String = "expireAt"
 
-  case class JsonDataEntry(uniqueSchemeWithId: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+  case class DataCache(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
 
-  object JsonDataEntry {
+  object DataCache {
     implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-    implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
-
+    implicit val format: Format[DataCache] = Json.format[DataCache]
   }
 }
 
@@ -51,34 +52,31 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
                                                     mongoComponent: MongoComponent,
                                                     configuration: Configuration
                                                   )(implicit val ec: ExecutionContext)
-  extends PlayMongoRepository[JsonDataEntry](
+  extends PlayMongoRepository[DataCache](
     mongoComponent = mongoComponent,
     collectionName = configuration.get[String](path = "mongodb.pensions-scheme-cache.scheme-with-id.name"),
-    domainFormat = JsonDataEntry.format,
+    domainFormat = DataCache.format,
     extraCodecs = Seq(
-      Codecs.playFormatCodec(JsonDataEntry.format)
+      Codecs.playFormatCodec(DataCache.format)
     ),
     indexes = Seq(
       IndexModel(
-        Indexes.ascending(idField),
-        IndexOptions().name("schemeId_userId_index").background(true)
+        Indexes.ascending(uniqueSchemeWithId),
+        IndexOptions().name("schemeId_userId_index").unique(true)
       ),
       IndexModel(
         Indexes.ascending(expireAtKey),
-        IndexOptions().name("dataExpiry").background(true)
-          .expireAfter(0L, TimeUnit.SECONDS)
+        IndexOptions().name("dataExpiry").expireAfter(0, TimeUnit.SECONDS)
       )
     )
   ) with Logging {
 
-  import JsonDataEntry._
-
-  private val filterScheme = Filters.equal("uniqueSchemeWithId", _: String)
+  import DataCache._
 
   private def expireInSeconds: DateTime = DateTime.now(DateTimeZone.UTC).
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
 
-  def save(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
+  def upsert(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
     val id: String = schemeWithId.schemeId + schemeWithId.userId
     val modifier = Updates.combine(
       Updates.set(idField, id),
@@ -87,19 +85,20 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
       Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
     )
 
-    collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(filterScheme(id), modifier,
+    collection.withDocumentClass[DataCache]().findOneAndUpdate(Filters.equal(uniqueSchemeWithId, id), modifier,
       new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => true)
-
   }
 
   def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
-    collection.find[JsonDataEntry](Filters.equal(idField, schemeWithId.schemeId + schemeWithId.userId)).headOption().map {
+    val id: String = schemeWithId.schemeId + schemeWithId.userId
+    collection.find[DataCache](Filters.equal(uniqueSchemeWithId, id)).headOption().map {
       _.map(_.data)
     }
   }
 
   def remove(schemeWithId: SchemeWithId): Future[Boolean] = {
-    collection.deleteOne(Filters.equal(idField, schemeWithId.schemeId + schemeWithId.userId)).toFuture().map { result =>
+    val id: String = schemeWithId.schemeId + schemeWithId.userId
+    collection.deleteOne(Filters.equal(uniqueSchemeWithId, id)).toFuture().map { result =>
       logger.info(s"Removing row from collection $collectionName externalId:${schemeWithId.schemeId}")
       result.wasAcknowledged
     }
