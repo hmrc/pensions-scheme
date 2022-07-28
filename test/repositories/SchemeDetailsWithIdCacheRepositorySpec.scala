@@ -113,7 +113,6 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
         mongoCollectionDrop()
 
         val record = (SchemeWithId("SchemeId", "UserId"), Json.parse("""{"data":"1"}"""))
-        val id: String = record._1.schemeId + record._1.userId
 
         val documentsInDB = for {
           _ <- schemeDetailsWithIdCacheRepository.upsert(record._1, record._2)
