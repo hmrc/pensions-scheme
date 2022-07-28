@@ -33,12 +33,12 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class LockRepository @Inject()(config: Configuration,
+class LockRepository @Inject()(configuration: Configuration,
                                appConfig: AppConfig,
                                mongoComponent: MongoComponent)
                               (implicit ec: ExecutionContext)
   extends PlayMongoRepository[SchemeVariance](
-    collectionName = config.underlying.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name"),
+    collectionName = configuration.underlying.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name"),
     mongoComponent = mongoComponent,
     domainFormat = SchemeVariance.format,
     indexes = Seq(
@@ -52,24 +52,20 @@ class LockRepository @Inject()(config: Configuration,
       ),
       IndexModel(
         Indexes.ascending("expireAt"),
-        IndexOptions().name("dataExpiry2").expireAfter(0, TimeUnit.SECONDS).background(true)
+        IndexOptions().name("dataExpiry").expireAfter(0, TimeUnit.SECONDS).background(true)
       )
     )
   ) with Logging {
   //scalastyle:off magic.number
+
+  import LockRepository._
+
   private lazy val documentExistsErrorCode = 11000
   val srnKey = "srn"
   val psaIdKey = "psaId"
 
   private def getExpireAt: DateTime =
     DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(appConfig.defaultDataExpireAfterDays + 1).toDateTimeAtStartOfDay()
-
-  private case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
-
-  private object JsonDataEntry {
-    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-    implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
-  }
 
   private val filterPsa = Filters.eq("psaId", _: String)
   private val filterSrn = Filters.eq("srn", _: String)
@@ -147,4 +143,11 @@ class LockRepository @Inject()(config: Configuration,
       }
     }
   }
+}
+
+object LockRepository {
+  private[repositories] case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+
+  implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
 }
