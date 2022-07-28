@@ -17,6 +17,7 @@
 package repositories
 
 import com.github.simplyscala.MongoEmbedDatabase
+import com.typesafe.config.Config
 import config.AppConfig
 import models.SchemeVariance
 import org.mockito.MockitoSugar
@@ -38,7 +39,8 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
   override def beforeEach: Unit = {
     super.beforeEach
-    when(mockConfig.get[String](path = "mongodb.pensions-scheme-cache.scheme_variation_lock.name")).thenReturn("scheme_variation_lock")
+    when(mockConfiguration.underlying).thenReturn(mockConfig)
+    when(mockConfig.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name")).thenReturn("scheme_variation_lock")
   }
 
   withEmbedMongoFixture(port = 24680) { _ =>
@@ -48,7 +50,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       "lock scheme for relevant psaId AND srn from MongoCollection" in {
         mongoCollectionDrop()
 
-        lockRepository.lock(testSchemeVariance).map{ result =>
+        lockRepository.lock(testSchemeVariance).map { result =>
           result mustBe testSchemeVariance
         }
       }
@@ -58,8 +60,10 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 }
 
 object LockRepositorySpec extends AnyWordSpec with MockitoSugar {
-  private val mockConfig = mock[Configuration]
+  private val mockConfiguration = mock[Configuration]
+  private val mockConfig = mock[Config]
   private val mockAppConfig = mock[AppConfig]
+
   private val databaseName = "pensions-scheme"
   private val mongoUri: String = s"mongodb://127.0.0.1:27017/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
   private val mongoComponent = MongoComponent(mongoUri)
@@ -69,7 +73,7 @@ object LockRepositorySpec extends AnyWordSpec with MockitoSugar {
   private def mongoCollectionDrop(): Void = Await
     .result(lockRepository.collection.drop().toFuture(), Duration.Inf)
 
-  def lockRepository: LockRepository = new LockRepository(mockConfig, mockAppConfig, mongoComponent)
+  def lockRepository: LockRepository = new LockRepository(mockConfiguration, mockAppConfig, mongoComponent)
 
 
 }

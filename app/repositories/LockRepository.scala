@@ -38,7 +38,7 @@ class LockRepository @Inject()(config: Configuration,
                                mongoComponent: MongoComponent)
                               (implicit ec: ExecutionContext)
   extends PlayMongoRepository[SchemeVariance](
-    collectionName = config.underlying.getString("mongodb.pensions-scheme-cache.scheme_variation_lock.name"),
+    collectionName = config.underlying.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name"),
     mongoComponent = mongoComponent,
     domainFormat = SchemeVariance.format,
     indexes = Seq(
