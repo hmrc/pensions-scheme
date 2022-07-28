@@ -125,58 +125,6 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
         }
       }
     }
-
-    "remove" must {
-      "delete an existing scheme details with_id cache record by id in Mongo collection" in {
-        mongoCollectionDrop()
-
-        val record = (SchemeWithId("SchemeId", "UserId"), Json.parse("""{"data":"1"}"""))
-        val id: String = record._1.schemeId + record._1.userId
-
-        val documentsInDB = for {
-          _ <- schemeDetailsWithIdCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- schemeDetailsWithIdCacheRepository.get(record._1)
-        } yield documentsInDB
-
-        whenReady(documentsInDB) { documentsInDB =>
-          documentsInDB.isDefined mustBe true
-        }
-
-        val documentsInDB2 = for {
-          _ <- schemeDetailsWithIdCacheRepository.remove(record._1)
-          documentsInDB2 <- schemeDetailsWithIdCacheRepository.get(record._1)
-        } yield documentsInDB2
-
-        whenReady(documentsInDB2) { documentsInDB2 =>
-          documentsInDB2.isDefined mustBe false
-        }
-      }
-
-      "not delete an existing scheme details with_id cache record by id in Mongo collection when id incorrect" in {
-        mongoCollectionDrop()
-
-        val record = (SchemeWithId("SchemeId", "UserId"), Json.parse("""{"data":"1"}"""))
-        val invalidRecord: SchemeWithId = SchemeWithId("Invalid-SchemeId", "Invalid-UserId")
-
-        val documentsInDB = for {
-          _ <- schemeDetailsWithIdCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- schemeDetailsWithIdCacheRepository.get(record._1)
-        } yield documentsInDB
-
-        whenReady(documentsInDB) { documentsInDB =>
-          documentsInDB.isDefined mustBe true
-        }
-
-        val documentsInDB2 = for {
-          _ <- schemeDetailsWithIdCacheRepository.remove(invalidRecord)
-          documentsInDB2 <- schemeDetailsWithIdCacheRepository.get(record._1)
-        } yield documentsInDB2
-
-        whenReady(documentsInDB2) { documentsInDB2 =>
-          documentsInDB2.isDefined mustBe true
-        }
-      }
-    }
   }
 }
 

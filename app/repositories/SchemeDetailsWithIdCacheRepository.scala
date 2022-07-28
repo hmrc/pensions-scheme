@@ -95,13 +95,4 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
       _.map(_.data)
     }
   }
-
-  def remove(schemeWithId: SchemeWithId): Future[Boolean] = {
-    val id: String = schemeWithId.schemeId + schemeWithId.userId
-    collection.deleteOne(Filters.equal(uniqueSchemeWithId, id)).toFuture().map { result =>
-      logger.info(s"Removing row from collection $collectionName externalId:${schemeWithId.schemeId}")
-      result.wasAcknowledged
-    }
-  }
-
 }
