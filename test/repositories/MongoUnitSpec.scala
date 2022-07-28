@@ -16,8 +16,8 @@
 
 package repositories
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+//import scala.concurrent.duration._
+//import scala.concurrent.{Await, Future}
 
 trait MongoUnitSpec {
 

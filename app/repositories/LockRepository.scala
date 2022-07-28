@@ -30,7 +30,6 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Future.never.recoverWith
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
