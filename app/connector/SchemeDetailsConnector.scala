@@ -73,9 +73,9 @@ class SchemeDetailsConnectorImpl @Inject()(
   case class SchemeFailedMapToUserAnswersException() extends Exception
 
   override def getSchemeDetails(
-                                 psaId: String, //psa id
-                                 schemeIdType: String, //"srn"
-                                 idNumber: String // srn no
+                                 psaId: String,
+                                 schemeIdType: String,
+                                 idNumber: String
                                )(
                                  implicit
                                  headerCarrier: HeaderCarrier,
