@@ -125,13 +125,12 @@ class LockRepository @Inject()(config: Configuration,
       Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)),
       modifier,
       new FindOneAndUpdateOptions().upsert(true)
-    ).toFuture().map { _ =>
-            VarianceLock
-    } .recoverWith {
-      case e: MongoException if e.getCode == documentExistsErrorCode =>
-        //          case e: LastError if e.code == documentExistsErrorCode =>
-        findLock(newLock.psaId, newLock.srn)
-    }
+    ).toFuture().map(_ => VarianceLock)
+      .recoverWith {
+        case e: MongoException if e.getCode == documentExistsErrorCode =>
+          //          case e: LastError if e.code == documentExistsErrorCode =>
+          findLock(newLock.psaId, newLock.srn)
+      }
   }
 
   private def findLock(psaId: String, srn: String): Future[Lock] = {

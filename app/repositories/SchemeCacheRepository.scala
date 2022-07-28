@@ -17,14 +17,14 @@
 package repositories
 
 import com.google.inject.Inject
-import org.joda.time.{DateTime, DateTimeZone}
 import com.mongodb.client.model.FindOneAndUpdateOptions
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.BsonBinary
 import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
-import repositories.SchemeCacheRepository.SchemeCacheRepositoryFormats.{dataKey, expireAtKey, idField, lastUpdatedKey}
-import repositories.SchemeCacheRepository._
+import repositories.SchemeDataEntry.SchemeDataEntryFormats.expireAtKey
+import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry, SchemeDataEntry, SchemeDataEntryFormats}
 import uk.gov.hmrc.crypto.{Crypted, CryptoWithKeysFromConfig, PlainText}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoBinaryFormats.{byteArrayReads, byteArrayWrites}
@@ -35,19 +35,17 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-object SchemeCacheRepository {
+object SchemeDataEntry {
 
   sealed trait SchemeDataEntry
 
-  case class DataEntry(id: String, data: Array[Byte], lastUpdated: DateTime, expireAt: DateTime) extends SchemeDataEntry
+  case class DataEntry(id: String, data: BsonBinary, lastUpdated: DateTime, expireAt: DateTime) extends SchemeDataEntry
 
   case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime) extends SchemeDataEntry
 
-  implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-
   object DataEntry {
     def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC), expireAt: DateTime): DataEntry =
-      DataEntry(id, data, lastUpdated, expireAt)
+      DataEntry(id, BsonBinary(data), lastUpdated, expireAt)
 
     final val bsonBinaryReads: Reads[BsonBinary] = byteArrayReads.map(t => BsonBinary(t))
     final val bsonBinaryWrites: Writes[BsonBinary] = byteArrayWrites.contramap(t => t.getData)
@@ -62,7 +60,7 @@ object SchemeCacheRepository {
     implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
   }
 
-  object SchemeCacheRepositoryFormats {
+  object SchemeDataEntryFormats {
     implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
     implicit val format: Format[SchemeDataEntry] = Json.format[SchemeDataEntry]
 
@@ -86,7 +84,7 @@ class SchemeCacheRepository @Inject()(
   extends PlayMongoRepository[SchemeDataEntry](
     collectionName = collectionName,
     mongoComponent = mongoComponent,
-    domainFormat = SchemeCacheRepositoryFormats.format,
+    domainFormat = SchemeDataEntryFormats.format,
     extraCodecs = Seq(
       Codecs.playFormatCodec(JsonDataEntry.format),
       Codecs.playFormatCodec(DataEntry.format)
@@ -100,7 +98,10 @@ class SchemeCacheRepository @Inject()(
     )
   ) with Logging {
 
-  import SchemeCacheRepository._
+  import SchemeDataEntryFormats._
+
+  private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
+  private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
   private def getExpireAt: DateTime = if (expireInSeconds.isEmpty) {
     DateTime
@@ -117,36 +118,29 @@ class SchemeCacheRepository @Inject()(
       )
   }
 
-  private val jsonCrypto: CryptoWithKeysFromConfig =
-    new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
-
-  private val encrypted: Boolean =
-    config.get[Boolean]("encrypted")
-
   def upsert(id: String, data: JsValue)
             (implicit ec: ExecutionContext): Future[Unit] = {
     if (encrypted) {
       val unencrypted = PlainText(Json.stringify(data))
       val encryptedData = jsonCrypto.encrypt(unencrypted).value
       val dataAsByteArray: Array[Byte] = encryptedData.getBytes("UTF-8")
-      val expireAt = getExpireAt
-      val lastUpdatedAt = DateTime.now(DateTimeZone.UTC)
-      val entry = DataEntry.apply(id, dataAsByteArray, lastUpdatedAt, expireAt)
+      val entry = DataEntry.apply(id, dataAsByteArray, expireAt = getExpireAt)
       val setOperation = Updates.combine(
         Updates.set(idField, entry.id),
         Updates.set(dataKey, entry.data),
         Updates.set(lastUpdatedKey, Codecs.toBson(entry.lastUpdated)),
         Updates.set(expireAtKey, Codecs.toBson(entry.expireAt))
       )
-      collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
+      collection.withDocumentClass[DataEntry]().findOneAndUpdate(
         filter = Filters.eq(idField, id),
         update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
     } else {
+      val record = JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC), getExpireAt)
       val setOperation = Updates.combine(
-        Updates.set(idField, id),
-        Updates.set(dataKey, Codecs.toBson(data)),
-        Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
-        Updates.set(expireAtKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC)))
+        Updates.set(idField, record.id),
+        Updates.set(dataKey, Codecs.toBson(record.data)),
+        Updates.set(lastUpdatedKey, Codecs.toBson(record.lastUpdated)),
+        Updates.set(expireAtKey, Codecs.toBson(record.expireAt))
       )
       collection.withDocumentClass[JsonDataEntry].findOneAndUpdate(
         filter = Filters.eq(idField, id),
@@ -160,7 +154,7 @@ class SchemeCacheRepository @Inject()(
       collection.find[DataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {
           dataEntry =>
-            val dataAsString = new String(dataEntry.data, StandardCharsets.UTF_8)
+            val dataAsString = new String(dataEntry.data.getData, StandardCharsets.UTF_8)
             val decrypted: PlainText = jsonCrypto.decrypt(Crypted(dataAsString))
             Json.parse(decrypted.value)
         }
@@ -193,7 +187,6 @@ class SchemeCacheRepository @Inject()(
       }
     }
   }
-
 
   def remove(id: String)
             (implicit ec: ExecutionContext): Future[Boolean] = {
