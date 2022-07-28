@@ -16,26 +16,7 @@
 
 package repositories
 
-import config.AppConfig
-import models._
-import org.mockito.MockitoSugar
-import org.scalatest.concurrent.Eventually
-import org.scalatest.concurrent.ScalaFutures._
-import org.scalatest.matchers.must.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach}
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{DB, ReadConcern}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.mongo.MongoSpecSupport
-import com.github.simplyscala.MongoEmbedDatabase
-
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
-
+/*
 class LockMongoRepositoryTest
   extends AnyWordSpec
     with MongoUnitSpec
@@ -263,4 +244,7 @@ class LockMongoRepositoryTest
   def lockRepository: LockRepository = new LockReposit(mongoComponent, mockAppConfig)
 
 
+}*/
+class LockMongoRepositoryTest {
+  self =>
 }

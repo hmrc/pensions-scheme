@@ -34,24 +34,24 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
-class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with MongoEmbedDatabase with BeforeAndAfter with
+class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with MongoEmbedDatabase with BeforeAndAfter with
   BeforeAndAfterEach { // scalastyle:off magic.number
 
   private val idField: String = "id"
 
-  import RacdacSchemeSubscriptionCacheRepositorySpec._
+  import SchemeDetailsCacheRepositorySpec._
 
   override def beforeEach: Unit = {
     super.beforeEach
     when(mockAppConfig.underlying).thenReturn(mockConfig)
-    when(mockConfig.getString("mongodb.pensions-scheme-cache.register-racdac-scheme.name")).thenReturn("pensions-scheme-register-racdac-scheme")
-    when(mockConfig.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays")).thenReturn(28)
+    when(mockConfig.getString("mongodb.pensions-scheme-cache.scheme-details.name")).thenReturn("pensions-scheme-scheme-details")
+    when(mockConfig.getInt("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")).thenReturn(3600)
     when(mockConfig.getString("scheme.json.encryption.key")).thenReturn("gvBoGdgzqG1AarzF1LY0zQ==")
   }
 
   withEmbedMongoFixture(port = 24680) { _ =>
     "upsert" must {
-      "save a new racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted false and collection is empty" in {
+      "save a new scheme details cache as JsonDataEntry in Mongo collection when encrypted false and collection is empty" in {
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
         mongoCollectionDrop()
 
@@ -59,8 +59,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val filters = Filters.eq(idField, record._1)
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
         } yield documentsInDB
 
         whenReady(documentsInDB) {
@@ -70,7 +70,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "update an existing racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted false" in {
+      "update an existing scheme details cache as JsonDataEntry in Mongo collection when encrypted false" in {
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
         mongoCollectionDrop()
 
@@ -79,9 +79,9 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val filters = Filters.eq(idField, "id-1")
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
+          _ <- schemeDetailsCacheRepository.upsert(record1._1, record1._2)
+          _ <- schemeDetailsCacheRepository.upsert(record2._1, record2._2)
+          documentsInDB <- schemeDetailsCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
         } yield documentsInDB
 
         whenReady(documentsInDB) {
@@ -92,7 +92,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "insert a new racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted false and id is not same" in {
+      "insert a new scheme details cache as JsonDataEntry in Mongo collection when encrypted false and id is not same" in {
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
         mongoCollectionDrop()
 
@@ -100,9 +100,9 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val record2 = ("id-2", Json.parse("""{"data":"2"}"""))
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry].toFuture()
+          _ <- schemeDetailsCacheRepository.upsert(record1._1, record1._2)
+          _ <- schemeDetailsCacheRepository.upsert(record2._1, record2._2)
+          documentsInDB <- schemeDetailsCacheRepository.collection.find[JsonDataEntry].toFuture()
         } yield documentsInDB
 
         whenReady(documentsInDB) {
@@ -111,7 +111,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "insert a new racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true and collection is empty" in {
+      "insert a new scheme details cache as DataEntry in Mongo collection when encrypted true and collection is empty" in {
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
         mongoCollectionDrop()
 
@@ -119,8 +119,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val filters = Filters.eq(idField, record._1)
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry](filters).toFuture()
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.collection.find[DataEntry](filters).toFuture()
         } yield documentsInDB
 
         whenReady(documentsInDB) {
@@ -129,7 +129,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "update an existing racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true" in {
+      "update an existing scheme details cache as DataEntry in Mongo collection when encrypted true" in {
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
         mongoCollectionDrop()
 
@@ -138,9 +138,9 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val filters = Filters.eq(idField, "id-1")
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry](filters).toFuture()
+          _ <- schemeDetailsCacheRepository.upsert(record1._1, record1._2)
+          _ <- schemeDetailsCacheRepository.upsert(record2._1, record2._2)
+          documentsInDB <- schemeDetailsCacheRepository.collection.find[DataEntry](filters).toFuture()
         } yield documentsInDB
 
         whenReady(documentsInDB) {
@@ -149,7 +149,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "insert a new racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true and id is not same" in {
+      "insert a new scheme details cache as DataEntry in Mongo collection when encrypted true and id is not same" in {
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
         mongoCollectionDrop()
 
@@ -157,9 +157,9 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val record2 = ("id-2", Json.parse("""{"data":"2"}"""))
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry].toFuture()
+          _ <- schemeDetailsCacheRepository.upsert(record1._1, record1._2)
+          _ <- schemeDetailsCacheRepository.upsert(record2._1, record2._2)
+          documentsInDB <- schemeDetailsCacheRepository.collection.find[DataEntry].toFuture()
         } yield documentsInDB
 
         whenReady(documentsInDB) {
@@ -170,7 +170,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
     }
 
     "get" must {
-      "get a racdac scheme subscription cache data record as JsonDataEntry by id in Mongo collection when encrypted false" in {
+      "get a scheme details cache data record as JsonDataEntry by id in Mongo collection when encrypted false" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
         mongoCollectionDrop()
@@ -178,8 +178,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -187,7 +187,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "get a racdac scheme subscription cache data record as DataEntry by id in Mongo collection when encrypted true" in {
+      "get a scheme details cache data record as DataEntry by id in Mongo collection when encrypted true" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
         mongoCollectionDrop()
@@ -195,8 +195,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
 
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -206,15 +206,15 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
     }
 
     "getLastUpdated" must {
-      "get a racdac scheme subscription cache's lastUpdated field by id in Mongo collection when encrypted false" in {
+      "get a scheme details cache's lastUpdated field by id in Mongo collection when encrypted false" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
         mongoCollectionDrop()
 
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.getLastUpdated(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.getLastUpdated(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -222,15 +222,15 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "get a racdac scheme subscription cache data's lastUpdated field by id in Mongo collection when encrypted true" in {
+      "get a scheme details cache data's lastUpdated field by id in Mongo collection when encrypted true" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
         mongoCollectionDrop()
 
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.getLastUpdated(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.getLastUpdated(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -241,15 +241,15 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
     }
 
     "remove" must {
-      "delete an existing JsonDataEntry racdac scheme subscription cache record by id in Mongo collection when encrypted false" in {
+      "delete an existing JsonDataEntry scheme details cache record by id in Mongo collection when encrypted false" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
         mongoCollectionDrop()
 
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -257,8 +257,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
 
         val documentsInDB2 = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.remove(record._1)
-          documentsInDB2 <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.remove(record._1)
+          documentsInDB2 <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB2
 
         whenReady(documentsInDB2) { documentsInDB2 =>
@@ -266,15 +266,15 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "not delete an existing JsonDataEntry racdac scheme subscription cache record by id in Mongo collection when encrypted false and id incorrect" in {
+      "not delete an existing JsonDataEntry scheme details cache record by id in Mongo collection when encrypted false and id incorrect" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
         mongoCollectionDrop()
 
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -282,8 +282,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
 
         val documentsInDB2 = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.remove("2")
-          documentsInDB2 <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.remove("2")
+          documentsInDB2 <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB2
 
         whenReady(documentsInDB2) { documentsInDB2 =>
@@ -291,15 +291,15 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "delete an existing DataEntry racdac scheme subscription cache record by id in Mongo collection when encrypted true" in {
+      "delete an existing DataEntry scheme details cache record by id in Mongo collection when encrypted true" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
         mongoCollectionDrop()
 
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -307,8 +307,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
 
         val documentsInDB2 = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.remove(record._1)
-          documentsInDB2 <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.remove(record._1)
+          documentsInDB2 <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB2
 
         whenReady(documentsInDB2) { documentsInDB2 =>
@@ -316,15 +316,15 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
       }
 
-      "not delete an existing DataEntry racdac scheme subscription cache record by id in Mongo collection when encrypted true" in {
+      "not delete an existing DataEntry scheme details cache record by id in Mongo collection when encrypted true" in {
 
         when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
         mongoCollectionDrop()
 
         val record = ("id-1", Json.parse("""{"data":"1"}"""))
         val documentsInDB = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-          documentsInDB <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
+          documentsInDB <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -332,8 +332,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         }
 
         val documentsInDB2 = for {
-          _ <- racdacSchemeSubscriptionCacheRepository.remove("2")
-          documentsInDB2 <- racdacSchemeSubscriptionCacheRepository.get(record._1)
+          _ <- schemeDetailsCacheRepository.remove("2")
+          documentsInDB2 <- schemeDetailsCacheRepository.get(record._1)
         } yield documentsInDB2
 
         whenReady(documentsInDB2) { documentsInDB2 =>
@@ -344,7 +344,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
   }
 }
 
-object RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with MockitoSugar {
+object SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar {
 
   import scala.concurrent.ExecutionContext.Implicits._
 
@@ -355,8 +355,8 @@ object RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mock
   private val mongoComponent = MongoComponent(mongoUri)
 
   private def mongoCollectionDrop(): Void = Await
-    .result(racdacSchemeSubscriptionCacheRepository.collection.drop().toFuture(), Duration.Inf)
+    .result(schemeDetailsCacheRepository.collection.drop().toFuture(), Duration.Inf)
 
-  def racdacSchemeSubscriptionCacheRepository: RacdacSchemeSubscriptionCacheRepository =
-    new RacdacSchemeSubscriptionCacheRepository(mockAppConfig, mongoComponent)
+  def schemeDetailsCacheRepository: SchemeDetailsCacheRepository =
+    new SchemeDetailsCacheRepository(mockAppConfig, mongoComponent)
 }
