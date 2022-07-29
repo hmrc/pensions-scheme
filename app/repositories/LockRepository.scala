@@ -32,6 +32,14 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
+
+object LockRepository {
+  private[repositories] case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+
+  implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
+}
+
 @Singleton
 class LockRepository @Inject()(configuration: Configuration,
                                appConfig: AppConfig,
@@ -84,14 +92,14 @@ class LockRepository @Inject()(configuration: Configuration,
     collection.find(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).toFuture().map(_.headOption)
 
   def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]] = {
-    collection.find(filterPsa(psaId)).toFuture().map(_.headOption)
+    collection.find(filterPsa(psaId)).headOption()
   }
 
   def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]] =
-    collection.find(filterSrn(srn)).toFuture().map(_.headOption)
+    collection.find(filterSrn(srn)).headOption()
 
   def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = {
-    collection.find(Filters.and(filterPsa(psaId), filterSrn(srn))).toFuture().map(_.headOption).flatMap {
+    collection.find(Filters.and(filterPsa(psaId), filterSrn(srn))).headOption().flatMap {
       case Some(_) => Future.successful(Some(VarianceLock))
       case None => for {
         psaLock <- getExistingLockByPSA(psaId)
@@ -131,23 +139,16 @@ class LockRepository @Inject()(configuration: Configuration,
 
   private def findLock(psaId: String, srn: String): Future[Lock] = {
     for {
-      psaLock <- getExistingLockByPSA(psaId) // has this psa got any scheme locked
-      srnLock <- getExistingLockBySRN(srn) // is this scheme locked to any psa
+      psaLock <- getExistingLockByPSA(psaId)
+      srnLock <- getExistingLockBySRN(srn)
     } yield {
       (psaLock, srnLock) match {
-        case (Some(_), None) => PsaLock // this psa has locked a scheme
-        case (None, Some(_)) => SchemeLock // this scheme is locked to a psa
-        case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock // this psa has locked a scheme and this scheme is locked
-        case (Some(_), Some(_)) => VarianceLock // <- Impossible ??
+        case (Some(_), None) => PsaLock
+        case (None, Some(_)) => SchemeLock
+        case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
+        case (Some(_), Some(_)) => VarianceLock
         case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
       }
     }
   }
-}
-
-object LockRepository {
-  private[repositories] case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
-
-  implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-  implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
 }
