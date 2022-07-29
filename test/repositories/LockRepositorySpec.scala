@@ -19,13 +19,14 @@ package repositories
 import com.github.simplyscala.MongoEmbedDatabase
 import com.typesafe.config.Config
 import config.AppConfig
-import models.{SchemeVariance, VarianceLock}
+import models.{BothLock, PsaLock, SchemeLock, SchemeVariance, VarianceLock}
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures.whenReady
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.Configuration
+import scalaz.\&/.Both
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.Await
@@ -121,9 +122,94 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
           documentsInDB mustBe VarianceLock
         }
       }
+
+      "return locked if existing lock" in {
+        mongoCollectionDrop()
+
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          documentsInDB <- lockRepository.lock(variance1)
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe VarianceLock
+        }
+      }
+
+      "return lockNotAvailableForPsa if its not a unique combination for psaId and srn, existing psaId has locked another scheme" in {
+        mongoCollectionDrop()
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          documentsInDB <- lockRepository.lock(SchemeVariance("psa1", "srn2"))
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe PsaLock
+        }
+      }
+
+      "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
+        mongoCollectionDrop()
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          documentsInDB <- lockRepository.lock(SchemeVariance("psa2", "srn1"))
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe SchemeLock
+        }
+      }
+
+      "return both locked if its not unique combination for existing psaId2 and srn1" in {
+        mongoCollectionDrop()
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+          documentsInDB <- lockRepository.lock(SchemeVariance("psa2", "srn1"))
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe BothLock
+        }
+      }
+
+      "return both locked if its not unique combination for existing psaId1 and srn2" in {
+        mongoCollectionDrop()
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+          documentsInDB <- lockRepository.lock(SchemeVariance("psa1", "srn2"))
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe BothLock
+        }
+      }
     }
 
+    "isLockByPsaIdOrSchemeId" should {
+        "return locked if its new and unique combination for psaId and srn" in {
+          mongoCollectionDrop()
+          val documentsInDB = lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
 
+          whenReady(documentsInDB) { documentsInDB =>
+            documentsInDB mustBe None
+          }
+        }
+
+          "return locked if exiting lock" in {
+            mongoCollectionDrop()
+
+            val documentsInDB = for {
+              _ <- lockRepository.collection.insertOne(variance1).toFuture()
+              documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
+            } yield documentsInDB
+
+            whenReady(documentsInDB) { documentsInDB =>
+              documentsInDB mustBe Some(VarianceLock)
+            }
+        }
+      }
   }
 }
 
