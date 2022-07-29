@@ -82,12 +82,6 @@ class LockRepository @Inject()(configuration: Configuration,
     collection.deleteOne(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).toFuture().map(_ => ())
   }
 
-  def releaseLockByPSA(psaId: String): Future[Unit] =
-    collection.deleteOne(filterPsa(psaId)).toFuture().map(_ => ())
-
-  def releaseLockBySRN(srn: String): Future[Unit] =
-    collection.deleteOne(filterSrn(srn)).toFuture().map(_ => ())
-
   def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]] =
     collection.find(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).toFuture().map(_.headOption)
 
