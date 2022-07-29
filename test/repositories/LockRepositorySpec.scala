@@ -19,8 +19,9 @@ package repositories
 import com.github.simplyscala.MongoEmbedDatabase
 import com.typesafe.config.Config
 import config.AppConfig
-import models.SchemeVariance
+import models.{SchemeVariance, VarianceLock}
 import org.mockito.MockitoSugar
+import org.scalatest.concurrent.ScalaFutures.whenReady
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
@@ -45,16 +46,41 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
   withEmbedMongoFixture(port = 24680) { _ =>
 
+    "releaseLock" must {
+      "Delete One" in {
+        mongoCollectionDrop()
+        val variance1 = SchemeVariance("psa1", "srn1")
+        val variance2 = SchemeVariance("psa2", "srn2")
+
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+          _ <- lockRepository.releaseLock(variance2)
+          documentsInDB <- lockRepository.collection.countDocuments().toFuture()
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe 1
+        }
+      }
+    }
 
     "Lock" must {
-      "lock scheme for relevant psaId AND srn from MongoCollection" in {
+      "return locked if its new and unique combination for psaId and srn" in {
         mongoCollectionDrop()
 
         lockRepository.lock(testSchemeVariance).map { result =>
           result mustBe testSchemeVariance
         }
+
+        val documentsInDB = lockRepository.lock(testSchemeVariance)
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe VarianceLock
+        }
       }
     }
+
 
   }
 }
