@@ -19,14 +19,13 @@ package repositories
 import com.github.simplyscala.MongoEmbedDatabase
 import com.typesafe.config.Config
 import config.AppConfig
-import models.{BothLock, PsaLock, SchemeLock, SchemeVariance, VarianceLock}
+import models._
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures.whenReady
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import play.api.Configuration
-import scalaz.\&/.Both
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.Await
@@ -75,18 +74,18 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         }
       }
 
-//      "Retrieve One" in {
-//        mongoCollectionDrop()
-//        val documentsInDB = for {
-//          _ <- lockRepository.collection.insertOne(variance1).toFuture()
-//          _ <- lockRepository.collection.insertOne(variance2).toFuture()
-//          documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
-//        } yield documentsInDB
-//
-//        whenReady(documentsInDB) { documentsInDB =>
-//          documentsInDB mustBe Some(SchemeVariance("psa1", "srn1"))
-//        }
-//      }
+      //      "Retrieve One" in {
+      //        mongoCollectionDrop()
+      //        val documentsInDB = for {
+      //          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+      //          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+      //          documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
+      //        } yield documentsInDB
+      //
+      //        whenReady(documentsInDB) { documentsInDB =>
+      //          documentsInDB mustBe Some(SchemeVariance("psa1", "srn1"))
+      //        }
+      //      }
 
       "getExistingLockBySRN" must {
         "Retrieve None" in {
@@ -97,19 +96,19 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
             result mustBe None
           }
         }
-
-        "Retrieve One" in {
-          mongoCollectionDrop()
-          val documentsInDB = for {
-            _ <- lockRepository.collection.insertOne(variance1).toFuture()
-            _ <- lockRepository.collection.insertOne(variance2).toFuture()
-            documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
-          } yield documentsInDB
-
-          whenReady(documentsInDB) { documentsInDB =>
-            documentsInDB mustBe Some(SchemeVariance("psa2", "srn2"))
-          }
-        }
+//
+//        "Retrieve One" in {
+//          mongoCollectionDrop()
+//          val documentsInDB = for {
+//            _ <- lockRepository.collection.insertOne(variance1).toFuture()
+//            _ <- lockRepository.collection.insertOne(variance2).toFuture()
+//            documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
+//          } yield documentsInDB
+//
+//          whenReady(documentsInDB) { documentsInDB =>
+//            documentsInDB mustBe Some(SchemeVariance("psa2", "srn2"))
+//          }
+//        }
       }
     }
 
@@ -188,28 +187,78 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
     }
 
     "isLockByPsaIdOrSchemeId" should {
-        "return locked if its new and unique combination for psaId and srn" in {
-          mongoCollectionDrop()
-          val documentsInDB = lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
+      "return locked if its new and unique combination for psaId and srn" in {
+        mongoCollectionDrop()
+        val documentsInDB = lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
 
-          whenReady(documentsInDB) { documentsInDB =>
-            documentsInDB mustBe None
-          }
-        }
-
-          "return locked if exiting lock" in {
-            mongoCollectionDrop()
-
-            val documentsInDB = for {
-              _ <- lockRepository.collection.insertOne(variance1).toFuture()
-              documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
-            } yield documentsInDB
-
-            whenReady(documentsInDB) { documentsInDB =>
-              documentsInDB mustBe Some(VarianceLock)
-            }
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe None
         }
       }
+
+      "return locked if exiting lock" in {
+        mongoCollectionDrop()
+
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe Some(VarianceLock)
+        }
+      }
+    }
+
+
+    "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId" in {
+      mongoCollectionDrop()
+      val documentsInDB = for {
+        _ <- lockRepository.collection.insertOne(variance1).toFuture()
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn2")
+      } yield documentsInDB
+
+      whenReady(documentsInDB) { documentsInDB =>
+        documentsInDB mustBe Some(PsaLock)
+      }
+    }
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
+      mongoCollectionDrop()
+      val documentsInDB = for {
+        _ <- lockRepository.collection.insertOne(variance1).toFuture()
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa2", "srn1")
+      } yield documentsInDB
+
+      whenReady(documentsInDB) { documentsInDB =>
+        documentsInDB mustBe Some(SchemeLock)
+      }
+    }
+
+    "return both locked if its not unique combination for existing psaId2 and srn1" in {
+      mongoCollectionDrop()
+      val documentsInDB = for {
+        _ <- lockRepository.collection.insertOne(variance1).toFuture()
+        _ <- lockRepository.collection.insertOne(variance2).toFuture()
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa2", "srn1")
+      } yield documentsInDB
+
+      whenReady(documentsInDB) { documentsInDB =>
+        documentsInDB mustBe Some(BothLock)
+      }
+    }
+
+    "return both locked if its not unique combination for existing psaId1 and srn2" in {
+      mongoCollectionDrop()
+      val documentsInDB = for {
+        _ <- lockRepository.collection.insertOne(variance1).toFuture()
+        _ <- lockRepository.collection.insertOne(variance2).toFuture()
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn2")
+      } yield documentsInDB
+
+      whenReady(documentsInDB) { documentsInDB =>
+        documentsInDB mustBe Some(BothLock)
+      }
+    }
   }
 }
 
