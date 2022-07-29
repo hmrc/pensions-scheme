@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package repositories
+//package repositories
 
 /*
 class LockMongoRepositoryTest
@@ -86,18 +86,18 @@ class LockMongoRepositoryTest
     //    }
     //  }
     //
-    //  "getExistingLockByPSA" must {
-    //    "Retrieve None" in {
-    //      await(repository.getExistingLockByPSA("some id")) mustBe None
-    //    }
-    //
-    //    "Retrieve One" in {
-    //      givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
-    //      givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
-    //
-    //      await(repository.getExistingLockByPSA("psa1")) mustBe Some(SchemeVariance("psa1", "srn1"))
-    //    }
-    //  }
+      "getExistingLockByPSA" must {
+        "Retrieve None" in {
+          await(repository.getExistingLockByPSA("some id")) mustBe None
+        }
+
+//        "Retrieve One" in {
+//          givenAnExistingDocument(SchemeVariance("psa1", "srn1"))
+//          givenAnExistingDocument(SchemeVariance("psa2", "srn2"))
+//
+//          await(repository.getExistingLockByPSA("psa1")) mustBe Some(SchemeVariance("psa1", "srn1"))
+//        }
+//      }
     //
     //  "getExistingLockBySRN" must {
     //    "Retrieve None" in {
@@ -245,6 +245,6 @@ class LockMongoRepositoryTest
 
 
 }*/
-class LockMongoRepositoryTest {
-  self =>
-}
+//class LockMongoRepositoryTest {
+//  self =>
+//}

@@ -49,8 +49,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
     "releaseLock" must {
       "Delete One" in {
         mongoCollectionDrop()
-        val variance1 = SchemeVariance("psa1", "srn1")
-        val variance2 = SchemeVariance("psa2", "srn2")
 
         val documentsInDB = for {
           _ <- lockRepository.collection.insertOne(variance1).toFuture()
@@ -65,15 +63,59 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       }
     }
 
+    "getExistingLockByPSA" must {
+      "Retrieve None" in {
+        mongoCollectionDrop()
+
+        val result = lockRepository.getExistingLockByPSA("psa1")
+
+        whenReady(result) { result =>
+          result mustBe None
+        }
+      }
+
+//      "Retrieve One" in {
+//        mongoCollectionDrop()
+//        val documentsInDB = for {
+//          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+//          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+//          documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
+//        } yield documentsInDB
+//
+//        whenReady(documentsInDB) { documentsInDB =>
+//          documentsInDB mustBe Some(SchemeVariance("psa1", "srn1"))
+//        }
+//      }
+
+      "getExistingLockBySRN" must {
+        "Retrieve None" in {
+          mongoCollectionDrop()
+          val result = lockRepository.getExistingLockBySRN("srn1")
+
+          whenReady(result) { result =>
+            result mustBe None
+          }
+        }
+
+        "Retrieve One" in {
+          mongoCollectionDrop()
+          val documentsInDB = for {
+            _ <- lockRepository.collection.insertOne(variance1).toFuture()
+            _ <- lockRepository.collection.insertOne(variance2).toFuture()
+            documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
+          } yield documentsInDB
+
+          whenReady(documentsInDB) { documentsInDB =>
+            documentsInDB mustBe Some(SchemeVariance("psa2", "srn2"))
+          }
+        }
+      }
+    }
+
     "Lock" must {
       "return locked if its new and unique combination for psaId and srn" in {
         mongoCollectionDrop()
-
-        lockRepository.lock(testSchemeVariance).map { result =>
-          result mustBe testSchemeVariance
-        }
-
-        val documentsInDB = lockRepository.lock(testSchemeVariance)
+        val documentsInDB = lockRepository.lock(variance1)
 
         whenReady(documentsInDB) { documentsInDB =>
           documentsInDB mustBe VarianceLock
@@ -93,7 +135,8 @@ object LockRepositorySpec extends AnyWordSpec with MockitoSugar {
   private val databaseName = "pensions-scheme"
   private val mongoUri: String = s"mongodb://127.0.0.1:27017/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
   private val mongoComponent = MongoComponent(mongoUri)
-  private val testSchemeVariance = SchemeVariance("psa1", "srn1")
+  val variance1 = SchemeVariance("psa1", "srn1")
+  val variance2 = SchemeVariance("psa2", "srn2")
 
 
   private def mongoCollectionDrop(): Void = Await
