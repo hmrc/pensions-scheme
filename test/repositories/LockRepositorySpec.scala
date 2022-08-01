@@ -56,59 +56,8 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
           _ <- lockRepository.releaseLock(variance2)
           documentsInDB <- lockRepository.collection.countDocuments().toFuture()
         } yield documentsInDB
-        Thread.sleep(3000)
         whenReady(documentsInDB) { documentsInDB =>
           documentsInDB mustBe 1
-        }
-      }
-    }
-
-    "getExistingLockByPSA" must {
-      "Retrieve None" in {
-        mongoCollectionDrop()
-
-        val result = lockRepository.getExistingLockByPSA("psa1")
-
-        whenReady(result) { result =>
-          result mustBe None
-        }
-      }
-
-      "Retrieve One" in {
-        mongoCollectionDrop()
-        val documentsInDB = for {
-          _ <- lockRepository.collection.insertOne(variance1).toFuture()
-          _ <- lockRepository.collection.insertOne(variance2).toFuture()
-          documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
-        } yield documentsInDB
-        Thread.sleep(3000)
-        whenReady(documentsInDB) { documentsInDB =>
-          documentsInDB mustBe Some(SchemeVariance("psa1", "srn1"))
-        }
-      }
-    }
-
-    "getExistingLockBySRN" must {
-      "Retrieve None" in {
-        mongoCollectionDrop()
-        val result = lockRepository.getExistingLockBySRN("srn1")
-
-        whenReady(result) { result =>
-          result mustBe None
-        }
-      }
-      // works sometimes!!
-      "Retrieve One" in {
-        mongoCollectionDrop()
-        val documentsInDB = for {
-          _ <- lockRepository.collection.insertOne(variance1).toFuture()
-          _ <- lockRepository.collection.insertOne(variance2).toFuture()
-          documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
-        } yield documentsInDB
-        Thread.sleep(3000)
-
-        whenReady(documentsInDB) { documentsInDB =>
-          documentsInDB mustBe Some(SchemeVariance("psa2", "srn2"))
         }
       }
     }
@@ -140,7 +89,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         mongoCollectionDrop()
         val documentsInDB = for {
           _ <- lockRepository.collection.insertOne(variance1).toFuture()
-          documentsInDB <- lockRepository.lock(SchemeVariance("psa1", "srn2"))
+          documentsInDB <- lockRepository.lock(SchemeVariance(variance1.psaId, "srn2"))
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -152,7 +101,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         mongoCollectionDrop()
         val documentsInDB = for {
           _ <- lockRepository.collection.insertOne(variance1).toFuture()
-          documentsInDB <- lockRepository.lock(SchemeVariance("psa2", "srn1"))
+          documentsInDB <- lockRepository.lock(SchemeVariance("psa2", variance1.srn))
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -165,7 +114,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         val documentsInDB = for {
           _ <- lockRepository.collection.insertOne(variance1).toFuture()
           _ <- lockRepository.collection.insertOne(variance2).toFuture()
-          documentsInDB <- lockRepository.lock(SchemeVariance("psa2", "srn1"))
+          documentsInDB <- lockRepository.lock(SchemeVariance(variance2.psaId, variance1.srn))
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -178,7 +127,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         val documentsInDB = for {
           _ <- lockRepository.collection.insertOne(variance1).toFuture()
           _ <- lockRepository.collection.insertOne(variance2).toFuture()
-          documentsInDB <- lockRepository.lock(SchemeVariance("psa1", "srn2"))
+          documentsInDB <- lockRepository.lock(SchemeVariance(variance1.psaId, variance2.srn))
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -202,7 +151,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
         val documentsInDB = for {
           _ <- lockRepository.collection.insertOne(variance1).toFuture()
-          documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
+          documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance1.psaId, variance1.srn)
         } yield documentsInDB
 
         whenReady(documentsInDB) { documentsInDB =>
@@ -216,7 +165,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       mongoCollectionDrop()
       val documentsInDB = for {
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
-        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn2")
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance1.psaId, "srn2")
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
@@ -227,7 +176,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       mongoCollectionDrop()
       val documentsInDB = for {
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
-        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa2", "srn1")
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa2", variance1.srn)
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
@@ -240,7 +189,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       val documentsInDB = for {
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         _ <- lockRepository.collection.insertOne(variance2).toFuture()
-        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa2", "srn1")
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance2.psaId, variance1.srn)
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
@@ -253,11 +202,61 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       val documentsInDB = for {
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         _ <- lockRepository.collection.insertOne(variance2).toFuture()
-        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn2")
+        documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance1.psaId, variance2.srn)
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
         documentsInDB mustBe Some(BothLock)
+      }
+    }
+
+
+    "getExistingLockByPSA" must {
+      "Retrieve None" in {
+        mongoCollectionDrop()
+
+        val result = lockRepository.getExistingLockByPSA("invalid-psa-id")
+
+        whenReady(result) { result =>
+          result mustBe None
+        }
+      }
+
+      "Retrieve One" in {
+        mongoCollectionDrop()
+
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe Some(variance1)
+        }
+      }
+    }
+
+    "getExistingLockBySRN" must {
+      "Retrieve None" in {
+        mongoCollectionDrop()
+
+        val result = lockRepository.getExistingLockBySRN("invalid-srn-id")
+
+        whenReady(result) { result =>
+          result mustBe None
+        }
+      }
+
+      "Retrieve One" in {
+        mongoCollectionDrop()
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+          documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe Some(variance2)
+        }
       }
     }
   }
@@ -279,6 +278,4 @@ object LockRepositorySpec extends AnyWordSpec with MockitoSugar {
     .result(lockRepository.collection.drop().toFuture(), Duration.Inf)
 
   def lockRepository: LockRepository = new LockRepository(mockConfiguration, mockAppConfig, mongoComponent)
-
-
 }

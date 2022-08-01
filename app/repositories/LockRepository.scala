@@ -21,7 +21,7 @@ import com.mongodb.client.model.FindOneAndUpdateOptions
 import config.AppConfig
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
-import org.mongodb.scala.MongoException
+import org.mongodb.scala.MongoCommandException
 import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
@@ -83,7 +83,7 @@ class LockRepository @Inject()(configuration: Configuration,
   }
 
   def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]] =
-    collection.find(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).toFuture().map(_.headOption)
+    collection.find(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).headOption()
 
   def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]] = {
     collection.find(filterPsa(psaId)).headOption()
@@ -95,18 +95,10 @@ class LockRepository @Inject()(configuration: Configuration,
   def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = {
     collection.find(Filters.and(filterPsa(psaId), filterSrn(srn))).headOption().flatMap {
       case Some(_) => Future.successful(Some(VarianceLock))
-      case None => for {
-        psaLock <- getExistingLockByPSA(psaId)
-        srnLock <- getExistingLockBySRN(srn)
-      } yield {
-        (psaLock, srnLock) match {
-          case (Some(_), None) => Some(PsaLock)
-          case (None, Some(_)) => Some(SchemeLock)
-          case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => Some(BothLock)
-          case (Some(_), Some(_)) => Some(VarianceLock)
-          case _ => None
+      case None => findLock(psaId, srn).map(Some(_))
+        .recoverWith {
+          case _: Exception => Future(None)
         }
-      }
     }
   }
 
@@ -125,8 +117,7 @@ class LockRepository @Inject()(configuration: Configuration,
       new FindOneAndUpdateOptions().upsert(true)
     ).toFuture().map(_ => VarianceLock)
       .recoverWith {
-        case e: MongoException if e.getCode == documentExistsErrorCode =>
-          //          case e: LastError if e.code == documentExistsErrorCode =>
+        case e: MongoCommandException if e.getCode == documentExistsErrorCode =>
           findLock(newLock.psaId, newLock.srn)
       }
   }
@@ -140,7 +131,6 @@ class LockRepository @Inject()(configuration: Configuration,
         case (Some(_), None) => PsaLock
         case (None, Some(_)) => SchemeLock
         case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
-        case (Some(_), Some(_)) => VarianceLock
         case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
       }
     }
