@@ -74,41 +74,41 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         }
       }
 
-      //      "Retrieve One" in {
-      //        mongoCollectionDrop()
-      //        val documentsInDB = for {
-      //          _ <- lockRepository.collection.insertOne(variance1).toFuture()
-      //          _ <- lockRepository.collection.insertOne(variance2).toFuture()
-      //          documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
-      //        } yield documentsInDB
-      //
-      //        whenReady(documentsInDB) { documentsInDB =>
-      //          documentsInDB mustBe Some(SchemeVariance("psa1", "srn1"))
-      //        }
-      //      }
+      "Retrieve One" in {
+        mongoCollectionDrop()
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+          documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
+        } yield documentsInDB
 
-      "getExistingLockBySRN" must {
-        "Retrieve None" in {
-          mongoCollectionDrop()
-          val result = lockRepository.getExistingLockBySRN("srn1")
-
-          whenReady(result) { result =>
-            result mustBe None
-          }
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe Some(SchemeVariance("psa1", "srn1"))
         }
-//
-//        "Retrieve One" in {
-//          mongoCollectionDrop()
-//          val documentsInDB = for {
-//            _ <- lockRepository.collection.insertOne(variance1).toFuture()
-//            _ <- lockRepository.collection.insertOne(variance2).toFuture()
-//            documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
-//          } yield documentsInDB
-//
-//          whenReady(documentsInDB) { documentsInDB =>
-//            documentsInDB mustBe Some(SchemeVariance("psa2", "srn2"))
-//          }
-//        }
+      }
+    }
+
+    "getExistingLockBySRN" must {
+      "Retrieve None" in {
+        mongoCollectionDrop()
+        val result = lockRepository.getExistingLockBySRN("srn1")
+
+        whenReady(result) { result =>
+          result mustBe None
+        }
+      }
+      // works sometimes!!
+      "Retrieve One" in {
+        mongoCollectionDrop()
+        val documentsInDB = for {
+          _ <- lockRepository.collection.insertOne(variance1).toFuture()
+          _ <- lockRepository.collection.insertOne(variance2).toFuture()
+          documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
+        } yield documentsInDB
+
+        whenReady(documentsInDB) { documentsInDB =>
+          documentsInDB mustBe Some(SchemeVariance("psa2", "srn2"))
+        }
       }
     }
 
@@ -270,8 +270,8 @@ object LockRepositorySpec extends AnyWordSpec with MockitoSugar {
   private val databaseName = "pensions-scheme"
   private val mongoUri: String = s"mongodb://127.0.0.1:27017/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
   private val mongoComponent = MongoComponent(mongoUri)
-  val variance1 = SchemeVariance("psa1", "srn1")
-  val variance2 = SchemeVariance("psa2", "srn2")
+  val variance1: SchemeVariance = SchemeVariance("psa1", "srn1")
+  val variance2: SchemeVariance = SchemeVariance("psa2", "srn2")
 
 
   private def mongoCollectionDrop(): Void = Await
