@@ -56,7 +56,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
           _ <- lockRepository.releaseLock(variance2)
           documentsInDB <- lockRepository.collection.countDocuments().toFuture()
         } yield documentsInDB
-
+        Thread.sleep(3000)
         whenReady(documentsInDB) { documentsInDB =>
           documentsInDB mustBe 1
         }
@@ -81,7 +81,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
           _ <- lockRepository.collection.insertOne(variance2).toFuture()
           documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
         } yield documentsInDB
-
+        Thread.sleep(3000)
         whenReady(documentsInDB) { documentsInDB =>
           documentsInDB mustBe Some(SchemeVariance("psa1", "srn1"))
         }
@@ -105,6 +105,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
           _ <- lockRepository.collection.insertOne(variance2).toFuture()
           documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
         } yield documentsInDB
+        Thread.sleep(3000)
 
         whenReady(documentsInDB) { documentsInDB =>
           documentsInDB mustBe Some(SchemeVariance("psa2", "srn2"))
@@ -196,7 +197,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         }
       }
 
-      "return locked if exiting lock" in {
+      "return locked if existing lock" in {
         mongoCollectionDrop()
 
         val documentsInDB = for {
