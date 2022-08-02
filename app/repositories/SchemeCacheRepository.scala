@@ -93,7 +93,7 @@ class SchemeCacheRepository @Inject()(
       IndexModel(
         Indexes.ascending(expireAtKey),
         IndexOptions().name("dataExpiry")
-          .expireAfter(expireInDays.get, TimeUnit.SECONDS).background(true)
+          .expireAfter(0, TimeUnit.SECONDS).background(true)
       )
     )
   ) with Logging {

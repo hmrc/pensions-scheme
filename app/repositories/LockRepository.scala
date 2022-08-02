@@ -60,7 +60,7 @@ class LockRepository @Inject()(configuration: Configuration,
       ),
       IndexModel(
         Indexes.ascending("expireAt"),
-        IndexOptions().name("dataExpiry").expireAfter(0, TimeUnit.SECONDS).background(true)
+        IndexOptions().name("dataExpiry").expireAfter(0, TimeUnit.SECONDS)
       )
     )
   ) with Logging {
