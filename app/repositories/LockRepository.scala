@@ -16,153 +16,110 @@
 
 package repositories
 
-import com.google.inject.{ImplementedBy, Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
+import com.mongodb.client.model.FindOneAndUpdateOptions
 import config.AppConfig
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
+import org.mongodb.scala.MongoCommandException
+import org.mongodb.scala.model._
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.LastError
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.api.{Cursor, DB, WriteConcern}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import play.api.{Configuration, Logging}
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[MongoDb])
-trait MongoDbProvider {
-  def mongo: () => DB
+
+object LockRepository {
+  private[repositories] case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+
+  implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
 }
 
 @Singleton
-class MongoDb @Inject()(component: ReactiveMongoComponent) extends MongoDbProvider {
-  override val mongo: () => DB = component.mongoConnector.db
-}
-
-
-@ImplementedBy(classOf[LockMongoRepository])
-trait LockRepository {
-
-  def releaseLock(lock: SchemeVariance): Future[Unit]
-
-  def releaseLockByPSA(psaId: String): Future[Unit]
-
-  def releaseLockBySRN(id: String): Future[Unit]
-
-  def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]]
-
-  def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]]
-
-  def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]]
-
-  def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]]
-
-  def list: Future[List[SchemeVariance]]
-
-  def replaceLock(newLock: SchemeVariance): Future[Boolean]
-
-  def lock(newLock: SchemeVariance): Future[Lock]
-}
-
-@Singleton
-class LockMongoRepository @Inject()(config: AppConfig,
-                                    mongoDbProvider: MongoDbProvider)
-                                   (implicit ec: ExecutionContext)
-  extends ReactiveRepository[SchemeVariance, BSONObjectID](
-    collectionName = "scheme_variation_lock",
-    mongo = mongoDbProvider.mongo,
-    domainFormat = SchemeVariance.format) with LockRepository {
+class LockRepository @Inject()(configuration: Configuration,
+                               appConfig: AppConfig,
+                               mongoComponent: MongoComponent)
+                              (implicit ec: ExecutionContext)
+  extends PlayMongoRepository[SchemeVariance](
+    collectionName = configuration.underlying.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name"),
+    mongoComponent = mongoComponent,
+    domainFormat = SchemeVariance.format,
+    indexes = Seq(
+      IndexModel(
+        Indexes.ascending("psaId"),
+        IndexOptions().name("psaId_Index").unique(true)
+      ),
+      IndexModel(
+        Indexes.ascending("srn"),
+        IndexOptions().name("srn_Index").unique(true)
+      ),
+      IndexModel(
+        Indexes.ascending("expireAt"),
+        IndexOptions().name("dataExpiry").expireAfter(0, TimeUnit.SECONDS).background(true)
+      )
+    )
+  ) with Logging {
   //scalastyle:off magic.number
-  private lazy val documentExistsErrorCode = Some(11000)
+
+  import LockRepository._
+
+  private lazy val documentExistsErrorCode = 11000
+  val srnKey = "srn"
+  val psaIdKey = "psaId"
 
   private def getExpireAt: DateTime =
-    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(config.defaultDataExpireAfterDays + 1).toDateTimeAtStartOfDay()
+    DateTime.now(DateTimeZone.UTC).toLocalDate.plusDays(appConfig.defaultDataExpireAfterDays + 1).toDateTimeAtStartOfDay()
 
-  private case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+  private val filterPsa = Filters.eq("psaId", _: String)
+  private val filterSrn = Filters.eq("srn", _: String)
 
-  private object JsonDataEntry {
-    implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
-    implicit val format: OFormat[JsonDataEntry] = Json.format[JsonDataEntry]
+  def releaseLock(lock: SchemeVariance): Future[Unit] = {
+    collection.deleteOne(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).toFuture().map(_ => ())
   }
 
+  def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]] =
+    collection.find(Filters.and(filterPsa(lock.psaId), filterSrn(lock.srn))).headOption()
 
-  override lazy val indexes: Seq[Index] = Seq(
-    Index(key = Seq("psaId" -> Ascending), name = Some("psaId_Index"), unique = true),
-    Index(key = Seq("srn" -> Ascending), name = Some("srn_Index"), unique = true),
-    Index(key = Seq("expireAt" -> Ascending), name = Some("dataExpiry"), options = BSONDocument("expireAfterSeconds" -> 0))
-  )
-
-  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = {
-    Future.sequence(indexes.map(collection.indexesManager.ensure(_)))
+  def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]] = {
+    collection.find(filterPsa(psaId)).headOption()
   }
 
-  override def releaseLock(lock: SchemeVariance): Future[Unit] =
-    collection.findAndRemove(byLock(lock.psaId, lock.srn), None, None, WriteConcern.Default, None, None, Nil).map(_ => ())
+  def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]] =
+    collection.find(filterSrn(srn)).headOption()
 
-  override def releaseLockByPSA(psaId: String): Future[Unit] =
-    collection.findAndRemove(byPsaId(psaId), None, None, WriteConcern.Default, None, None, Nil).map(_ => ())
-
-  override def releaseLockBySRN(srn: String): Future[Unit] =
-    collection.findAndRemove(bySrn(srn), None, None, WriteConcern.Default, None, None, Nil).map(_ => ())
-
-  override def getExistingLock(lock: SchemeVariance): Future[Option[SchemeVariance]] =
-    collection.find[BSONDocument, BSONDocument](byLock(lock.psaId, lock.srn), None).one[SchemeVariance]
-
-  override def getExistingLockByPSA(psaId: String): Future[Option[SchemeVariance]] =
-    collection.find[BSONDocument, BSONDocument](byPsaId(psaId), None).one[SchemeVariance]
-
-  override def getExistingLockBySRN(srn: String): Future[Option[SchemeVariance]] =
-    collection.find[BSONDocument, BSONDocument](bySrn(srn), None).one[SchemeVariance]
-
-  override def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = collection.find[BSONDocument, BSONDocument](
-    byLock(psaId, srn), None).one[SchemeVariance].flatMap[Option[Lock]] {
-    case Some(_) => Future.successful(Some(VarianceLock))
-    case None => for {
-      psaLock <- getExistingLockByPSA(psaId)
-      srnLock <- getExistingLockBySRN(srn)
-    } yield {
-      (psaLock, srnLock) match {
-        case (Some(_), None) => Some(PsaLock)
-        case (None, Some(_)) => Some(SchemeLock)
-        case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => Some(BothLock)
-        case (Some(_), Some(_)) => Some(VarianceLock)
-        case _ => None
-      }
-    }
-  }
-
-  override def list: Future[List[SchemeVariance]] = {
-    //scalastyle:off magic.number
-    val arbitraryLimit = 10000
-    collection.find[JsObject, JsObject](Json.obj(), None)
-      .cursor[SchemeVariance]()
-      .collect[List](arbitraryLimit, Cursor.FailOnError())
-  }
-
-  override def replaceLock(newLock: SchemeVariance): Future[Boolean] = {
-    collection.update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true).map {
-      lastError =>
-        lastError.writeErrors.isEmpty
-    } recoverWith {
-      case e: LastError if e.code == documentExistsErrorCode =>
-        getExistingLock(newLock).map {
-          case Some(existingLock) => existingLock.psaId == newLock.psaId && existingLock.srn == newLock.srn
-          case None => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: ${newLock.psaId} and srn: ${newLock.srn}")
+  def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = {
+    collection.find(Filters.and(filterPsa(psaId), filterSrn(srn))).headOption().flatMap {
+      case Some(_) => Future.successful(Some(VarianceLock))
+      case None => findLock(psaId, srn).map(Some(_))
+        .recoverWith {
+          case _: Exception => Future(None)
         }
     }
   }
 
-  override def lock(newLock: SchemeVariance): Future[Lock] = {
+  def lock(newLock: SchemeVariance): Future[Lock] = {
+    val dataKey = "data"
+    val data: JsValue = Json.toJson(JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), DateTime.now(DateTimeZone.UTC), getExpireAt))
+    val modifier = Updates.combine(
+      Updates.set(psaIdKey, newLock.psaId),
+      Updates.set(srnKey, newLock.srn),
+      Updates.set(dataKey, Codecs.toBson(data))
+    )
 
-    collection.update(true).one(byLock(newLock.psaId, newLock.srn), modifier(newLock), upsert = true)
-      .map[Lock](_ => VarianceLock) recoverWith {
-      case e: LastError if e.code == documentExistsErrorCode =>
-        findLock(newLock.psaId, newLock.srn)
-    }
+    collection.findOneAndUpdate(
+      Filters.and(filterPsa(newLock.psaId), filterSrn(newLock.srn)),
+      modifier,
+      new FindOneAndUpdateOptions().upsert(true)
+    ).toFuture().map(_ => VarianceLock)
+      .recoverWith {
+        case e: MongoCommandException if e.getCode == documentExistsErrorCode =>
+          findLock(newLock.psaId, newLock.srn)
+      }
   }
 
   private def findLock(psaId: String, srn: String): Future[Lock] = {
@@ -174,18 +131,8 @@ class LockMongoRepository @Inject()(config: AppConfig,
         case (Some(_), None) => PsaLock
         case (None, Some(_)) => SchemeLock
         case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
-        case (Some(_), Some(_)) => VarianceLock
         case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
       }
     }
   }
-
-  private def byPsaId(psaId: String): BSONDocument = BSONDocument("psaId" -> psaId)
-
-  private def bySrn(srn: String): BSONDocument = BSONDocument("srn" -> srn)
-
-  private def byLock(psaId: String, srn: String): BSONDocument = BSONDocument("psaId" -> psaId, "srn" -> srn)
-
-  private def modifier(newLock: SchemeVariance): BSONDocument = BSONDocument("$set" -> Json.toJson(
-    JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), DateTime.now(DateTimeZone.UTC), getExpireAt)))
 }

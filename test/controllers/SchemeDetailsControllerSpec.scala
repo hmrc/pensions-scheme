@@ -54,7 +54,7 @@ class SchemeDetailsControllerSpec
     reset(mockSchemeConnector)
     when(mockSchemeService.getPstrFromSrn(any(), any(), any())(any(), any(), any())).thenReturn(Future.successful(idNumber))
     when(mockSchemeDetailsCache.get(any())).thenReturn(Future.successful(None))
-    when(mockSchemeDetailsCache.save(any(), any())).thenReturn(Future.successful(true))
+    when(mockSchemeDetailsCache.upsert(any(), any())).thenReturn(Future.successful(true))
   }
 
   "getSchemeDetails" must {

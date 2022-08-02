@@ -21,16 +21,16 @@ import com.typesafe.config.Config
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class AppConfig @Inject()(runModeConfiguration: Configuration, environment: Environment, servicesConfig: ServicesConfig) {
-  lazy val underlying: Config = runModeConfiguration.underlying
+class AppConfig @Inject()(configuration: Configuration, environment: Environment, servicesConfig: ServicesConfig) {
+  lazy val underlying: Config = configuration.underlying
   lazy val defaultDataExpireAfterDays: Int = underlying.getInt("defaultDataExpireInDays")
   lazy val ifURL: String = servicesConfig.baseUrl(serviceName = "if-hod")
   lazy val barsBaseUrl: String = servicesConfig.baseUrl("bank-account-reputation")
   lazy val appName: String = underlying.getString("appName")
 
-  lazy val integrationframeworkEnvironment: String = runModeConfiguration.getOptional[String](
+  lazy val integrationframeworkEnvironment: String = configuration.getOptional[String](
     path = "microservice.services.if-hod.env").getOrElse("local")
-  lazy val integrationframeworkAuthorization: String = "Bearer " + runModeConfiguration.getOptional[String](
+  lazy val integrationframeworkAuthorization: String = "Bearer " + configuration.getOptional[String](
     path = "microservice.services.if-hod.authorizationToken").getOrElse("local")
 
   lazy val schemeRegistrationIFUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.register")}"

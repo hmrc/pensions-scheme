@@ -17,78 +17,82 @@
 package repositories
 
 import com.google.inject.Inject
+import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.SchemeWithId
 import org.joda.time.{DateTime, DateTimeZone}
-import org.slf4j.{Logger, LoggerFactory}
-import play.api.Configuration
+import org.mongodb.scala.model._
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import play.api.{Configuration, Logging}
+import repositories.SchemeDetailsWithIdCacheRepository._
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-class SchemeDetailsWithIdCacheRepository @Inject()(
-                                     mongoComponent: ReactiveMongoComponent,
-                                     configuration: Configuration
-                                   )(implicit val ec: ExecutionContext)
-  extends ReactiveRepository[JsValue, BSONObjectID](
-    configuration.get[String](path = "mongodb.pensions-scheme-cache.scheme-with-id.name"),
-    mongoComponent.mongoConnector.db,
-    implicitly
-  ) {
 
-  override val logger: Logger = LoggerFactory.getLogger("SchemeDetailsWithIdCacheRepository")
+object SchemeDetailsWithIdCacheRepository {
+
+  private val dataKey: String = "data"
+  private val idField: String = "id"
+  private val uniqueSchemeWithId: String = "uniqueSchemeWithId"
+  private val lastUpdatedKey: String = "lastUpdated"
+  private val expireAtKey: String = "expireAt"
+
+  case class DataCache(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+
+  object DataCache {
+    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+    implicit val format: Format[DataCache] = Json.format[DataCache]
+  }
+}
+
+class SchemeDetailsWithIdCacheRepository @Inject()(
+                                                    mongoComponent: MongoComponent,
+                                                    configuration: Configuration
+                                                  )(implicit val ec: ExecutionContext)
+  extends PlayMongoRepository[DataCache](
+    mongoComponent = mongoComponent,
+    collectionName = configuration.get[String](path = "mongodb.pensions-scheme-cache.scheme-with-id.name"),
+    domainFormat = DataCache.format,
+    extraCodecs = Seq(
+      Codecs.playFormatCodec(DataCache.format)
+    ),
+    indexes = Seq(
+      IndexModel(
+        Indexes.ascending(uniqueSchemeWithId),
+        IndexOptions().name("schemeId_userId_index").unique(true)
+      ),
+      IndexModel(
+        Indexes.ascending(expireAtKey),
+        IndexOptions().name("dataExpiry").expireAfter(0, TimeUnit.SECONDS)
+      )
+    )
+  ) with Logging {
+
+  import DataCache._
 
   private def expireInSeconds: DateTime = DateTime.now(DateTimeZone.UTC).
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
 
-  override lazy val indexes: Seq[Index] = Seq(
-    Index(key = Seq("uniqueSchemeWithId" -> Ascending), name = Some("schemeId_userId_index"), unique = true),
-    Index(key = Seq("expireAt" -> Ascending), name = Some("dataExpiry"), options = BSONDocument("expireAfterSeconds" -> 0))
-  )
-
-  (for { _ <- ensureIndexes } yield { () }) recoverWith {
-    case t: Throwable => Future.successful(logger.error(s"Error creating indexes on collection ${collection.name}", t))
-  } andThen {
-    case _ => CollectionDiagnostics.logCollectionInfo(collection)
-  }
-
-  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
-    Future.sequence(indexes.map(collection.indexesManager.ensure(_)))
-
-  private val selector: SchemeWithId => BSONDocument = schemeWithId =>
-    BSONDocument("uniqueSchemeWithId" -> (schemeWithId.schemeId + schemeWithId.userId))
-
-  private val modifier: JsValue => BSONDocument = document =>
-    BSONDocument("$set" -> document)
-
-  def save(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
+  def upsert(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
     val id: String = schemeWithId.schemeId + schemeWithId.userId
-    val document: JsValue = Json.toJson(DataCache.applyDataCache(id, schemeDetails, expireAt = expireInSeconds))
-    collection.update(true).one(selector(schemeWithId), modifier(document), upsert = true).map(_.ok)
+    val modifier = Updates.combine(
+      Updates.set(idField, id),
+      Updates.set(dataKey, Codecs.toBson(schemeDetails)),
+      Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
+      Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
+    )
+
+    collection.withDocumentClass[DataCache]().findOneAndUpdate(Filters.equal(uniqueSchemeWithId, id), modifier,
+      new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => true)
   }
 
-  def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] =
-    collection.find(selector(schemeWithId), Option.empty[JsObject]).one[DataCache].map(_.map(_.data))
-
-  def remove(schemeWithId: SchemeWithId): Future[Boolean] =
-    collection.delete.one(selector(schemeWithId)).map(_.ok)
-
-}
-
-private case class DataCache(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
-
-private object DataCache {
-  implicit val dateFormat: Format[DateTime] = ReactiveMongoFormats.dateTimeFormats
-  implicit val format: Format[DataCache] = Json.format[DataCache]
-
-  def applyDataCache(id: String, data: JsValue,
-            lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC),
-            expireAt: DateTime): DataCache =
-    DataCache(id, data, lastUpdated, expireAt)
+  def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
+    val id: String = schemeWithId.schemeId + schemeWithId.userId
+    collection.find[DataCache](Filters.equal(uniqueSchemeWithId, id)).headOption().map {
+      _.map(_.data)
+    }
+  }
 }

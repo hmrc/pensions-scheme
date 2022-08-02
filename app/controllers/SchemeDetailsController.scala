@@ -75,7 +75,7 @@ class SchemeDetailsController @Inject()(
     schemeDetailsCache.get(id).flatMap {
       case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
       case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
-        case Right(json) => schemeDetailsCache.save(id, json).map { _ => Ok(json) }
+        case Right(json) => schemeDetailsCache.upsert(id, json).map { _ => Ok(json) }
         case Left(e) => Future.successful(result(e))
       }
     }
@@ -85,7 +85,7 @@ class SchemeDetailsController @Inject()(
     schemeDetailsCache.get(id).flatMap {
       case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
       case _ => schemeDetailsConnector.getPspSchemeDetails(id.userId, id.schemeId).flatMap {
-        case Right(json) => schemeDetailsCache.save(id, json).map {
+        case Right(json) => schemeDetailsCache.upsert(id, json).map {
           _ => Ok(json)
         }
         case Left(e) => Future.successful(result(e))
