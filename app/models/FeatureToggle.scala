@@ -47,7 +47,7 @@ object FeatureToggleName {
   implicit val reads: Reads[FeatureToggleName] = Reads {
     case JsString(SchemeRegistration.asString) => JsSuccess(SchemeRegistration)
     case JsString(DummyToggle.asString) => JsSuccess(DummyToggle)
-    case _ => JsError("Unrecognised feature toggle name")
+    case error => JsError("Unrecognised feature toggle name:" + error)
   }
 
   implicit val writes: Writes[FeatureToggleName] =
@@ -59,7 +59,7 @@ object FeatureToggleName {
       override def bind(key: String, value: String): Either[String, FeatureToggleName] =
         JsString(value).validate[FeatureToggleName] match {
           case JsSuccess(name, _) => Right(name)
-          case _ => Left("invalid feature toggle name")
+          case error => Left("invalid feature toggle name:" + key + ":" + error)
         }
 
       override def unbind(key: String, value: FeatureToggleName): String =
