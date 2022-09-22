@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 
-trait FeatureToggle {
+sealed trait FeatureToggle {
   def name: FeatureToggleName
 
   def isEnabled: Boolean
@@ -28,11 +28,13 @@ trait FeatureToggle {
   def isDisabled: Boolean = !isEnabled
 }
 
-trait FeatureToggleName {
+sealed trait FeatureToggleName {
   def asString: String
 }
 
 object FeatureToggleName {
+
+
   case object DummyToggle extends FeatureToggleName {
     val asString = "dummy"
   }
@@ -61,6 +63,7 @@ object FeatureToggleName {
           case _ => Left("invalid feature toggle name")
         }
       }
+
       override def unbind(key: String, value: FeatureToggleName): String =
         value.asString
     }
@@ -88,12 +91,12 @@ object FeatureToggle {
 
     (__ \ "isEnabled").read[Boolean].flatMap {
       case true =>
-         (__ \ "name").read[Option[FeatureToggleName]].map{
+        (__ \ "name").read[Option[FeatureToggleName]].map {
           case None => Disabled(InvalidToggle)
           case Some(name) => Enabled(name)
         }
       case false =>
-        (__ \ "name").read[Option[FeatureToggleName]].map{
+        (__ \ "name").read[Option[FeatureToggleName]].map {
           case None => Disabled(InvalidToggle)
           case Some(name) => Disabled(name)
         }
@@ -103,4 +106,14 @@ object FeatureToggle {
   implicit val writes: Writes[FeatureToggle] =
     ((__ \ "name").write[FeatureToggleName] and
       (__ \ "isEnabled").write[Boolean]).apply(ft => (ft.name, ft.isEnabled))
+}
+
+object FeatureToggleNameTest {
+  case object InvalidToggle1 extends FeatureToggleName {
+    val asString = "invalid 1"
+  }
+
+  case object InvalidToggle2 extends FeatureToggleName {
+    val asString = "invalid 2"
+  }
 }

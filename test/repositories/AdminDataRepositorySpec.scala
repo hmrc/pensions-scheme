@@ -17,8 +17,9 @@
 package repositories
 
 import com.github.simplyscala.MongoEmbedDatabase
+import models.FeatureToggle
 import models.FeatureToggleName.DummyToggle
-import models.{FeatureToggle, FeatureToggleName}
+import models.FeatureToggleNameTest.{InvalidToggle1, InvalidToggle2}
 import org.mockito.MockitoSugar
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures.whenReady
@@ -63,14 +64,6 @@ class AdminDataRepositorySpec extends AnyWordSpec with MockitoSugar with Matcher
 
       "return toggles excluding invalid toggles where there are toggles in db which are not listed in feature toggle class" in {
         mongoCollectionDrop()
-
-        case object InvalidToggle1 extends FeatureToggleName {
-          val asString = "invalid 1"
-        }
-
-        case object InvalidToggle2 extends FeatureToggleName {
-          val asString = "invalid 2"
-        }
 
         val documentsInDB = for {
           _ <- adminDataRepository.collection.insertOne(
