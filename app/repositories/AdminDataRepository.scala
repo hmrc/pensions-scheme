@@ -27,7 +27,8 @@ import repositories.FeatureToggleMongoFormatter.{FeatureToggles, featureToggles,
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object FeatureToggleMongoFormatter {
   case class FeatureToggles(_id: String, toggles: Seq[FeatureToggle])
@@ -55,13 +56,37 @@ class AdminDataRepository @Inject()(
   ) with Logging {
 
   def getFeatureToggles: Future[Seq[FeatureToggle]] = {
+println("\nA")
+
+    val xx = collection.find[FeatureToggles](
+      Filters.eq(id, featureToggles)
+    )
+
+    val yy = xx.toFuture()
+
+    yy recover {
+      case uuu =>
+      println( "\n>>>>" + uuu)
+        uuu.printStackTrace()
+
+    }
+
 
     collection.find[FeatureToggles](
       Filters.eq(id, featureToggles)
-    ).headOption().map(_.map(ft =>
+    ).headOption().map(_.map{ft =>
+      println("\nB")
       ft.toggles
-    ).getOrElse(Seq.empty[FeatureToggle])
+    }.getOrElse(Seq.empty[FeatureToggle])
     )
+
+//
+//    collection.find[FeatureToggles](
+//      Filters.eq(id, featureToggles)
+//    ).headOption().map(_.map(ft =>
+//      ft.toggles
+//    ).getOrElse(Seq.empty[FeatureToggle])
+//    )
   }
 
   def setFeatureToggles(toggles: Seq[FeatureToggle]): Future[Unit] = {

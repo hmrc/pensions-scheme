@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 
-sealed trait FeatureToggle {
+trait FeatureToggle {
   def name: FeatureToggleName
 
   def isEnabled: Boolean
@@ -28,7 +28,7 @@ sealed trait FeatureToggle {
   def isDisabled: Boolean = !isEnabled
 }
 
-sealed trait FeatureToggleName {
+trait FeatureToggleName {
   def asString: String
 }
 
@@ -44,10 +44,10 @@ object FeatureToggleName {
 
   val toggles = Seq(DummyToggle, SchemeRegistration)
 
-  implicit val reads: Reads[FeatureToggleName] = Reads {
-    case JsString(SchemeRegistration.asString) => JsSuccess(SchemeRegistration)
-    case JsString(DummyToggle.asString) => JsSuccess(DummyToggle)
-    case _ => JsError("Unrecognised feature toggle name")
+  implicit val reads: Reads[Option[FeatureToggleName]] = Reads {
+    case JsString(SchemeRegistration.asString) => JsSuccess(Some(SchemeRegistration))
+    case JsString(DummyToggle.asString) => JsSuccess(Some(DummyToggle))
+    case _ => JsSuccess(None)
   }
 
   implicit val writes: Writes[FeatureToggleName] =
@@ -56,12 +56,12 @@ object FeatureToggleName {
   implicit def pathBindable: PathBindable[FeatureToggleName] =
     new PathBindable[FeatureToggleName] {
 
-      override def bind(key: String, value: String): Either[String, FeatureToggleName] =
-        JsString(value).validate[FeatureToggleName] match {
-          case JsSuccess(name, _) => Right(name)
+      override def bind(key: String, value: String): Either[String, FeatureToggleName] = {
+        JsString(value).validate[Option[FeatureToggleName]] match {
+          case JsSuccess(Some(name), _) => Right(name)
           case _ => Left("invalid feature toggle name")
         }
-
+      }
       override def unbind(key: String, value: FeatureToggleName): String =
         value.asString
     }
@@ -81,10 +81,24 @@ object FeatureToggle {
   def apply(name: FeatureToggleName, enabled: Boolean): FeatureToggle =
     if (enabled) Enabled(name) else Disabled(name)
 
+//  implicit val reads: Reads[FeatureToggle] =
+//    (__ \ "isEnabled").read[Boolean].flatMap {
+//      case true => (__ \ "name").read[FeatureToggleName].map(Enabled(_).asInstanceOf[FeatureToggle])
+//      case false => (__ \ "name").read[FeatureToggleName].map(Disabled(_).asInstanceOf[FeatureToggle])
+//    }
+
   implicit val reads: Reads[FeatureToggle] =
     (__ \ "isEnabled").read[Boolean].flatMap {
-      case true => (__ \ "name").read[FeatureToggleName].map(Enabled(_).asInstanceOf[FeatureToggle])
-      case false => (__ \ "name").read[FeatureToggleName].map(Disabled(_).asInstanceOf[FeatureToggle])
+      case true =>
+         (__ \ "name").read[Option[FeatureToggleName]].map{
+          case None => throw new RuntimeException("Unrecognised feature toggle name a")
+          case Some(jj) => Enabled(jj)
+        }
+      case false =>
+        (__ \ "name").read[Option[FeatureToggleName]].map{
+          case None => throw new RuntimeException("Unrecognised feature toggle name b")
+          case Some(jj) => Disabled(jj)
+        }
     }
 
   implicit val writes: Writes[FeatureToggle] =
