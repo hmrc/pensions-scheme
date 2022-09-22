@@ -61,7 +61,7 @@ class AdminDataRepositorySpec extends AnyWordSpec with MockitoSugar with Matcher
         }
       }
 
-      "return toggles including invalid toggles where there are unrecognised toggles in db" in {
+      "return toggles excluding invalid toggles where there are toggles in db which are not listed in feature toggle class" in {
         mongoCollectionDrop()
 
         case object InvalidToggle1 extends FeatureToggleName {
@@ -74,7 +74,8 @@ class AdminDataRepositorySpec extends AnyWordSpec with MockitoSugar with Matcher
 
         val documentsInDB = for {
           _ <- adminDataRepository.collection.insertOne(
-            FeatureToggles("toggles", Seq(FeatureToggle(DummyToggle, enabled = true),
+            FeatureToggles("toggles", Seq(
+              FeatureToggle(DummyToggle, enabled = true),
               FeatureToggle(InvalidToggle1, enabled = false),
               FeatureToggle(InvalidToggle2, enabled = false)))).headOption()
           documentsInDB <- adminDataRepository.getFeatureToggles
@@ -82,7 +83,7 @@ class AdminDataRepositorySpec extends AnyWordSpec with MockitoSugar with Matcher
 
         whenReady(documentsInDB) { documentsInDB =>
           documentsInDB.map(_.toString) mustBe Seq(
-            "Enabled(DummyToggle)", "Disabled(InvalidToggle)", "Disabled(InvalidToggle)"
+            "Enabled(DummyToggle)"
           )
         }
       }

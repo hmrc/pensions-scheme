@@ -16,6 +16,7 @@
 
 package models
 
+import models.FeatureToggleName.InvalidToggle
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
@@ -33,6 +34,10 @@ trait FeatureToggleName {
 }
 
 object FeatureToggleName {
+
+  case object InvalidToggle extends FeatureToggleName {
+    val asString = "invalid"
+  }
 
   case object DummyToggle extends FeatureToggleName {
     val asString = "dummy"
@@ -82,9 +87,7 @@ object FeatureToggle {
     if (enabled) Enabled(name) else Disabled(name)
 
   implicit val reads: Reads[FeatureToggle] = {
-    case object InvalidToggle extends FeatureToggleName {
-      val asString = "invalid"
-    }
+
     (__ \ "isEnabled").read[Boolean].flatMap {
       case true =>
          (__ \ "name").read[Option[FeatureToggleName]].map{
