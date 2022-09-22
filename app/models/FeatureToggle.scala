@@ -81,25 +81,23 @@ object FeatureToggle {
   def apply(name: FeatureToggleName, enabled: Boolean): FeatureToggle =
     if (enabled) Enabled(name) else Disabled(name)
 
-//  implicit val reads: Reads[FeatureToggle] =
-//    (__ \ "isEnabled").read[Boolean].flatMap {
-//      case true => (__ \ "name").read[FeatureToggleName].map(Enabled(_).asInstanceOf[FeatureToggle])
-//      case false => (__ \ "name").read[FeatureToggleName].map(Disabled(_).asInstanceOf[FeatureToggle])
-//    }
-
-  implicit val reads: Reads[FeatureToggle] =
+  implicit val reads: Reads[FeatureToggle] = {
+    case object InvalidToggle extends FeatureToggleName {
+      val asString = "invalid"
+    }
     (__ \ "isEnabled").read[Boolean].flatMap {
       case true =>
          (__ \ "name").read[Option[FeatureToggleName]].map{
-          case None => throw new RuntimeException("Unrecognised feature toggle name a")
-          case Some(jj) => Enabled(jj)
+          case None => Disabled(InvalidToggle)
+          case Some(name) => Enabled(name)
         }
       case false =>
         (__ \ "name").read[Option[FeatureToggleName]].map{
-          case None => throw new RuntimeException("Unrecognised feature toggle name b")
-          case Some(jj) => Disabled(jj)
+          case None => Disabled(InvalidToggle)
+          case Some(name) => Disabled(name)
         }
     }
+  }
 
   implicit val writes: Writes[FeatureToggle] =
     ((__ \ "name").write[FeatureToggleName] and
