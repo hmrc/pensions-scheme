@@ -19,6 +19,7 @@ package repositories
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.FeatureToggle
+import models.FeatureToggle.InvalidToggleName
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
 import play.api.libs.json._
@@ -55,13 +56,13 @@ class AdminDataRepository @Inject()(
   ) with Logging {
 
   def getFeatureToggles: Future[Seq[FeatureToggle]] = {
-
-    collection.find[FeatureToggles](
+    val allToggles = collection.find[FeatureToggles](
       Filters.eq(id, featureToggles)
-    ).headOption().map(_.map(ft =>
+    ).headOption().map(_.map { ft =>
       ft.toggles
-    ).getOrElse(Seq.empty[FeatureToggle])
+    }.getOrElse(Seq.empty[FeatureToggle])
     )
+    allToggles.map(_.filter(_.name.asString != InvalidToggleName))
   }
 
   def setFeatureToggles(toggles: Seq[FeatureToggle]): Future[Unit] = {
