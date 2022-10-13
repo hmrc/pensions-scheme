@@ -93,6 +93,7 @@ class LockRepository @Inject()(configuration: Configuration,
     collection.find(filterSrn(srn)).headOption()
 
   def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = {
+    logger.warn( s"isLockByPSaIdOrSchemeId with psaId $psaId and srn $srn")
     collection.find(Filters.and(filterPsa(psaId), filterSrn(srn))).headOption().flatMap {
       case Some(v) =>
         logger.warn(s"LockRepository.isLockByPsaIdOrSchemeId returns SchemeVariance $v")
