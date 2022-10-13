@@ -62,7 +62,7 @@ class BarsConnectorSpec
       } """
 
     server.stubFor(
-      post(urlEqualTo("/v2/validateBankDetails"))
+      post(urlEqualTo("/validate/bank-details"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -257,7 +257,7 @@ class BarsConnectorSpec
     val bankAccount = BankAccount(sortCode, accountNumber)
 
     server.stubFor(
-      post(urlEqualTo("/v2/validateBankDetails"))
+      post(urlEqualTo("/validate/bank-details"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -289,7 +289,7 @@ class BarsConnectorSpec
     val bankAccount = BankAccount(sortCode, accountNumber)
 
     server.stubFor(
-      post(urlEqualTo("/v2/validateBankDetails"))
+      post(urlEqualTo("/validate/bank-details"))
         .willReturn(
           serverError()
             .withStatus(Status.BAD_REQUEST)
