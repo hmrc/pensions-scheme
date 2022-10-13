@@ -18,7 +18,7 @@ package controllers.cache
 
 import com.google.inject.Inject
 import models.SchemeVariance
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.libs.json.Json
 import play.api.mvc._
 import repositories.LockRepository
@@ -34,6 +34,8 @@ class SchemeVarianceLockCacheController @Inject()(
                                                    val authConnector: AuthConnector,
                                                    cc: ControllerComponents
                                                  )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
+
+  private val logger = Logger(classOf[SchemeVarianceLockCacheController])
 
   def lock(): Action[AnyContent] = Action.async {
     implicit request =>
@@ -51,8 +53,12 @@ class SchemeVarianceLockCacheController @Inject()(
         withIDs { (psaId, srn) =>
             repository.isLockByPsaIdOrSchemeId(psaId, srn)
               .map {
-                case Some(lock) =>  Ok(Json.toJson(lock.toString))
-                case None =>  NotFound
+                case Some(lock) =>
+                  logger.warn(s"isLockByPsaIdOrSchemeId returning lock info: $lock")
+                  Ok(Json.toJson(lock.toString))
+                case None =>
+                  logger.warn(s"isLockByPsaIdOrSchemeId returning None")
+                  NotFound
               }
         }
       }

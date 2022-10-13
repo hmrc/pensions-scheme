@@ -94,10 +94,14 @@ class LockRepository @Inject()(configuration: Configuration,
 
   def isLockByPsaIdOrSchemeId(psaId: String, srn: String): Future[Option[Lock]] = {
     collection.find(Filters.and(filterPsa(psaId), filterSrn(srn))).headOption().flatMap {
-      case Some(_) => Future.successful(Some(VarianceLock))
+      case Some(v) =>
+        logger.warn(s"LockRepository.isLockByPsaIdOrSchemeId returns SchemeVariance $v")
+        Future.successful(Some(VarianceLock))
       case None => findLock(psaId, srn).map(Some(_))
         .recoverWith {
-          case _: Exception => Future(None)
+          case _: Exception =>
+            logger.warn(s"LockRepository.isLockByPsaIdOrSchemeId returns None (via exception)")
+            Future(None)
         }
     }
   }
@@ -128,10 +132,19 @@ class LockRepository @Inject()(configuration: Configuration,
       srnLock <- getExistingLockBySRN(srn)
     } yield {
       (psaLock, srnLock) match {
-        case (Some(_), None) => PsaLock
-        case (None, Some(_)) => SchemeLock
-        case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) => BothLock
-        case _ => throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
+        case (Some(v), None) =>
+          logger.warn(s"LockRepository.findLock returns PsaLock $v")
+          PsaLock
+        case (None, Some(v)) =>
+          logger.warn(s"LockRepository.findLock returns SchemeLock $v")
+          SchemeLock
+        case (Some(SchemeVariance(_, _)), Some(SchemeVariance(_, _))) =>
+          logger.warn(s"LockRepository.findLock returns BothLock")
+          BothLock
+
+        case _ =>
+          logger.warn(s"LockRepository.findLock throws exception")
+          throw new Exception(s"Expected SchemeVariance to be locked, but no lock was found with psaId: $psaId and srn: $srn")
       }
     }
   }
