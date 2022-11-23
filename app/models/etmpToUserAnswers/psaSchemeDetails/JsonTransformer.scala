@@ -20,6 +20,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
+import scala.language.postfixOps
+
 trait JsonTransformer {
 
   val doNothing: Reads[JsObject] = {
@@ -27,71 +29,71 @@ trait JsonTransformer {
   }
 
   def userAnswersIndividualDetailsReads(userAnswersPath: String): Reads[JsObject] =
-    (__ \ userAnswersPath \ 'firstName).json.copyFrom((__ \ 'personDetails \ 'firstName).json.pick) and
-      (__ \ userAnswersPath \ 'lastName).json.copyFrom((__ \ 'personDetails \ 'lastName).json.pick) and
-      (__ \ 'dateOfBirth).json.copyFrom((__ \ 'personDetails \ 'dateOfBirth).json.pick) reduce
+    (__ \ userAnswersPath \ Symbol("firstName")).json.copyFrom((__ \ Symbol("personDetails") \ Symbol("firstName")).json.pick) and
+      (__ \ userAnswersPath \ Symbol("lastName")).json.copyFrom((__ \ Symbol("personDetails") \ Symbol("lastName")).json.pick) and
+      (__ \ Symbol("dateOfBirth")).json.copyFrom((__ \ Symbol("personDetails") \ Symbol("dateOfBirth")).json.pick) reduce
 
   def userAnswersNinoReads(userAnswersPath: String): Reads[JsObject] =
     (__ \ "nino").read[String].flatMap { _ =>
-      (__ \ 'hasNino).json.put(JsBoolean(true)) and
-        (__ \ userAnswersPath \ 'value).json.copyFrom((__ \ 'nino).json.pick) reduce
+      (__ \ Symbol("hasNino")).json.put(JsBoolean(true)) and
+        (__ \ userAnswersPath \ Symbol("value")).json.copyFrom((__ \ Symbol("nino")).json.pick) reduce
     } orElse {
-      (__ \ 'hasNino).json.put(JsBoolean(false)) and
-        (__ \ 'noNinoReason).json.copyFrom((__ \ 'noNinoReason).json.pick) reduce
+      (__ \ Symbol("hasNino")).json.put(JsBoolean(false)) and
+        (__ \ Symbol("noNinoReason")).json.copyFrom((__ \ Symbol("noNinoReason")).json.pick) reduce
     } orElse {
       doNothing
     }
 
   def userAnswersUtrReads: Reads[JsObject] =
     (__ \ "utr").read[String].flatMap { _ =>
-      (__ \ 'hasUtr).json.put(JsBoolean(true)) and
-        (__ \ 'utr \ 'value).json.copyFrom((__ \ 'utr).json.pick) reduce
+      (__ \ Symbol("hasUtr")).json.put(JsBoolean(true)) and
+        (__ \ Symbol("utr") \ Symbol("value")).json.copyFrom((__ \ Symbol("utr")).json.pick) reduce
     } orElse {
-      (__ \ 'hasUtr).json.put(JsBoolean(false)) and
-        (__ \ 'noUtrReason).json.copyFrom((__ \ 'noUtrReason).json.pick) reduce
+      (__ \ Symbol("hasUtr")).json.put(JsBoolean(false)) and
+        (__ \ Symbol("noUtrReason")).json.copyFrom((__ \ Symbol("noUtrReason")).json.pick) reduce
     } orElse {
       doNothing
     }
 
   def userAnswersContactDetailsReads(userAnswersBase: String): Reads[JsObject] =
-    (__ \ userAnswersBase \ 'emailAddress).json.copyFrom((__ \ 'correspondenceContactDetails \ 'email).json.pick) and
-      (__ \ userAnswersBase \ 'phoneNumber).json.copyFrom((__ \ 'correspondenceContactDetails \ 'telephone).json.pick) reduce
+    (__ \ userAnswersBase \ Symbol("emailAddress")).json.copyFrom((__ \ Symbol("correspondenceContactDetails") \ Symbol("email")).json.pick) and
+      (__ \ userAnswersBase \ Symbol("phoneNumber")).json.copyFrom((__ \ Symbol("correspondenceContactDetails") \ Symbol("telephone")).json.pick) reduce
 
 
   def userAnswersCompanyDetailsReads: Reads[JsObject] =
-    (__ \ 'companyDetails \ 'companyName).json.copyFrom((__ \ 'organisationName).json.pick)
+    (__ \ Symbol("companyDetails") \ Symbol("companyName")).json.copyFrom((__ \ Symbol("organisationName")).json.pick)
 
   def userAnswersCrnReads: Reads[JsObject] =
     (__ \ "crnNumber").read[String].flatMap { _ =>
-      (__ \ 'hasCrn).json.put(JsBoolean(true)) and
-        (__ \ 'companyRegistrationNumber \ 'value).json.copyFrom((__ \ 'crnNumber).json.pick) reduce
+      (__ \ Symbol("hasCrn")).json.put(JsBoolean(true)) and
+        (__ \ Symbol("companyRegistrationNumber") \ Symbol("value")).json.copyFrom((__ \ Symbol("crnNumber")).json.pick) reduce
     } orElse {
-      (__ \ 'hasCrn).json.put(JsBoolean(false)) and
-        (__ \ 'noCrnReason).json.copyFrom((__ \ 'noCrnReason).json.pick) reduce
+      (__ \ Symbol("hasCrn")).json.put(JsBoolean(false)) and
+        (__ \ Symbol("noCrnReason")).json.copyFrom((__ \ Symbol("noCrnReason")).json.pick) reduce
     } orElse {
       doNothing
     }
 
 
   def userAnswersPartnershipDetailsReads: Reads[JsObject] =
-    (__ \ 'partnershipDetails \ 'name).json.copyFrom((__ \ 'partnershipName).json.pick)
+    (__ \ Symbol("partnershipDetails") \ Symbol("name")).json.copyFrom((__ \ Symbol("partnershipName")).json.pick)
 
   def userAnswersTrusteePartnershipDetailsReads: Reads[JsObject] =
-    (__ \ 'partnershipDetails \ 'name).json.copyFrom((__ \ 'organisationName).json.pick)
+    (__ \ Symbol("partnershipDetails") \ Symbol("name")).json.copyFrom((__ \ Symbol("organisationName")).json.pick)
 
   def transformVatToUserAnswersReads(userAnswersBase: String): Reads[JsObject] =
     (__ \ "vatRegistrationNumber").read[String].flatMap { _ =>
-      (__ \ 'hasVat).json.put(JsBoolean(true)) and
-        (__ \ userAnswersBase \ 'value).json.copyFrom((__ \ 'vatRegistrationNumber).json.pick) reduce
+      (__ \ Symbol("hasVat")).json.put(JsBoolean(true)) and
+        (__ \ userAnswersBase \ Symbol("value")).json.copyFrom((__ \ Symbol("vatRegistrationNumber")).json.pick) reduce
     } orElse {
-      (__ \ 'hasVat).json.put(JsBoolean(false))
+      (__ \ Symbol("hasVat")).json.put(JsBoolean(false))
     }
 
   def userAnswersPayeReads(userAnswersBase: String): Reads[JsObject] =
     (__ \ "payeReference").read[String].flatMap { _ =>
-      (__ \ 'hasPaye).json.put(JsBoolean(true)) and
-        (__ \ userAnswersBase \ 'value).json.copyFrom((__ \ 'payeReference).json.pick) reduce
+      (__ \ Symbol("hasPaye")).json.put(JsBoolean(true)) and
+        (__ \ userAnswersBase \ Symbol("value")).json.copyFrom((__ \ Symbol("payeReference")).json.pick) reduce
     } orElse {
-      (__ \ 'hasPaye).json.put(JsBoolean(false))
+      (__ \ Symbol("hasPaye")).json.put(JsBoolean(false))
     }
 }

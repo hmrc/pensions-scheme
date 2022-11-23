@@ -17,10 +17,10 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.trustee.TrusteeDetails
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 

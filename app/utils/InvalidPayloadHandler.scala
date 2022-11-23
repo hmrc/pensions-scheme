@@ -18,14 +18,14 @@ package utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.ImplementedBy
-import com.networknt.schema.{JsonSchema, JsonSchemaFactory, ValidationMessage}
+import com.networknt.schema.{JsonSchema, JsonSchemaFactory, SpecVersion, ValidationMessage}
 import play.api.Logger
-
-import javax.inject.Inject
 import play.api.libs.json._
 
-import java.net.URL
-import scala.collection.JavaConverters._
+import java.io.InputStream
+import javax.inject.Inject
+import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 
 @ImplementedBy(classOf[InvalidPayloadHandlerImpl])
 trait InvalidPayloadHandler {
@@ -38,9 +38,10 @@ trait InvalidPayloadHandler {
 
 class InvalidPayloadHandlerImpl @Inject() extends InvalidPayloadHandler {
   private val logger = Logger(classOf[InvalidPayloadHandler])
+
   private[utils] def loadSchema(schemaFileName: String): JsonSchema = {
-    val schemaUrl: URL = getClass.getResource(schemaFileName)
-    val factory = JsonSchemaFactory.getInstance()
+    val schemaUrl: InputStream = getClass.getResourceAsStream(schemaFileName)
+    val factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4)
     factory.getSchema(schemaUrl)
   }
 
@@ -76,7 +77,7 @@ class InvalidPayloadHandlerImpl @Inject() extends InvalidPayloadHandler {
   private[utils] def logFailure(schema: JsonSchema, json: JsValue, args: Seq[String]): Unit = {
 
     val failures = getFailures(schema, json)
-    val msg = new StringBuilder()
+    val msg = new mutable.StringBuilder()
 
     msg.append(s"Invalid Payload JSON Failures${if (args.nonEmpty) s" for url: ${args.head}"}\n")
     msg.append(s"Failures: ${failures.size}\n")

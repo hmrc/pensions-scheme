@@ -14,22 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * Copyright 2022 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package service
 
 import audit.testdoubles.StubSuccessfulAuditService
@@ -42,10 +26,11 @@ import models.userAnswersToEtmp.establisher.EstablisherDetails
 import models.userAnswersToEtmp.trustee.TrusteeDetails
 import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.MockitoSugar._
+import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status
 import play.api.libs.json._
 import play.api.mvc.AnyContentAsEmpty
@@ -64,7 +49,7 @@ class SchemeServiceImplSpec
   "listOfSchemes" should "return the list of schemes from the connector" in {
     when(schemeConnector.listOfSchemes(any(), any())(any(), any(), any())).thenReturn(Future.successful(Right(listOfSchemesJson)))
     schemeService.listOfSchemes("PSA", psaId).map { httpResponse =>
-      httpResponse.right.value shouldBe listOfSchemesJson
+      httpResponse.value shouldBe listOfSchemesJson
     }
   }
 
@@ -122,9 +107,9 @@ class SchemeServiceImplSpec
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
     schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       response =>
-        val json = response.right.value
+        val json = response.value
 
-        json.transform((__ \ 'pensionSchemeDeclaration \ 'declaration1).json.pick).asOpt mustBe None
+        json.transform((__ \ Symbol("pensionSchemeDeclaration") \ Symbol("declaration1")).json.pick).asOpt mustBe None
         verify(schemeConnector, times(1)).registerScheme(any(), eqTo(regDataWithRacDacNode))(any(), any(), any())
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
     }
@@ -137,7 +122,7 @@ class SchemeServiceImplSpec
 
     schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
       response =>
-        val json = response.right.value
+        val json = response.value
         verify(schemeConnector, times(1)).registerScheme(any(), eqTo(racDacRegisterData))(any(), any(), any())
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
     }
@@ -149,7 +134,7 @@ class SchemeServiceImplSpec
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
     schemeService.registerScheme(psaId, pensionsSchemeJson).map {
       response =>
-        val json = response.right.value
+        val json = response.value
         val expected = schemeSubscription.copy(
           hasIndividualEstablisher = true,
           status = Status.OK,
@@ -185,7 +170,7 @@ class SchemeServiceImplSpec
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
     schemeService.registerScheme(psaId, racDACPensionsSchemeJson).map {
       response =>
-        val json = response.right.value
+        val json = response.value
         val expected = RACDACDeclarationAuditEvent(
           psaIdentifier = psaId,
           status = Status.OK,
@@ -221,7 +206,7 @@ class SchemeServiceImplSpec
       thenReturn(Future.successful(Right(schemeRegistrationResponseJson)))
     schemeService.updateScheme(pstr, psaId, pensionsSchemeJson).map {
       response =>
-        val json = response.right.value
+        val json = response.value
         verify(schemeConnector, times(1)).updateSchemeDetails(
           any(), eqTo(Json.parse(updateSchemeRegisterData)))(any(), any(), any())
         json.validate[SchemeRegistrationResponse] mustBe JsSuccess(schemeRegistrationResponse)
@@ -264,7 +249,7 @@ class SchemeServiceImplSpec
   }
 }
 
-object SchemeServiceImplSpec extends SpecBase {
+object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
 
   private val schemeConnector: SchemeConnector = mock[SchemeConnector]
   private val barsConnector: BarsConnector = mock[BarsConnector]

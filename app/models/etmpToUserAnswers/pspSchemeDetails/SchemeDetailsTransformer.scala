@@ -31,151 +31,151 @@ class SchemeDetailsTransformer @Inject()(
   extends JsonTransformer {
 
   private def membersReads(ifPath: String, uaPath: String): Reads[JsObject] =
-    (__ \ 'schemeDetails \ ifPath).read[String].flatMap {
+    (__ \ Symbol("schemeDetails") \ ifPath).read[String].flatMap {
       members =>
         (__ \ uaPath).json.put(JsString(SchemeMembers.nameWithValue(members)))
     }
 
   private val benefitsReads: Reads[JsObject] =
-    (__ \ 'schemeDetails \ 'schemeProvideBenefits).read[String].flatMap {
+    (__ \ Symbol("schemeDetails") \ Symbol("schemeProvideBenefits")).read[String].flatMap {
       benefits =>
-        (__ \ 'benefits).json.put(JsString(Benefits.nameWithValue(benefits)))
+        (__ \ Symbol("benefits")).json.put(JsString(Benefits.nameWithValue(benefits)))
     }
 
   private val moneyPurchaseReads: Reads[JsObject] =
-    (__ \ 'schemeDetails \ 'tcmpBenefitType).readNullable[String].flatMap {
+    (__ \ Symbol("schemeDetails") \ Symbol("tcmpBenefitType")).readNullable[String].flatMap {
       case Some(benefits) =>
-        (__ \ 'moneyPurchaseBenefits).json.put(JsString(benefits))
+        (__ \ Symbol("moneyPurchaseBenefits")).json.put(JsString(benefits))
       case _ =>
         doNothing
     }
 
   private val schemeTypeReads: Reads[JsObject] =
-    (__ \ 'schemeDetails \ 'isSchemeMasterTrust).read[Boolean].flatMap {
+    (__ \ Symbol("schemeDetails") \ Symbol("isSchemeMasterTrust")).read[Boolean].flatMap {
       case true =>
-        (__ \ 'schemeType \ 'name).json.put(JsString("master"))
+        (__ \ Symbol("schemeType") \ Symbol("name")).json.put(JsString("master"))
       case _ =>
-        (__ \ 'schemeDetails \ 'pensionSchemeStructure).readNullable[String].flatMap {
+        (__ \ Symbol("schemeDetails") \ Symbol("pensionSchemeStructure")).readNullable[String].flatMap {
           _.map { schemeType =>
-            (__ \ 'schemeType \ 'name).json.put(JsString(SchemeType.nameWithValue(schemeType)))
+            (__ \ Symbol("schemeType") \ Symbol("name")).json.put(JsString(SchemeType.nameWithValue(schemeType)))
           } getOrElse doNothing
         }
     } and
-      ((__ \ 'schemeType \ 'schemeTypeDetails).json.copyFrom(
-        (__ \ 'schemeDetails \ 'otherPensionSchemeStructure).json.pick
+      ((__ \ Symbol("schemeType") \ Symbol("schemeTypeDetails")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("otherPensionSchemeStructure")).json.pick
       ) orElse doNothing) reduce
 
   private def pspRelationshipDetails: Reads[JsObject] =
     (
-      (__ \ 'pspDetails \ 'id).json.copyFrom(
-        (__ \ 'pspRelationshipDetails \ 'pspid).json.pick
+      (__ \ Symbol("pspDetails") \ Symbol("id")).json.copyFrom(
+        (__ \ Symbol("pspRelationshipDetails") \ Symbol("pspid")).json.pick
       ) and
-        ((__ \ 'pspDetails \ 'individual \ 'firstName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'firstName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("individual") \ Symbol("firstName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("firstName")).json.pick
         ) orElse doNothing) and
-        ((__ \ 'pspDetails \ 'individual \ 'middleName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'middleName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("individual") \ Symbol("middleName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("middleName")).json.pick
         ) orElse doNothing) and
-        ((__ \ 'pspDetails \ 'individual \ 'lastName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'lastName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("individual") \ Symbol("lastName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("lastName")).json.pick
         ) orElse doNothing) and
-        ((__ \ 'pspDetails \ 'organisationOrPartnershipName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'orgOrPartnershipName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("organisationOrPartnershipName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("orgOrPartnershipName")).json.pick
         ) orElse doNothing) and
-        (__ \ 'pspDetails \ 'relationshipStartDate).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'relationshipStartDate).json.pick
+        (__ \ Symbol("pspDetails") \ Symbol("relationshipStartDate")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("relationshipStartDate")).json.pick
         ) and
-        (__ \ 'pspDetails \ 'authorisingPSAID).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'authorisedPSAID).json.pick
+        (__ \ Symbol("pspDetails") \ Symbol("authorisingPSAID")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("authorisedPSAID")).json.pick
         ) and
-        ((__ \ 'pspDetails \ 'authorisingPSA \ 'firstName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'authorisedPSAFirstName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("authorisingPSA") \ Symbol("firstName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("authorisedPSAFirstName")).json.pick
         ) orElse doNothing) and
-        ((__ \ 'pspDetails \ 'authorisingPSA \ 'middleName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'authorisedPSAMiddleName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("authorisingPSA") \ Symbol("middleName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("authorisedPSAMiddleName")).json.pick
         ) orElse doNothing) and
-        ((__ \ 'pspDetails \ 'authorisingPSA \ 'lastName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'authorisedPSALastName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("authorisingPSA") \ Symbol("lastName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("authorisedPSALastName")).json.pick
         ) orElse doNothing) and
-        ((__ \ 'pspDetails \ 'authorisingPSA \ 'organisationOrPartnershipName).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'authorisedPSAOrgOrPartName).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("authorisingPSA") \ Symbol("organisationOrPartnershipName")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("authorisedPSAOrgOrPartName")).json.pick
         ) orElse doNothing) and
-        ((__ \ 'pspDetails \ 'pspClientReference).json.copyFrom(
-          (__ \ 'pspRelationshipDetails \ 'clientReference).json.pick
+        ((__ \ Symbol("pspDetails") \ Symbol("pspClientReference")).json.copyFrom(
+          (__ \ Symbol("pspRelationshipDetails") \ Symbol("clientReference")).json.pick
         ) orElse doNothing)
       ) reduce
 
   private val schemeDetailsReads: Reads[JsObject] =
-    ((__ \ 'srn).json.copyFrom(
-      (__ \ 'schemeDetails \ 'srn).json.pick
+    ((__ \ Symbol("srn")).json.copyFrom(
+      (__ \ Symbol("schemeDetails") \ Symbol("srn")).json.pick
     ) orElse doNothing) and
-      (__ \ 'pstr).json.copyFrom(
-        (__ \ 'schemeDetails \ 'pstr).json.pick
+      (__ \ Symbol("pstr")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("pstr")).json.pick
       ) and
-      (__ \ 'schemeStatus).json.copyFrom(
-        (__ \ 'schemeDetails \ 'schemeStatus).json.pick
+      (__ \ Symbol("schemeStatus")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("schemeStatus")).json.pick
       ) and
-      (__ \ 'schemeName).json.copyFrom(
-        (__ \ 'schemeDetails \ 'schemeName).json.pick
+      (__ \ Symbol("schemeName")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("schemeName")).json.pick
       ) and
       schemeTypeReads and
       membersReads(ifPath = "currentSchemeMembers", uaPath = "membership") and
       membersReads(ifPath = "futureSchemeMembers", uaPath = "membershipFuture") and
-      (__ \ 'investmentRegulated).json.copyFrom(
-        (__ \ 'schemeDetails \ 'isRegulatedSchemeInvestment).json.pick
+      (__ \ Symbol("investmentRegulated")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("isRegulatedSchemeInvestment")).json.pick
       ) and
-      (__ \ 'occupationalPensionScheme).json.copyFrom(
-        (__ \ 'schemeDetails \ 'isOccupationalPensionScheme).json.pick
+      (__ \ Symbol("occupationalPensionScheme")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("isOccupationalPensionScheme")).json.pick
       ) and
       benefitsReads and
       moneyPurchaseReads and
-      (__ \ 'schemeEstablishedCountry).json.copyFrom(
-        (__ \ 'schemeDetails \ 'schemeEstablishedCountry).json.pick
+      (__ \ Symbol("schemeEstablishedCountry")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("schemeEstablishedCountry")).json.pick
       ) and
-      (__ \ 'securedBenefits).json.copyFrom(
-        (__ \ 'schemeDetails \ 'isSchemeBenefitsInsuranceCompany).json.pick
+      (__ \ Symbol("securedBenefits")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("isSchemeBenefitsInsuranceCompany")).json.pick
       ) and
-      ((__ \ 'insuranceCompanyName).json.copyFrom(
-        (__ \ 'schemeDetails \ 'insuranceCompanyName).json.pick
+      ((__ \ Symbol("insuranceCompanyName")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("insuranceCompanyName")).json.pick
       ) orElse doNothing) and
-      ((__ \ 'insurancePolicyNumber).json.copyFrom(
-        (__ \ 'schemeDetails \ 'policyNumber).json.pick
+      ((__ \ Symbol("insurancePolicyNumber")).json.copyFrom(
+        (__ \ Symbol("schemeDetails") \ Symbol("policyNumber")).json.pick
       ) orElse doNothing) and
       (addressTransformer.getDifferentAddress(
-        __ \ 'insurerAddress, __ \ 'schemeDetails \ 'insuranceCompanyAddressDetails
+        __ \ Symbol("insurerAddress"), __ \ Symbol("schemeDetails") \ Symbol("insuranceCompanyAddressDetails")
       ) orElse doNothing) and
-      (__ \ 'isAboutBenefitsAndInsuranceComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isAboutMembersComplete).json.put(JsBoolean(true)) and
-      (__ \ 'isBeforeYouStartComplete).json.put(JsBoolean(true)) reduce
+      (__ \ Symbol("isAboutBenefitsAndInsuranceComplete")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("isAboutMembersComplete")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("isBeforeYouStartComplete")).json.put(JsBoolean(true)) reduce
 
   private val racdacSchemeDetailsReads: Reads[JsObject] = {
-    (__ \ 'racdacScheme).json.put(JsBoolean(true)) and
-    ((__ \ 'srn).json.copyFrom(
-      (__ \ 'racdacSchemeDetails \ 'srn).json.pick
-    ) orElse doNothing) and
-      (__ \ 'pstr).json.copyFrom(
-        (__ \ 'racdacSchemeDetails \ 'pstr).json.pick
+    (__ \ Symbol("racdacScheme")).json.put(JsBoolean(true)) and
+      ((__ \ Symbol("srn")).json.copyFrom(
+        (__ \ Symbol("racdacSchemeDetails") \ Symbol("srn")).json.pick
+      ) orElse doNothing) and
+      (__ \ Symbol("pstr")).json.copyFrom(
+        (__ \ Symbol("racdacSchemeDetails") \ Symbol("pstr")).json.pick
       ) and
-      (__ \ 'schemeStatus).json.copyFrom(
-        (__ \ 'racdacSchemeDetails \ 'schemeStatus).json.pick
+      (__ \ Symbol("schemeStatus")).json.copyFrom(
+        (__ \ Symbol("racdacSchemeDetails") \ Symbol("schemeStatus")).json.pick
       ) and
-      (__ \ 'schemeName).json.copyFrom(
-        (__ \ 'racdacSchemeDetails \ 'racdacName).json.pick
+      (__ \ Symbol("schemeName")).json.copyFrom(
+        (__ \ Symbol("racdacSchemeDetails") \ Symbol("racdacName")).json.pick
       ) and
-      (__ \ 'racdac \ 'contractOrPolicyNumber).json.copyFrom(
-        (__ \ 'racdacSchemeDetails \ 'contractOrPolicyNumber).json.pick
+      (__ \ Symbol("racdac") \ Symbol("contractOrPolicyNumber")).json.copyFrom(
+        (__ \ Symbol("racdacSchemeDetails") \ Symbol("contractOrPolicyNumber")).json.pick
       ) and
-      (__ \ 'registrationStartDate).json.copyFrom(
-        (__ \ 'racdacSchemeDetails \ 'registrationStartDate).json.pick
+      (__ \ Symbol("registrationStartDate")).json.copyFrom(
+        (__ \ Symbol("racdacSchemeDetails") \ Symbol("registrationStartDate")).json.pick
       ) reduce
   }
 
   val userAnswersSchemeDetailsReads: Reads[JsObject] =
     pspRelationshipDetails and
-      (__ \ 'racdacScheme).readNullable[String].flatMap {
+      (__ \ Symbol("racdacScheme")).readNullable[String].flatMap {
         case Some("Yes") =>
           racdacSchemeDetailsReads
         case _ =>
           schemeDetailsReads
-    } reduce
+      } reduce
 }

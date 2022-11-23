@@ -19,24 +19,40 @@ package controllers
 import base.SpecBase
 import models.enumeration.SchemeJourneyType
 import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
-import org.scalatest.concurrent.{ScalaFutures, PatienceConfiguration}
-import org.mockito.MockitoSugar
-import play.api.libs.json.{JsObject, JsResultException, Json, JsValue}
+import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import org.scalatestplus.mockito.MockitoSugar
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule
+import play.api.libs.json.{JsObject, JsResultException, JsValue, Json}
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories._
 import service.SchemeService
 import uk.gov.hmrc.http._
 
 import java.time.LocalDate
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfter with PatienceConfiguration {
   val mockSchemeService: SchemeService = mock[SchemeService]
-  val schemeController = new SchemeController(mockSchemeService, stubControllerComponents())
   val validSchemeUpdateData: JsValue = readJsonFromFile("/data/validSchemeUpdateRequest.json")
+  private val schemeController: SchemeController = injector.instanceOf[SchemeController]
+
+  override protected def bindings: Seq[GuiceableModule] =
+    Seq(
+      bind[SchemeService].toInstance(mockSchemeService),
+      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
+      bind[LockRepository].toInstance(mock[LockRepository]),
+      bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
+      bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),
+      bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
+      bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
+    )
 
   before {
     reset(mockSchemeService)
@@ -143,7 +159,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
   }
 
   "list of schemes" must {
-    val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSA"),("idValue", "A2000001"))
+    val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSA"), ("idValue", "A2000001"))
 
     "return OK with list of schemes for PSA when If/ETMP returns it successfully" in {
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
@@ -158,7 +174,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     }
 
     "return OK with list of schemes for PSP when If/ETMP returns it successfully" in {
-      val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSP"),("idValue", "A2200001"))
+      val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSP"), ("idValue", "A2200001"))
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
       when(mockSchemeService.listOfSchemes(meq("PSP"), meq("A2200001"))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))

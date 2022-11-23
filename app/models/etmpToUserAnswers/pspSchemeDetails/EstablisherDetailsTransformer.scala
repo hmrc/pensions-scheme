@@ -20,18 +20,20 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
+import scala.language.postfixOps
+
 class EstablisherDetailsTransformer extends JsonTransformer {
 
 
   val userAnswersEstablishersReads: Reads[JsObject] = {
-    (__ \ 'establisherDetails).readNullable(__.read(
-      (__ \ 'individualDetails).readNullable(
+    (__ \ Symbol("establisherDetails")).readNullable(__.read(
+      (__ \ Symbol("individualDetails")).readNullable(
         __.read(Reads.seq(userAnswersEstablisherIndividualReads(__))).map(JsArray(_))).flatMap { individual =>
-        (__ \ 'companyOrOrgDetails).readNullable(
+        (__ \ Symbol("companyOrOrgDetails")).readNullable(
           __.read(Reads.seq(userAnswersEstablisherCompanyReads(__))).map(JsArray(_))).flatMap { company =>
-          (__ \ 'partnershipDetails).readNullable(
+          (__ \ Symbol("partnershipDetails")).readNullable(
             __.read(Reads.seq(userAnswersEstablisherPartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
-            (__ \ 'establishers).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
+            (__ \ Symbol("establishers")).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
           }
         }
       })).map {
@@ -40,21 +42,21 @@ class EstablisherDetailsTransformer extends JsonTransformer {
   }
 
   def userAnswersEstablisherIndividualReads(apiPath: JsPath): Reads[JsObject] = {
-    (__ \ 'establisherKind).json.put(JsString("individual")) and
-      (__ \ "establisherDetails" \ 'firstName).json.copyFrom((apiPath \ 'firstName).json.pick) and
-      (__ \ "establisherDetails" \ 'lastName).json.copyFrom((apiPath \ 'lastName).json.pick) and
-      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
+    (__ \ Symbol("establisherKind")).json.put(JsString("individual")) and
+      (__ \ "establisherDetails" \ Symbol("firstName")).json.copyFrom((apiPath \ Symbol("firstName")).json.pick) and
+      (__ \ "establisherDetails" \ Symbol("lastName")).json.copyFrom((apiPath \ Symbol("lastName")).json.pick) and
+      (__ \ Symbol("isEstablisherComplete")).json.put(JsBoolean(true)) reduce
   }
 
   def userAnswersEstablisherCompanyReads(apiPath: JsPath): Reads[JsObject] =
-    (__ \ 'establisherKind).json.put(JsString("company")) and
-      (__ \ 'companyDetails \ 'companyName).json.copyFrom((apiPath \ 'organisationName).json.pick) and
-      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
+    (__ \ Symbol("establisherKind")).json.put(JsString("company")) and
+      (__ \ Symbol("companyDetails") \ Symbol("companyName")).json.copyFrom((apiPath \ Symbol("organisationName")).json.pick) and
+      (__ \ Symbol("isEstablisherComplete")).json.put(JsBoolean(true)) reduce
 
 
   def userAnswersEstablisherPartnershipReads(apiPath: JsPath): Reads[JsObject] =
-    (__ \ 'establisherKind).json.put(JsString("partnership")) and
-      (__ \ 'partnershipDetails \ 'name).json.copyFrom((apiPath \ 'partnershipName).json.pick) and
-      (__ \ 'isEstablisherComplete).json.put(JsBoolean(true)) reduce
+    (__ \ Symbol("establisherKind")).json.put(JsString("partnership")) and
+      (__ \ Symbol("partnershipDetails") \ Symbol("name")).json.copyFrom((apiPath \ Symbol("partnershipName")).json.pick) and
+      (__ \ Symbol("isEstablisherComplete")).json.put(JsBoolean(true)) reduce
 
 }

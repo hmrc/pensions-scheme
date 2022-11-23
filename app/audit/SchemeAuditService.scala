@@ -21,10 +21,8 @@ import models.enumeration.{SchemeType => EnumSchemeType}
 import models.userAnswersToEtmp.PensionsScheme
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.{HttpException, UpstreamErrorResponse}
 
-import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 class SchemeAuditService {
@@ -109,8 +107,6 @@ class SchemeAuditService {
                               idValue: String
                             )(
                               sendEvent: ListOfSchemesAudit => Unit
-                            )(
-                              implicit request: RequestHeader, ec: ExecutionContext
                             ): PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
 
     case Success(Right(listOfSchemes)) =>
@@ -143,8 +139,7 @@ class SchemeAuditService {
   def sendSchemeSubscriptionEvent(psaId: String, pensionsScheme: PensionsScheme, hasBankDetails: Boolean)
                                  (
                                    sendEvent: SchemeSubscription => Unit
-                                 )
-                                 (implicit request: RequestHeader, ec: ExecutionContext):
+                                 ):
   PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
     case Success(Right(outputResponse)) =>
       sendEvent(translateSchemeSubscriptionEvent(psaId, pensionsScheme, hasBankDetails, Status.OK, Some(outputResponse)))
@@ -160,10 +155,9 @@ class SchemeAuditService {
   }
 
   def sendRACDACSchemeSubscriptionEvent(psaId: String, registerData: JsValue)
-                                 (
-                                   sendEvent: RACDACDeclarationAuditEvent => Unit
-                                 )
-                                 (implicit request: RequestHeader, ec: ExecutionContext):
+                                       (
+                                         sendEvent: RACDACDeclarationAuditEvent => Unit
+                                       ):
   PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
     case Success(Right(outputResponse)) =>
       sendEvent(RACDACDeclarationAuditEvent(psaId, Status.OK, registerData, Some(outputResponse)))
@@ -198,8 +192,7 @@ class SchemeAuditService {
   def sendSchemeUpdateEvent(psaId: String, pensionsScheme: PensionsScheme)
                            (
                              sendEvent: SchemeUpdate => Unit
-                           )
-                           (implicit request: RequestHeader, ec: ExecutionContext):
+                           ):
   PartialFunction[Try[Either[HttpException, JsValue]], Unit] = {
     case Success(Right(outputResponse)) =>
       sendEvent(translateSchemeUpdateEvent(psaId, pensionsScheme, Status.OK, Some(outputResponse)))

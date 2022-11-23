@@ -20,18 +20,19 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, PspSchemeDetailsAuditEvent, SchemeDetailsAuditEvent}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.MockitoSugar
 import org.scalatest._
+import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers._
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException, UpstreamErrorResponse}
 import utils.WireMockHelper
-import org.scalatest.flatspec.AsyncFlatSpec
 
 class SchemeDetailsConnectorSpec
   extends AsyncFlatSpec
@@ -54,6 +55,14 @@ class SchemeDetailsConnectorSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
+      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
+      bind[LockRepository].toInstance(mock[LockRepository]),
+      bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
+      bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),
+      bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
+      bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
     )
 
   def connector: SchemeDetailsConnector = app.injector.instanceOf[SchemeDetailsConnector]
@@ -71,7 +80,7 @@ class SchemeDetailsConnectorSpec
         )
     )
     connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe userAnswersResponse
+      response.value shouldBe userAnswersResponse
     }
   }
 
@@ -88,7 +97,7 @@ class SchemeDetailsConnectorSpec
         )
     )
     connector.getSchemeDetails(idValue, schemeIdType, idNumber).map { response =>
-      response.right.value shouldBe userAnswersResponse
+      response.value shouldBe userAnswersResponse
     }
   }
 
@@ -174,7 +183,7 @@ class SchemeDetailsConnectorSpec
 
     recoverToExceptionIf[NotFoundException] {
       connector.getSchemeDetails(idValue, schemeIdType, idNumber)
-    } map {_ =>
+    } map { _ =>
       auditService.verifySent(
         SchemeDetailsAuditEvent(idValue, 404, None)
       ) shouldBe true
@@ -194,7 +203,7 @@ class SchemeDetailsConnectorSpec
         )
     )
     connector.getPspSchemeDetails(pspId, pstr).map { response =>
-      response.right.value shouldBe userAnswersResponse
+      response.value shouldBe userAnswersResponse
     }
   }
 
@@ -248,7 +257,7 @@ class SchemeDetailsConnectorSpec
 
     recoverToExceptionIf[NotFoundException] {
       connector.getPspSchemeDetails(pspId, pstr)
-    } map {_ =>
+    } map { _ =>
       auditService.verifyExtendedSent(
         PspSchemeDetailsAuditEvent(pspId, 404, None)
       ) shouldBe true

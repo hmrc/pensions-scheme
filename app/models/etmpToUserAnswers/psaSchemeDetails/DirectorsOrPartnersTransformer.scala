@@ -22,26 +22,28 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
+import scala.language.postfixOps
+
 class DirectorsOrPartnersTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
   def userAnswersDirectorReads: Reads[JsObject] = {
     userAnswersIndividualDetailsReads("directorDetails") and
       userAnswersNinoReads("directorNino") and
       userAnswersUtrReads and
-      addressTransformer.getDifferentAddress(__ \ 'directorAddressId, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears(__ \ 'companyDirectorAddressYears) and
-      addressTransformer.getPreviousAddress( __ \ 'previousAddress) and
+      addressTransformer.getDifferentAddress(__ \ Symbol("directorAddressId"), __ \ Symbol("correspondenceAddressDetails")) and
+      addressTransformer.getAddressYears(__ \ Symbol("companyDirectorAddressYears")) and
+      addressTransformer.getPreviousAddress(__ \ Symbol("previousAddress")) and
       userAnswersContactDetailsReads("directorContactDetails") and
-      (__ \ 'isDirectorComplete).json.put(JsBoolean(true)) reduce
+      (__ \ Symbol("isDirectorComplete")).json.put(JsBoolean(true)) reduce
   }
 
   def userAnswersPartnerReads: Reads[JsObject] =
     userAnswersIndividualDetailsReads("partnerDetails") and
       userAnswersNinoReads("partnerNino") and
       userAnswersUtrReads and
-      addressTransformer.getDifferentAddress(__ \ 'partnerAddressId, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears( __ \ 'partnerAddressYears) and
-      addressTransformer.getPreviousAddress( __ \ 'partnerPreviousAddress) and
+      addressTransformer.getDifferentAddress(__ \ Symbol("partnerAddressId"), __ \ Symbol("correspondenceAddressDetails")) and
+      addressTransformer.getAddressYears(__ \ Symbol("partnerAddressYears")) and
+      addressTransformer.getPreviousAddress(__ \ Symbol("partnerPreviousAddress")) and
       userAnswersContactDetailsReads("partnerContactDetails") and
-      (__ \ 'isPartnerComplete).json.put(JsBoolean(true)) reduce
+      (__ \ Symbol("isPartnerComplete")).json.put(JsBoolean(true)) reduce
 }

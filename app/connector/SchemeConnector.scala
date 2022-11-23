@@ -85,7 +85,7 @@ class SchemeConnectorImpl @Inject()(
 
     val (url, hc, schemaPath) =
       (config.schemeRegistrationIFUrl.format(psaId),
-        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader),
         "/resources/schemas/schemeSubscriptionIF.json")
 
     logger.debug(s"[Register-Scheme-Outgoing-Payload] - ${registerData.toString()}")
@@ -120,8 +120,7 @@ class SchemeConnectorImpl @Inject()(
                             ): Future[Either[HttpException, JsValue]] = {
     val listOfSchemesUrl = config.listOfSchemesUrl.format(idType, idValue)
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders =
-      headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier)))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader.toSeq)
     logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
     http.GET[HttpResponse](listOfSchemesUrl)(
@@ -145,7 +144,7 @@ class SchemeConnectorImpl @Inject()(
 
     val (url, hc, schemaPath) =
       (config.updateSchemeUrl.format(pstr),
-        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader(implicitly[HeaderCarrier](headerCarrier))),
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader.toSeq),
         "/resources/schemas/schemeVariationIFSchema.json")
 
     logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")

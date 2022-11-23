@@ -23,9 +23,9 @@ import scala.annotation.tailrec
 object ReadsHelper {
 
   def previousAddressDetails(
-    addressYears: String,
-    previousAddress: Option[Address],
-    tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
+                              addressYears: String,
+                              previousAddress: Option[Address],
+                              tradingTime: Option[Boolean] = None): Option[PreviousAddressDetails] = {
 
     val tradingTimeAnswer = tradingTime.getOrElse(true)
 
@@ -45,7 +45,7 @@ object ReadsHelper {
     override def reads(json: JsValue): JsResult[Seq[T]] = {
       json match {
         case JsArray(establishers) =>
-          readFilteredSeq(JsSuccess(Nil), filterDeleted(establishers, detailsType), isA, readsA)
+          readFilteredSeq(JsSuccess(Nil), filterDeleted(establishers.toSeq, detailsType), isA, readsA)
         case _ => JsSuccess(Nil)
       }
     }
@@ -56,7 +56,7 @@ object ReadsHelper {
     override def reads(json: JsValue): JsResult[Seq[T]] = {
       json match {
         case JsArray(establishers) =>
-          readFilteredSeqBoolean(JsSuccess(Nil), filterDeleted(establishers, detailsType), isA, readsA)
+          readFilteredSeqBoolean(JsSuccess(Nil), filterDeleted(establishers.toSeq, detailsType), isA, readsA)
         case _ => JsSuccess(Nil)
       }
     }

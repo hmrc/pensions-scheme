@@ -22,17 +22,19 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
+import scala.language.postfixOps
+
 class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer) extends JsonTransformer {
 
   val userAnswersTrusteesReads: Reads[JsObject] = {
-    (__ \ 'psaPspSchemeDetails \ 'trusteeDetails).readNullable(__.read(
-      (__ \ 'individualTrusteeDetails).readNullable(
+    (__ \ Symbol("psaPspSchemeDetails") \ Symbol("trusteeDetails")).readNullable(__.read(
+      (__ \ Symbol("individualTrusteeDetails")).readNullable(
         __.read(Reads.seq(userAnswersTrusteeIndividualReads)).map(JsArray(_))).flatMap { individual =>
-        (__ \ 'companyTrusteeDetails).readNullable(
+        (__ \ Symbol("companyTrusteeDetails")).readNullable(
           __.read(Reads.seq(userAnswersTrusteeCompanyReads)).map(JsArray(_))).flatMap { company =>
-          (__ \ 'partnershipTrusteeDetails).readNullable(
+          (__ \ Symbol("partnershipTrusteeDetails")).readNullable(
             __.read(Reads.seq(userAnswersTrusteePartnershipReads)).map(JsArray(_))).flatMap { partnership =>
-            (__ \ 'trustees).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
+            (__ \ Symbol("trustees")).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray()))
           }
         }
       })).map {
@@ -41,36 +43,36 @@ class TrusteeDetailsTransformer @Inject()(addressTransformer: AddressTransformer
   }
 
   def userAnswersTrusteeIndividualReads: Reads[JsObject] =
-    (__ \ 'trusteeKind).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("trusteeDetails")and
+    (__ \ Symbol("trusteeKind")).json.put(JsString("individual")) and
+      userAnswersIndividualDetailsReads("trusteeDetails") and
       userAnswersNinoReads("trusteeNino") and
       userAnswersUtrReads and
-      addressTransformer.getDifferentAddress(__ \ 'trusteeAddressId, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears( __ \ 'trusteeAddressYears) and
-      addressTransformer.getPreviousAddress( __ \ 'trusteePreviousAddress) and
+      addressTransformer.getDifferentAddress(__ \ Symbol("trusteeAddressId"), __ \ Symbol("correspondenceAddressDetails")) and
+      addressTransformer.getAddressYears(__ \ Symbol("trusteeAddressYears")) and
+      addressTransformer.getPreviousAddress(__ \ Symbol("trusteePreviousAddress")) and
       userAnswersContactDetailsReads("trusteeContactDetails") reduce
 
   def userAnswersTrusteeCompanyReads: Reads[JsObject] =
-    (__ \ 'trusteeKind).json.put(JsString("company")) and
+    (__ \ Symbol("trusteeKind")).json.put(JsString("company")) and
       userAnswersCompanyDetailsReads and
       transformVatToUserAnswersReads("companyVat") and
       userAnswersPayeReads("companyPaye") and
       userAnswersCrnReads and
       userAnswersUtrReads and
-      addressTransformer.getDifferentAddress(__ \ 'companyAddress, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears( __ \ 'trusteesCompanyAddressYears) and
-      addressTransformer.getPreviousAddress( __ \ 'companyPreviousAddress) and
+      addressTransformer.getDifferentAddress(__ \ Symbol("companyAddress"), __ \ Symbol("correspondenceAddressDetails")) and
+      addressTransformer.getAddressYears(__ \ Symbol("trusteesCompanyAddressYears")) and
+      addressTransformer.getPreviousAddress(__ \ Symbol("companyPreviousAddress")) and
       userAnswersContactDetailsReads("companyContactDetails") reduce
 
   def userAnswersTrusteePartnershipReads: Reads[JsObject] =
-    (__ \ 'trusteeKind).json.put(JsString("partnership")) and
+    (__ \ Symbol("trusteeKind")).json.put(JsString("partnership")) and
       userAnswersTrusteePartnershipDetailsReads and
       transformVatToUserAnswersReads("partnershipVat") and
       userAnswersPayeReads("partnershipPaye") and
       userAnswersUtrReads and
-      addressTransformer.getDifferentAddress(__ \ 'partnershipAddress, __ \ 'correspondenceAddressDetails) and
-      addressTransformer.getAddressYears( __ \ 'partnershipAddressYears) and
-      addressTransformer.getPreviousAddress( __ \ 'partnershipPreviousAddress) and
+      addressTransformer.getDifferentAddress(__ \ Symbol("partnershipAddress"), __ \ Symbol("correspondenceAddressDetails")) and
+      addressTransformer.getAddressYears(__ \ Symbol("partnershipAddressYears")) and
+      addressTransformer.getPreviousAddress(__ \ Symbol("partnershipPreviousAddress")) and
       userAnswersContactDetailsReads("partnershipContactDetails") reduce
 
 }

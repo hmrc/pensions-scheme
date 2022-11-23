@@ -219,7 +219,7 @@ class CustomerAndSchemeDetailsReadsSpec extends AnyWordSpec with Matchers {
   }
 
   "Json Payload containing Customer and scheme details" must {
-    behave like readsTests
+    behave like readsTests()
   }
 
 }

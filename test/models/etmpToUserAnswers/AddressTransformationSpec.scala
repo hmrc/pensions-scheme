@@ -31,7 +31,7 @@ class AddressTransformationSpec extends TransformationSpec {
         forAll(addressJsValueGen()) {
           address => {
             val (ifAddress, userAnswersExpectedAddress) = address
-            lazy val transformedJson = ifAddress.transform(addressTransformer.getAddress(__ \ 'userAnswersAddress, __ \ 'ifAddress)).asOpt.value
+            lazy val transformedJson = ifAddress.transform(addressTransformer.getAddress(__ \ Symbol("userAnswersAddress"), __ \ Symbol("ifAddress"))).asOpt.value
 
             transformedJson mustBe userAnswersExpectedAddress
           }
@@ -44,7 +44,7 @@ class AddressTransformationSpec extends TransformationSpec {
         forAll(addressJsValueGen(isDifferent = true)) {
           address => {
             val (ifAddress, userAnswersExpectedAddress) = address
-            lazy val transformedJson = ifAddress.transform(addressTransformer.getDifferentAddress(__ \ 'userAnswersAddress, __ \ 'ifAddress)).asOpt.value
+            lazy val transformedJson = ifAddress.transform(addressTransformer.getDifferentAddress(__ \ Symbol("userAnswersAddress"), __ \ Symbol("ifAddress"))).asOpt.value
 
             transformedJson mustBe userAnswersExpectedAddress
           }
@@ -57,14 +57,14 @@ class AddressTransformationSpec extends TransformationSpec {
     "transformed using getAddressYears" must {
       "map correctly to user answers address years for under a year" in {
         lazy val transformedJson = ifPayload().transform(addressTransformer.
-          getAddressYears( __ \ 'addressYears)).asOpt.value
+          getAddressYears(__ \ Symbol("addressYears"))).asOpt.value
 
         (transformedJson \ "addressYears").as[String] mustBe "under_a_year"
       }
 
       "map correctly to user answers address years for over a year" in {
         lazy val transformedJson = ifPayload(false).transform(addressTransformer.
-          getAddressYears( __ \ 'addressYears)).asOpt.value
+          getAddressYears(__ \ Symbol("addressYears"))).asOpt.value
 
         (transformedJson \ "addressYears").as[String] mustBe "over_a_year"
       }
@@ -73,7 +73,7 @@ class AddressTransformationSpec extends TransformationSpec {
     "transformed using getPreviousAddress" must {
       "map correctly to user answers previous address" in {
         lazy val transformedJson = ifPayload().transform(addressTransformer.
-          getPreviousAddress( __ \ 'previousAddress)).asOpt.value
+          getPreviousAddress(__ \ Symbol("previousAddress"))).asOpt.value
 
         (transformedJson \ "previousAddress" \ "addressLine1").as[String] mustBe "a1"
         (transformedJson \ "previousAddress" \ "addressLine2").as[String] mustBe "a2"
@@ -89,16 +89,16 @@ class AddressTransformationSpec extends TransformationSpec {
 object AddressTransformationSpec {
 
   def ifPayload(isPrevious: Boolean = true): JsObject = Json.obj(
-      "previousAddressDetails" -> Json.obj(
-        "isPreviousAddressLast12Month" -> isPrevious,
-        "previousAddress" -> Json.obj(
-          "line1" -> "a1",
-          "line2" -> "a2",
-          "line3" -> "a3",
-          "line4" -> "a4",
-          "postalCode" -> "1234",
-          "countryCode" -> "GB"
-        )
+    "previousAddressDetails" -> Json.obj(
+      "isPreviousAddressLast12Month" -> isPrevious,
+      "previousAddress" -> Json.obj(
+        "line1" -> "a1",
+        "line2" -> "a2",
+        "line3" -> "a3",
+        "line4" -> "a4",
+        "postalCode" -> "1234",
+        "countryCode" -> "GB"
       )
+    )
   )
 }
