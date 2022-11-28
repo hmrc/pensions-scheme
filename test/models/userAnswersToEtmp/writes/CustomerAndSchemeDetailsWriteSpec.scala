@@ -16,15 +16,15 @@
 
 package models.userAnswersToEtmp.writes
 
-import models.enumeration.{SchemeType, Benefits}
+import models.enumeration.{Benefits, SchemeType}
 import models.userAnswersToEtmp.CustomerAndSchemeDetails
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
+import org.scalatest.{Ignore, OptionValues}
 import play.api.libs.json.Json
-import utils.{SchemaValidatorForTests, PensionSchemeGenerators}
-
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
+@Ignore
 class CustomerAndSchemeDetailsWriteSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "CustomerAndSchemeDetails object" should {
