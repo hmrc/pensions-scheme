@@ -23,12 +23,13 @@ object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
     ws,
-    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-28"         % "0.74.0",
-    "com.typesafe.play"       %% "play-json"                  % "2.9.3",
-    "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % "7.12.0",
-    "com.networknt"           %  "json-schema-validator"      % "1.0.73",
-    "uk.gov.hmrc"             %% "domain"                     % "8.1.0-play-28",
-    "com.typesafe.play"       %% "play-json-joda"             % "2.9.3",
+    "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-28"         % "0.74.0",
+    "com.typesafe.play"             %% "play-json"                  % "2.9.3",
+    "uk.gov.hmrc"                   %% "bootstrap-backend-play-28"  % "7.12.0",
+    "com.networknt"                 %  "json-schema-validator"      % "1.0.73",
+    "uk.gov.hmrc"                   %% "domain"                     % "8.1.0-play-28",
+    "com.typesafe.play"             %% "play-json-joda"             % "2.9.3",
+    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.14.0",
     ehcache
   )
 
@@ -44,7 +45,6 @@ object AppDependencies {
     "org.scalatestplus.play"      %% "scalatestplus-play"           % "5.1.0"             % Test,
     "com.eclipsesource"           %% "play-json-schema-validator"   % "0.9.5"             % scope,
     "com.github.tomakehurst"       % "wiremock-jre8"                % "2.35.0"            % scope,
-    "io.github.wolfendale"        %% "scalacheck-gen-regexp"        % "1.0.0"             % scope,
-    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.14.0"            % scope
+    "io.github.wolfendale"        %% "scalacheck-gen-regexp"        % "1.0.0"             % scope
   )
 }
