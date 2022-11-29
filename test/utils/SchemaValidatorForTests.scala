@@ -21,8 +21,6 @@ import com.eclipsesource.schema.drafts._
 import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import play.api.libs.json.{JsResult, JsValue}
 
-// https://github.com/networknt/json-schema-validator/pull/625
-// use SchemaValidatorForTests after fix
 trait SchemaValidatorForTests {
 
   def validateJson(elementToValidate: JsValue, schemaFileName: String, schemaNodePath: String): JsResult[JsValue] = {

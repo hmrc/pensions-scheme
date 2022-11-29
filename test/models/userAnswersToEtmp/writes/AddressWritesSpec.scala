@@ -22,12 +22,12 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
-import utils.{PensionSchemeGenerators, SchemaValidator2ForTests}
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 import scala.util.Random
 
 @Ignore
-class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidator2ForTests {
+class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An updated address" should {
     "parse correctly to a valid if format for variations api - API 1468" when {
