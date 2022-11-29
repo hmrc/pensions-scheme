@@ -20,12 +20,13 @@ import models.Samples
 import models.userAnswersToEtmp.PreviousAddressDetails
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
+import org.scalatest.{Ignore, OptionValues}
 import play.api.libs.json.{JsValue, Json}
 import utils.SchemaValidatorForTests
 
 import scala.util.Random
 
+@Ignore
 class PreviousAddressDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with Samples with SchemaValidatorForTests {
 
   "A previous address details object" should {

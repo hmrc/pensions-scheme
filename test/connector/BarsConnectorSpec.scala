@@ -20,15 +20,17 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, BarsCheck}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.userAnswersToEtmp.{BankAccount, ValidateBankDetailsRequest}
+import org.scalatest.OptionValues
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.OptionValues
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
+import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.WireMockHelper
 
@@ -36,14 +38,32 @@ import scala.concurrent.ExecutionContext
 
 class BarsConnectorSpec
   extends AsyncFlatSpec
+    with WireMockHelper
     with Matchers
     with OptionValues
-    with WireMockHelper {
+    with MockitoSugar {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val rh: RequestHeader = FakeRequest("", "")
 
   private val auditService = new StubSuccessfulAuditService()
+
+  override protected def portConfigKey: String = "microservice.services.bank-account-reputation.port"
+
+  override protected def bindings: Seq[GuiceableModule] =
+    Seq(
+      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
+      bind[LockRepository].toInstance(mock[LockRepository]),
+      bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
+      bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),
+      bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
+      bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository]),
+      bind[AuditService].toInstance(auditService)
+    )
+
+  def connector: BarsConnector = injector.instanceOf[BarsConnector]
 
   val notInvalid = false
   val invalid = true
@@ -71,7 +91,6 @@ class BarsConnectorSpec
         )
     )
 
-    val connector = injector.instanceOf[BarsConnector]
     connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe invalid
     }
@@ -123,7 +142,6 @@ class BarsConnectorSpec
         )
     )
 
-    val connector = injector.instanceOf[BarsConnector]
     connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe notInvalid
     }
@@ -149,7 +167,6 @@ class BarsConnectorSpec
         )
     )
 
-    val connector = injector.instanceOf[BarsConnector]
     connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe notInvalid
     }
@@ -169,7 +186,6 @@ class BarsConnectorSpec
         )
     )
 
-    val connector = injector.instanceOf[BarsConnector]
     connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { response =>
       response shouldBe notInvalid
     }
@@ -201,7 +217,6 @@ class BarsConnectorSpec
     val hc: HeaderCarrier = HeaderCarrier(extraHeaders = Seq((headerName, headerValue)))
     val ec: ExecutionContext = implicitly[ExecutionContext]
 
-    val connector = injector.instanceOf[BarsConnector]
     connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier)(ec, hc, rh).map { _ =>
       succeed
     }
@@ -236,7 +251,6 @@ class BarsConnectorSpec
         )
     )
 
-    val connector = injector.instanceOf[BarsConnector]
     connector.invalidBankAccount(BankAccount(sortCode, accountNumber), psaIdentifier).map { _ =>
       succeed
     }
@@ -265,8 +279,6 @@ class BarsConnectorSpec
             .withBody(response)
         )
     )
-
-    val connector = injector.instanceOf[BarsConnector]
 
     connector.invalidBankAccount(bankAccount, psaIdentifier).map { _ =>
       auditService.verifySent(
@@ -298,8 +310,6 @@ class BarsConnectorSpec
         )
     )
 
-    val connector = injector.instanceOf[BarsConnector]
-
     connector.invalidBankAccount(bankAccount, psaIdentifier).map { _ =>
       auditService.verifySent(
         BarsCheck(
@@ -312,12 +322,4 @@ class BarsConnectorSpec
     }
 
   }
-
-  override protected def portConfigKey: String = "microservice.services.bank-account-reputation.port"
-
-  override protected def bindings: Seq[GuiceableModule] =
-    Seq(
-      bind[AuditService].toInstance(auditService)
-    )
-
 }

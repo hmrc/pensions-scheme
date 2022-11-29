@@ -16,46 +16,58 @@
 
 package controllers
 
-import base.{JsonFileReader, SpecBase}
+import base.SpecBase
 import connector.SchemeDetailsConnector
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{never, reset, verify, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
-import org.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories._
 import uk.gov.hmrc.http.BadRequestException
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AssociatedPsaControllerSpec
   extends SpecBase
     with MockitoSugar
     with BeforeAndAfter
-    with PatienceConfiguration
-    with JsonFileReader {
+    with PatienceConfiguration {
 
   private val mockSchemeConnector: SchemeDetailsConnector = mock[SchemeDetailsConnector]
-  private val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
   private val schemeIdNumber = "S999999999"
   private val userIdNumber = "A0000001"
   private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
+
+  override protected def bindings: Seq[GuiceableModule] =
+    Seq(
+      bind[SchemeDetailsConnector].toInstance(mockSchemeConnector),
+      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
+      bind[LockRepository].toInstance(mock[LockRepository]),
+      bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
+      bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),
+      bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
+      bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
+    )
+
+  private val associatedPsaController: AssociatedPsaController = injector.instanceOf[AssociatedPsaController]
 
   before {
     reset(mockSchemeConnector)
   }
 
   "getAssociatedPsa" must {
-
     "return OK" when {
-
       "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails" in {
-        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
-
         val request = FakeRequest("GET", "/").withHeaders(
           ("psaId", userIdNumber),
           ("schemeReferenceNumber", schemeIdNumber)
@@ -71,8 +83,6 @@ class AssociatedPsaControllerSpec
       }
 
       "the psa we retrieve dont exists in the list of PSAs we receive from getSchemeDetails as its empty" in {
-        val associatedPsaController = new AssociatedPsaController(mockSchemeConnector, stubControllerComponents())
-
         val request = FakeRequest("GET", "/").withHeaders(
           ("psaId", userIdNumber),
           ("schemeReferenceNumber", schemeIdNumber)
@@ -103,7 +113,7 @@ class AssociatedPsaControllerSpec
         verify(mockSchemeConnector, never).getSchemeDetails(
           userIdNumber = ArgumentMatchers.any(),
           schemeIdType = ArgumentMatchers.any(),
-            schemeIdNumber = ArgumentMatchers.any()
+          schemeIdNumber = ArgumentMatchers.any()
         )(any(), any(), any())
       }
     }
@@ -119,7 +129,7 @@ class AssociatedPsaControllerSpec
       verify(mockSchemeConnector, never).getSchemeDetails(
         userIdNumber = ArgumentMatchers.any(),
         schemeIdType = ArgumentMatchers.any(),
-          schemeIdNumber = ArgumentMatchers.any()
+        schemeIdNumber = ArgumentMatchers.any()
       )(any(), any(), any())
     }
 

@@ -16,32 +16,33 @@
 
 package utils
 
+import com.eclipsesource.schema.drafts.Version4.schemaTypeReads
+import com.eclipsesource.schema.drafts._
 import com.eclipsesource.schema.{JsonSource, SchemaValidator}
 import play.api.libs.json.{JsResult, JsValue}
 
 trait SchemaValidatorForTests {
 
-  def validateJson(elementToValidate: JsValue, schemaFileName: String, schemaNodePath: String): JsResult[JsValue]  = {
-    val rootSchema = JsonSource.schemaFromUrl(getClass.getResource(s"/schemas/$schemaFileName")).get
+  def validateJson(elementToValidate: JsValue, schemaFileName: String, schemaNodePath: String): JsResult[JsValue] = {
 
-    val validator = SchemaValidator().addSchema(s"/schemas/$schemaFileName", rootSchema)
+    val rootSchema = JsonSource.schemaFromStream(getClass.getResourceAsStream(s"/schemas/$schemaFileName")).get
 
     val schema = JsonSource.schemaFromString(
       s"""{
-        |  "additionalProperties": {
-        |  "$$ref": "/schemas/$schemaFileName$schemaNodePath" }
-        |}""".stripMargin).get
+         |  "additionalProperties": { "$$ref": "/schemas/$schemaFileName$schemaNodePath" }
+         |}""".stripMargin).get
+
+    val validator = SchemaValidator(Some(Version4))
+      .addSchema(s"/schemas/$schemaFileName", rootSchema)
 
     validator.validate(schema, elementToValidate)
   }
 
-  def validateJson(elementToValidate: JsValue, schemaFileName: String): JsResult[JsValue]  = {
+  def validateJson(elementToValidate: JsValue, schemaFileName: String): JsResult[JsValue] = {
 
     val rootSchema = JsonSource.schemaFromUrl(getClass.getResource(s"/schemas/$schemaFileName")).get
-
-    val validator = SchemaValidator().addSchema(s"/schemas/$schemaFileName", rootSchema)
-
-    validator.validate(getClass.getResource(s"/schemas/$schemaFileName"), elementToValidate)
+    val validator = SchemaValidator(Some(Version4))
+    validator.validate(rootSchema, elementToValidate)
   }
 
 }

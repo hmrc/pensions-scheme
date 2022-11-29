@@ -484,14 +484,14 @@ trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val establisherDetails = establishers.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
     val trusteeDetails = trustees.map(_._1).getOrElse(Json.obj("psaSchemeDetails" -> Json.obj()))
 
-    val branch = (__ \ 'psaSchemeDetails).json.pick
+    val branch = (__ \ Symbol("psaSchemeDetails")).json.pick
     val ifEstablishers = establisherDetails.transform(branch).get
     val ifTrustee = trusteeDetails.transform(branch).get
 
     val uaEstablisherDetails = establishers.map(_._2).getOrElse(Json.obj())
     val uaErusteeDetails = trustees.map(_._2).getOrElse(Json.obj())
 
-    val jsonTransformer = (__ \ 'psaSchemeDetails).json.update(
+    val jsonTransformer = (__ \ Symbol("psaSchemeDetails")).json.update(
       __.read[JsObject].map { o => o ++ ifEstablishers.as[JsObject] ++ ifTrustee.as[JsObject] }
     ).orElse(__.json.put(Json.obj()))
 

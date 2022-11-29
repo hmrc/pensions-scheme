@@ -533,14 +533,14 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     val establisherDetails = establishers.map(_._1).getOrElse(Json.obj("psaPspSchemeDetails" -> Json.obj()))
     val trusteeDetails = trustees.map(_._1).getOrElse(Json.obj("psaPspSchemeDetails" -> Json.obj()))
 
-    val branch = (__ \ 'psaPspSchemeDetails).json.pick
+    val branch = (__ \ Symbol("psaPspSchemeDetails")).json.pick
     val ifEstablishers = establisherDetails.transform(branch).get
     val ifTrustee = trusteeDetails.transform(branch).get
 
     val uaEstablisherDetails = establishers.map(_._2).getOrElse(Json.obj())
     val uaErusteeDetails = trustees.map(_._2).getOrElse(Json.obj())
 
-    val jsonTransformer = (__ \ 'psaPspSchemeDetails).json.update(
+    val jsonTransformer = (__ \ Symbol("psaPspSchemeDetails")).json.update(
       __.read[JsObject].map { o => o ++ ifEstablishers.as[JsObject] ++ ifTrustee.as[JsObject] }
     ).orElse(__.json.put(Json.obj()))
 
@@ -555,7 +555,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
   } yield {
     val (racdacSchemeDetails, uaRadDacSchemeDetails) = schemeDetails
 
-    val jsonTransformer = (__ \ 'psaPspSchemeDetails).json.update(
+    val jsonTransformer = (__ \ Symbol("psaPspSchemeDetails")).json.update(
       __.read[JsObject]
     )
 

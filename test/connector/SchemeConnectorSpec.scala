@@ -20,10 +20,10 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, ListOfSchemesAudit}
 import base.JsonFileReader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.MockitoSugar
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.{EitherValues, OptionValues, RecoverMethods}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
@@ -31,6 +31,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{NOT_FOUND, _}
+import repositories._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException, UpstreamErrorResponse}
 import utils.WireMockHelper
 
@@ -47,7 +48,6 @@ class SchemeConnectorSpec
 
   import SchemeConnectorSpec._
 
-
   override def beforeEach(): Unit = {
     auditService.reset()
     super.beforeEach()
@@ -58,6 +58,14 @@ class SchemeConnectorSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].toInstance(auditService),
+      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
+      bind[LockRepository].toInstance(mock[LockRepository]),
+      bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
+      bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),
+      bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
+      bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
     )
 
   def connector: SchemeConnector = app.injector.instanceOf[SchemeConnector]
@@ -71,7 +79,7 @@ class SchemeConnectorSpec
     )
 
     connector.listOfSchemes(psaType, idValue).map { response =>
-      response.right.value shouldBe validListOfSchemeIFResponse
+      response.value shouldBe validListOfSchemeIFResponse
     }
   }
 
@@ -84,7 +92,7 @@ class SchemeConnectorSpec
     )
 
     connector.listOfSchemes(pspType, idValue).map { response =>
-      response.right.value shouldBe validListOfSchemeIFResponse
+      response.value shouldBe validListOfSchemeIFResponse
     }
   }
 
@@ -128,7 +136,7 @@ class SchemeConnectorSpec
 
     connector.listOfSchemes(psaType, idValue).map { response =>
       auditService.verifySent(
-        ListOfSchemesAudit("PSA", idValue, Status.OK, Some(response.right.value))) shouldBe true
+        ListOfSchemesAudit("PSA", idValue, Status.OK, Some(response.value))) shouldBe true
     }
   }
 
@@ -139,7 +147,7 @@ class SchemeConnectorSpec
           notFound()
         )
     )
-    connector.listOfSchemes(psaType, idValue) .map(_ => fail("Expected failure"))
+    connector.listOfSchemes(psaType, idValue).map(_ => fail("Expected failure"))
       .recover {
         case _: NotFoundException =>
           auditService.verifySent(
@@ -160,7 +168,7 @@ class SchemeConnectorSpec
     )
 
     connector.registerScheme(idValue, registerSchemeData).map { response =>
-      response.right.value shouldBe successResponse
+      response.value shouldBe successResponse
     }
   }
 
@@ -243,7 +251,7 @@ class SchemeConnectorSpec
     )
 
     connector.updateSchemeDetails(pstr, updateSchemeData).map { response =>
-      response.right.value shouldBe successResponse
+      response.value shouldBe successResponse
     }
   }
 

@@ -20,15 +20,19 @@ import akka.stream.Materializer
 import akka.util.ByteString
 import org.apache.commons.lang3.RandomUtils
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
-import org.mockito.MockitoSugar
+import org.mockito.Mockito.when
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.bind
+import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.libs.json.Json
 import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.SchemeCacheRepository
+import repositories._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.UnauthorizedException
 
@@ -48,13 +52,35 @@ class RacdacSchemeCacheControllerSpec
   val cc: ControllerComponents = app.injector.instanceOf[ControllerComponents]
 
   private class RacdacSchemeCacheControllerImpl(
-                                           repo: SchemeCacheRepository,
-                                           authConnector: AuthConnector
-                                         ) extends SchemeCacheController(repo, authConnector, cc)
+                                                 repo: SchemeCacheRepository,
+                                                 authConnector: AuthConnector
+                                               ) extends SchemeCacheController(repo, authConnector, cc)
 
   def controller(repo: SchemeCacheRepository, authConnector: AuthConnector): SchemeCacheController = {
     new RacdacSchemeCacheControllerImpl(repo, authConnector)
   }
+
+  private def modules: Seq[GuiceableModule] =
+    Seq(
+      bind[AuthConnector].toInstance(authConnector),
+      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
+      bind[LockRepository].toInstance(mock[LockRepository]),
+      bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
+      bind[SchemeCacheRepository].toInstance(repo),
+      bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
+      bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
+    )
+
+  override def fakeApplication(): Application = GuiceApplicationBuilder()
+    .configure(
+      //turn off metrics
+      "metrics.jvm" -> false,
+      "metrics.enabled" -> false
+    )
+    .overrides(modules: _*)
+    .build()
 
   // scalastyle:off method.length
   "SchemeCacheController" must {
@@ -113,7 +139,7 @@ class RacdacSchemeCacheControllerSpec
 
       "return 200 when the request body can be parsed and passed to the repository successfully" in {
 
-        when(repo.upsert(any(), any())(any())) thenReturn Future.successful(true)
+        when(repo.upsert(any(), any())(any())) thenReturn Future.successful((): Unit)
         when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
         val result = call(controller(repo, authConnector).save("foo"), FakeRequest("POST", "/").withJsonBody(Json.obj("abc" -> "def")))
@@ -122,7 +148,7 @@ class RacdacSchemeCacheControllerSpec
       }
 
       "return 413 when the request body cannot be parsed" in {
-        when(repo.upsert(any(), any())(any())) thenReturn Future.successful(true)
+        when(repo.upsert(any(), any())(any())) thenReturn Future.successful((): Unit)
         when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
         val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withRawBody(ByteString(RandomUtils.nextBytes(512001))))

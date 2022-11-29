@@ -21,49 +21,52 @@ import audit.{AuditService, EmailAuditEvent}
 import base.SpecBase
 import models._
 import org.joda.time.DateTime
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test.Helpers._
+import repositories._
 import uk.gov.hmrc.crypto.{ApplicationCrypto, PlainText}
 import uk.gov.hmrc.domain.PsaId
 
-class EmailResponseControllerSpec extends SpecBase {
+class EmailResponseControllerSpec extends SpecBase with MockitoSugar {
 
   import EmailResponseControllerSpec._
+
+  protected override def bindings: Seq[GuiceableModule] =
+    Seq(
+      bind[AuditService].to(fakeAuditService),
+      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
+      bind[LockRepository].toInstance(mock[LockRepository]),
+      bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
+      bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),
+      bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
+      bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
+    )
 
   "EmailResponseController" must {
 
     "respond OK when given EmailEvents" which {
 
       "will send events excluding Opened to audit service" in {
+        val encrypted = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText(psa.id)).value
 
-        running(_.overrides(
-          bind[AuditService].to(fakeAuditService)
-        )) { app =>
+        val controller = app.injector.instanceOf[EmailResponseController]
 
-          val encrypted = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText(psa.id)).value
+        val result = controller.retrieveStatus(encrypted)(fakeRequest.withBody(Json.toJson(emailEvents)))
 
-          val controller = app.injector.instanceOf[EmailResponseController]
-
-          val result = controller.retrieveStatus(encrypted)(fakeRequest.withBody(Json.toJson(emailEvents)))
-
-          status(result) mustBe OK
-          fakeAuditService.verifySent(EmailAuditEvent(psa, Sent)) mustBe true
-          fakeAuditService.verifySent(EmailAuditEvent(psa, Delivered)) mustBe true
-          fakeAuditService.verifySent(EmailAuditEvent(psa, Opened)) mustBe false
-
-        }
+        status(result) mustBe OK
+        fakeAuditService.verifySent(EmailAuditEvent(psa, Sent)) mustBe true
+        fakeAuditService.verifySent(EmailAuditEvent(psa, Delivered)) mustBe true
+        fakeAuditService.verifySent(EmailAuditEvent(psa, Opened)) mustBe false
       }
-
     }
-
   }
 
   "respond with BAD_REQUEST when not given EmailEvents" in {
-
-    running(_.overrides(
-      bind[AuditService].to(fakeAuditService)
-    )) { app =>
 
       fakeAuditService.reset()
 
@@ -74,19 +77,11 @@ class EmailResponseControllerSpec extends SpecBase {
       val result = controller.retrieveStatus(encrypted)(fakeRequest.withBody(validJson))
 
       status(result) mustBe BAD_REQUEST
-      fakeAuditService.verifyNothingSent mustBe true
-
-    }
-
+      fakeAuditService.verifyNothingSent() mustBe true
   }
 
   "respond with FORBIDDEN" when {
     "URL contains an id does not match PSAID pattern" in {
-
-      running(_.overrides(
-        bind[AuditService].to(fakeAuditService)
-      )) { app =>
-
         fakeAuditService.reset()
 
         val psa = app.injector.instanceOf[ApplicationCrypto].QueryParameterCrypto.encrypt(PlainText("psa")).value
@@ -97,9 +92,7 @@ class EmailResponseControllerSpec extends SpecBase {
 
         status(result) mustBe FORBIDDEN
         contentAsString(result) mustBe "Malformed PSAID"
-        fakeAuditService.verifyNothingSent mustBe true
-
-      }
+        fakeAuditService.verifyNothingSent() mustBe true
     }
   }
 

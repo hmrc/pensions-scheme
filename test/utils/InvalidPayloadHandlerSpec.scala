@@ -16,7 +16,7 @@
 
 package utils
 
-import com.networknt.schema.{JsonSchema, JsonSchemaFactory}
+import com.networknt.schema.{JsonSchema, JsonSchemaFactory, SpecVersion}
 import org.scalactic.Equality
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -173,7 +173,7 @@ class InvalidPayloadHandlerSpec extends AnyFlatSpec with Matchers {
     val actual = logger.getFailures(multiSchema, json)
 
     actual.size shouldBe 2
-    actual should contain allOf(maxLengthError, typeError)
+    actual should contain.allOf(maxLengthError, typeError)
 
   }
 }
@@ -343,21 +343,16 @@ object InvalidPayloadHandlerSpec {
 
   def loadSchema(schemaString: String): JsonSchema = {
 
-    val factory = JsonSchemaFactory.getInstance
+    val factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4)
     factory.getSchema(schemaString)
-
   }
 
-  implicit val validationFailureEquality: Equality[ValidationFailure] = new Equality[ValidationFailure] {
-
-    override def areEqual(a: ValidationFailure, b: Any): Boolean = {
-      b match {
-        case failure: ValidationFailure =>
-          a.failureType == failure.failureType && a.message.contains(failure.message) && a.value == failure.value
-        case _ => false
-      }
+  implicit val validationFailureEquality: Equality[ValidationFailure] = (a: ValidationFailure, b: Any) => {
+    b match {
+      case failure: ValidationFailure =>
+        a.failureType == failure.failureType && a.message.contains(failure.message) && a.value == failure.value
+      case _ => false
     }
-
   }
 
 }

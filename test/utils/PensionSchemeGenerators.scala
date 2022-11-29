@@ -37,7 +37,7 @@ trait PensionSchemeGenerators {
     randomNumberFromRange(1, 3) match {
       case 1 => utrRange
       case 2 => "k" + utrRange
-      case 3 => utrRange + "k"
+      case 3 => utrRange.toString + "k"
     }
   }
 

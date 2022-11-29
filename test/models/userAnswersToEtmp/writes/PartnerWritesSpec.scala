@@ -20,10 +20,10 @@ import models.userAnswersToEtmp.Individual
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
+import org.scalatest.{Ignore, OptionValues}
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
-
+@Ignore
 class PartnerWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "A partner" should {

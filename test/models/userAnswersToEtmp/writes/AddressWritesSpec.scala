@@ -17,15 +17,16 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.{InternationalAddress, UkAddress}
+import org.scalatest.{Ignore, OptionValues}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 import scala.util.Random
 
+@Ignore
 class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An updated address" should {

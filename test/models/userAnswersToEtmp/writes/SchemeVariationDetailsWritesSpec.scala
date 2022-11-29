@@ -20,10 +20,11 @@ import models.userAnswersToEtmp.PensionsScheme
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
+import org.scalatest.{Ignore, OptionValues}
 import play.api.libs.json.{Json, JsValue}
 import utils.{SchemaValidatorForTests, PensionSchemeGenerators}
 
+@Ignore
 class SchemeVariationDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
   "An PensionsScheme object" should {

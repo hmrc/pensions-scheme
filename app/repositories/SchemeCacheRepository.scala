@@ -25,7 +25,7 @@ import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import repositories.SchemeDataEntry.SchemeDataEntryFormats.expireAtKey
 import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry, SchemeDataEntry, SchemeDataEntryFormats}
-import uk.gov.hmrc.crypto.{Crypted, CryptoWithKeysFromConfig, PlainText}
+import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoBinaryFormats.{byteArrayReads, byteArrayWrites}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
@@ -88,19 +88,19 @@ class SchemeCacheRepository @Inject()(
     extraCodecs = Seq(
       Codecs.playFormatCodec(JsonDataEntry.format),
       Codecs.playFormatCodec(DataEntry.format)
-    ),
+    ).toSeq,
     indexes = Seq(
       IndexModel(
         Indexes.ascending(expireAtKey),
         IndexOptions().name("dataExpiry")
           .expireAfter(0, TimeUnit.SECONDS).background(true)
       )
-    )
+    ).toSeq
   ) with Logging {
 
   import SchemeDataEntryFormats._
 
-  private val jsonCrypto: CryptoWithKeysFromConfig = new CryptoWithKeysFromConfig(baseConfigKey = encryptionKey, config.underlying)
+  private val jsonCrypto: Encrypter with Decrypter = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = encryptionKey, config.underlying)
   private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
   private def getExpireAt: DateTime = if (expireInSeconds.isEmpty) {
@@ -142,7 +142,7 @@ class SchemeCacheRepository @Inject()(
         Updates.set(lastUpdatedKey, Codecs.toBson(record.lastUpdated)),
         Updates.set(expireAtKey, Codecs.toBson(record.expireAt))
       )
-      collection.withDocumentClass[JsonDataEntry].findOneAndUpdate(
+      collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
         filter = Filters.eq(idField, id),
         update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
     }
