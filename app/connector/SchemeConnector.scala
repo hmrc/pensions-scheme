@@ -132,7 +132,9 @@ class SchemeConnectorImpl @Inject()(
         case OK =>
           logger.debug(s"Call to list of schemes API on IF was successful with response ${response.json}")
           Right(response.json)
-        case _ => Left(handleErrorResponse("Scheme details", listOfSchemesUrl, response))
+        case _ =>
+          logger.warn(s"Response ${response.status} to list of schemes API for idType $idType and idValue $idValue")
+          Left(handleErrorResponse("Scheme details", listOfSchemesUrl, response))
       }
     } andThen schemeAuditService.sendListOfSchemesEvent(idType, idValue)(auditService.sendEvent)
   }
