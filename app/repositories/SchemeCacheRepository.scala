@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 object SchemeDataEntry {
 
   sealed trait SchemeDataEntry

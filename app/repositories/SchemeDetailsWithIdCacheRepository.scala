@@ -31,7 +31,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-
+@Singleton
 object SchemeDetailsWithIdCacheRepository {
 
   private val dataKey: String = "data"

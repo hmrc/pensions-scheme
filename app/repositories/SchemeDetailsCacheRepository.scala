@@ -22,6 +22,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext
 
+@Singleton
 class SchemeDetailsCacheRepository @Inject()(
                                               config: Configuration,
                                               mongoComponent: MongoComponent
