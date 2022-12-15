@@ -16,6 +16,7 @@
 
 package repositories
 
+import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import org.joda.time.{DateTime, DateTimeZone}
@@ -35,7 +36,6 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 object SchemeDataEntry {
 
   sealed trait SchemeDataEntry
@@ -72,6 +72,7 @@ object SchemeDataEntry {
   }
 }
 
+@Singleton
 class SchemeCacheRepository @Inject()(
                                        collectionName: String,
                                        mongoComponent: MongoComponent,

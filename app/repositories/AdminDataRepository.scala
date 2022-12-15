@@ -16,6 +16,7 @@
 
 package repositories
 
+import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.FeatureToggle
@@ -30,7 +31,6 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 object FeatureToggleMongoFormatter {
   case class FeatureToggles(_id: String, toggles: Seq[FeatureToggle])
 
@@ -40,6 +40,7 @@ object FeatureToggleMongoFormatter {
   val featureToggles = "toggles"
 }
 
+@Singleton
 class AdminDataRepository @Inject()(
                                      mongoComponent: MongoComponent,
                                      configuration: Configuration

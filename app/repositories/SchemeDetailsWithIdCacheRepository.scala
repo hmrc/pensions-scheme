@@ -16,6 +16,7 @@
 
 package repositories
 
+import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.SchemeWithId
@@ -31,7 +32,6 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 object SchemeDetailsWithIdCacheRepository {
 
   private val dataKey: String = "data"
@@ -48,6 +48,7 @@ object SchemeDetailsWithIdCacheRepository {
   }
 }
 
+@Singleton
 class SchemeDetailsWithIdCacheRepository @Inject()(
                                                     mongoComponent: MongoComponent,
                                                     configuration: Configuration

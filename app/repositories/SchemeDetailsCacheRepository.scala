@@ -16,6 +16,7 @@
 
 package repositories
 
+import javax.inject.Singleton
 import com.google.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.mongo.MongoComponent
