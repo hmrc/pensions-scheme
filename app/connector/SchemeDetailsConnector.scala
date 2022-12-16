@@ -84,7 +84,7 @@ class SchemeDetailsConnectorImpl @Inject()(
                                ): Future[Either[HttpException, JsObject]] = {
     val (url, hc) = (
       config.schemeDetailsUrl.format(schemeIdType, idNumber),
-      HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader.toSeq)
+      HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader)
     )
 
     logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
@@ -106,7 +106,7 @@ class SchemeDetailsConnectorImpl @Inject()(
                                   ): Future[Either[HttpException, JsObject]] = {
 
     val url = config.pspSchemeDetailsUrl.format(pspId, pstr)
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader.toSeq)
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader)
     logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
 
     http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>

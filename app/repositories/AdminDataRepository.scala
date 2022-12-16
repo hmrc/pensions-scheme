@@ -16,6 +16,7 @@
 
 package repositories
 
+import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.FeatureToggle
@@ -39,6 +40,7 @@ object FeatureToggleMongoFormatter {
   val featureToggles = "toggles"
 }
 
+@Singleton
 class AdminDataRepository @Inject()(
                                      mongoComponent: MongoComponent,
                                      configuration: Configuration

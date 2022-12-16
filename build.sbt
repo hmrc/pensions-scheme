@@ -40,7 +40,6 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
   )
   .settings(resolvers ++= Seq(
     Resolver.jcenterRepo,
-    "third-party-maven-releases" at "https://artefacts.tax.service.gov.uk/artifactory/third-party-maven-releases/"
   ))
   .settings(majorVersion := 0)
   .settings(scalaVersion := "2.13.8")

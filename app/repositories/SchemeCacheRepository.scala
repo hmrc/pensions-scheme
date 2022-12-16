@@ -16,6 +16,7 @@
 
 package repositories
 
+import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import org.joda.time.{DateTime, DateTimeZone}
@@ -71,6 +72,7 @@ object SchemeDataEntry {
   }
 }
 
+@Singleton
 class SchemeCacheRepository @Inject()(
                                        collectionName: String,
                                        mongoComponent: MongoComponent,
@@ -88,14 +90,14 @@ class SchemeCacheRepository @Inject()(
     extraCodecs = Seq(
       Codecs.playFormatCodec(JsonDataEntry.format),
       Codecs.playFormatCodec(DataEntry.format)
-    ).toSeq,
+    ),
     indexes = Seq(
       IndexModel(
         Indexes.ascending(expireAtKey),
         IndexOptions().name("dataExpiry")
           .expireAfter(0, TimeUnit.SECONDS).background(true)
       )
-    ).toSeq
+    )
   ) with Logging {
 
   import SchemeDataEntryFormats._

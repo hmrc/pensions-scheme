@@ -120,7 +120,7 @@ class SchemeConnectorImpl @Inject()(
                             ): Future[Either[HttpException, JsValue]] = {
     val listOfSchemesUrl = config.listOfSchemesUrl.format(idType, idValue)
 
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader.toSeq)
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader)
     logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
     http.GET[HttpResponse](listOfSchemesUrl)(
@@ -146,7 +146,7 @@ class SchemeConnectorImpl @Inject()(
 
     val (url, hc, schemaPath) =
       (config.updateSchemeUrl.format(pstr),
-        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader.toSeq),
+        HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader),
         "/resources/schemas/schemeVariationIFSchema.json")
 
     logger.debug(s"[Update-Scheme-Outgoing-Payload] - ${data.toString()}")
