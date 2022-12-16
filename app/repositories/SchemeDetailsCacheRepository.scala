@@ -16,14 +16,13 @@
 
 package repositories
 
-import javax.inject.Singleton
 import com.google.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext
 
-@Singleton
+
 class SchemeDetailsCacheRepository @Inject()(
                                               config: Configuration,
                                               mongoComponent: MongoComponent
