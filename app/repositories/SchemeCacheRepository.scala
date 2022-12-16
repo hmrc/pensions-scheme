@@ -90,14 +90,14 @@ class SchemeCacheRepository @Inject()(
     extraCodecs = Seq(
       Codecs.playFormatCodec(JsonDataEntry.format),
       Codecs.playFormatCodec(DataEntry.format)
-    ).toSeq,
+    ),
     indexes = Seq(
       IndexModel(
         Indexes.ascending(expireAtKey),
         IndexOptions().name("dataExpiry")
           .expireAfter(0, TimeUnit.SECONDS).background(true)
       )
-    ).toSeq
+    )
   ) with Logging {
 
   import SchemeDataEntryFormats._
