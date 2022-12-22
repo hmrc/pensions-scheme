@@ -57,7 +57,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     insuranceCompanyName <- Gen.option(specialCharStringGen)
     policyNumber <- Gen.option(policyNumberGen)
     insuranceAddress <- Gen.option(addressJsValueGen("insuranceCompanyAddressDetails", "insurerAddress", isDifferent = true))
-    otherPensionSchemeStructure <- Gen.option(otherSchemeStructureGen)
+    otherPensionSchemeStructure <- otherSchemeStructureGen
     moreThanTenTrustees <- Gen.option(booleanGen)
     contactDetails <- contactDetailsJsValueGen
     optionalContact <- Gen.option(contactDetails._1)
@@ -67,9 +67,16 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
   } yield {
     val schemeTypeName = if (isSchemeMasterTrust.contains(true)) Json.obj("name" -> "master") else
       schemeStructure.map(schemeType => Json.obj("name" -> SchemeType.nameWithValue(schemeType))).getOrElse(Json.obj())
-    val otherDetails = optional("schemeTypeDetails", otherPensionSchemeStructure)
+
+    val otherStructure = schemeStructure match {
+      case Some("Other") => Some(otherPensionSchemeStructure)
+      case _ => None
+    }
+
+
+    val otherDetails = optional("schemeTypeDetails", otherStructure)
     val schemeType = schemeTypeName ++ otherDetails
-    val schemeTypeJs = if (isSchemeMasterTrust.contains(true) | schemeStructure.nonEmpty | otherPensionSchemeStructure.nonEmpty)
+    val schemeTypeJs = if (isSchemeMasterTrust.contains(true) | schemeStructure.nonEmpty | otherStructure.nonEmpty)
       Json.obj("schemeType" -> schemeType) else Json.obj()
     val statusJs = Json.obj("schemeStatus" -> schemeStatus) ++ optional("pstr", pstr)
     val date = relationshipDate.map(dt => Json.obj("relationshipDate" -> dt.toString)).getOrElse(Json.obj())
@@ -92,7 +99,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
         optional("policyNumber", policyNumber) ++
         optionalContact.map { value => Json.obj("insuranceCompanyContactDetails" -> value) }.getOrElse(Json.obj()) ++
         insuranceAddress.map { value => value._1.as[JsObject] }.getOrElse(Json.obj()) ++
-        optional("otherPensionSchemeStructure", otherPensionSchemeStructure) ++
+        optional("otherPensionSchemeStructure", otherStructure) ++
         optional("pensionSchemeStructure", schemeStructure) ++
         moreThanTenTrustees.map { value => Json.obj("hasMoreThanTenTrustees" -> value) }.getOrElse(Json.obj()) ++
         optional("insuranceCompanyName", insuranceCompanyName)

@@ -102,6 +102,7 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
 
       s"uses request/response json" in {
         val result = ifResponse.transform(transformer.transformToUserAnswers).get
+
         result mustBe userAnswersResponse
       }
     }

@@ -280,6 +280,12 @@ trait PensionSchemeGenerators {
     }.getOrElse(Json.obj())
   }
 
+  protected def optionalWithDefaultValue(key: String, element: Option[String], defaultValue: String): JsObject = {
+    element.map { value =>
+      Json.obj(key -> value)
+    }.getOrElse(Json.obj(key -> defaultValue))
+  }
+
   protected def optionalWithReason(key: String, element: Option[String], reason: String): JsObject = {
     element.map { value =>
       Json.obj(key -> value)
