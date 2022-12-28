@@ -63,10 +63,18 @@ class SchemeDetailsTransformer @Inject()(
               )
           } getOrElse doNothing
         }
-    } and
-      ((__ \ Symbol("schemeType") \ Symbol("schemeTypeDetails")).json.copyFrom(
-        (__ \ Symbol("psaPspSchemeDetails") \ Symbol("schemeDetails") \ Symbol("otherPensionSchemeStructure")).json.pick
-      ) orElse doNothing) reduce
+    } and ((__ \ Symbol("schemeType") \ Symbol("schemeTypeDetails")).json.copyFrom(schemeTypeDetails) orElse doNothing) reduce
+  }
+
+  private def schemeTypeDetails: Reads[JsString] = {
+    (__ \ Symbol("psaPspSchemeDetails") \ Symbol("schemeDetails") \ Symbol("pensionSchemeStructure")).readNullable[String].flatMap {
+      case Some("Other") =>
+        (__ \ Symbol("psaPspSchemeDetails") \ Symbol("schemeDetails") \ Symbol("otherPensionSchemeStructure")).readNullable[String].map {
+          case Some(v) => JsString(v)
+          case _ => JsString("Unknown")
+        }
+      case _ => Reads.failed[JsString]("Not applicable")
+    }
   }
 
   private def getPsaIds: Reads[JsObject] = {
