@@ -18,14 +18,14 @@ import play.sbt.PlayImport.{ehcache, ws}
 import sbt._
 
 object AppDependencies {
-
+  private val playVersion = "7.13.0"
   val appName = "pensions-scheme"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
     "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-28"         % "0.74.0",
     "com.typesafe.play"             %% "play-json"                  % "2.9.4",
-    "uk.gov.hmrc"                   %% "bootstrap-backend-play-28"  % "7.13.0",
+    "uk.gov.hmrc"                   %% "bootstrap-backend-play-28"  % playVersion,
     "com.networknt"                 %  "json-schema-validator"      % "1.0.76",
     "uk.gov.hmrc"                   %% "domain"                     % "8.1.0-play-28",
     "com.typesafe.play"             %% "play-json-joda"             % "2.9.4",
@@ -34,7 +34,7 @@ object AppDependencies {
   )
 
   def test(scope: String = "test, it"): Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"                 %% "bootstrap-test-play-28"       % "7.13.0"            % Test,
+    "uk.gov.hmrc"                 %% "bootstrap-test-play-28"       % playVersion         % Test,
     "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-28"      % "0.74.0"            % Test,
     "de.flapdoodle.embed"          % "de.flapdoodle.embed.mongo"    % "3.5.3"             % Test,
     "org.pegdown"                  % "pegdown"                      % "1.6.0"             % scope,
