@@ -57,14 +57,18 @@ class SchemeDetailsController @Inject()(
   def getPspSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
       val srnOpt = request.headers.get("srn")
+      val pstrOpt = request.headers.get("pstr")
       val pspIdOpt = request.headers.get("pspId")
       val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
 
-      (srnOpt, pspIdOpt) match {
-        case (Some(srn), Some(pspId)) =>
+      (srnOpt, pstrOpt, pspIdOpt) match {
+        case (Some(srn), None, Some(pspId)) =>
           schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
             fetchFromCacheOrApiForPsp(SchemeWithId(pstr, pspId), refreshDataOpt)
           }
+        case (None, Some(pstr), Some(pspId)) =>
+            fetchFromCacheOrApiForPsp(SchemeWithId(pstr, pspId), refreshDataOpt)
+
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
