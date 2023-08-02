@@ -20,7 +20,7 @@ import com.google.inject.Inject
 import models.ListOfSchemes
 import models.enumeration.SchemeJourneyType
 import play.api.Logger
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 import play.api.mvc._
 import service.SchemeService
 import uk.gov.hmrc.http._
@@ -50,6 +50,28 @@ class SchemeController @Inject()(
         case (Some(typeOfId), Some(valueOfId)) =>
           schemeService.listOfSchemes(typeOfId, valueOfId).map {
             case Right(json) => Ok(Json.toJson(json.convertTo[ListOfSchemes]))
+            case Left(e) => result(e)
+          }
+        case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
+      }
+    }
+  }
+  def openDateScheme: Action[AnyContent] = Action.async {
+    implicit request => {
+      val idType = request.headers.get("idType")
+      val idValue = request.headers.get("idValue")
+      val pstr = request.headers.get("pstr")
+
+      (idType, idValue, pstr) match {
+        case (Some(typeOfId), Some(valueOfId), Some(valueOfPstr)) =>
+          schemeService.listOfSchemes(typeOfId, valueOfId).map {
+            case Right(json) =>
+             json.convertTo[ListOfSchemes].schemeDetails.flatMap(
+                _.find(_.pstr.exists(_ == valueOfPstr)).flatMap(_.openDate)) match {
+               case Some(openDate) =>
+                 Ok(JsString(openDate))
+                case None => throw new BadRequestException("Bad Request without openDate")
+              }
             case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))

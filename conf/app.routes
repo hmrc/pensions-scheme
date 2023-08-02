@@ -3,6 +3,7 @@
 POST          /register-scheme/:schemeJourneyType               controllers.SchemeController.registerScheme(schemeJourneyType: SchemeJourneyType.Name)
 POST          /update-scheme                                    controllers.SchemeController.updateScheme
 GET           /list-of-schemes                                  controllers.SchemeController.listOfSchemes
+GET           /open-date                                        controllers.SchemeController.openDateScheme
 
 GET           /scheme                                           controllers.SchemeDetailsController.getSchemeDetails
 GET           /psp-scheme                                       controllers.SchemeDetailsController.getPspSchemeDetails

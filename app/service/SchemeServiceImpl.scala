@@ -47,6 +47,7 @@ class SchemeServiceImpl @Inject()(
     schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly)
   }
 
+
   case object RegisterSchemeToggleOffTransformFailed extends Exception
 
   private def registerNonRACDACScheme(json: JsValue, psaId: String)

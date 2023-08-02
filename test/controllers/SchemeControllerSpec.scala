@@ -25,7 +25,7 @@ import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsObject, JsResultException, JsValue, Json}
+import play.api.libs.json.{JsObject, JsResultException, JsString, JsValue, Json}
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -247,6 +247,44 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         e mustBe a[Exception]
         e.getMessage mustBe "Generic Exception"
         verify(mockSchemeService, times(1)).listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any())
+      }
+    }
+  }
+
+  "openDateScheme" must {
+    val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSA"), ("idValue", "A2000001"), ("pstr", "24000001IN"))
+
+       "return OK with openDate for PSA when If/ETMP returns it successfully" in {
+      val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
+      when(mockSchemeService.listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any()))
+        .thenReturn(Future.successful(Right(validResponse)))
+      val result = schemeController.openDateScheme(fakeRequest)
+         ScalaFutures.whenReady(result) { _ =>
+        status(result) mustBe OK
+        contentAsJson(result) mustEqual JsString("2017-12-17")
+        verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
+      }
+    }
+
+    "return OK with openDate for PSP when If/ETMP returns it successfully" in {
+      val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSP"), ("idValue", "A2200001"), ("pstr", "24000001IN"))
+      val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
+      when(mockSchemeService.listOfSchemes(meq("PSP"), meq("A2200001"))(any(), any(), any()))
+        .thenReturn(Future.successful(Right(validResponse)))
+      val result = schemeController.openDateScheme(fakeRequest)
+      ScalaFutures.whenReady(result) { _ =>
+        status(result) mustBe OK
+        contentAsJson(result) mustEqual JsString("2017-12-17")
+        verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
+      }
+    }
+
+    "throw BadRequestException when PSAId is not present in the header" in {
+      val result = schemeController.listOfSchemes(FakeRequest("GET", "/"))
+      ScalaFutures.whenReady(result.failed) { e =>
+        e mustBe a[BadRequestException]
+        e.getMessage mustBe "Bad Request with no ID type or value"
+        verify(mockSchemeService, never).listOfSchemes(any(), any())(any(), any(), any())
       }
     }
   }
