@@ -3,11 +3,11 @@
   "totalSchemesRegistered": "15",
   "schemeDetails": [
     {
-      "name": "A Wound-Up Scheme",
-      "referenceNumber": "S2400000002",
-      "schemeStatus": "Wound-up",
+      "name": "Open Scheme Overview API Test",
+      "referenceNumber": "S2400000040",
+      "schemeStatus": "Open",
       "openDate": "2017-12-17",
-      "pstr": "24000002IN",
+      "pstr": "24000040IN",
       "relationship": "Primary PSA",
       "pspDetails": [{
         "pspid": "A2200005",
@@ -53,11 +53,11 @@
         }]
     },
     {
-      "name": "Open Scheme Overview API Test",
-      "referenceNumber": "S2400000040",
-      "schemeStatus": "Open",
+      "name": "A Wound-Up Scheme",
+      "referenceNumber": "S2400000002",
+      "schemeStatus": "Wound-up",
       "openDate": "2017-12-17",
-      "pstr": "24000040IN",
+      "pstr": "24000002IN",
       "relationship": "Primary PSA",
       "pspDetails": [{
         "pspid": "A2200005",

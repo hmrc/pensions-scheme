@@ -161,8 +161,8 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
   "list of schemes" must {
     val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSA"), ("idValue", "A2000001"))
 
-    "return OK with list of schemes for PSA when If/ETMP returns it successfully" in {
-      val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
+    "return OK with sorted list of schemes for PSA when If/ETMP returns it successfully" in {
+      val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponseAlphabetical.json")
       when(mockSchemeService.listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemes(fakeRequest)
@@ -173,9 +173,9 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       }
     }
 
-    "return OK with list of schemes for PSP when If/ETMP returns it successfully" in {
+    "return OK with sorted list of schemes for PSP when If/ETMP returns it successfully" in {
       val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSP"), ("idValue", "A2200001"))
-      val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
+      val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponseAlphabetical.json")
       when(mockSchemeService.listOfSchemes(meq("PSP"), meq("A2200001"))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemes(fakeRequest)
