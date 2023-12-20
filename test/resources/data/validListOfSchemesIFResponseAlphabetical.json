@@ -1,0 +1,56 @@
+{
+  "processingDate": "2001-12-17T09:30:47Z",
+  "totalSchemesRegistered": "15",
+  "schemeDetails": [
+    {
+      "name": "Open Scheme Overview API Test",
+      "referenceNumber": "S2400000040",
+      "schemeStatus": "Open",
+      "openDate": "2017-12-17",
+      "pstr": "24000040IN",
+      "relationship": "Primary PSA",
+      "pspDetails": [{
+        "pspid": "A2200005",
+        "orgOrPartName": "PSP Limited Company 1",
+        "relationshipStartDate": "2021-04-01",
+        "authorisedPSAID": "A2100005",
+        "authorisedPSAFirstName": "Nigel",
+        "authorisedPSAMiddleName": "Robert",
+        "authorisedPSALastName": "Smith"
+      },
+        {
+          "pspid": "A2200007",
+          "firstName": "PSP Individual",
+          "lastName": "Second",
+          "relationshipStartDate": "2021-04-01",
+          "authorisedPSAID": "A2100007",
+          "authorisedPSAOrgOrPartName": "Acme Ltd"
+        }]
+    },
+    {
+      "name": "Open Single Trust Scheme with Indiv Establisher and Trustees",
+      "referenceNumber": "S2400000001",
+      "schemeStatus": "Open",
+      "openDate": "2017-12-17",
+      "pstr": "24000001IN",
+      "relationship": "Primary PSA",
+      "pspDetails": [{
+        "pspid": "A2200005",
+        "orgOrPartName": "PSP Limited Company 1",
+        "relationshipStartDate": "2021-04-01",
+        "authorisedPSAID": "A2100005",
+        "authorisedPSAFirstName": "Nigel",
+        "authorisedPSAMiddleName": "Robert",
+        "authorisedPSALastName": "Smith"
+      },
+        {
+          "pspid": "A2200007",
+          "firstName": "PSP Individual",
+          "lastName": "Second",
+          "relationshipStartDate": "2021-04-01",
+          "authorisedPSAID": "A2100007",
+          "authorisedPSAOrgOrPartName": "Acme Ltd"
+        }]
+    }
+  ]
+}
