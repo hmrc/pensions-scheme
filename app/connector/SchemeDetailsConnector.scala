@@ -139,6 +139,7 @@ class SchemeDetailsConnectorImpl @Inject()(
             Right(value)
           case JsError(e) => throw JsResultException(e)
         }
+      case NOT_FOUND if response.body.contains("PSP_RELATIONSHIP_NOT_FOUND") => Left(new HttpException( response.body, NOT_FOUND))
       case _ =>
         Left(handleErrorResponse("GET", url, response))
     }
