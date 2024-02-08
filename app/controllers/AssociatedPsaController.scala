@@ -19,8 +19,10 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeDetailsConnector
+import models.SchemeWithId
 import play.api.libs.json._
 import play.api.mvc._
+import repositories.SchemeDetailsWithIdCacheRepository
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
@@ -29,7 +31,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AssociatedPsaController @Inject()(
                                          schemeDetailsConnector: SchemeDetailsConnector,
-                                         cc: ControllerComponents
+                                         cc: ControllerComponents,
+                                         schemeDetailsCache: SchemeDetailsWithIdCacheRepository
                                        )(
                                          implicit ec: ExecutionContext
                                        )
@@ -49,7 +52,8 @@ class AssociatedPsaController @Inject()(
 
       srn match {
         case Some(schemeReferenceNumber) =>
-          schemeDetailsConnector.getSchemeDetails(userId, srnRequest, schemeReferenceNumber).map {
+          val schemeWithId = SchemeWithId(schemeReferenceNumber, userId)
+          fetchFromCacheOrApiForPsa(schemeWithId, srnRequest, None).map {
             case Right(json) =>
 
               val isAssociated =
@@ -68,4 +72,14 @@ class AssociatedPsaController @Inject()(
       }
     } recoverWith recoverFromError
   }
+
+  private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
+                                       (implicit hc: HeaderCarrier, request: RequestHeader): Future[Either[HttpException, JsObject]] =
+    schemeDetailsCache.get(id).flatMap {
+      case Some(json) if !refreshData.contains(true) => Future.successful(Right(json.as[JsObject]))
+      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
+        case Right(json) => schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
+        case e => Future.successful(e)
+      }
+    }
 }
