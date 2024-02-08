@@ -42,6 +42,7 @@ class AssociatedPsaControllerSpec
     with PatienceConfiguration {
 
   private val mockSchemeConnector: SchemeDetailsConnector = mock[SchemeDetailsConnector]
+  private val mockSessionDetailsCache = mock[SchemeDetailsWithIdCacheRepository]
   private val schemeIdNumber = "S999999999"
   private val userIdNumber = "A0000001"
   private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
@@ -54,20 +55,23 @@ class AssociatedPsaControllerSpec
       bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
       bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),
       bind[SchemeDetailsCacheRepository].toInstance(mock[SchemeDetailsCacheRepository]),
-      bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository]),
       bind[SchemeSubscriptionCacheRepository].toInstance(mock[SchemeSubscriptionCacheRepository]),
-      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
+      bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository]),
+      bind[SchemeDetailsWithIdCacheRepository].toInstance(mockSessionDetailsCache)
     )
 
   private val associatedPsaController: AssociatedPsaController = injector.instanceOf[AssociatedPsaController]
 
   before {
     reset(mockSchemeConnector)
+    reset(mockSessionDetailsCache)
+    when(mockSessionDetailsCache.get(any())).thenReturn(Future.successful(None))
+    when(mockSessionDetailsCache.upsert(any(), any())).thenReturn(Future.successful(true))
   }
 
   "getAssociatedPsa" must {
     "return OK" when {
-      "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails" in {
+      "the psa we retrieve exists in the list of PSAs we receive from getSchemeDetails and create cache" in {
         val request = FakeRequest("GET", "/").withHeaders(
           ("psaId", userIdNumber),
           ("schemeReferenceNumber", schemeIdNumber)
@@ -97,8 +101,28 @@ class AssociatedPsaControllerSpec
 
         status(result) mustBe OK
         contentAsJson(result) mustBe Json.toJson(false)
+        verify(mockSessionDetailsCache).upsert(any(), any())
       }
     }
+  }
+
+  "retrieve data from cache when cache is available" in {
+    val request = FakeRequest("GET", "/").withHeaders(
+      ("psaId", userIdNumber),
+      ("schemeReferenceNumber", schemeIdNumber)
+    )
+
+    when(mockSessionDetailsCache.get(any())).thenReturn(Future.successful(Some(userAnswersResponse.as[JsObject])))
+
+    val result = associatedPsaController.isPsaAssociated()(request)
+
+    status(result) mustBe OK
+    contentAsJson(result) mustBe Json.toJson(true)
+    verify(mockSchemeConnector, never).getSchemeDetails(
+      userIdNumber = ArgumentMatchers.any(),
+      schemeIdType = ArgumentMatchers.any(),
+      schemeIdNumber = ArgumentMatchers.any()
+    )(any(), any(), any())
   }
 
   "throw BadRequestException" when {

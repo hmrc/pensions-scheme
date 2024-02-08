@@ -52,7 +52,7 @@ trait ErrorHandler {
       Future.failed(new Exception(e.getMessage))
   }
 
-  def throwAppropriateException(e: UpstreamErrorResponse): Exception = {
+  private def throwAppropriateException(e: UpstreamErrorResponse): Exception = {
     e.statusCode match {
       case FORBIDDEN if e.message.contains("INVALID_BUSINESS_PARTNER") =>
         new ForbiddenException(e.message)
