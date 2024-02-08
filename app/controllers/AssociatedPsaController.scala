@@ -20,6 +20,7 @@ package controllers
 import com.google.inject.Inject
 import connector.SchemeDetailsConnector
 import models.SchemeWithId
+import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.SchemeDetailsWithIdCacheRepository
@@ -37,7 +38,7 @@ class AssociatedPsaController @Inject()(
                                          implicit ec: ExecutionContext
                                        )
   extends BackendController(cc)
-    with ErrorHandler {
+    with ErrorHandler with Logging {
   def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
       val (userId, jsonPath) =
@@ -76,9 +77,13 @@ class AssociatedPsaController @Inject()(
   private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
                                        (implicit hc: HeaderCarrier, request: RequestHeader): Future[Either[HttpException, JsObject]] =
     schemeDetailsCache.get(id).flatMap {
-      case Some(json) if !refreshData.contains(true) => Future.successful(Right(json.as[JsObject]))
+      case Some(json) if !refreshData.contains(true) =>
+        logger.info("Retrieving scheme details from cache")
+        Future.successful(Right(json.as[JsObject]))
       case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
-        case Right(json) => schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
+        case Right(json) =>
+          logger.info("Retrieving scheme details from API")
+          schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
         case e => Future.successful(e)
       }
     }
