@@ -28,42 +28,37 @@ import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry, SchemeDataEntry, 
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoBinaryFormats.{byteArrayReads, byteArrayWrites}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
-
-import java.time.Instant
+import java.time.{LocalDateTime, ZoneId}
 
 object SchemeDataEntry {
 
   sealed trait SchemeDataEntry
 
-  case class DataEntry(id: String, data: BsonBinary, lastUpdated: Instant, expireAt: Instant) extends SchemeDataEntry
+  case class DataEntry(id: String, data: BsonBinary, lastUpdated: LocalDateTime, expireAt: LocalDateTime) extends SchemeDataEntry
 
-  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: Instant, expireAt: Instant) extends SchemeDataEntry
+  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: LocalDateTime, expireAt: LocalDateTime) extends SchemeDataEntry
 
   object DataEntry {
-    def apply(id: String, data: Array[Byte], lastUpdated: Instant = Instant.now(), expireAt: Instant): DataEntry =
+    def apply(id: String, data: Array[Byte], lastUpdated: LocalDateTime = LocalDateTime.now(ZoneId.of("UTC")), expireAt: LocalDateTime): DataEntry =
       DataEntry(id, BsonBinary(data), lastUpdated, expireAt)
 
     final private val bsonBinaryReads: Reads[BsonBinary] = byteArrayReads.map(t => BsonBinary(t))
     final private val bsonBinaryWrites: Writes[BsonBinary] = byteArrayWrites.contramap(t => t.getData)
     implicit val bsonBinaryFormat: Format[BsonBinary] = Format(bsonBinaryReads, bsonBinaryWrites)
 
-    implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
     implicit val format: Format[DataEntry] = Json.format[DataEntry]
   }
 
   object JsonDataEntry {
-    implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
     implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
   }
 
   object SchemeDataEntryFormats {
-    implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
     implicit val format: Format[SchemeDataEntry] = Json.format[SchemeDataEntry]
 
     val dataKey: String = "data"
@@ -106,21 +101,20 @@ class SchemeCacheRepository @Inject()(
   private val jsonCrypto: Encrypter with Decrypter = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = encryptionKey, config.underlying)
   private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
-  private def getExpireAt: Instant = if (expireInSeconds.isEmpty) {
+  private def getExpireAt: LocalDateTime = if (expireInSeconds.isEmpty) {
     val secondsInDay = 86400
     val expirySeconds = expireInDays match {
       case Some(days) => secondsInDay * days
       case _ => secondsInDay * (config.underlying.getInt("defaultDataExpireInDays") + 1)
     }
-    Instant
+    LocalDateTime
       .now()
       .plusSeconds(expirySeconds)
   } else {
-    Instant
+    val expirySeconds = expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds"))
+    LocalDateTime
       .now()
-      .plusSeconds(
-        expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds"))
-      )
+      .plusSeconds(expirySeconds)
   }
 
   def upsert(id: String, data: JsValue)
@@ -140,7 +134,7 @@ class SchemeCacheRepository @Inject()(
         filter = Filters.eq(idField, id),
         update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
     } else {
-      val record = JsonDataEntry(id, data, Instant.now(), getExpireAt)
+      val record = JsonDataEntry(id, data, LocalDateTime.now(ZoneId.of("UTC")), getExpireAt)
       val setOperation = Updates.combine(
         Updates.set(idField, record.id),
         Updates.set(dataKey, Codecs.toBson(record.data)),
@@ -175,7 +169,7 @@ class SchemeCacheRepository @Inject()(
   }
 
   def getLastUpdated(id: String)
-                    (implicit ec: ExecutionContext): Future[Option[Instant]] = {
+                    (implicit ec: ExecutionContext): Future[Option[LocalDateTime]] = {
     if (encrypted) {
       collection.find[DataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {

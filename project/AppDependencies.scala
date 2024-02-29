@@ -44,7 +44,6 @@ object AppDependencies {
     "org.scalatestplus"           %% "mockito-4-6"                  % "3.2.15.0"          % Test,
     "org.scalatestplus.play"      %% "scalatestplus-play"           % "5.1.0"             % Test,
     "com.eclipsesource"           %% "play-json-schema-validator"   % "0.9.5"             % scope,
-    "com.github.tomakehurst"       % "wiremock-jre8"                % "2.35.0"            % scope,
     "io.github.wolfendale"        %% "scalacheck-gen-regexp"        % "1.1.0"             % scope
   )
 }

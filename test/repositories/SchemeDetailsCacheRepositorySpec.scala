@@ -31,8 +31,7 @@ import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import java.time.Instant
+import java.time.{Instant, LocalDateTime, ZoneId}
 
 class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with EmbeddedMongoDBSupport with BeforeAndAfter
   with BeforeAndAfterAll with ScalaFutures { // scalastyle:off magic.number
@@ -230,7 +229,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
-        documentsInDB.get.compareTo(Instant.now()) mustBe -1
+        documentsInDB.get.compareTo(LocalDateTime.now()) mustBe -1
       }
     }
 
@@ -246,7 +245,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
-        documentsInDB.get.compareTo(Instant.now()) mustBe -1
+        documentsInDB.get.compareTo(LocalDateTime.now(ZoneId.of("UTC"))) mustBe -1
 
       }
     }

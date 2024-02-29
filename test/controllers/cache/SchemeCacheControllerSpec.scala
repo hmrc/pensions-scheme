@@ -38,8 +38,7 @@ import uk.gov.hmrc.http.UnauthorizedException
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
-import java.time.Instant
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 class SchemeCacheControllerSpec
   extends AnyWordSpec
@@ -196,7 +195,7 @@ class SchemeCacheControllerSpec
 
     s".lastUpdated" must {
       "return 200 and the relevant data when it exists" in {
-        val date = Instant.now
+        val date = LocalDateTime.now()
         when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.successful {
           Some(date)
         }
@@ -205,7 +204,7 @@ class SchemeCacheControllerSpec
         val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
         status(result) mustEqual OK
-        contentAsJson(result) mustEqual Json.toJson(date)
+        contentAsJson(result) mustEqual Json.toJson(date.toInstant(ZoneOffset.UTC).toEpochMilli)
       }
 
       "return 404 when the data doesn't exist" in {
