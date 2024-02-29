@@ -16,7 +16,6 @@
 
 package controllers.cache
 
-import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.json.{JsNumber, Writes, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, AnyContent}
@@ -25,6 +24,8 @@ import uk.gov.hmrc.auth.core.{AuthorisedFunctions, AuthConnector}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
+
+import java.time.Instant
 
 abstract class SchemeCacheController(
                                       repository: SchemeCacheRepository,
@@ -66,8 +67,8 @@ abstract class SchemeCacheController(
       }
   }
 
-  private val jodaDateTimeNumberWrites = new Writes[DateTime] {
-    def writes(d: DateTime): JsValue = JsNumber(d.getMillis)
+  private val instantNumberWrites = new Writes[Instant] {
+    def writes(d: Instant): JsValue = JsNumber(d.toEpochMilli)
   }
 
   def lastUpdated(id: String): Action[AnyContent] = Action.async {
@@ -77,7 +78,7 @@ abstract class SchemeCacheController(
         repository.getLastUpdated(id).map { response =>
           logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
           response.map {
-            date => Ok(Json.toJson(date)(jodaDateTimeNumberWrites))
+            date => Ok(Json.toJson(date)(instantNumberWrites))
           } getOrElse NotFound
         }
       }

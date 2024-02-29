@@ -20,17 +20,17 @@ import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.SchemeWithId
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import repositories.SchemeDetailsWithIdCacheRepository._
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
+
+import java.time.Instant
 
 object SchemeDetailsWithIdCacheRepository {
 
@@ -40,10 +40,9 @@ object SchemeDetailsWithIdCacheRepository {
   private val lastUpdatedKey: String = "lastUpdated"
   private val expireAtKey: String = "expireAt"
 
-  case class DataCache(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+  case class DataCache(id: String, data: JsValue, lastUpdated: Instant, expireAt: Instant)
 
   object DataCache {
-    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
     implicit val format: Format[DataCache] = Json.format[DataCache]
   }
 }
@@ -72,9 +71,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     )
   ) with Logging {
 
-  import DataCache._
-
-  private def expireInSeconds: DateTime = DateTime.now(DateTimeZone.UTC).
+  private def expireInSeconds: Instant = Instant.now().
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
 
   def upsert(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
@@ -82,7 +79,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
-      Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
+      Updates.set(lastUpdatedKey, Codecs.toBson(Instant.now())),
       Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
     )
 

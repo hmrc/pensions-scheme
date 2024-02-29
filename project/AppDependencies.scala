@@ -29,7 +29,6 @@ object AppDependencies {
     "uk.gov.hmrc"                   %% "bootstrap-backend-play-30"  % playVersion,
     "com.networknt"                 %  "json-schema-validator"      % "1.0.76",
     "uk.gov.hmrc"                   %% "domain-play-30"             % "9.0.0",
-    "com.typesafe.play"             %% "play-json-joda"             % "2.9.4",
     "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.14.2",
     ehcache
   )

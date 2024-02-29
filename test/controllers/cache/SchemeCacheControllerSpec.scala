@@ -19,7 +19,6 @@ package controllers.cache
 import akka.stream.Materializer
 import akka.util.ByteString
 import org.apache.commons.lang3.RandomUtils
-import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
 import org.scalatest.matchers.must.Matchers
@@ -39,6 +38,8 @@ import uk.gov.hmrc.http.UnauthorizedException
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
+import java.time.Instant
 
 class SchemeCacheControllerSpec
   extends AnyWordSpec
@@ -195,7 +196,7 @@ class SchemeCacheControllerSpec
 
     s".lastUpdated" must {
       "return 200 and the relevant data when it exists" in {
-        val date = DateTime.now
+        val date = Instant.now
         when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.successful {
           Some(date)
         }
@@ -204,7 +205,7 @@ class SchemeCacheControllerSpec
         val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
         status(result) mustEqual OK
-        contentAsJson(result) mustEqual Json.toJson(date.getMillis)
+        contentAsJson(result) mustEqual Json.toJson(date)
       }
 
       "return 404 when the data doesn't exist" in {

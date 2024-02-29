@@ -17,11 +17,12 @@
 package utils
 
 import models.enumeration.{Benefits, SchemeMembers, SchemeType}
-import org.joda.time.LocalDate
 import org.scalacheck.Gen
 import org.scalacheck.Gen.const
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsObject, JsValue, Json, _}
+
+import java.time.Instant
 
 trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
@@ -119,7 +120,7 @@ trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  private def getPersonName(firstName: String, lastName: String, date: LocalDate, element: String) = {
+  private def getPersonName(firstName: String, lastName: String, date: Instant, element: String) = {
     Json.obj(
       element -> Json.obj(
         "firstName" -> firstName,
@@ -470,7 +471,7 @@ trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                                 firstName: String,
                                 middleName: Option[String],
                                 lastName: String,
-                                date: LocalDate): JsObject = {
+                                date: Instant): JsObject = {
       getPersonName(firstName, lastName, date, s"${directorOrPartner}Details")
   }
 
