@@ -31,8 +31,7 @@ import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import java.time.{Instant, LocalDateTime}
-import java.time.ZoneOffset.UTC
+import java.time.LocalDateTime
 
 class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with EmbeddedMongoDBSupport with BeforeAndAfter
   with BeforeAndAfterAll with ScalaFutures { // scalastyle:off magic.number

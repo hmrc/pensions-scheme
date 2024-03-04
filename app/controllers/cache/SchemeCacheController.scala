@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 
 abstract class SchemeCacheController(
                                       repository: SchemeCacheRepository,
@@ -66,7 +66,7 @@ abstract class SchemeCacheController(
       }
   }
 
-  private val instantNumberWrites = new Writes[LocalDateTime] {
+  private val localDateTimeNumberWrites = new Writes[LocalDateTime] {
     def writes(d: LocalDateTime): JsValue = JsNumber(d.toInstant(ZoneOffset.UTC).toEpochMilli)
   }
 
@@ -77,7 +77,7 @@ abstract class SchemeCacheController(
         repository.getLastUpdated(id).map { response =>
           logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
           response.map {
-            date => Ok(Json.toJson(date)(instantNumberWrites))
+            date => Ok(Json.toJson(date)(localDateTimeNumberWrites))
           } getOrElse NotFound
         }
       }

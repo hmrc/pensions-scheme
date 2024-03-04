@@ -22,7 +22,7 @@ import org.scalacheck.Gen.const
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsObject, JsValue, Json, _}
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
@@ -120,7 +120,7 @@ trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  private def getPersonName(firstName: String, lastName: String, date: Instant, element: String) = {
+  private def getPersonName(firstName: String, lastName: String, date: LocalDateTime, element: String) = {
     Json.obj(
       element -> Json.obj(
         "firstName" -> firstName,
@@ -471,7 +471,7 @@ trait DESPensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                                 firstName: String,
                                 middleName: Option[String],
                                 lastName: String,
-                                date: Instant): JsObject = {
+                                date: LocalDateTime): JsObject = {
       getPersonName(firstName, lastName, date, s"${directorOrPartner}Details")
   }
 

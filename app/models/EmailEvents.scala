@@ -21,7 +21,7 @@ import utils.{Enumerable, WithName}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 sealed trait Event
 
@@ -40,16 +40,16 @@ case object PermanentBounce extends WithName("PermanentBounce") with Event
 case object Opened extends WithName("Opened") with Event
 case object Complained extends WithName("Complained") with Event
 
-case class EmailEvent(event: Event, detected: Instant)
+case class EmailEvent(event: Event, detected: LocalDateTime)
 
 object EmailEvent {
 
   implicit val read: Reads[EmailEvent] = {
-    ((JsPath \ "event").read[Event] and ((JsPath \ "detected").read[String] map Instant.parse))(EmailEvent.apply _)
+    ((JsPath \ "event").read[Event] and ((JsPath \ "detected").read[String] map LocalDateTime.parse))(EmailEvent.apply _)
   }
 
   implicit val write: Writes[EmailEvent] = (
-    (JsPath \ "event").write[Event] and (JsPath \ "detected").write[Instant]
+    (JsPath \ "event").write[Event] and (JsPath \ "detected").write[LocalDateTime]
   ) ( emailEvent => (emailEvent.event, emailEvent.detected) )
 
 }

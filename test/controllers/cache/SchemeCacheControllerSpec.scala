@@ -38,7 +38,7 @@ import uk.gov.hmrc.http.UnauthorizedException
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 
 class SchemeCacheControllerSpec
   extends AnyWordSpec

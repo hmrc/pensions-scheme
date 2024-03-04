@@ -25,19 +25,17 @@ import org.mongodb.scala.model._
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 
 object LockRepository {
-  private[repositories] case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: Instant, expireAt: Instant)
+  private[repositories] case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: LocalDateTime, expireAt: LocalDateTime)
 
-  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
   implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
 }
 
@@ -73,10 +71,10 @@ class LockRepository @Inject()(configuration: Configuration,
   private val srnKey = "srn"
   private val psaIdKey = "psaId"
 
-  private def getExpireAt: Instant = {
+  private def getExpireAt: LocalDateTime = {
     val secondsInDay = 86400
     val days = appConfig.defaultDataExpireAfterDays + 1
-    Instant.now().plusSeconds(secondsInDay * days)
+    LocalDateTime.now().plusSeconds(secondsInDay * days)
   }
 
 
@@ -109,7 +107,7 @@ class LockRepository @Inject()(configuration: Configuration,
 
   def lock(newLock: SchemeVariance): Future[Lock] = {
     val dataKey = "data"
-    val data: JsValue = Json.toJson(JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), Instant.now(), getExpireAt))
+    val data: JsValue = Json.toJson(JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), LocalDateTime.now(), getExpireAt))
     val modifier = Updates.combine(
       Updates.set(psaIdKey, newLock.psaId),
       Updates.set(srnKey, newLock.srn),

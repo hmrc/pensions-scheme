@@ -22,7 +22,7 @@ import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee, Tru
 import org.scalacheck.Gen
 import play.api.libs.json.{JsObject, Json}
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 trait PensionSchemeGenerators {
   val specialCharStringGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
@@ -69,13 +69,13 @@ trait PensionSchemeGenerators {
 
   val titleGenerator: Gen[String] = Gen.oneOf(Seq("Mr", "Mrs", "Miss", "Ms", "Dr", "Professor", "Lord"))
   val nameGenerator: Gen[String] = Gen.listOfN[Char](randomNumberFromRange(1, 35), Gen.alphaChar).map(_.mkString)
-  val dateGenerator: Gen[Instant] = for {
+  val dateGenerator: Gen[LocalDateTime] = for {
     day <- Gen.choose(10, 28)
     month <- Gen.choose(10, 12)
     year <- Gen.choose(1990, 2000)
   } yield {
-    val str = s"$year-$month-${day}T10:15:30.00Z"
-    Instant.parse(str)
+    val str = s"$year-$month-${day}T10:15:30.00"
+    LocalDateTime.parse(str)
   }
 
   val reasonGen: Gen[String] = Gen.listOfN[Char](randomNumberFromRange(1, 160), Gen.alphaChar).map(_.mkString)

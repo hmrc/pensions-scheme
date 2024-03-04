@@ -30,7 +30,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 object SchemeDetailsWithIdCacheRepository {
 
@@ -40,7 +40,7 @@ object SchemeDetailsWithIdCacheRepository {
   private val lastUpdatedKey: String = "lastUpdated"
   private val expireAtKey: String = "expireAt"
 
-  case class DataCache(id: String, data: JsValue, lastUpdated: Instant, expireAt: Instant)
+  case class DataCache(id: String, data: JsValue, lastUpdated: LocalDateTime, expireAt: LocalDateTime)
 
   object DataCache {
     implicit val format: Format[DataCache] = Json.format[DataCache]
@@ -71,7 +71,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     )
   ) with Logging {
 
-  private def expireInSeconds: Instant = Instant.now().
+  private def expireInSeconds: LocalDateTime = LocalDateTime.now().
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
 
   def upsert(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
@@ -79,7 +79,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
-      Updates.set(lastUpdatedKey, Codecs.toBson(Instant.now())),
+      Updates.set(lastUpdatedKey, Codecs.toBson(LocalDateTime.now())),
       Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
     )
 
