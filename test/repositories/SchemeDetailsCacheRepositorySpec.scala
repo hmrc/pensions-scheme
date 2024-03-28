@@ -17,7 +17,6 @@
 package repositories
 
 import com.typesafe.config.Config
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
@@ -31,6 +30,7 @@ import play.api.libs.json.Json
 import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
 import uk.gov.hmrc.mongo.MongoComponent
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with EmbeddedMongoDBSupport with BeforeAndAfter
@@ -229,7 +229,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
-        documentsInDB.get.compareTo(DateTime.now(DateTimeZone.UTC)) mustBe -1
+        documentsInDB.get.compareTo(Instant.now()) mustBe -1
       }
     }
 
@@ -245,7 +245,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
-        documentsInDB.get.compareTo(DateTime.now(DateTimeZone.UTC)) mustBe -1
+        documentsInDB.get.compareTo(Instant.now()) mustBe -1
 
       }
     }

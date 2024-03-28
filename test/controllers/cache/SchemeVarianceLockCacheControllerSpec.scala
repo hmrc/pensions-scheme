@@ -16,7 +16,7 @@
 
 package controllers.cache
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import models.{SchemeLock, SchemeVariance, VarianceLock}
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
