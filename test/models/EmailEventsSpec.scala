@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.OptionValues
 import play.api.libs.json.{JsValue, Json}
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 class EmailEventsSpec extends AnyWordSpec with OptionValues with Matchers {
 
@@ -59,7 +59,7 @@ object EmailEventsSpec {
   )
 
   private val emailResponseEvents = EmailEvents(Seq(
-    EmailEvent(Sent, LocalDateTime.parse("2015-07-02T08:26:39.035")),
-    EmailEvent(Delivered, LocalDateTime.parse("2015-07-02T08:25:20.068"))
+    EmailEvent(Sent, Instant.parse("2015-07-02T08:26:39.035")),
+    EmailEvent(Delivered, Instant.parse("2015-07-02T08:25:20.068"))
   ))
 }

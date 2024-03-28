@@ -16,7 +16,6 @@
 
 package repositories
 
-import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import org.mongodb.scala.bson.BsonBinary
@@ -28,23 +27,25 @@ import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry, SchemeDataEntry, 
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoBinaryFormats.{byteArrayReads, byteArrayWrites}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
-import java.time.{LocalDateTime, ZoneId}
 
 object SchemeDataEntry {
 
   sealed trait SchemeDataEntry
 
-  case class DataEntry(id: String, data: BsonBinary, lastUpdated: LocalDateTime, expireAt: LocalDateTime) extends SchemeDataEntry
+  case class DataEntry(id: String, data: BsonBinary, lastUpdated: Instant, expireAt: Instant) extends SchemeDataEntry
 
-  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: LocalDateTime, expireAt: LocalDateTime) extends SchemeDataEntry
+  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: Instant, expireAt: Instant) extends SchemeDataEntry
 
   object DataEntry {
-    def apply(id: String, data: Array[Byte], lastUpdated: LocalDateTime = LocalDateTime.now(ZoneId.of("UTC")), expireAt: LocalDateTime): DataEntry =
+    def apply(id: String, data: Array[Byte], lastUpdated: Instant = Instant.now(), expireAt: Instant): DataEntry =
       DataEntry(id, BsonBinary(data), lastUpdated, expireAt)
 
     final private val bsonBinaryReads: Reads[BsonBinary] = byteArrayReads.map(t => BsonBinary(t))
@@ -101,18 +102,18 @@ class SchemeCacheRepository @Inject()(
   private val jsonCrypto: Encrypter with Decrypter = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = encryptionKey, config.underlying)
   private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
-  private def getExpireAt: LocalDateTime = if (expireInSeconds.isEmpty) {
+  private def getExpireAt: Instant = if (expireInSeconds.isEmpty) {
     val secondsInDay = 86400
     val expirySeconds = expireInDays match {
       case Some(days) => secondsInDay * days
       case _ => secondsInDay * (config.underlying.getInt("defaultDataExpireInDays") + 1)
     }
-    LocalDateTime
+    Instant
       .now()
       .plusSeconds(expirySeconds)
   } else {
     val expirySeconds = expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds"))
-    LocalDateTime
+    Instant
       .now()
       .plusSeconds(expirySeconds)
   }
@@ -134,12 +135,12 @@ class SchemeCacheRepository @Inject()(
         filter = Filters.eq(idField, id),
         update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
     } else {
-      val record = JsonDataEntry(id, data, LocalDateTime.now(ZoneId.of("UTC")), getExpireAt)
+      val record = JsonDataEntry(id, data, Instant.now(), getExpireAt)
       val setOperation = Updates.combine(
         Updates.set(idField, record.id),
         Updates.set(dataKey, Codecs.toBson(record.data)),
-        Updates.set(lastUpdatedKey, Codecs.toBson(record.lastUpdated)),
-        Updates.set(expireAtKey, Codecs.toBson(record.expireAt))
+        Updates.set(lastUpdatedKey, Codecs.toBson(record.lastUpdated)(MongoJavatimeFormats.instantWrites)),
+        Updates.set(expireAtKey, Codecs.toBson(record.expireAt)(MongoJavatimeFormats.instantWrites))
       )
       collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
         filter = Filters.eq(idField, id),
@@ -169,7 +170,7 @@ class SchemeCacheRepository @Inject()(
   }
 
   def getLastUpdated(id: String)
-                    (implicit ec: ExecutionContext): Future[Option[LocalDateTime]] = {
+                    (implicit ec: ExecutionContext): Future[Option[Instant]] = {
     if (encrypted) {
       collection.find[DataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {

@@ -17,14 +17,14 @@
 package controllers.cache
 
 import play.api.Logger
-import play.api.libs.json.{JsNumber, JsValue, Json, Writes}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SchemeCacheRepository
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
-import java.time.{LocalDateTime, ZoneOffset}
 
 abstract class SchemeCacheController(
                                       repository: SchemeCacheRepository,
@@ -66,10 +66,6 @@ abstract class SchemeCacheController(
       }
   }
 
-  private val localDateTimeNumberWrites = new Writes[LocalDateTime] {
-    def writes(d: LocalDateTime): JsValue = JsNumber(d.toInstant(ZoneOffset.UTC).toEpochMilli)
-  }
-
   def lastUpdated(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
@@ -77,7 +73,7 @@ abstract class SchemeCacheController(
         repository.getLastUpdated(id).map { response =>
           logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
           response.map {
-            date => Ok(Json.toJson(date)(localDateTimeNumberWrites))
+            date => Ok(Json.toJson(date)(MongoJavatimeFormats.instantWrites))
           } getOrElse NotFound
         }
       }
