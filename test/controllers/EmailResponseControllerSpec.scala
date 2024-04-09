@@ -29,7 +29,7 @@ import repositories._
 import uk.gov.hmrc.crypto.{ApplicationCrypto, PlainText}
 import uk.gov.hmrc.domain.PsaId
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 class EmailResponseControllerSpec extends SpecBase with MockitoSugar {
 
@@ -104,7 +104,7 @@ object EmailResponseControllerSpec {
   val psa: PsaId = PsaId("A7654321")
 
   val emailEvents: EmailEvents =
-    EmailEvents(Seq(EmailEvent(Sent, Instant.now()), EmailEvent(Delivered, Instant.now()), EmailEvent(Opened, Instant.now())))
+    EmailEvents(Seq(EmailEvent(Sent, LocalDateTime.now()), EmailEvent(Delivered, LocalDateTime.now()), EmailEvent(Opened, LocalDateTime.now())))
 
   val fakeAuditService = new StubSuccessfulAuditService()
 

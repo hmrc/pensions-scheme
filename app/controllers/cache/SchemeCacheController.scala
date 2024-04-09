@@ -73,7 +73,7 @@ abstract class SchemeCacheController(
         repository.getLastUpdated(id).map { response =>
           logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
           response.map {
-            date => Ok(Json.toJson(date)(MongoJavatimeFormats.instantWrites))
+            date => Ok(Json.toJson(date))
           } getOrElse NotFound
         }
       }

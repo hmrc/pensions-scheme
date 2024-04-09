@@ -26,7 +26,7 @@ case class ValidateBankDetailsRequest(account: BankAccount)
 case class ValidateBankDetailsResponse(accountNumberWithSortCodeIsValid: Boolean, sortCodeIsPresentOnEISCD: Boolean)
 
 object BankAccount {
-  implicit val formats = Json.format[BankAccount]
+  implicit val formats: OFormat[BankAccount] = Json.format[BankAccount]
 
   implicit def apiReads: Reads[BankAccount] = (
     (JsPath \ "sortCode" \ "first").read[String] and
@@ -38,7 +38,7 @@ object BankAccount {
 }
 
 object ValidateBankDetailsRequest {
-  implicit val formats = Json.format[ValidateBankDetailsRequest]
+  implicit val formats: OFormat[ValidateBankDetailsRequest] = Json.format[ValidateBankDetailsRequest]
 }
 
 object ValidateBankDetailsResponse {

@@ -20,6 +20,7 @@ import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import org.mongodb.scala.bson.BsonBinary
 import org.mongodb.scala.model._
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import repositories.SchemeDataEntry.SchemeDataEntryFormats.expireAtKey
@@ -52,14 +53,39 @@ object SchemeDataEntry {
     final private val bsonBinaryWrites: Writes[BsonBinary] = byteArrayWrites.contramap(t => t.getData)
     implicit val bsonBinaryFormat: Format[BsonBinary] = Format(bsonBinaryReads, bsonBinaryWrites)
 
-    implicit val format: Format[DataEntry] = Json.format[DataEntry]
+    implicit val format: Format[DataEntry] = new Format[DataEntry] {
+      override def writes(o: DataEntry): JsValue = Json.writes[DataEntry].writes(o)
+
+      private val instantReads = MongoJavatimeFormats.instantReads
+
+      override def reads(json: JsValue): JsResult[DataEntry] = (
+        (JsPath \ "id").read[String] and
+          (JsPath \ "data").read[BsonBinary] and
+          (JsPath \ "lastUpdated").read(instantReads) and
+          (JsPath \ "expireAt").read(instantReads)
+      )((id, data, lastUpdated, expireAt) => DataEntry(id, data, lastUpdated, expireAt))
+        .reads(json)
+    }
   }
 
   object JsonDataEntry {
-    implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
+    implicit val format: Format[JsonDataEntry] = new Format[JsonDataEntry] {
+      override def writes(o: JsonDataEntry): JsValue = Json.writes[JsonDataEntry].writes(o)
+
+      private val instantReads = MongoJavatimeFormats.instantReads
+
+      override def reads(json: JsValue): JsResult[JsonDataEntry] = (
+        (JsPath \ "id").read[String] and
+          (JsPath \ "data").read[JsValue] and
+          (JsPath \ "lastUpdated").read(instantReads) and
+          (JsPath \ "expireAt").read(instantReads)
+        )((id, data, lastUpdated, expireAt) => JsonDataEntry(id, data, lastUpdated, expireAt))
+        .reads(json)
+    }
   }
 
   object SchemeDataEntryFormats {
+    implicit val dateFormats: Format[Instant] = MongoJavatimeFormats.instantFormat
     implicit val format: Format[SchemeDataEntry] = Json.format[SchemeDataEntry]
 
     val dataKey: String = "data"
@@ -86,7 +112,8 @@ class SchemeCacheRepository @Inject()(
     domainFormat = SchemeDataEntryFormats.format,
     extraCodecs = Seq(
       Codecs.playFormatCodec(JsonDataEntry.format),
-      Codecs.playFormatCodec(DataEntry.format)
+      Codecs.playFormatCodec(DataEntry.format),
+      Codecs.playFormatCodec(MongoJavatimeFormats.instantFormat)
     ),
     indexes = Seq(
       IndexModel(
@@ -128,8 +155,8 @@ class SchemeCacheRepository @Inject()(
       val setOperation = Updates.combine(
         Updates.set(idField, entry.id),
         Updates.set(dataKey, entry.data),
-        Updates.set(lastUpdatedKey, Codecs.toBson(entry.lastUpdated)),
-        Updates.set(expireAtKey, Codecs.toBson(entry.expireAt))
+        Updates.set(lastUpdatedKey, entry.lastUpdated),
+        Updates.set(expireAtKey, entry.expireAt)
       )
       collection.withDocumentClass[DataEntry]().findOneAndUpdate(
         filter = Filters.eq(idField, id),
@@ -139,8 +166,8 @@ class SchemeCacheRepository @Inject()(
       val setOperation = Updates.combine(
         Updates.set(idField, record.id),
         Updates.set(dataKey, Codecs.toBson(record.data)),
-        Updates.set(lastUpdatedKey, Codecs.toBson(record.lastUpdated)(MongoJavatimeFormats.instantWrites)),
-        Updates.set(expireAtKey, Codecs.toBson(record.expireAt)(MongoJavatimeFormats.instantWrites))
+        Updates.set(lastUpdatedKey, record.lastUpdated),
+        Updates.set(expireAtKey, record.expireAt)
       )
       collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
         filter = Filters.eq(idField, id),

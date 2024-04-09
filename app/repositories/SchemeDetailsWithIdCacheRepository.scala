@@ -16,11 +16,11 @@
 
 package repositories
 
-import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.SchemeWithId
 import org.mongodb.scala.model._
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import repositories.SchemeDetailsWithIdCacheRepository._
@@ -28,9 +28,10 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import java.util.concurrent.TimeUnit
-import scala.concurrent.{ExecutionContext, Future}
 import java.time.Instant
+import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
+import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeDetailsWithIdCacheRepository {
 
@@ -43,7 +44,19 @@ object SchemeDetailsWithIdCacheRepository {
   case class DataCache(id: String, data: JsValue, lastUpdated: Instant, expireAt: Instant)
 
   object DataCache {
-    implicit val format: Format[DataCache] = Json.format[DataCache]
+    implicit val format: Format[DataCache] = new Format[DataCache] {
+      override def writes(o: DataCache): JsValue = Json.writes[DataCache].writes(o)
+
+      private val instantReads = MongoJavatimeFormats.instantReads
+
+      override def reads(json: JsValue): JsResult[DataCache] = (
+        (JsPath \ "id").read[String] and
+          (JsPath \ "data").read[JsValue] and
+          (JsPath \ "lastUpdated").read(instantReads) and
+          (JsPath \ "expireAt").read(instantReads)
+      )((id, data, lastUpdated, expireAt) => DataCache(id, data, lastUpdated, expireAt))
+        .reads(json)
+    }
   }
 }
 
@@ -79,8 +92,8 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
-      Updates.set(lastUpdatedKey, Codecs.toBson(Instant.now())(MongoJavatimeFormats.instantWrites)),
-      Updates.set(expireAtKey, Codecs.toBson(expireInSeconds)(MongoJavatimeFormats.instantWrites))
+      Updates.set(lastUpdatedKey, Instant.now()),
+      Updates.set(expireAtKey, expireInSeconds)
     )
 
     collection.withDocumentClass[DataCache]().findOneAndUpdate(Filters.equal(uniqueSchemeWithId, id), modifier,

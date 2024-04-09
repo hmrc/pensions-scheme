@@ -20,9 +20,9 @@ import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import org.scalacheck.Gen
 import org.scalacheck.Gen.const
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsObject, JsValue, Json, _}
+import play.api.libs.json._
 
-import java.time.Instant
+import java.time.LocalDate
 
 trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
 
@@ -329,7 +329,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
     )
   }
 
-  private def getPersonName(firstName: String, lastName: String, date: Instant, element: String) = {
+  private def getPersonName(firstName: String, lastName: String, date: LocalDate, element: String) = {
     Json.obj(
       element -> Json.obj(
         "firstName" -> firstName,
@@ -527,7 +527,7 @@ trait PensionSchemeJsValueGenerators extends PensionSchemeGenerators {
                                 firstName: String,
                                 middleName: Option[String],
                                 lastName: String,
-                                date: Instant): JsObject = {
+                                date: LocalDate): JsObject = {
     getPersonName(firstName, lastName, date, s"${directorOrPartner}Details")
   }
 
