@@ -4,13 +4,11 @@ import sbt.Keys._
 import sbt._
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, scalaSettings}
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 lazy val microservice = Project(AppDependencies.appName, file("."))
   .disablePlugins(JUnitXmlReportPlugin)
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .settings(scalaSettings: _*)
-  .settings(publishingSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test(),
@@ -42,4 +40,4 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     Resolver.jcenterRepo,
   ))
   .settings(majorVersion := 0)
-  .settings(scalaVersion := "2.13.8")
+  .settings(scalaVersion := "2.13.12")

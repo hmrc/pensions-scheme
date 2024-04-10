@@ -16,12 +16,11 @@
 
 package repositories
 
-import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.BsonBinary
 import org.mongodb.scala.model._
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import repositories.SchemeDataEntry.SchemeDataEntryFormats.expireAtKey
@@ -29,40 +28,64 @@ import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry, SchemeDataEntry, 
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoBinaryFormats.{byteArrayReads, byteArrayWrites}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeDataEntry {
 
   sealed trait SchemeDataEntry
 
-  case class DataEntry(id: String, data: BsonBinary, lastUpdated: DateTime, expireAt: DateTime) extends SchemeDataEntry
+  case class DataEntry(id: String, data: BsonBinary, lastUpdated: Instant, expireAt: Instant) extends SchemeDataEntry
 
-  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime) extends SchemeDataEntry
+  case class JsonDataEntry(id: String, data: JsValue, lastUpdated: Instant, expireAt: Instant) extends SchemeDataEntry
 
   object DataEntry {
-    def apply(id: String, data: Array[Byte], lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC), expireAt: DateTime): DataEntry =
+    def apply(id: String, data: Array[Byte], lastUpdated: Instant = Instant.now(), expireAt: Instant): DataEntry =
       DataEntry(id, BsonBinary(data), lastUpdated, expireAt)
 
-    final val bsonBinaryReads: Reads[BsonBinary] = byteArrayReads.map(t => BsonBinary(t))
-    final val bsonBinaryWrites: Writes[BsonBinary] = byteArrayWrites.contramap(t => t.getData)
+    final private val bsonBinaryReads: Reads[BsonBinary] = byteArrayReads.map(t => BsonBinary(t))
+    final private val bsonBinaryWrites: Writes[BsonBinary] = byteArrayWrites.contramap(t => t.getData)
     implicit val bsonBinaryFormat: Format[BsonBinary] = Format(bsonBinaryReads, bsonBinaryWrites)
 
-    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-    implicit val format: Format[DataEntry] = Json.format[DataEntry]
+    implicit val format: Format[DataEntry] = new Format[DataEntry] {
+      override def writes(o: DataEntry): JsValue = Json.writes[DataEntry].writes(o)
+
+      private val instantReads = MongoJavatimeFormats.instantReads
+
+      override def reads(json: JsValue): JsResult[DataEntry] = (
+        (JsPath \ "id").read[String] and
+          (JsPath \ "data").read[BsonBinary] and
+          (JsPath \ "lastUpdated").read(instantReads) and
+          (JsPath \ "expireAt").read(instantReads)
+      )((id, data, lastUpdated, expireAt) => DataEntry(id, data, lastUpdated, expireAt))
+        .reads(json)
+    }
   }
 
   object JsonDataEntry {
-    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-    implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
+    implicit val format: Format[JsonDataEntry] = new Format[JsonDataEntry] {
+      override def writes(o: JsonDataEntry): JsValue = Json.writes[JsonDataEntry].writes(o)
+
+      private val instantReads = MongoJavatimeFormats.instantReads
+
+      override def reads(json: JsValue): JsResult[JsonDataEntry] = (
+        (JsPath \ "id").read[String] and
+          (JsPath \ "data").read[JsValue] and
+          (JsPath \ "lastUpdated").read(instantReads) and
+          (JsPath \ "expireAt").read(instantReads)
+        )((id, data, lastUpdated, expireAt) => JsonDataEntry(id, data, lastUpdated, expireAt))
+        .reads(json)
+    }
   }
 
   object SchemeDataEntryFormats {
-    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+    implicit val dateFormats: Format[Instant] = MongoJavatimeFormats.instantFormat
     implicit val format: Format[SchemeDataEntry] = Json.format[SchemeDataEntry]
 
     val dataKey: String = "data"
@@ -89,7 +112,8 @@ class SchemeCacheRepository @Inject()(
     domainFormat = SchemeDataEntryFormats.format,
     extraCodecs = Seq(
       Codecs.playFormatCodec(JsonDataEntry.format),
-      Codecs.playFormatCodec(DataEntry.format)
+      Codecs.playFormatCodec(DataEntry.format),
+      Codecs.playFormatCodec(MongoJavatimeFormats.instantFormat)
     ),
     indexes = Seq(
       IndexModel(
@@ -105,19 +129,20 @@ class SchemeCacheRepository @Inject()(
   private val jsonCrypto: Encrypter with Decrypter = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = encryptionKey, config.underlying)
   private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
-  private def getExpireAt: DateTime = if (expireInSeconds.isEmpty) {
-    DateTime
-      .now(DateTimeZone.UTC)
-      .toLocalDate
-      .plusDays(
-        expireInDays.getOrElse(config.underlying.getInt("defaultDataExpireInDays")) + 1
-      ).toDateTimeAtStartOfDay()
+  private def getExpireAt: Instant = if (expireInSeconds.isEmpty) {
+    val secondsInDay = 86400
+    val expirySeconds = expireInDays match {
+      case Some(days) => secondsInDay * days
+      case _ => secondsInDay * (config.underlying.getInt("defaultDataExpireInDays") + 1)
+    }
+    Instant
+      .now()
+      .plusSeconds(expirySeconds)
   } else {
-    DateTime
-      .now(DateTimeZone.UTC)
-      .plusSeconds(
-        expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds"))
-      )
+    val expirySeconds = expireInSeconds.getOrElse(config.underlying.getInt("defaultDataExpireInSeconds"))
+    Instant
+      .now()
+      .plusSeconds(expirySeconds)
   }
 
   def upsert(id: String, data: JsValue)
@@ -130,19 +155,19 @@ class SchemeCacheRepository @Inject()(
       val setOperation = Updates.combine(
         Updates.set(idField, entry.id),
         Updates.set(dataKey, entry.data),
-        Updates.set(lastUpdatedKey, Codecs.toBson(entry.lastUpdated)),
-        Updates.set(expireAtKey, Codecs.toBson(entry.expireAt))
+        Updates.set(lastUpdatedKey, entry.lastUpdated),
+        Updates.set(expireAtKey, entry.expireAt)
       )
       collection.withDocumentClass[DataEntry]().findOneAndUpdate(
         filter = Filters.eq(idField, id),
         update = setOperation, new FindOneAndUpdateOptions().upsert(true)).toFuture().map(_ => ())
     } else {
-      val record = JsonDataEntry(id, data, DateTime.now(DateTimeZone.UTC), getExpireAt)
+      val record = JsonDataEntry(id, data, Instant.now(), getExpireAt)
       val setOperation = Updates.combine(
         Updates.set(idField, record.id),
         Updates.set(dataKey, Codecs.toBson(record.data)),
-        Updates.set(lastUpdatedKey, Codecs.toBson(record.lastUpdated)),
-        Updates.set(expireAtKey, Codecs.toBson(record.expireAt))
+        Updates.set(lastUpdatedKey, record.lastUpdated),
+        Updates.set(expireAtKey, record.expireAt)
       )
       collection.withDocumentClass[JsonDataEntry]().findOneAndUpdate(
         filter = Filters.eq(idField, id),
@@ -172,7 +197,7 @@ class SchemeCacheRepository @Inject()(
   }
 
   def getLastUpdated(id: String)
-                    (implicit ec: ExecutionContext): Future[Option[DateTime]] = {
+                    (implicit ec: ExecutionContext): Future[Option[Instant]] = {
     if (encrypted) {
       collection.find[DataEntry](Filters.equal(idField, id)).headOption().map {
         _.map {
@@ -193,7 +218,7 @@ class SchemeCacheRepository @Inject()(
   def remove(id: String)
             (implicit ec: ExecutionContext): Future[Boolean] = {
     collection.deleteOne(Filters.equal(idField, id)).toFuture().map { result =>
-      logger.info(s"Removing row from collection ${collectionName} externalId:$id")
+      logger.info(s"Removing row from collection $collectionName externalId:$id")
       result.wasAcknowledged
     }
   }

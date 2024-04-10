@@ -16,20 +16,21 @@
 
 package repositories
 
-import javax.inject.Singleton
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.SchemeWithId
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.model._
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import repositories.SchemeDetailsWithIdCacheRepository._
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.time.Instant
 import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeDetailsWithIdCacheRepository {
@@ -40,11 +41,22 @@ object SchemeDetailsWithIdCacheRepository {
   private val lastUpdatedKey: String = "lastUpdated"
   private val expireAtKey: String = "expireAt"
 
-  case class DataCache(id: String, data: JsValue, lastUpdated: DateTime, expireAt: DateTime)
+  case class DataCache(id: String, data: JsValue, lastUpdated: Instant, expireAt: Instant)
 
   object DataCache {
-    implicit val dateFormat: Format[DateTime] = MongoJodaFormats.dateTimeFormat
-    implicit val format: Format[DataCache] = Json.format[DataCache]
+    implicit val format: Format[DataCache] = new Format[DataCache] {
+      override def writes(o: DataCache): JsValue = Json.writes[DataCache].writes(o)
+
+      private val instantReads = MongoJavatimeFormats.instantReads
+
+      override def reads(json: JsValue): JsResult[DataCache] = (
+        (JsPath \ "id").read[String] and
+          (JsPath \ "data").read[JsValue] and
+          (JsPath \ "lastUpdated").read(instantReads) and
+          (JsPath \ "expireAt").read(instantReads)
+      )((id, data, lastUpdated, expireAt) => DataCache(id, data, lastUpdated, expireAt))
+        .reads(json)
+    }
   }
 }
 
@@ -72,9 +84,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     )
   ) with Logging {
 
-  import DataCache._
-
-  private def expireInSeconds: DateTime = DateTime.now(DateTimeZone.UTC).
+  private def expireInSeconds: Instant = Instant.now().
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
 
   def upsert(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
@@ -82,8 +92,8 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val modifier = Updates.combine(
       Updates.set(idField, id),
       Updates.set(dataKey, Codecs.toBson(schemeDetails)),
-      Updates.set(lastUpdatedKey, Codecs.toBson(DateTime.now(DateTimeZone.UTC))),
-      Updates.set(expireAtKey, Codecs.toBson(expireInSeconds))
+      Updates.set(lastUpdatedKey, Instant.now()),
+      Updates.set(expireAtKey, expireInSeconds)
     )
 
     collection.withDocumentClass[DataCache]().findOneAndUpdate(Filters.equal(uniqueSchemeWithId, id), modifier,

@@ -16,11 +16,12 @@
 
 package models
 
-import org.joda.time.DateTime
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
 import play.api.libs.json.{JsValue, Json}
+
+import java.time.LocalDateTime
 
 class EmailEventsSpec extends AnyWordSpec with OptionValues with Matchers {
 
@@ -47,18 +48,18 @@ object EmailEventsSpec {
       |    "events": [
       |        {
       |            "event": "Sent",
-      |            "detected": "2015-07-02T08:26:39.035Z"
+      |            "detected": "2015-07-02T08:26:39.035"
       |        },
       |        {
       |            "event": "Delivered",
-      |            "detected": "2015-07-02T08:25:20.068Z"
+      |            "detected": "2015-07-02T08:25:20.068"
       |        }
       |    ]
       |}""".stripMargin
   )
 
   private val emailResponseEvents = EmailEvents(Seq(
-    EmailEvent(Sent, DateTime.parse("2015-07-02T08:26:39.035Z")),
-    EmailEvent(Delivered, DateTime.parse("2015-07-02T08:25:20.068Z"))
+    EmailEvent(Sent, LocalDateTime.parse("2015-07-02T08:26:39.035")),
+    EmailEvent(Delivered, LocalDateTime.parse("2015-07-02T08:25:20.068"))
   ))
 }

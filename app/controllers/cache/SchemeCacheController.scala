@@ -16,12 +16,11 @@
 
 package controllers.cache
 
-import org.joda.time.DateTime
 import play.api.Logger
-import play.api.libs.json.{JsNumber, Writes, JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, AnyContent}
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SchemeCacheRepository
-import uk.gov.hmrc.auth.core.{AuthorisedFunctions, AuthConnector}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -66,10 +65,6 @@ abstract class SchemeCacheController(
       }
   }
 
-  private val jodaDateTimeNumberWrites = new Writes[DateTime] {
-    def writes(d: DateTime): JsValue = JsNumber(d.getMillis)
-  }
-
   def lastUpdated(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised() {
@@ -77,7 +72,7 @@ abstract class SchemeCacheController(
         repository.getLastUpdated(id).map { response =>
           logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
           response.map {
-            date => Ok(Json.toJson(date)(jodaDateTimeNumberWrites))
+            date => Ok(Json.toJson(date))
           } getOrElse NotFound
         }
       }

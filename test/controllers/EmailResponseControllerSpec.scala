@@ -20,15 +20,16 @@ import audit.testdoubles.StubSuccessfulAuditService
 import audit.{AuditService, EmailAuditEvent}
 import base.SpecBase
 import models._
-import org.joda.time.DateTime
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import repositories._
 import uk.gov.hmrc.crypto.{ApplicationCrypto, PlainText}
 import uk.gov.hmrc.domain.PsaId
+
+import java.time.LocalDateTime
 
 class EmailResponseControllerSpec extends SpecBase with MockitoSugar {
 
@@ -100,12 +101,13 @@ class EmailResponseControllerSpec extends SpecBase with MockitoSugar {
 
 object EmailResponseControllerSpec {
 
-  val psa = PsaId("A7654321")
+  val psa: PsaId = PsaId("A7654321")
 
-  val emailEvents = EmailEvents(Seq(EmailEvent(Sent, DateTime.now()), EmailEvent(Delivered, DateTime.now()), EmailEvent(Opened, DateTime.now())))
+  val emailEvents: EmailEvents =
+    EmailEvents(Seq(EmailEvent(Sent, LocalDateTime.now()), EmailEvent(Delivered, LocalDateTime.now()), EmailEvent(Opened, LocalDateTime.now())))
 
   val fakeAuditService = new StubSuccessfulAuditService()
 
-  val validJson = Json.obj("name" -> "value")
+  val validJson: JsObject = Json.obj("name" -> "value")
 
 }

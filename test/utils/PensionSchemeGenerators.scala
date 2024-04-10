@@ -19,9 +19,10 @@ package utils
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.establisher.{CompanyEstablisher, EstablisherDetails, Partnership}
 import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee, TrusteeDetails}
-import org.joda.time.LocalDate
 import org.scalacheck.Gen
 import play.api.libs.json.{JsObject, Json}
+
+import java.time.LocalDate
 
 trait PensionSchemeGenerators {
   val specialCharStringGen: Gen[String] = Gen.listOfN[Char](160, Gen.alphaChar).map(_.mkString)
@@ -69,10 +70,11 @@ trait PensionSchemeGenerators {
   val titleGenerator: Gen[String] = Gen.oneOf(Seq("Mr", "Mrs", "Miss", "Ms", "Dr", "Professor", "Lord"))
   val nameGenerator: Gen[String] = Gen.listOfN[Char](randomNumberFromRange(1, 35), Gen.alphaChar).map(_.mkString)
   val dateGenerator: Gen[LocalDate] = for {
-    day <- Gen.choose(1, 28)
-    month <- Gen.choose(1, 12)
+    day <- Gen.choose(10, 28)
+    month <- Gen.choose(10, 12)
     year <- Gen.choose(1990, 2000)
-  } yield new LocalDate(year, month, day)
+  } yield LocalDate.of(year, month, day)
+
   val reasonGen: Gen[String] = Gen.listOfN[Char](randomNumberFromRange(1, 160), Gen.alphaChar).map(_.mkString)
   val contactDetailsGen: Gen[ContactDetails] = for {
     phone <- Gen.listOfN[Char](randomNumberFromRange(1, 24), Gen.numChar).map(_.mkString)
@@ -161,7 +163,6 @@ trait PensionSchemeGenerators {
     address <- ukAddressGen
     contact <- contactDetailsGen
     previous <- Gen.option(previousAddressDetailsGen)
-    partners <- Gen.listOfN(randomNumberFromRange(1, 10), individualGen)
   } yield PartnershipTrustee(name, utr, noUtrReason, vat, paye, CorrespondenceAddressDetails(address), CorrespondenceContactDetails(contact), previous)
 
   val establisherDetailsGen: Gen[EstablisherDetails] = for {
@@ -193,14 +194,14 @@ trait PensionSchemeGenerators {
     haveMoreThanTenTrustees <- Gen.option(booleanGen)
     establisherDetails <- establisherDetailsGen
     trusteeDetailsType <- Gen.option(trusteeDetailsGen).suchThat(_.nonEmpty)
-  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+  } yield (changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType)
 
   val establisherAndTrustDetailsGenNonEmpty : Gen[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]= for {
     changeOfEstablisherOrTrustDetails <- booleanGen
     haveMoreThanTenTrustees <- Gen.option(booleanGen).suchThat(_.nonEmpty)
     establisherDetails <- establisherDetailsGenNonEmpty
     trusteeDetailsType <- Gen.option(trusteeDetailsGenNonEmpty).suchThat(_.nonEmpty)
-  } yield ((changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType))
+  } yield (changeOfEstablisherOrTrustDetails, haveMoreThanTenTrustees, establisherDetails, trusteeDetailsType)
 
 
   val establisherAndTrustDetailsNonEmpty: Gen[List[(Boolean, Option[Boolean], EstablisherDetails, Option[TrusteeDetails])]] =
