@@ -21,7 +21,7 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsValue, Json}
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime, ZoneId}
 
 class EmailEventsSpec extends AnyWordSpec with OptionValues with Matchers {
 
@@ -48,18 +48,21 @@ object EmailEventsSpec {
       |    "events": [
       |        {
       |            "event": "Sent",
-      |            "detected": "2015-07-02T08:26:39.035"
+      |            "detected": "2015-07-02T08:26:39.035Z"
       |        },
       |        {
       |            "event": "Delivered",
-      |            "detected": "2015-07-02T08:25:20.068"
+      |            "detected": "2015-07-02T08:25:20.068Z"
       |        }
       |    ]
       |}""".stripMargin
   )
 
+  val sentEventTimestamp: Instant = LocalDateTime.parse("2015-07-02T08:26:39.035").atZone(ZoneId.of("UTC")).toInstant
+  val deliveredEventTimestamp: Instant = LocalDateTime.parse("2015-07-02T08:25:20.068").atZone(ZoneId.of("UTC")).toInstant
+
   private val emailResponseEvents = EmailEvents(Seq(
-    EmailEvent(Sent, LocalDateTime.parse("2015-07-02T08:26:39.035")),
-    EmailEvent(Delivered, LocalDateTime.parse("2015-07-02T08:25:20.068"))
+    EmailEvent(Sent, sentEventTimestamp),
+    EmailEvent(Delivered, deliveredEventTimestamp)
   ))
 }
