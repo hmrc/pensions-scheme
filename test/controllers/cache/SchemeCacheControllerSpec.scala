@@ -204,7 +204,7 @@ class SchemeCacheControllerSpec
         val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
         status(result) mustEqual OK
-        contentAsJson(result) mustEqual Json.toJson(date)
+        contentAsJson(result) mustEqual Json.toJson(date.toEpochMilli)
       }
 
       "return 404 when the data doesn't exist" in {
