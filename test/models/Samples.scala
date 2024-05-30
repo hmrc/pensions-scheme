@@ -19,12 +19,10 @@ package models
 import models.userAnswersToEtmp._
 import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee}
 
-import scala.util.Random
-
 trait Samples {
 
   val mongoHost = "localhost"
-  val mongoPort = 10000 + Random.nextInt(10000)
+  val mongoPort = 27017
 
   val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")
   val nonUkAddressSample = InternationalAddress("line1", Some("line2"), Some("line3"), Some("line4"), "IT", Some("NE1"))
