@@ -16,7 +16,7 @@
 
 package repositories
 
-import models.SchemeWithId
+import models.{Samples, SchemeWithId}
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
@@ -32,8 +32,8 @@ import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with EmbeddedMongoDBSupport with BeforeAndAfter
-  with BeforeAndAfterAll with ScalaFutures { // scalastyle:off magic.number
+class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with BeforeAndAfter
+  with BeforeAndAfterAll with ScalaFutures with Samples { // scalastyle:off magic.number
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(30, Seconds), Span(1, Millis))
 
@@ -46,14 +46,9 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
   override def beforeAll(): Unit = {
     when(mockAppConfig.get[String]("mongodb.pensions-scheme-cache.scheme-with-id.name")).thenReturn("pensions-scheme-scheme-with-id-cache")
     when(mockAppConfig.get[Int]("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")).thenReturn(3600)
-    initMongoDExecutable()
-    startMongoD()
     schemeDetailsWithIdCacheRepository = buildRepository(mongoHost, mongoPort)
     super.beforeAll()
   }
-
-  override def afterAll(): Unit =
-    stopMongoD()
 
   "upsert" must {
     "save a new scheme details with_id cache in Mongo collection when collection is empty" in {

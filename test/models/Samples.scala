@@ -21,6 +21,9 @@ import models.userAnswersToEtmp.trustee.{CompanyTrustee, PartnershipTrustee}
 
 trait Samples {
 
+  val mongoHost = "localhost"
+  val mongoPort = 27017
+
   val ukAddressSampleWithTwoLines = UkAddress("line1", Some("line2"), None, None, "GB", "NE1")
   val nonUkAddressSample = InternationalAddress("line1", Some("line2"), Some("line3"), Some("line4"), "IT", Some("NE1"))
   val ukAddressSample = UkAddress("line1", Some("line2"), Some("line3"), Some("line4"), "GB", "NE1")
