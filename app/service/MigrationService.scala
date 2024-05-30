@@ -30,6 +30,7 @@ import scala.concurrent.duration.Duration
 
 class MigrationService @Inject()(mongoLockRepository: MongoLockRepository,
                                  mongoComponent: MongoComponent)(implicit ec: ExecutionContext) extends Logging {
+  /*
   private val lock = LockService(mongoLockRepository, "event_reporting_data_expireAtLock", Duration(10, TimeUnit.MINUTES))
 
   private def fixExpireAt(collectionName: String) = {
@@ -42,7 +43,7 @@ class MigrationService @Inject()(mongoLockRepository: MongoLockRepository,
       }
   }
 
-
+  logger.warn("[PODS-9319] Migration started")
   lock withLock {
     for {
       res <- fixExpireAt("pensions-scheme-scheme-details")
@@ -54,4 +55,5 @@ class MigrationService @Inject()(mongoLockRepository: MongoLockRepository,
   } recover {
     case e => logger.error("Locking finished with error", e)
   }
+  */
 }
