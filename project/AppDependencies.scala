@@ -36,7 +36,6 @@ object AppDependencies {
   def test(scope: String = "test, it"): Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                 %% "bootstrap-test-play-30"       % playVersion         % Test,
     "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-30"      % mongoVersion        % Test,
-    "de.flapdoodle.embed"          % "de.flapdoodle.embed.mongo"    % "3.5.3"             % Test,
     "org.pegdown"                  % "pegdown"                      % "1.6.0"             % scope,
     "com.vladsch.flexmark"         % "flexmark-all"                 % "0.64.0"            % scope,
     "org.scalatest"               %% "scalatest"                    % "3.2.15"            % Test,

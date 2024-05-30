@@ -17,6 +17,7 @@
 package repositories
 
 import com.typesafe.config.Config
+import models.Samples
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
@@ -31,10 +32,10 @@ import play.api.libs.json.Json
 import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
 import uk.gov.hmrc.mongo.MongoComponent
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import java.time.Instant
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class SchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with EmbeddedMongoDBSupport
+class SchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with Samples
   with BeforeAndAfter with BeforeAndAfterAll with ScalaFutures { // scalastyle:off magic.number
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(30, Seconds), Span(1, Millis))
@@ -48,13 +49,8 @@ class SchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with MockitoSuga
     when(mockConfig.getString("mongodb.pensions-scheme-cache.register-scheme.name")).thenReturn("pensions-scheme-register-scheme")
     when(mockConfig.getInt("mongodb.pensions-scheme-cache.register-scheme.timeToLiveInDays")).thenReturn(28)
     when(mockConfig.getString("scheme.json.encryption.key")).thenReturn("gvBoGdgzqG1AarzF1LY0zQ==")
-    initMongoDExecutable()
-    startMongoD()
     super.beforeAll()
   }
-
-  override def afterAll(): Unit =
-    stopMongoD()
 
   "upsert" must {
     "save a new scheme subscription cache as JsonDataEntry in Mongo collection when encrypted false and collection is empty" in {

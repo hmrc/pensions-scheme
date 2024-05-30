@@ -36,7 +36,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 * https://github.com/flapdoodle-oss/de.flapdoodle.embed.mongo/issues/320
 * */
 
-class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers with BeforeAndAfterAll with EmbeddedMongoDBSupport
+class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers with BeforeAndAfterAll with Samples
   with MockitoSugar with ScalaFutures { // scalastyle:off magic.number
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(30, Seconds), Span(1, Millis))
@@ -48,14 +48,9 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
   override def beforeAll(): Unit = {
     when(mockConfiguration.underlying).thenReturn(mockConfig)
     when(mockConfig.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name")).thenReturn("scheme_variation_lock")
-    initMongoDExecutable()
-    startMongoD()
     lockRepository = buildRepository(mongoHost, mongoPort)
     super.beforeAll()
   }
-
-  override def afterAll(): Unit =
-    stopMongoD()
 
   "releaseLock" must {
     "Delete One" in {

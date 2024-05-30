@@ -16,9 +16,9 @@
 
 package repositories
 
-import models.FeatureToggle
 import models.FeatureToggleName.DummyToggle
 import models.FeatureToggleNameTest.{InvalidToggle1, InvalidToggle2}
+import models.{FeatureToggle, Samples}
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
@@ -34,7 +34,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class AdminDataRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with EmbeddedMongoDBSupport
+class AdminDataRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with Samples
   with BeforeAndAfter with BeforeAndAfterAll with ScalaFutures { // scalastyle:off magic.number
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(30, Seconds), Span(1, Millis))
@@ -45,14 +45,10 @@ class AdminDataRepositorySpec extends AnyWordSpec with MockitoSugar with Matcher
 
   override def beforeAll(): Unit = {
     when(mockAppConfig.get[String](path = "mongodb.pensions-scheme-cache.admin-data.name")).thenReturn("admin-data")
-    initMongoDExecutable()
-    startMongoD()
     adminDataRepository = buildRepository(mongoHost, mongoPort)
     super.beforeAll()
   }
 
-  override def afterAll(): Unit =
-    stopMongoD()
 
   "getFeatureToggle" must {
     "get FeatureToggles from Mongo collection" in {
