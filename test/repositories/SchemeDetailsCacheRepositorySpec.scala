@@ -19,6 +19,7 @@ package repositories
 import com.typesafe.config.Config
 import models.Samples
 import org.mockito.Mockito.when
+import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
@@ -30,6 +31,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
 import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
+import scalaz.Leibniz.subst
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.time.Instant
@@ -173,6 +175,27 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       whenReady(documentsInDB) {
         documentsInDB =>
           documentsInDB.size mustBe 2
+      }
+    }
+    "save expireAt value as a date" in {
+      when(mockAppConfig.getOptional[Boolean](path= "encrypted")).thenReturn(Some(false))
+      val schemeDetailsCacheRepository = buildRepository(mongoHost, mongoPort)
+      val ftr = schemeDetailsCacheRepository.collection.drop().toFuture().flatMap { _ =>
+        schemeDetailsCacheRepository.upsert("id", Json.parse("{}")).flatMap { _ =>
+          for {
+            stringResults <- schemeDetailsCacheRepository.collection.find[JsonDataEntry](
+              BsonDocument("expireAt" -> BsonDocument("$type" -> BsonString("string")))
+            ).toFuture()
+            dateResults <- schemeDetailsCacheRepository.collection.find[JsonDataEntry](
+              BsonDocument("expireAt" -> BsonDocument("$type" -> BsonString("date")))
+            ).toFuture()
+          } yield stringResults -> dateResults
+        }
+      }
+
+      whenReady(ftr) { case (stringResults, dateResults) =>
+        stringResults.length mustBe 0
+        dateResults.length mustBe 1
       }
     }
   }
