@@ -98,7 +98,7 @@ class InvalidPayloadHandlerImpl @Inject() extends InvalidPayloadHandler {
   private def valueFromJson(message: ValidationMessage, json: JsValue): Option[String] = {
     message.getType match {
       case "enum" | "format" | "maximum" | "maxLength" | "minimum" | "minLength" | "pattern" | "type" =>
-        (json \ message.getPath.drop(2)).asOpt[JsValue] match {
+        (json \ message.getMessageKey.drop(2)).asOpt[JsValue] match {
           case Some(JsBoolean(bool)) => Some(bool.toString)
           case Some(JsNull) => Some("null")
           case Some(JsNumber(n)) => Some(depersonalise(n.toString))

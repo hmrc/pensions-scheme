@@ -39,11 +39,11 @@ trait ErrorHandler {
       Future.failed(new NotFoundException(e.message))
     case e: UpstreamErrorResponse =>
       e match {
-        case Upstream4xxResponse(message, statusCode, reportAs, headers) =>
+        case UpstreamErrorResponse(message, statusCode, reportAs, headers) if statusCode >= 400 && statusCode < 500 =>
           Future.failed(
             throwAppropriateException(UpstreamErrorResponse(message, statusCode, reportAs, headers))
           )
-        case Upstream5xxResponse(message, statusCode, reportAs, headers) =>
+        case UpstreamErrorResponse(message, statusCode, reportAs, headers) if statusCode >= 500 =>
           Future.failed(
             UpstreamErrorResponse(message, statusCode, reportAs, headers)
           )
