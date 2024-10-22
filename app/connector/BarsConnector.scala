@@ -24,32 +24,38 @@ import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json.JsSuccess
 import play.api.mvc.RequestHeader
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[BarsConnectorImpl])
 trait BarsConnector {
-  def invalidBankAccount(bankAccount: BankAccount, psaId: String)
-                        (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean]
+  def invalidBankAccount(bankAccount: BankAccount,
+                         psaId: String
+                        )(implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean]
 }
 
 @Singleton
-class BarsConnectorImpl @Inject()(http: HttpClient, appConfig: AppConfig, auditService: AuditService) extends BarsConnector {
+class BarsConnectorImpl @Inject()(httpClientV2: HttpClientV2, appConfig: AppConfig, auditService: AuditService)
+  extends BarsConnector {
 
   private val logger = Logger(classOf[BarsConnectorImpl])
 
   val barsBaseUrl: String = appConfig.barsBaseUrl
 
-  def invalidBankAccount(bankAccount: BankAccount, psaId: String)
-                        (implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean] = {
+  def invalidBankAccount(bankAccount: BankAccount,
+                         psaId: String
+                        )(implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean] = {
 
     val request = ValidateBankDetailsRequest(bankAccount)
+    val url = url"${barsBaseUrl}/validate/bank-details"
 
-    http.POST[ValidateBankDetailsRequest, HttpResponse](s"$barsBaseUrl/validate/bank-details", request).map {
+    httpClientV2.post(url)
+      .withBody(request)
+      .execute[HttpResponse] map {
       httpResponse =>
-
         auditService.sendEvent(
           BarsCheck(
             psaIdentifier = psaId,
