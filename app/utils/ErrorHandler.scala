@@ -38,7 +38,6 @@ trait ErrorHandler {
     case e: NotFoundException =>
       Future.failed(new NotFoundException(e.message))
     case e: UpstreamErrorResponse =>
-      e match {
         case UpstreamErrorResponse(message, statusCode, reportAs, headers) if statusCode >= 400 && statusCode < 500 =>
           Future.failed(
             throwAppropriateException(UpstreamErrorResponse(message, statusCode, reportAs, headers))
