@@ -22,6 +22,7 @@ import play.api.http.HttpEntity
 import play.api.http.Status._
 import play.api.libs.json.{JsResultException, JsValue}
 import play.api.mvc.{ResponseHeader, Result}
+import uk.gov.hmrc.http.UpstreamErrorResponse.{Upstream4xxResponse, Upstream5xxResponse}
 import uk.gov.hmrc.http._
 
 import scala.concurrent.Future
@@ -39,14 +40,11 @@ trait ErrorHandler {
       Future.failed(new NotFoundException(e.message))
     case e: UpstreamErrorResponse =>
       e match {
-        case UpstreamErrorResponse(message, statusCode, reportAs, headers) if statusCode >= 400 && statusCode < 500 =>
-          Future.failed(
-            throwAppropriateException(UpstreamErrorResponse(message, statusCode, reportAs, headers))
-          )
-        case UpstreamErrorResponse(message, statusCode, reportAs, headers) if statusCode >= 500 =>
-          Future.failed(
-            UpstreamErrorResponse(message, statusCode, reportAs, headers)
-          )
+        case UpstreamErrorResponse.Upstream4xxResponse(e) =>
+          Future.failed(throwAppropriateException(e))
+        case UpstreamErrorResponse.Upstream5xxResponse(e) =>
+          Future.failed(e)
+        case e => Future.failed(e)
       }
     case e: Exception =>
       Future.failed(new Exception(e.getMessage))
