@@ -26,7 +26,8 @@ import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HttpClient, _}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http._
 import utils.HttpResponseHelper
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,8 +40,7 @@ trait SchemeDetailsConnector {
                         schemeIdType: String,
                         schemeIdNumber: String
                       )(
-                        implicit
-                        headerCarrier: HeaderCarrier,
+                        implicit headerCarrier: HeaderCarrier,
                         ec: ExecutionContext,
                         request: RequestHeader
                       ): Future[Either[HttpException, JsObject]]
@@ -49,15 +49,14 @@ trait SchemeDetailsConnector {
                            pspId: String,
                            pstr: String
                          )(
-                           implicit
-                           headerCarrier: HeaderCarrier,
+                           implicit headerCarrier: HeaderCarrier,
                            ec: ExecutionContext,
                            request: RequestHeader
                          ): Future[Either[HttpException, JsObject]]
 }
 
 class SchemeDetailsConnectorImpl @Inject()(
-                                            http: HttpClient,
+                                            httpClientV2: HttpClientV2,
                                             config: AppConfig,
                                             auditService: AuditService,
                                             schemeSubscriptionDetailsTransformer: PsaSchemeDetailsTransformer,
@@ -65,52 +64,50 @@ class SchemeDetailsConnectorImpl @Inject()(
                                             schemeAuditService: SchemeAuditService,
                                             headerUtils: HeaderUtils
                                           )
-  extends SchemeDetailsConnector
-    with HttpResponseHelper {
+  extends SchemeDetailsConnector with HttpResponseHelper {
 
   private val logger = Logger(classOf[SchemeConnectorImpl])
-
-  case class SchemeFailedMapToUserAnswersException() extends Exception
 
   override def getSchemeDetails(
                                  psaId: String,
                                  schemeIdType: String,
                                  idNumber: String
                                )(
-                                 implicit
-                                 headerCarrier: HeaderCarrier,
+                                 implicit headerCarrier: HeaderCarrier,
                                  ec: ExecutionContext,
                                  request: RequestHeader
                                ): Future[Either[HttpException, JsObject]] = {
-    val (url, hc) = (
-      config.schemeDetailsUrl.format(schemeIdType, idNumber),
-      HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader)
-    )
 
-    logger.debug(s"Calling get scheme details API on IF with url $url and hc $hc")
+    val url = url"${config.schemeDetailsUrl.format(schemeIdType, idNumber)}"
 
-    http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-      handleSchemeDetailsResponse(response, url)
-    ) andThen
+    logger.debug(s"Calling get scheme details API on IF with url $url and hc $headerCarrier")
+
+    httpClientV2.get(url)
+      .setHeader(headerUtils.integrationFrameworkHeader: _*)
+      .execute[HttpResponse].map { response =>
+        handleSchemeDetailsResponse(response, url.toString)
+      } andThen
       schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
+
   }
 
   override def getPspSchemeDetails(
                                     pspId: String,
                                     pstr: String
                                   )(
-                                    implicit
-                                    headerCarrier: HeaderCarrier,
+                                    implicit headerCarrier: HeaderCarrier,
                                     ec: ExecutionContext,
                                     request: RequestHeader
                                   ): Future[Either[HttpException, JsObject]] = {
 
-    val url = config.pspSchemeDetailsUrl.format(pspId, pstr)
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = headerUtils.integrationFrameworkHeader)
-    logger.debug(s"Calling psp get scheme details API with url $url and hc $hc")
+    val url = url"${config.pspSchemeDetailsUrl.format(pspId, pstr)}"
+    logger.debug(s"Calling psp get scheme details API with url $url and hc $headerCarrier")
 
-    http.GET[HttpResponse](url)(implicitly, hc, implicitly).map(response =>
-      handlePspSchemeDetailsResponse(response, url)) andThen
+    httpClientV2.get(url)
+      .setHeader(headerUtils.integrationFrameworkHeader: _*)
+      .execute[HttpResponse].map { response =>
+      handlePspSchemeDetailsResponse(response, url.toString)
+    } andThen
       schemeAuditService.sendPspSchemeDetailsEvent(pspId)(auditService.sendExtendedEvent)
   }
 
@@ -144,4 +141,5 @@ class SchemeDetailsConnectorImpl @Inject()(
         Left(handleErrorResponse("GET", url, response))
     }
   }
+
 }

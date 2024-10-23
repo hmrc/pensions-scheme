@@ -28,7 +28,6 @@ class InvalidPayloadHandlerSpec extends AnyFlatSpec with Matchers {
   import InvalidPayloadHandlerSpec._
 
   "loadSchema" should "load the Scheme Subscription schema" in {
-
     val logger = testFixture().handler
     val schema = logger.loadSchema("/resources/schemas/schemeSubscription.json")
     schema shouldBe a[JsonSchema]
@@ -37,144 +36,94 @@ class InvalidPayloadHandlerSpec extends AnyFlatSpec with Matchers {
   }
 
   "log" should "handle enum failure" in {
-
     val json = Json.obj("test" -> "three")
-
-    val expected = ValidationFailure("enum", "$.test", Some("xxxxx"))
-
+    val expected = ValidationFailure("enum", "$.test: does not have a value in the enumeration [\"one\", \"two\"]", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(enumSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle maximum failure" in {
-
     val json = Json.obj("test" -> 11)
-
-    val expected = ValidationFailure("maximum", "$.test", Some("99"))
-
+    val expected = ValidationFailure("maximum", "$.test: must have a maximum value of 10.0", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(maximumSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle maxLength failure" in {
-
     val json = Json.obj("test" -> "abc")
-
-    val expected = ValidationFailure("maxLength", "$.test", Some("xxx"))
-
+    val expected = ValidationFailure("maxLength", "$.test: must be at most 2 characters long", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(maxLengthSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle minimum failure" in {
-
     val json = Json.obj("test" -> 0)
-
-    val expected = ValidationFailure("minimum", "$.test", Some("9"))
-
+    val expected = ValidationFailure("minimum", "$.test: must have a minimum value of 1.0", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(minimumSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle minLength failure" in {
-
     val json = Json.obj("test" -> "a")
-
-    val expected = ValidationFailure("minLength", "$.test", Some("x"))
-
+    val expected = ValidationFailure("minLength", "$.test: must be at least 2 characters long", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(minLengthSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle pattern failure" in {
-
     val json = Json.obj("test" -> "123")
-
-    val expected = ValidationFailure("pattern", "$.test", Some("999"))
-
+    val expected = ValidationFailure("pattern", "$.test: does not match the regex pattern ^[A-Z]{2}$", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(patternSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle required failure" in {
-
     val json = Json.obj()
-
-    val expected = ValidationFailure("required", "$.test", None)
-
+    val expected = ValidationFailure("required", "$: required property 'test' not found", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(requiredSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle type failure" in {
-
     val json = Json.obj("test" -> JsNull)
-
-    val expected = ValidationFailure("type", "$.test", Some("null"))
-
+    val expected = ValidationFailure("type", "$.test: null found, string expected", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(requiredSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle format failure" in {
-
     val json = Json.obj("test" -> "abc")
-
-    val expected = ValidationFailure("format", "$.test", Some("xxx"))
-
+    val expected = ValidationFailure("format", "$.test: does not match the email pattern must be a valid RFC 5321 Mailbox", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(formatSchema, json)
-
     actual.size shouldBe 1
     actual.head shouldEqual expected
-
   }
 
   it should "handle multiple failures" in {
-
     val json = Json.obj("test1" -> "abc", "test2" -> true)
-
-    val maxLengthError = ValidationFailure("maxLength", "$.test1", Some("xxx"))
-    val typeError = ValidationFailure("type", "$.test2", Some("true"))
-
+    val maxLengthError = ValidationFailure("maxLength", "$.test1: must be at most 2 characters long", None)
+    val typeError = ValidationFailure("type", "$.test2: boolean found, string expected", None)
     val logger = testFixture().handler
     val actual = logger.getFailures(multiSchema, json)
-
     actual.size shouldBe 2
     actual should contain.allOf(maxLengthError, typeError)
-
   }
 }
 

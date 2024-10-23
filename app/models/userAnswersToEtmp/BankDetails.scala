@@ -16,8 +16,10 @@
 
 package models.userAnswersToEtmp
 
+import org.apache.pekko.util.ByteString
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.libs.ws.{BodyWritable, InMemoryBody}
 
 case class BankAccount(sortCode: String, accountNumber: String)
 
@@ -39,6 +41,11 @@ object BankAccount {
 
 object ValidateBankDetailsRequest {
   implicit val formats: OFormat[ValidateBankDetailsRequest] = Json.format[ValidateBankDetailsRequest]
+
+  implicit val bodyWritable: BodyWritable[ValidateBankDetailsRequest] = BodyWritable(
+    req => InMemoryBody(ByteString(Json.toBytes(Json.toJson(req)))),
+    "application/json"
+  )
 }
 
 object ValidateBankDetailsResponse {
