@@ -161,9 +161,11 @@ class SchemeServiceImpl @Inject()(
     listOfSchemes(idType, idValue).map {
       case Right(listOfSchemesJsValue) => listOfSchemesJsValue.convertTo[ListOfSchemes].schemeDetails.flatMap { listOfSchemes =>
         listOfSchemes.find(_.referenceNumber == srn).flatMap(_.pstr)
-      }.getOrElse(throw pstrException)
-      case _ => throw pstrException
+      }.getOrElse(throw notFoundPstrException(idValue, srn))
+      case Left(e: Exception) => throw pstrException(e.getMessage, idValue)
     }
 
-  val pstrException: BadRequestException = new BadRequestException("PSTR could not be retrieved from SRN to call the get psp scheme details API")
+  def pstrException(msg: String, idValue: String): BadRequestException = new BadRequestException(
+    s"Could not retrieved schemes for PSTR:  $idValue, error message: $msg");
+  def notFoundPstrException(idValue: String, srn: String): BadRequestException = new BadRequestException(s"Schemes not found for PSTR: $idValue and srn: $srn");
 }
