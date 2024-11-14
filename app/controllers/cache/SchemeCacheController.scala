@@ -43,7 +43,7 @@ abstract class SchemeCacheController(
         request.body.asJson.map {
           jsValue =>
             repository.upsert(id, jsValue).map(_ => Ok)
-        } getOrElse Future.successful(EntityTooLarge)
+        } getOrElse Future.successful(BadRequest("Can't parse json"))
       }
   }
 

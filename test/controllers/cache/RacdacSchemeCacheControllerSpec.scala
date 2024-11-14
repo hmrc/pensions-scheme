@@ -18,7 +18,6 @@ package controllers.cache
 
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.util.ByteString
-import org.apache.commons.lang3.RandomUtils
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
 import org.mockito.Mockito.when
 import org.scalatest.matchers.must.Matchers
@@ -147,13 +146,13 @@ class RacdacSchemeCacheControllerSpec
         status(result) mustEqual OK
       }
 
-      "return 413 when the request body cannot be parsed" in {
+      "return 400 when the request body cannot be parsed" in {
         when(repo.upsert(any(), any())(any())) thenReturn Future.successful((): Unit)
         when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
 
-        val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withRawBody(ByteString(RandomUtils.nextBytes(512001))))
+        val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withRawBody(ByteString("foo")))
 
-        status(result) mustEqual REQUEST_ENTITY_TOO_LARGE
+        status(result) mustEqual BAD_REQUEST
       }
 
       "throw an exception when the call is not authorised" in {
