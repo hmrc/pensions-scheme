@@ -1,8 +1,5 @@
 # Pensions Scheme
 
-## Note on terminology
-The terms scheme reference number and submission reference number (SRN) are interchangeable within the PODS codebase; some downstream APIs use scheme reference number, some use submission reference number, probably because of oversight on part of the technical teams who developed these APIs. This detail means the same thing, the reference number that was returned from ETMP when the scheme details were submitted.
-
 - [Overview](#overview)
 - [Requirements](#requirements)
 - [Running the Service](#running-the-service)
@@ -22,8 +19,6 @@ This service has a corresponding front-end microservice, namely Pensions Scheme 
 **Associated Frontend Link:** https://github.com/hmrc/pensions-scheme-frontend
 
 **Stubs:** https://github.com/hmrc/pensions-scheme-stubs
-
-
 
 ## Requirements
 This service is written in Scala and Play, so needs at least a [JRE] to run.
@@ -144,6 +139,8 @@ There are numerous APIs implemented throughout the MPS architecture, and the rel
 [To Do]
 Include relevant links or details to any additional, service-specific documents (e.g., stubs, testing protocols) when available.
 
+## Note on terminology
+The terms scheme reference number and submission reference number (SRN) are interchangeable within the PODS codebase; some downstream APIs use scheme reference number, some use submission reference number, probably because of oversight on part of the technical teams who developed these APIs. This detail means the same thing, the reference number that was returned from ETMP when the scheme details were submitted.
 
 ## Endpoints
 [To Do]
