@@ -33,7 +33,7 @@ This service is written in Scala and Play, so needs at least a [JRE] to run.
 ## Running the Service
 **Service Manager Profile:** PODS_ALL
 
-**Port:** XXXX
+**Port:** 8203
 
 **Link:** *http://localhost:XXXX/INSERT-BASE-URL-HERE*
 
