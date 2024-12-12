@@ -112,7 +112,7 @@ class SchemeDetailsConnectorImpl @Inject()(
   }
 
   private def handleSchemeDetailsResponse(response: HttpResponse, url: String): Either[HttpException, JsObject] = {
-    logger.debug(s"Get-Scheme-details-response from IF API - ${response.json}")
+    logger.warn(s"Get-Scheme-details-response from IF API Structure - ${Json.prettyPrint(anonymizeJson(response.json))}")
     response.status match {
       case OK =>
         response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers) match {
@@ -125,6 +125,23 @@ class SchemeDetailsConnectorImpl @Inject()(
         Left(handleErrorResponse("GET", url, response))
     }
   }
+
+  private def anonymizeJson(json: JsValue): JsValue = {
+    json match {
+      case obj: JsObject =>
+        JsObject(obj.fields.map {
+          case ("pstr", value: JsValue) => "pstr" -> value
+          case (key, value: JsObject) => key -> anonymizeJson(value)
+          case (key, value: JsArray) => key -> anonymizeJson(value)
+          case (key, _) => key -> JsString("...")
+        })
+      case arr: JsArray =>
+        JsArray(arr.value.map(anonymizeJson))
+      case _ => JsString("...")
+    }
+  }
+
+
 
   private def handlePspSchemeDetailsResponse(response: HttpResponse, url: String): Either[HttpException, JsObject] = {
     logger.debug(s"Get-Psp-Scheme-details-response - ${response.json}")
