@@ -153,7 +153,7 @@ class SchemeDetailsTransformer @Inject()(
       }
   }
 
-  private val schemeDetailsReads: Reads[JsObject] =
+  private def schemeDetailsReads(pstr:Option[String]): Reads[JsObject] =
     getPsaIds and
       getPspDetails and
       ((__ \ Symbol("srn")).json.copyFrom(
@@ -161,7 +161,9 @@ class SchemeDetailsTransformer @Inject()(
       ) orElse doNothing) and
       ((__ \ Symbol("pstr")).json.copyFrom(
         (__ \ Symbol("psaPspSchemeDetails") \ Symbol("schemeDetails") \ Symbol("pstr")).json.pick
-      ) orElse doNothing) and
+      ) orElse Reads.pure(
+        pstr.map(value => Json.obj("pstr" -> JsString(value))).getOrElse(Json.obj())
+      )) and
       (__ \ Symbol("schemeStatus")).json.copyFrom(
         (__ \ Symbol("psaPspSchemeDetails") \ Symbol("schemeDetails") \ Symbol("schemeStatus")).json.pick
       ) and
@@ -225,13 +227,13 @@ class SchemeDetailsTransformer @Inject()(
         (__ \ Symbol("psaPspSchemeDetails") \ Symbol("racdacSchemeDetails") \ Symbol("registrationStartDate")).json.pick
       ) orElse doNothing) reduce
 
-  val userAnswersSchemeDetailsReads: Reads[JsObject] =
+  def userAnswersSchemeDetailsReads(pstr:Option[String]): Reads[JsObject] =
     getPsaIds and
       getPspDetails and
       (__ \ Symbol("psaPspSchemeDetails") \ Symbol("racdacScheme")).readNullable[String].flatMap {
         case Some(_) =>
           racdacSchemeDetailsReads
         case _ =>
-          schemeDetailsReads
+          schemeDetailsReads(pstr)
       } reduce
 }
