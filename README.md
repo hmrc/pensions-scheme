@@ -35,9 +35,6 @@ This service is written in Scala and Play, so needs at least a [JRE] to run.
 
 **Port:** 8203
 
-**Link:** *http://localhost:XXXX/INSERT-BASE-URL-HERE*
-
-
 In order to run the service, ensure Service Manager is installed (see [MDTP guidance](https://docs.tax.service.gov.uk/mdtp-handbook/documentation/developer-set-up/set-up-service-manager.html) if needed) and launch the relevant configuration by typing into the terminal:
 `sm2 --start PODS_ALL`
 
