@@ -29,8 +29,6 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
       "models.enumeration.SchemeJourneyType"
     )
   )
-  .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
     Test / fork := true,
     Test / javaOptions += "-Dconfig.file=conf/test.application.conf"

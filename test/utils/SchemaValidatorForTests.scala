@@ -16,33 +16,61 @@
 
 package utils
 
-import com.eclipsesource.schema.drafts.Version4.schemaTypeReads
-import com.eclipsesource.schema.drafts._
-import com.eclipsesource.schema.{JsonSource, SchemaValidator}
-import play.api.libs.json.{JsResult, JsValue}
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.networknt.schema.{JsonSchemaFactory, SpecVersion, ValidationMessage}
+import play.api.libs.json._
+
+import java.io.InputStream
+import scala.annotation.tailrec
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 trait SchemaValidatorForTests {
 
   def validateJson(elementToValidate: JsValue, schemaFileName: String, schemaNodePath: String): JsResult[JsValue] = {
 
-    val rootSchema = JsonSource.schemaFromStream(getClass.getResourceAsStream(s"/schemas/$schemaFileName")).get
+    val relevantNodes: Array[String] = schemaNodePath.split("/").drop(2)
 
-    val schema = JsonSource.schemaFromString(
-      s"""{
-         |  "additionalProperties": { "$$ref": "/schemas/$schemaFileName$schemaNodePath" }
-         |}""".stripMargin).get
+    val schemaUrl: InputStream = getClass.getResourceAsStream(s"/schemas/$schemaFileName")
 
-    val validator = SchemaValidator(Some(Version4))
-      .addSchema(s"/schemas/$schemaFileName", rootSchema)
+    @tailrec
+    def removeIrrelevantNodes(json: JsObject, nodes:Array[String]): JsValue = {
+      val head = nodes.head
+      val cleanedUpJson = JsObject(Seq(head -> (json \ head).get))
+      if(nodes.length > 1) {
+        removeIrrelevantNodes(cleanedUpJson, nodes.tail)
+      } else {
+        cleanedUpJson
+      }
+    }
 
-    validator.validate(schema, elementToValidate)
+
+    val schemaJson = Json.parse(schemaUrl).as[JsObject]
+    val schemaJsonNoIrrelevantNodes = (schemaJson - "properties") +
+      ("properties" -> removeIrrelevantNodes((schemaJson \ "properties").get.as[JsObject], relevantNodes)) -
+      "required" +
+      ("required" -> JsArray(Seq(JsString(relevantNodes(0)))))
+
+
+    val factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4)
+    val schema = factory.getSchema(schemaJsonNoIrrelevantNodes.toString())
+
+    val mapper = new ObjectMapper()
+    val jsonNode = mapper.readTree(elementToValidate.toString())
+
+    val set = schema.validate(jsonNode).asScala.toSet
+    if(set.isEmpty) JsSuccess(JsObject(Seq()))
+    else JsError(set.toString)
   }
 
-  def validateJson(elementToValidate: JsValue, schemaFileName: String): JsResult[JsValue] = {
+  def validateJson(elementToValidate: JsValue, schemaFileName: String): Set[ValidationMessage] = {
 
-    val rootSchema = JsonSource.schemaFromUrl(getClass.getResource(s"/schemas/$schemaFileName")).get
-    val validator = SchemaValidator(Some(Version4))
-    validator.validate(rootSchema, elementToValidate)
+    val schemaUrl: InputStream = getClass.getResourceAsStream(s"/schemas/$schemaFileName")
+    val factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4)
+    val schema = factory.getSchema(schemaUrl)
+    val mapper = new ObjectMapper()
+    val jsonNode = mapper.readTree(elementToValidate.toString())
+
+    schema.validate(jsonNode).asScala.toSet
   }
 
 }

@@ -39,7 +39,7 @@ class SchemeVariationDetailsWritesSpec extends AnyWordSpec with Matchers with Op
 
           val result = validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schemaIF.json")
 
-          result.isSuccess mustBe true
+          result mustBe Set()
         }
       }
 
