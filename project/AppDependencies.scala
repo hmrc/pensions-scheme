@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import play.sbt.PlayImport.{ehcache, ws}
-import sbt._
+import play.sbt.PlayImport.ws
+import sbt.*
 
 object AppDependencies {
   private val playVersion = "9.5.0"
@@ -32,7 +32,7 @@ object AppDependencies {
     "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.18.2"
   )
 
-  def test(scope: String = "test, it"): Seq[ModuleID] = Seq(
+  def test(scope: String = "test"): Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                 %% "bootstrap-test-play-30"       % playVersion         % Test,
     "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-30"      % mongoVersion        % Test,
     "org.scalatest"               %% "scalatest"                    % "3.2.19"            % Test,

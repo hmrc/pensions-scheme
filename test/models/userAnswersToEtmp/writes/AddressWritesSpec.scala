@@ -75,7 +75,6 @@ class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with
         forAll(ukAddressGen) {
           address => {
             val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
-            println(invalidAddress)
             val mappedAddress: JsValue = Json.toJson(invalidAddress)(UkAddress.updateWrites)
             val testJsValue = Json.obj(
               "schemeDetails" -> Json.obj("insuranceCompanyDetails" -> Json.obj("insuranceCompanyAddressDetails" -> mappedAddress))
