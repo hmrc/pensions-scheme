@@ -17,7 +17,7 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.{InternationalAddress, UkAddress}
-import org.scalatest.{Ignore, OptionValues}
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
@@ -26,8 +26,17 @@ import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 import scala.util.Random
 
-@Ignore
+
 class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate = value,
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("schemeDetails","insuranceCompanyDetails"),
+    relevantDefinitions = Some(Array(
+      Array("insuranceCompanyDetailsType", "insuranceCompanyAddressDetails"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"))))
 
   "An updated address" should {
     "parse correctly to a valid if format for variations api - API 1468" when {
@@ -35,11 +44,13 @@ class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with
         forAll(ukAddressGen) {
           address => {
             val mappedAddress: JsValue = Json.toJson(address)(UkAddress.updateWrites)
-            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
+            val testJsValue = {
+              Json.obj(
+                "schemeDetails" -> Json.obj("insuranceCompanyDetails" -> Json.obj("insuranceCompanyAddressDetails" -> mappedAddress))
+              )
+            }
 
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isSuccess mustBe true
+            jsonValidator(testJsValue) mustBe Set()
           }
         }
       }
@@ -49,11 +60,11 @@ class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with
           address => {
 
             val mappedAddress: JsValue = Json.toJson(address)(InternationalAddress.updateWrites)
-            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
+            val testJsValue = Json.obj(
+              "schemeDetails" -> Json.obj("insuranceCompanyDetails" -> Json.obj("insuranceCompanyAddressDetails" -> mappedAddress))
+            )
 
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isSuccess mustBe true
+            jsonValidator(testJsValue) mustBe Set()
           }
         }
       }
@@ -64,13 +75,13 @@ class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with
         forAll(ukAddressGen) {
           address => {
             val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
-
+            println(invalidAddress)
             val mappedAddress: JsValue = Json.toJson(invalidAddress)(UkAddress.updateWrites)
-            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
+            val testJsValue = Json.obj(
+              "schemeDetails" -> Json.obj("insuranceCompanyDetails" -> Json.obj("insuranceCompanyAddressDetails" -> mappedAddress))
+            )
 
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isError mustBe true
+            jsonValidator(testJsValue).nonEmpty mustBe true
           }
         }
       }
@@ -81,11 +92,11 @@ class AddressWritesSpec extends AnyWordSpec with Matchers with OptionValues with
             val invalidAddress = address.copy(addressLine1 = Random.alphanumeric.take(40).mkString)
 
             val mappedAddress: JsValue = Json.toJson(invalidAddress)(InternationalAddress.updateWrites)
-            val testJsValue = Json.obj("insuranceCompanyAddressDetails" -> mappedAddress)
+            val testJsValue = Json.obj(
+              "schemeDetails" -> Json.obj("insuranceCompanyDetails" -> Json.obj("insuranceCompanyAddressDetails" -> mappedAddress))
+            )
 
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/schemeDetails/insuranceCompanyDetails/insuranceCompanyAddressDetails").isError mustBe true
+            jsonValidator(testJsValue).nonEmpty mustBe true
           }
         }
       }

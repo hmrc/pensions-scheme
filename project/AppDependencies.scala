@@ -27,10 +27,9 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-30"         % mongoVersion,
     "com.typesafe.play"             %% "play-json"                  % "2.10.5",
     "uk.gov.hmrc"                   %% "bootstrap-backend-play-30"  % playVersion,
-    "com.networknt"                 %  "json-schema-validator"      % "1.5.1",
+    "com.networknt"                 %  "json-schema-validator"      % "1.5.5",
     "uk.gov.hmrc"                   %% "domain-play-30"             % "9.0.0",
-    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.17.2",
-    ehcache
+    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.18.2"
   )
 
   def test(scope: String = "test, it"): Seq[ModuleID] = Seq(

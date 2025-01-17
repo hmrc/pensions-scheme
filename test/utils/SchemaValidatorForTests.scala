@@ -21,45 +21,83 @@ import com.networknt.schema.{JsonSchemaFactory, SpecVersion, ValidationMessage}
 import play.api.libs.json._
 
 import java.io.InputStream
-import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 
+// scalastyle:off
 trait SchemaValidatorForTests {
 
-  def validateJson(elementToValidate: JsValue, schemaFileName: String, schemaNodePath: String): JsResult[JsValue] = {
-
-    val relevantNodes: Array[String] = schemaNodePath.split("/").drop(2)
+  def validateJson(elementToValidate: JsValue,
+                   schemaFileName: String,
+                   relevantProperties: Array[String],
+                   relevantDefinitions: Option[Array[Array[String]]]): Set[ValidationMessage] = {
 
     val schemaUrl: InputStream = getClass.getResourceAsStream(s"/schemas/$schemaFileName")
 
-    @tailrec
     def removeIrrelevantNodes(json: JsObject, nodes:Array[String]): JsValue = {
       val head = nodes.head
       val cleanedUpJson = JsObject(Seq(head -> (json \ head).get))
+
+      val isArray = (json \ head \ "type").asOpt[String] match {
+        case Some("array") => true
+        case _ => false
+      }
+
       if(nodes.length > 1) {
-        removeIrrelevantNodes(cleanedUpJson, nodes.tail)
+        def getObj(headJson: JsObject) = {
+          val tailNode = nodes.tail.head
+          val cleanedUpHeadJson = (headJson - "properties") +
+            ("properties" -> removeIrrelevantNodes((headJson \ "properties").get.as[JsObject], nodes.tail)) -
+            "required" +
+            ("required" -> JsArray(Seq(JsString(tailNode))))
+          cleanedUpJson - head + (head -> cleanedUpHeadJson)
+        }
+        if(isArray) {
+          val headNode = (cleanedUpJson \ head).as[JsObject]
+          val itemsNode = (headNode \ "items").as[JsObject]
+          val propertiesNode = (itemsNode \ "properties").as[JsObject]
+          val cleanedUpPropertiesNode = removeIrrelevantNodes(propertiesNode, nodes.tail)
+          val cleanedUpItemsNode = itemsNode - "properties" + ("properties" -> cleanedUpPropertiesNode) -
+            "required" + ("required" -> JsArray(Seq(JsString(nodes.tail.head))))
+          val cleandUpArrayNode = headNode - "items" + ("items" -> cleanedUpItemsNode)
+          cleanedUpJson - head + (head -> cleandUpArrayNode)
+
+        } else {
+          getObj((cleanedUpJson \ head).as[JsObject])
+        }
       } else {
         cleanedUpJson
       }
     }
 
+    def removeIrrelevantDefinitions(json: JsObject, nodes:Array[Array[String]]): JsValue = {
+      nodes.foldLeft(Json.obj())({ case (acc, nodes) =>
+        acc.deepMerge(removeIrrelevantNodes(json, nodes).as[JsObject])
+      })
+    }
+
 
     val schemaJson = Json.parse(schemaUrl).as[JsObject]
     val schemaJsonNoIrrelevantNodes = (schemaJson - "properties") +
-      ("properties" -> removeIrrelevantNodes((schemaJson \ "properties").get.as[JsObject], relevantNodes)) -
+      ("properties" -> removeIrrelevantNodes((schemaJson \ "properties").get.as[JsObject], relevantProperties)) -
       "required" +
-      ("required" -> JsArray(Seq(JsString(relevantNodes(0)))))
+      ("required" -> JsArray(Seq(JsString(relevantProperties.head))))
 
+    val schemaJsonWithNoIrrelevantNodesAndDefinitions = {
+      relevantDefinitions.map { relevantDefinitions =>
+        schemaJsonNoIrrelevantNodes - "definitions" +
+          ("definitions" -> removeIrrelevantDefinitions((schemaJson \ "definitions").get.as[JsObject], relevantDefinitions))
+      }.getOrElse(schemaJsonNoIrrelevantNodes)
+    }
+
+    //println(Json.prettyPrint(schemaJsonWithNoIrrelevantNodesAndDefinitions))
 
     val factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4)
-    val schema = factory.getSchema(schemaJsonNoIrrelevantNodes.toString())
+    val schema = factory.getSchema(schemaJsonWithNoIrrelevantNodesAndDefinitions.toString())
 
     val mapper = new ObjectMapper()
     val jsonNode = mapper.readTree(elementToValidate.toString())
 
-    val set = schema.validate(jsonNode).asScala.toSet
-    if(set.isEmpty) JsSuccess(JsObject(Seq()))
-    else JsError(set.toString)
+    schema.validate(jsonNode).asScala.toSet
   }
 
   def validateJson(elementToValidate: JsValue, schemaFileName: String): Set[ValidationMessage] = {
