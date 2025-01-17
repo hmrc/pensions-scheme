@@ -17,16 +17,57 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.Individual
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 
-@Ignore
+
 class IndividualWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" ->
+      Json.obj("establisherDetails" ->
+        value
+      )
+    ),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "establisherDetails"),
+      Array("establisherDetailsType", "individualDetails"),
+      Array("establisherIndividualDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
+
+  private def trusteeJsonValidator(value: JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" ->
+      Json.obj("trusteeDetailsType" ->
+        value
+      )
+    ),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "trusteeDetailsType"),
+      Array("trusteeDetailsType", "individualDetails"),
+      Array("individualTrusteeDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
 
   "An Individual object" should {
 
@@ -40,9 +81,11 @@ class IndividualWritesSpec extends AnyWordSpec with Matchers with OptionValues w
 
             val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
-            validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails").isSuccess mustBe true
+            jsonValidator(valid) mustBe Set()
+
+//            validateJson(elementToValidate = valid,
+//              schemaFileName = "api1468_schema.json",
+//              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails").isSuccess mustBe true
           }
         }
       }
@@ -58,9 +101,7 @@ class IndividualWritesSpec extends AnyWordSpec with Matchers with OptionValues w
 
             val inValid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
-            validateJson(elementToValidate = inValid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/individualDetails").isError mustBe true
+            jsonValidator(inValid).isEmpty mustBe false
           }
         }
       }
@@ -73,10 +114,7 @@ class IndividualWritesSpec extends AnyWordSpec with Matchers with OptionValues w
             val mappedIndividual: JsValue = Json.toJson(individual)(Individual.individualUpdateWrites)
 
             val valid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
-
-            validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails").isSuccess mustBe true
+            trusteeJsonValidator(valid) mustBe Set()
           }
         }
       }
@@ -92,9 +130,7 @@ class IndividualWritesSpec extends AnyWordSpec with Matchers with OptionValues w
 
             val inValid = Json.obj("individualDetails" -> Json.arr(mappedIndividual))
 
-            validateJson(elementToValidate = inValid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails").isError mustBe true
+            trusteeJsonValidator(inValid).isEmpty mustBe false
           }
         }
       }

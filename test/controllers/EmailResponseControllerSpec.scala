@@ -38,7 +38,6 @@ class EmailResponseControllerSpec extends SpecBase with MockitoSugar {
   protected override def bindings: Seq[GuiceableModule] =
     Seq(
       bind[AuditService].to(fakeAuditService),
-      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
       bind[LockRepository].toInstance(mock[LockRepository]),
       bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
       bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),

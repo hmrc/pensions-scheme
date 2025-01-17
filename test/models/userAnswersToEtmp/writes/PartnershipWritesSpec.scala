@@ -18,14 +18,53 @@ package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.establisher.Partnership
 import models.userAnswersToEtmp.trustee.PartnershipTrustee
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
-@Ignore
+
 class PartnershipWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" ->
+      Json.obj("establisherDetails" ->
+        value
+      )
+    ),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "establisherDetails"),
+      Array("establisherDetailsType", "partnershipDetails"),
+      Array("establisherPartnershipDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
+
+  private def trusteeJsonValidator(value:JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" ->
+      Json.obj("trusteeDetailsType" -> value
+      )
+    ),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "trusteeDetailsType"),
+      Array("trusteeDetailsType","partnershipTrusteeDetails"),
+      Array("partnershipTrusteeDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
 
   "An establisher partnership object" should {
 
@@ -36,10 +75,7 @@ class PartnershipWritesSpec extends AnyWordSpec with Matchers with OptionValues 
 
             val mappedPartner: JsValue = Json.toJson(partnership)(Partnership.updateWrites)
             val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
-
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isSuccess mustBe true
+            jsonValidator(testJsValue) mustBe Set()
           }
         }
       }
@@ -54,9 +90,7 @@ class PartnershipWritesSpec extends AnyWordSpec with Matchers with OptionValues 
             val mappedPartner: JsValue = Json.toJson(invalidPartnership)(Partnership.updateWrites)
             val testJsValue = Json.obj("partnershipDetails" -> Json.arr(mappedPartner))
 
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/partnershipDetails").isError mustBe true
+            jsonValidator(testJsValue).isEmpty mustBe false
           }
         }
       }
@@ -72,9 +106,7 @@ class PartnershipWritesSpec extends AnyWordSpec with Matchers with OptionValues 
             val mappedPartner: JsValue = Json.toJson(partnership)(PartnershipTrustee.updateWrites)
             val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
 
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails").isSuccess mustBe true
+            trusteeJsonValidator(testJsValue) mustBe Set()
           }
         }
       }
@@ -89,9 +121,7 @@ class PartnershipWritesSpec extends AnyWordSpec with Matchers with OptionValues 
             val mappedPartner: JsValue = Json.toJson(invalidPartnership)(PartnershipTrustee.updateWrites)
             val testJsValue = Json.obj("partnershipTrusteeDetails" -> Json.arr(mappedPartner))
 
-            validateJson(elementToValidate = testJsValue,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/partnershipTrusteeDetails").isError mustBe true
+            trusteeJsonValidator(testJsValue).isEmpty mustBe false
           }
         }
       }

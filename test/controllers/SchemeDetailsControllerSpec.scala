@@ -55,7 +55,6 @@ class SchemeDetailsControllerSpec
     Seq(
       bind[SchemeDetailsConnector].toInstance(mockSchemeConnector),
       bind[SchemeService].toInstance(mockSchemeService),
-      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
       bind[LockRepository].toInstance(mock[LockRepository]),
       bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
       bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),

@@ -54,7 +54,6 @@ class SchemeCacheControllerSpec
   private def modules: Seq[GuiceableModule] =
     Seq(
       bind[AuthConnector].toInstance(authConnector),
-      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
       bind[LockRepository].toInstance(mock[LockRepository]),
       bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
       bind[SchemeCacheRepository].toInstance(repo),

@@ -17,14 +17,21 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.PensionSchemeUpdateDeclaration
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-@Ignore
+
 class PensionSchemeDeclarationWriteSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate = value,
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("pensionSchemeDeclaration"),
+    relevantDefinitions = Some(Array(
+      Array("pensionSchemeDeclarationType")
+    )))
 
   "PensionSchemeDeclaration" must{
 
@@ -32,24 +39,14 @@ class PensionSchemeDeclarationWriteSpec extends AnyWordSpec with Matchers with O
 
       val declaration = PensionSchemeUpdateDeclaration(true)
 
-      val valid = Json.toJson("pensionSchemeDeclaration" -> Json.toJson(declaration)(PensionSchemeUpdateDeclaration.writes))
-
-      val result = validateJson(elementToValidate = valid,
-        schemaFileName = "api1468_schema.json",
-        schemaNodePath = "#/properties/pensionSchemeDeclaration")
-
-      result.isSuccess mustBe true
+      val valid = Json.obj("pensionSchemeDeclaration" -> PensionSchemeUpdateDeclaration.writes.writes(declaration))
+      jsonValidator(valid) mustBe Set()
     }
 
     "invalid scheme declaration with incorrect format" in {
 
       val valid = Json.obj("pensionSchemeDeclaration" -> Json.obj("declaration1" -> "INVALID"))
-
-      val result = validateJson(elementToValidate = valid,
-        schemaFileName = "api1468_schema.json",
-        schemaNodePath = "#/properties/pensionSchemeDeclaration")
-
-      result.isError mustBe true
+      jsonValidator(valid).isEmpty mustBe false
     }
   }
 

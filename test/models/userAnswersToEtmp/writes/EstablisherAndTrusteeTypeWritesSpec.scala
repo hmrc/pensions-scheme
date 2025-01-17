@@ -26,6 +26,27 @@ import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
 class EstablisherAndTrusteeTypeWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
 
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate = value,
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType"),
+      Array("establisherPartnershipDetailsType"),
+      Array("establisherIndividualDetailsType"),
+      Array("establisherDetailsType"),
+      Array("establisherCompanyOrOrgDetailsType"),
+      Array("individualTrusteeDetailsType"),
+      Array("companyTrusteeDetailsType"),
+      Array("trusteeDetailsType"),
+      Array("partnershipTrusteeDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
+
   "An PensionsScheme object" should {
 
     "map correctly to an update payload for establisherAndTrustDetailsType API 1468" when {
@@ -37,10 +58,7 @@ class EstablisherAndTrusteeTypeWritesSpec extends AnyWordSpec with Matchers with
           val mappedEstablisherAndTrustDetails: JsValue = Json.toJson(element)(PensionsScheme.updateWriteEstablisherAndTrustDetails)
 
           val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
-
-          validateJson(elementToValidate = valid,
-            schemaFileName = "api1468_schema.json",
-            schemaNodePath = "#/properties/establisherAndTrustDetailsType").isSuccess mustBe true
+          jsonValidator(valid) mustBe Set()
         }
       }
 
@@ -55,10 +73,7 @@ class EstablisherAndTrusteeTypeWritesSpec extends AnyWordSpec with Matchers with
         )(PensionsScheme.updateWriteEstablisherAndTrustDetails)
 
         val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
-
-        validateJson(elementToValidate = valid,
-          schemaFileName = "api1468_schema.json",
-          schemaNodePath = "#/properties/establisherAndTrustDetailsType").isError mustBe true
+        jsonValidator(valid).isEmpty mustBe false
       }
     }
   }

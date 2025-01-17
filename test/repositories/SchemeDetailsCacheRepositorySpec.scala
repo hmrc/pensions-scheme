@@ -31,7 +31,6 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
 import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
-import scalaz.Leibniz.subst
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.time.Instant

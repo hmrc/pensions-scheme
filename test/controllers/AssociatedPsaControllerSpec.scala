@@ -50,7 +50,6 @@ class AssociatedPsaControllerSpec
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
       bind[SchemeDetailsConnector].toInstance(mockSchemeConnector),
-      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
       bind[LockRepository].toInstance(mock[LockRepository]),
       bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
       bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),

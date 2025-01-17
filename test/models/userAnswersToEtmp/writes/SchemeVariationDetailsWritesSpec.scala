@@ -17,15 +17,36 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.PensionsScheme
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
-import play.api.libs.json.{Json, JsValue}
-import utils.{SchemaValidatorForTests, PensionSchemeGenerators}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import play.api.libs.json.{JsValue, Json}
+import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-@Ignore
+
 class SchemeVariationDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate = value,
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType"),
+      Array("establisherPartnershipDetailsType"),
+      Array("establisherIndividualDetailsType"),
+      Array("establisherDetailsType"),
+      Array("establisherCompanyOrOrgDetailsType"),
+      Array("individualTrusteeDetailsType"),
+      Array("companyTrusteeDetailsType"),
+      Array("trusteeDetailsType"),
+      Array("partnershipTrusteeDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
 
   "An PensionsScheme object" should {
 
@@ -39,7 +60,7 @@ class SchemeVariationDetailsWritesSpec extends AnyWordSpec with Matchers with Op
 
           val result = validateJson(elementToValidate = mappedSchemeDetails, schemaFileName = "api1468_schemaIF.json")
 
-          result.isSuccess mustBe true
+          result mustBe Set()
         }
       }
 
@@ -53,9 +74,7 @@ class SchemeVariationDetailsWritesSpec extends AnyWordSpec with Matchers with Op
 
             val valid = Json.obj("establisherAndTrustDetailsType" -> mappedEstablisherAndTrustDetails)
 
-            validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType").isError mustBe true
+            jsonValidator(valid).isEmpty mustBe false
         }
       }
     }
