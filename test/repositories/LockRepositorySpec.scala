@@ -24,19 +24,16 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import uk.gov.hmrc.mongo.MongoComponent
 
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
-/*
-* 4 tests are ignored, because index with unique attribute is not working with embedded mongo
-* https://github.com/flapdoodle-oss/de.flapdoodle.embed.mongo/issues/320
-* */
-
-class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers with BeforeAndAfterAll with Samples
+class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers with BeforeAndAfterEach with Samples
   with MockitoSugar with ScalaFutures { // scalastyle:off magic.number
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(30, Seconds), Span(1, Millis))
@@ -45,18 +42,22 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
   var lockRepository: LockRepository = _
 
-  override def beforeAll(): Unit = {
+  override def beforeEach(): Unit = {
     when(mockConfiguration.underlying).thenReturn(mockConfig)
     when(mockConfig.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name")).thenReturn("scheme_variation_lock")
     lockRepository = buildRepository(mongoHost, mongoPort)
-    super.beforeAll()
+    super.beforeEach()
+  }
+
+  override def afterEach(): Unit = {
+    Await.result(lockRepository.collection.drop().toFuture(), 5.seconds)
+    super.afterEach()
   }
 
   "releaseLock" must {
     "Delete One" in {
 
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         _ <- lockRepository.collection.insertOne(variance2).toFuture()
         _ <- lockRepository.releaseLock(variance2)
@@ -71,7 +72,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
   "Lock" must {
     "return locked if its new and unique combination for psaId and srn" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         res <- lockRepository.lock(variance1)
       } yield res
 
@@ -82,7 +82,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
     "return locked if existing lock" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         documentsInDB <- lockRepository.lock(variance1)
       } yield documentsInDB
@@ -92,21 +91,19 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       }
     }
 
-    "return lockNotAvailableForPsa if its not a unique combination for psaId and srn, existing psaId has locked another scheme" ignore {
-      val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
-        _ <- lockRepository.collection.insertOne(variance1).toFuture()
-        documentsInDB <- lockRepository.lock(SchemeVariance(variance1.psaId, "srn2"))
-      } yield documentsInDB
+    "return lockNotAvailableForPsa if its not a unique combination for psaId and srn, existing psaId has locked another scheme" in {
+      val documentsInDB = lockRepository.collection.insertOne(variance1).toFuture().flatMap { _ =>
+          lockRepository.lock(SchemeVariance(variance1.psaId, "srn2"))
+        }
+
 
       whenReady(documentsInDB) { documentsInDB =>
         documentsInDB mustBe PsaLock
       }
     }
 
-    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" ignore {
+    "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         documentsInDB <- lockRepository.lock(SchemeVariance("psa2", variance1.srn))
       } yield documentsInDB
@@ -116,9 +113,8 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       }
     }
 
-    "return both locked if its not unique combination for existing psaId2 and srn1" ignore {
+    "return both locked if its not unique combination for existing psaId2 and srn1" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         _ <- lockRepository.collection.insertOne(variance2).toFuture()
         documentsInDB <- lockRepository.lock(SchemeVariance(variance2.psaId, variance1.srn))
@@ -129,9 +125,8 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
       }
     }
 
-    "return both locked if its not unique combination for existing psaId1 and srn2" ignore {
+    "return both locked if its not unique combination for existing psaId1 and srn2" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         _ <- lockRepository.collection.insertOne(variance2).toFuture()
         documentsInDB <- lockRepository.lock(SchemeVariance(variance1.psaId, variance2.srn))
@@ -146,7 +141,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
   "isLockByPsaIdOrSchemeId" should {
     "return locked if its new and unique combination for psaId and srn" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         res <- lockRepository.isLockByPsaIdOrSchemeId("psa1", "srn1")
       } yield res
 
@@ -157,7 +151,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
     "return locked if existing lock" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance1.psaId, variance1.srn)
       } yield documentsInDB
@@ -171,7 +164,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
   "return lockNotAvailableForPsa if its not unique combination for psaId and srn, existing psaId" in {
     val documentsInDB = for {
-      _ <- lockRepository.collection.drop().toFuture()
       _ <- lockRepository.collection.insertOne(variance1).toFuture()
       documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance1.psaId, "srn2")
     } yield documentsInDB
@@ -182,7 +174,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
   }
   "return lockNotAvailableForSRN if its not unique combination for psaId and srn, existing srn" in {
     val documentsInDB = for {
-      _ <- lockRepository.collection.drop().toFuture()
       _ <- lockRepository.collection.insertOne(variance1).toFuture()
       documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId("psa2", variance1.srn)
     } yield documentsInDB
@@ -194,7 +185,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
   "return both locked if its not unique combination for existing psaId2 and srn1" in {
     val documentsInDB = for {
-      _ <- lockRepository.collection.drop().toFuture()
       _ <- lockRepository.collection.insertOne(variance1).toFuture()
       _ <- lockRepository.collection.insertOne(variance2).toFuture()
       documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance2.psaId, variance1.srn)
@@ -207,7 +197,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
   "return both locked if its not unique combination for existing psaId1 and srn2" in {
     val documentsInDB = for {
-      _ <- lockRepository.collection.drop().toFuture()
       _ <- lockRepository.collection.insertOne(variance1).toFuture()
       _ <- lockRepository.collection.insertOne(variance2).toFuture()
       documentsInDB <- lockRepository.isLockByPsaIdOrSchemeId(variance1.psaId, variance2.srn)
@@ -222,7 +211,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
   "getExistingLockByPSA" must {
     "Retrieve None" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         res <- lockRepository.getExistingLockByPSA("invalid-psa-id")
       } yield res
 
@@ -233,7 +221,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
     "Retrieve One" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance1).toFuture()
         documentsInDB <- lockRepository.getExistingLockByPSA(variance1.psaId)
       } yield documentsInDB
@@ -247,7 +234,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
   "getExistingLockBySRN" must {
     "Retrieve None" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         res <- lockRepository.getExistingLockBySRN("invalid-srn-id")
       } yield res
 
@@ -258,7 +244,6 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
     "Retrieve One" in {
       val documentsInDB = for {
-        _ <- lockRepository.collection.drop().toFuture()
         _ <- lockRepository.collection.insertOne(variance2).toFuture()
         documentsInDB <- lockRepository.getExistingLockBySRN(variance2.srn)
       } yield documentsInDB

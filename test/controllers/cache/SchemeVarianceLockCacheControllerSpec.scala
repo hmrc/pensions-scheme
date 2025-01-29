@@ -46,7 +46,6 @@ class SchemeVarianceLockCacheControllerSpec extends AnyWordSpec with Matchers wi
   private def modules: Seq[GuiceableModule] =
     Seq(
       bind[AuthConnector].toInstance(authConnector),
-      bind[AdminDataRepository].toInstance(mock[AdminDataRepository]),
       bind[LockRepository].toInstance(lockRepo),
       bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository]),
       bind[SchemeCacheRepository].toInstance(mock[SchemeCacheRepository]),

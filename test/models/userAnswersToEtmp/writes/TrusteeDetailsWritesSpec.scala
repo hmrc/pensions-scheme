@@ -17,15 +17,33 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.trustee.TrusteeDetails
-import org.scalatest.{Ignore, OptionValues}
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
 
-@Ignore
+
 class TrusteeDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" -> value),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "trusteeDetailsType"),
+      Array("trusteeDetailsType"),
+      Array("individualTrusteeDetailsType"),
+      Array("companyTrusteeDetailsType"),
+      Array("partnershipTrusteeDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
 
   "An trustee details object" should {
 
@@ -39,9 +57,7 @@ class TrusteeDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValu
 
             val valid = Json.obj("trusteeDetailsType" -> mappedTrustee)
 
-            validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType").isSuccess mustBe true
+            jsonValidator(valid) mustBe Set()
           }
         }
       }
@@ -63,9 +79,7 @@ class TrusteeDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValu
 
             val inValid = Json.obj("trusteeDetailsType" -> mappedTrustee)
 
-            validateJson(elementToValidate = inValid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType").isError mustBe true
+            jsonValidator(inValid).isEmpty mustBe false
           }
         }
       }
