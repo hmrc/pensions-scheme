@@ -124,21 +124,18 @@ class AssociatedPsaControllerSpec
     )(any(), any(), any())
   }
 
-  "throw BadRequestException" when {
+  "return BadRequest" when {
     "the Scheme Reference Number is not present in the header" in {
       val result = associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/").withHeaders(
         ("psaId", userIdNumber)
       ))
-
-      ScalaFutures.whenReady(result.failed) { e =>
-        e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters PSA Id or SRN"
-        verify(mockSchemeConnector, never).getSchemeDetails(
-          userIdNumber = ArgumentMatchers.any(),
-          schemeIdType = ArgumentMatchers.any(),
-          schemeIdNumber = ArgumentMatchers.any()
-        )(any(), any(), any())
-      }
+      status(result) mustBe BAD_REQUEST
+      contentAsString(result) must include("schemeReferenceNumber")
+      verify(mockSchemeConnector, never).getSchemeDetails(
+        userIdNumber = ArgumentMatchers.any(),
+        schemeIdType = ArgumentMatchers.any(),
+        schemeIdNumber = ArgumentMatchers.any()
+      )(any(), any(), any())
     }
 
 
@@ -147,7 +144,9 @@ class AssociatedPsaControllerSpec
         associatedPsaController.isPsaAssociated()(FakeRequest("GET", "/")
           .withHeaders(("schemeReferenceNumber", schemeIdNumber)))
 
-      the[Exception] thrownBy result must have message "Unable to retrieve either PSA or PSP from request"
+      status(result) mustBe BAD_REQUEST
+      contentAsString(result) must include("pspId")
+      contentAsString(result) must include("psaId")
 
       verify(mockSchemeConnector, never).getSchemeDetails(
         userIdNumber = ArgumentMatchers.any(),

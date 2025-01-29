@@ -19,7 +19,7 @@ package service
 import audit.testdoubles.StubSuccessfulAuditService
 import audit.{RACDACDeclarationAuditEvent, SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
 import base.SpecBase
-import connector.{BarsConnector, SchemeConnector}
+import connector.{BarsConnector, SchemeConnector, SchemeDetailsConnector}
 import models._
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.establisher.EstablisherDetails
@@ -35,16 +35,18 @@ import play.api.http.Status
 import play.api.libs.json._
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
+import repositories.SchemeDetailsWithIdCacheRepository
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 
+import scala.concurrent.ExecutionContext.global
 import scala.concurrent.Future
 
-class SchemeServiceImplSpec
+class SchemeServiceSpec
   extends AsyncFlatSpec
     with Matchers
     with EitherValues {
 
-  import SchemeServiceImplSpec._
+  import SchemeServiceSpec._
 
   "listOfSchemes" should "return the list of schemes from the connector" in {
     when(schemeConnector.listOfSchemes(any(), any())(any(), any(), any())).thenReturn(Future.successful(Right(listOfSchemesJson)))
@@ -249,35 +251,39 @@ class SchemeServiceImplSpec
   }
 }
 
-object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
+object SchemeServiceSpec extends SpecBase with MockitoSugar {
 
   private val schemeConnector: SchemeConnector = mock[SchemeConnector]
   private val barsConnector: BarsConnector = mock[BarsConnector]
   private val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
+  private val mockSchemeDetailsConnector = mock[SchemeDetailsConnector]
+  private val mockSchemeDetailsWithIdCache = mock[SchemeDetailsWithIdCacheRepository]
 
-  private val schemeService: SchemeServiceImpl = new SchemeServiceImpl(
+  private val schemeService: SchemeService = new SchemeService(
     schemeConnector,
     barsConnector,
     auditService,
-    new SchemeAuditService
-  )
+    new SchemeAuditService,
+    mockSchemeDetailsConnector,
+    mockSchemeDetailsWithIdCache
+  )(global)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request: FakeRequest[AnyContentAsEmpty.type] =
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val request: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", "")
 
-  val psaId: String = "test-psa-id"
-  val listOfSchemes: ListOfSchemes =
+  private val psaId: String = "test-psa-id"
+  private val listOfSchemes: ListOfSchemes =
     ListOfSchemes(
       processingDate = "1969-07-20",
       totalSchemesRegistered = "0",
       schemeDetails = None
     )
 
-  val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
-  val pstr: String = "test-pstr"
+  private val listOfSchemesJson: JsValue = Json.toJson(listOfSchemes)
+  private val pstr: String = "test-pstr"
 
-  def bankDetailsJson(accountNumber: String): JsValue =
+  private def bankDetailsJson(accountNumber: String): JsValue =
     Json.obj(
       "uKBankDetails" -> Json.obj(
         "bankName" -> "my bank name",
@@ -292,7 +298,7 @@ object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
       )
     )
 
-  val racDacRegisterData = Json.obj(
+  private val racDacRegisterData = Json.obj(
     "racdacScheme" -> true,
     "racdacSchemeDetails" -> Json.obj(
       "racdacName" -> "test-scheme-name",
@@ -305,7 +311,7 @@ object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
     )
   )
 
-  val pensionsScheme: PensionsScheme = PensionsScheme(
+  private val pensionsScheme: PensionsScheme = PensionsScheme(
     CustomerAndSchemeDetails(
       schemeName = "test-pensions-scheme",
       isSchemeMasterTrust = false,
@@ -340,13 +346,13 @@ object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
     )
   )
 
-  def bankAccount(accountNumber: String): BankAccount =
+  private def bankAccount(accountNumber: String): BankAccount =
     BankAccount("001100", accountNumber)
 
-  val invalidAccountNumber: String = "111"
-  val notInvalidAccountNumber: String = "112"
+  private val invalidAccountNumber: String = "111"
+  private val notInvalidAccountNumber: String = "112"
 
-  val pensionsSchemeJson: JsValue = Json.obj(
+  private val pensionsSchemeJson: JsValue = Json.obj(
     "schemeName" -> "test-scheme-name",
     "isSchemeMasterTrust" -> false,
     "schemeType" -> Json.obj(
@@ -457,13 +463,13 @@ object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
     )
   )
 
-  val schemeRegistrationResponse: SchemeRegistrationResponse = SchemeRegistrationResponse(
+  private val schemeRegistrationResponse: SchemeRegistrationResponse = SchemeRegistrationResponse(
     "test-processing-date",
     "test-scheme-reference-number")
-  val schemeRegistrationResponseJson: JsValue =
+  private val schemeRegistrationResponseJson: JsValue =
     Json.toJson(schemeRegistrationResponse)
 
-  val schemeSubscription: SchemeSubscription = SchemeSubscription(
+  private val schemeSubscription: SchemeSubscription = SchemeSubscription(
     psaIdentifier = psaId,
     schemeType = Some(AuditSchemeType.singleTrust),
     hasIndividualEstablisher = false,
@@ -477,7 +483,7 @@ object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
     response = None
   )
 
-  val expectedJsonForAudit: JsValue = Json.parse(
+  private val expectedJsonForAudit: JsValue = Json.parse(
     """{
    "customerAndSchemeDetails":{
       "schemeName":"test-scheme-name",
@@ -547,7 +553,7 @@ object SchemeServiceImplSpec extends SpecBase with MockitoSugar {
    }
   }""")
 
-  val schemeUpdateRequestJson: JsValue = Json.parse(
+  private val schemeUpdateRequestJson: JsValue = Json.parse(
     """
       |{
       |   "customerAndSchemeDetails":{

@@ -18,7 +18,7 @@ import play.sbt.PlayImport.ws
 import sbt.*
 
 object AppDependencies {
-  private val playVersion = "9.5.0"
+  private val playVersion = "9.7.0"
   private val mongoVersion = "2.2.0"
   val appName = "pensions-scheme"
 
