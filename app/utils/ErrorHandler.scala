@@ -22,7 +22,6 @@ import play.api.http.HttpEntity
 import play.api.http.Status._
 import play.api.libs.json.{JsResultException, JsValue}
 import play.api.mvc.{ResponseHeader, Result}
-import uk.gov.hmrc.http.UpstreamErrorResponse.{Upstream4xxResponse, Upstream5xxResponse}
 import uk.gov.hmrc.http._
 
 import scala.concurrent.Future

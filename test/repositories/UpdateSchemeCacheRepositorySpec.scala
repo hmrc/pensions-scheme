@@ -17,6 +17,7 @@
 package repositories
 
 import com.typesafe.config.Config
+import crypto.DataEncryptor
 import models.Samples
 import org.mockito.Mockito.when
 import org.mongodb.scala.bson.{BsonDocument, BsonString}
@@ -29,12 +30,15 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
+import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.libs.json.Json
-import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
+import repositories.SchemeDataEntry.JsonDataEntry
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.inject.bind
 
 class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with Samples with BeforeAndAfter
   with BeforeAndAfterAll with ScalaFutures { // scalastyle:off magic.number
@@ -44,6 +48,26 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
   private val idField: String = "id"
 
   import UpdateSchemeCacheRepositorySpec._
+
+  private val modules: Seq[GuiceableModule] = Seq(
+    bind[AuthConnector].toInstance(mock[AuthConnector]),
+    bind[UpdateSchemeCacheRepository].toInstance(mock[UpdateSchemeCacheRepository])
+  )
+
+  private val app = new GuiceApplicationBuilder()
+    .configure(
+      conf = "auditing.enabled" -> false,
+      "metrics.enabled" -> false,
+      "metrics.jvm" -> false,
+      "run.mode" -> "Test"
+    ).overrides(modules: _*).build()
+
+  private val cipher = app.injector.instanceOf[DataEncryptor]
+  private def buildRepository(mongoHost: String, mongoPort: Int): UpdateSchemeCacheRepository = {
+    val databaseName = "pensions-scheme"
+    val mongoUri = s"mongodb://$mongoHost:$mongoPort/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
+    new UpdateSchemeCacheRepository(mockAppConfig, MongoComponent(mongoUri), cipher)
+  }
 
   override def beforeAll(): Unit = {
     when(mockAppConfig.underlying).thenReturn(mockConfig)
@@ -93,8 +117,8 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       whenReady(documentsInDB) {
         documentsInDB =>
           documentsInDB.size mustBe 1
-          documentsInDB.head.data mustBe record2._2
-          documentsInDB.head.data must not be record1._2
+          cipher.decrypt("id-1", documentsInDB.head.data) mustBe record2._2
+          cipher.decrypt("id-1", documentsInDB.head.data) must not be record1._2
       }
     }
 
@@ -118,7 +142,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       }
     }
 
-    "insert a new update scheme cache as DataEntry in Mongo collection when encrypted true and collection is empty" in {
+    "insert a new update scheme cache as JsonDataEntry in Mongo collection when encrypted true and collection is empty" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val updateSchemeCacheRepository: UpdateSchemeCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -128,7 +152,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       val documentsInDB = for {
         _ <- updateSchemeCacheRepository.collection.drop().toFuture()
         _ <- updateSchemeCacheRepository.upsert(record._1, record._2)
-        documentsInDB <- updateSchemeCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- updateSchemeCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -137,7 +161,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       }
     }
 
-    "update an existing update scheme cache as DataEntry in Mongo collection when encrypted true" in {
+    "update an existing update scheme cache as JsonDataEntry in Mongo collection when encrypted true" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val updateSchemeCacheRepository: UpdateSchemeCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -149,7 +173,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
         _ <- updateSchemeCacheRepository.collection.drop().toFuture()
         _ <- updateSchemeCacheRepository.upsert(record1._1, record1._2)
         _ <- updateSchemeCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- updateSchemeCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- updateSchemeCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -158,7 +182,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       }
     }
 
-    "insert a new update scheme cache as DataEntry in Mongo collection when encrypted true and id is not same" in {
+    "insert a new update scheme cache as JsonDataEntry in Mongo collection when encrypted true and id is not same" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val updateSchemeCacheRepository: UpdateSchemeCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -169,7 +193,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
         _ <- updateSchemeCacheRepository.collection.drop().toFuture()
         _ <- updateSchemeCacheRepository.upsert(record1._1, record1._2)
         _ <- updateSchemeCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- updateSchemeCacheRepository.collection.find[DataEntry]().toFuture()
+        documentsInDB <- updateSchemeCacheRepository.collection.find[JsonDataEntry]().toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -378,9 +402,4 @@ object UpdateSchemeCacheRepositorySpec extends MockitoSugar {
   private val mockAppConfig = mock[Configuration]
   private val mockConfig = mock[Config]
 
-  private def buildRepository(mongoHost: String, mongoPort: Int): UpdateSchemeCacheRepository = {
-    val databaseName = "pensions-scheme"
-    val mongoUri = s"mongodb://$mongoHost:$mongoPort/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
-    new UpdateSchemeCacheRepository(mockAppConfig, MongoComponent(mongoUri))
-  }
 }

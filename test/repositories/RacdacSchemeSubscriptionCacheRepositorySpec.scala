@@ -17,6 +17,7 @@
 package repositories
 
 import com.typesafe.config.Config
+import crypto.DataEncryptor
 import models.Samples
 import org.mockito.Mockito.when
 import org.mongodb.scala.bson.{BsonDocument, BsonString}
@@ -29,8 +30,11 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
+import play.api.inject.bind
+import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.libs.json.Json
-import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
+import repositories.SchemeDataEntry.JsonDataEntry
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.time.Instant
@@ -44,6 +48,27 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
   private val idField: String = "id"
 
   import RacdacSchemeSubscriptionCacheRepositorySpec._
+
+  private val modules: Seq[GuiceableModule] = Seq(
+    bind[AuthConnector].toInstance(mock[AuthConnector]),
+    bind[RacdacSchemeSubscriptionCacheRepository].toInstance(mock[RacdacSchemeSubscriptionCacheRepository])
+  )
+
+  private val app = new GuiceApplicationBuilder()
+    .configure(
+      conf = "auditing.enabled" -> false,
+      "metrics.enabled" -> false,
+      "metrics.jvm" -> false,
+      "run.mode" -> "Test"
+    ).overrides(modules: _*).build()
+
+  private val cipher = app.injector.instanceOf[DataEncryptor]
+
+  private def buildRepository(mongoHost: String, mongoPort: Int): RacdacSchemeSubscriptionCacheRepository = {
+    val databaseName = "pensions-scheme"
+    val mongoUri = s"mongodb://$mongoHost:$mongoPort/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
+    new RacdacSchemeSubscriptionCacheRepository(mockAppConfig, MongoComponent(mongoUri), cipher)
+  }
 
   override def beforeAll(): Unit = {
     when(mockAppConfig.underlying).thenReturn(mockConfig)
@@ -92,8 +117,8 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       whenReady(documentsInDB) {
         documentsInDB =>
           documentsInDB.size mustBe 1
-          documentsInDB.head.data mustBe record2._2
-          documentsInDB.head.data must not be record1._2
+          cipher.decrypt("id-1", documentsInDB.head.data) mustBe record2._2
+          cipher.decrypt("id-1", documentsInDB.head.data) must not be record1._2
       }
     }
 
@@ -117,7 +142,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       }
     }
 
-    "insert a new racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true and collection is empty" in {
+    "insert a new racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted true and collection is empty" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val racdacSchemeSubscriptionCacheRepository: RacdacSchemeSubscriptionCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -127,7 +152,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       val documentsInDB = for {
         _ <- racdacSchemeSubscriptionCacheRepository.collection.drop().toFuture()
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -136,7 +161,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       }
     }
 
-    "update an existing racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true" in {
+    "update an existing racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted true" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val racdacSchemeSubscriptionCacheRepository: RacdacSchemeSubscriptionCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -148,7 +173,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         _ <- racdacSchemeSubscriptionCacheRepository.collection.drop().toFuture()
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -157,7 +182,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       }
     }
 
-    "insert a new racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true and id is not same" in {
+    "insert a new racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted true and id is not same" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val racdacSchemeSubscriptionCacheRepository: RacdacSchemeSubscriptionCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -168,7 +193,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         _ <- racdacSchemeSubscriptionCacheRepository.collection.drop().toFuture()
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry]().toFuture()
+        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry]().toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -378,9 +403,4 @@ object RacdacSchemeSubscriptionCacheRepositorySpec extends MockitoSugar {
   private val mockAppConfig = mock[Configuration]
   private val mockConfig = mock[Config]
 
-  private def buildRepository(mongoHost: String, mongoPort: Int): RacdacSchemeSubscriptionCacheRepository = {
-    val databaseName = "pensions-scheme"
-    val mongoUri = s"mongodb://$mongoHost:$mongoPort/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
-    new RacdacSchemeSubscriptionCacheRepository(mockAppConfig, MongoComponent(mongoUri))
-  }
 }
