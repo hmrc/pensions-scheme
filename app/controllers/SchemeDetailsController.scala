@@ -18,12 +18,13 @@ package controllers
 
 import com.google.inject.Inject
 import connector.SchemeDetailsConnector
-import models.SchemeWithId
+import controllers.actions.{PsaEnrolmentAuthAction, PsaPspEnrolmentAuthAction, PsaPspSchemeAuthAction, PsaSchemeAuthAction}
+import models.{SchemeReferenceNumber, SchemeWithId}
 import play.api.libs.json.JsObject
 import play.api.mvc._
 import repositories.SchemeDetailsWithIdCacheRepository
 import service.SchemeService
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
 
@@ -33,7 +34,11 @@ class SchemeDetailsController @Inject()(
                                          schemeDetailsConnector: SchemeDetailsConnector,
                                          schemeDetailsCache: SchemeDetailsWithIdCacheRepository,
                                          schemeService: SchemeService,
-                                         cc: ControllerComponents
+                                         cc: ControllerComponents,
+                                         psaEnrolmentAuthAction: PsaEnrolmentAuthAction,
+                                         psaPspEnrolmentAuthAction: PsaPspEnrolmentAuthAction,
+                                         psaSchemeAuthAction: PsaSchemeAuthAction,
+                                         psaPspSchemeAuthAction: PsaPspSchemeAuthAction
                                        )(implicit ec: ExecutionContext)
   extends BackendController(cc)
     with ErrorHandler {
@@ -48,6 +53,22 @@ class SchemeDetailsController @Inject()(
       (idType, id, idPsa) match {
         case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
           fetchFromCacheOrApiForPsa(SchemeWithId(idNumber, psaId), schemeIdType, refreshDataOpt)
+        case _ =>
+          Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
+      }
+    } recoverWith recoverFromError
+  }
+
+  def getSchemeDetailsSrn(srn: SchemeReferenceNumber): Action[AnyContent] = (psaEnrolmentAuthAction andThen psaSchemeAuthAction(srn)).async {
+    implicit request => {
+      val idType = request.headers.get("schemeIdType")
+      val id = request.headers.get("idNumber")
+      val idPsa = request.psaId.value
+      val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
+
+      (idType, id) match {
+        case (Some(schemeIdType), Some(idNumber)) =>
+          fetchFromCacheOrApiForPsa(SchemeWithId(idNumber, idPsa), schemeIdType, refreshDataOpt)
         case _ =>
           Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
@@ -72,6 +93,28 @@ class SchemeDetailsController @Inject()(
         case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
+  }
+
+  def getPspSchemeDetailsSrn(srn: SchemeReferenceNumber): Action[AnyContent] = {
+    (psaPspEnrolmentAuthAction andThen psaPspSchemeAuthAction(srn, loggedInAsPsa = false)).async {
+      implicit request => {
+        val srnOpt = request.headers.get("srn")
+        val pstrOpt = request.headers.get("pstr")
+        val pspIdOpt = request.pspId.map(_.value)
+        val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
+
+        (srnOpt, pstrOpt, pspIdOpt) match {
+          case (Some(srn), None, Some(pspId)) =>
+            schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
+              fetchFromCacheOrApiForPsp(SchemeWithId(pstr, pspId), refreshDataOpt)
+            }
+          case (None, Some(pstr), Some(pspId)) =>
+            fetchFromCacheOrApiForPsp(SchemeWithId(pstr, pspId), refreshDataOpt)
+
+          case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
+        }
+      } recoverWith recoverFromError
+    }
   }
 
   private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])

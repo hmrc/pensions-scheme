@@ -17,6 +17,7 @@
 package controllers.cache
 
 import com.google.inject.Inject
+import controllers.actions.PsaPspEnrolmentAuthAction
 import play.api.mvc.ControllerComponents
 import repositories.RacdacSchemeSubscriptionCacheRepository
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -26,6 +27,7 @@ import scala.concurrent.ExecutionContext
 class RacdacSchemeSubscriptionJourneyCacheController @Inject()(
                                                           repository: RacdacSchemeSubscriptionCacheRepository,
                                                           authConnector: AuthConnector,
-                                                          cc: ControllerComponents
+                                                          cc: ControllerComponents,
+                                                          psaPspEnrolmentAuthAction: PsaPspEnrolmentAuthAction
                                                         )(implicit val ec: ExecutionContext)
-  extends SchemeCacheController(repository, authConnector, cc)
+  extends SchemeCacheController(repository, authConnector, cc, psaPspEnrolmentAuthAction)
