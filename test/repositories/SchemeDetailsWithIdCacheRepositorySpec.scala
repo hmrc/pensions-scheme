@@ -16,7 +16,6 @@
 
 package repositories
 
-import crypto.DataEncryptor
 import models.{Samples, SchemeWithId}
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
@@ -27,11 +26,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
-import play.api.inject.bind
-import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.libs.json.Json
 import repositories.SchemeDetailsWithIdCacheRepository.DataCache
-import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,27 +42,6 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
   import SchemeDetailsWithIdCacheRepositorySpec._
 
   var schemeDetailsWithIdCacheRepository: SchemeDetailsWithIdCacheRepository = _
-
-  private val modules: Seq[GuiceableModule] = Seq(
-    bind[AuthConnector].toInstance(mock[AuthConnector]),
-    bind[SchemeDetailsWithIdCacheRepository].toInstance(mock[SchemeDetailsWithIdCacheRepository])
-  )
-
-  private val app = new GuiceApplicationBuilder()
-    .configure(
-      conf = "auditing.enabled" -> false,
-      "metrics.enabled" -> false,
-      "metrics.jvm" -> false,
-      "run.mode" -> "Test"
-    ).overrides(modules: _*).build()
-
-  private val cipher = app.injector.instanceOf[DataEncryptor]
-
-  private def buildRepository(mongoHost: String, mongoPort: Int): SchemeDetailsWithIdCacheRepository = {
-    val databaseName = "pensions-scheme"
-    val mongoUri = s"mongodb://$mongoHost:$mongoPort/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
-    new SchemeDetailsWithIdCacheRepository(MongoComponent(mongoUri), mockAppConfig, cipher)
-  }
 
   override def beforeAll(): Unit = {
     when(mockAppConfig.get[String]("mongodb.pensions-scheme-cache.scheme-with-id.name")).thenReturn("pensions-scheme-scheme-with-id-cache")
@@ -112,8 +87,8 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
       whenReady(documentsInDB) {
         documentsInDB =>
           documentsInDB.size mustBe 1
-          cipher.decrypt(id, documentsInDB.head.data) mustBe record2._2
-          cipher.decrypt(id, documentsInDB.head.data) must not be record1._2
+          documentsInDB.head.data mustBe record2._2
+          documentsInDB.head.data must not be record1._2
       }
     }
 
@@ -157,4 +132,10 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 object SchemeDetailsWithIdCacheRepositorySpec extends MockitoSugar {
 
   private val mockAppConfig = mock[Configuration]
+
+  private def buildRepository(mongoHost: String, mongoPort: Int): SchemeDetailsWithIdCacheRepository = {
+    val databaseName = "pensions-scheme"
+    val mongoUri = s"mongodb://$mongoHost:$mongoPort/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
+    new SchemeDetailsWithIdCacheRepository(MongoComponent(mongoUri), mockAppConfig)
+  }
 }

@@ -38,9 +38,4 @@ class AppConfig @Inject()(configuration: Configuration, environment: Environment
   lazy val schemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
   lazy val pspSchemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.psp.scheme.details")}"
   lazy val updateSchemeUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
-
-  val mongoEncryptionKey: Option[String] = configuration.getOptional[String]("mongodb.encryption.key") match {
-    case None if environment.mode == Mode.Prod => throw new RuntimeException("Encryption key is not set")
-    case x => x
-  }
 }
