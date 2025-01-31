@@ -29,13 +29,12 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeVarianceLockCacheController @Inject()(
-                                                   config: Configuration,
                                                    repository: LockRepository,
                                                    cc: ControllerComponents,
                                                    psaPspEnrolmentAuthAction: PsaPspEnrolmentAuthAction
                                                  )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def lock(): Action[AnyContent] = Action.async {
+  def lock(): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
       withIDs { (psaId, srn) =>
         repository.lock(SchemeVariance(psaId, srn))
