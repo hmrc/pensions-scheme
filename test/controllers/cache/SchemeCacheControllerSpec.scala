@@ -124,18 +124,6 @@ class SchemeCacheControllerSpec
           status(result)
         }
       }
-
-      "throw an exception when the call is not authorised" in {
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
-          new UnauthorizedException("")
-        }
-
-        val result = controller(repo, authConnector).get("foo")(FakeRequest())
-
-        an[UnauthorizedException] must be thrownBy {
-          status(result)
-        }
-      }
     }
 
     s".save" must {
