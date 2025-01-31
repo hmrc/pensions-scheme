@@ -5,7 +5,6 @@ POST          /register-scheme/:schemeJourneyType               controllers.Sche
 POST          /register-scheme-self/:schemeJourneyType          controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType.Name)
 #deprecated
 POST          /update-scheme                                    controllers.SchemeController.updateScheme
-POST          /update-scheme/:srn                               controllers.SchemeController.updateSchemeSrn(srn: SchemeReferenceNumber)
 #deprecated
 GET           /list-of-schemes                                  controllers.SchemeController.listOfSchemes
 GET           /list-of-schemes-self                             controllers.SchemeController.listOfSchemesSelf
@@ -67,7 +66,7 @@ GET           /update-scheme/get-lock-by-scheme                 controllers.cach
 GET           /update-scheme/isLockByPsaOrScheme                controllers.cache.SchemeVarianceLockCacheController.isLockByPsaIdOrSchemeId()
 POST          /update-scheme/lock                               controllers.cache.SchemeVarianceLockCacheController.lock()
 DELETE        /update-scheme/release-lock                       controllers.cache.SchemeVarianceLockCacheController.releaseLock()
-
+POST          /update-scheme/:srn                               controllers.SchemeController.updateSchemeSrn(srn: SchemeReferenceNumber)
 
 # scheme details read only caching in protected mongo
 

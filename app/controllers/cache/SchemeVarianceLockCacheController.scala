@@ -17,102 +17,93 @@
 package controllers.cache
 
 import com.google.inject.Inject
+import controllers.actions.PsaPspEnrolmentAuthAction
 import models.SchemeVariance
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc._
 import repositories.LockRepository
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeVarianceLockCacheController @Inject()(
-                                                   config: Configuration,
                                                    repository: LockRepository,
-                                                   val authConnector: AuthConnector,
-                                                   cc: ControllerComponents
-                                                 )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
+                                                   cc: ControllerComponents,
+                                                   psaPspEnrolmentAuthAction: PsaPspEnrolmentAuthAction
+                                                 )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def lock(): Action[AnyContent] = Action.async {
+  def lock(): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      authorised() {
-        withIDs { (psaId, srn) =>
-            repository.lock(SchemeVariance(psaId, srn))
-              .map { lock => Ok(Json.toJson(lock.toString)) }
-        }
+      withIDs { (psaId, srn) =>
+        repository.lock(SchemeVariance(psaId, srn))
+          .map { lock => Ok(Json.toJson(lock.toString)) }
       }
   }
 
-  def isLockByPsaIdOrSchemeId(): Action[AnyContent] = Action.async {
+  def isLockByPsaIdOrSchemeId(): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      authorised() {
-        withIDs { (psaId, srn) =>
-            repository.isLockByPsaIdOrSchemeId(psaId, srn)
-              .map {
-                case Some(lock) =>  Ok(Json.toJson(lock.toString))
-                case None =>  NotFound
-              }
-        }
+      withIDs { (psaId, srn) =>
+        repository.isLockByPsaIdOrSchemeId(psaId, srn)
+          .map {
+            case Some(lock) =>
+              Ok(Json.toJson(lock.toString))
+            case None =>
+              NotFound
+          }
       }
   }
 
-  def getLock(): Action[AnyContent] = Action.async {
+  def getLock(): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      authorised() {
-        withIDs { (psaId, srn) =>
-          repository.getExistingLock(SchemeVariance(psaId, srn))
-            .map {
-              case Some(schemeVariance) => Ok(Json.toJson(schemeVariance))
-              case None => NotFound
-            }
-        }
+      withIDs { (psaId, srn) =>
+        repository.getExistingLock(SchemeVariance(psaId, srn))
+          .map {
+            case Some(schemeVariance) => Ok(Json.toJson(schemeVariance))
+            case None => NotFound
+          }
       }
+
   }
 
-  def getLockByPsa(): Action[AnyContent] = Action.async {
+  def getLockByPsa(): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      authorised() {
-        request.headers.get("psaId") match {
-          case Some(psaId) =>
+      request.headers.get("psaId") match {
+        case Some(psaId) =>
           repository.getExistingLockByPSA(psaId).flatMap {
-              case Some(schemeVariance) => Future.successful(Ok(Json.toJson(schemeVariance)))
-              case None => Future.successful(NotFound)
-            }
-          case _ => Future.failed(new BadRequestException("Bad Request without psaId"))
-        }
+            case Some(schemeVariance) => Future.successful(Ok(Json.toJson(schemeVariance)))
+            case None => Future.successful(NotFound)
+          }
+        case _ => Future.failed(new BadRequestException("Bad Request without psaId"))
       }
   }
 
-  def getLockByScheme(): Action[AnyContent] = Action.async {
+  def getLockByScheme(): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      authorised() {
-        request.headers.get("srn") match {
-          case Some(srn) =>
+      request.headers.get("srn") match {
+        case Some(srn) =>
           repository.getExistingLockBySRN(srn)
             .map {
               case Some(schemeVariance) => Ok(Json.toJson(schemeVariance))
               case None => NotFound
             }
-          case _ => Future.failed(new BadRequestException("Bad Request without srn"))
-        }
+        case _ => Future.failed(new BadRequestException("Bad Request without srn"))
       }
   }
 
-  def releaseLock(): Action[AnyContent] = Action.async {
+  def releaseLock(): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      authorised() {
-        withIDs { (psaId, srn) =>
-          repository.releaseLock(SchemeVariance(psaId, srn)).map(_ => Ok)
-        }
+      withIDs { (psaId, srn) =>
+        repository.releaseLock(SchemeVariance(psaId, srn)).map(_ => Ok)
       }
   }
 
-  private def withIDs(block: (String, String) => Future[Result])(implicit request: Request[_]) : Future[Result] = {
-    (request.headers.get("psaId"), request.headers.get("srn"))  match {
+  private def withIDs(block: (String, String) => Future[Result])(implicit request: Request[_]): Future[Result] = {
+    (request.headers.get("psaId"), request.headers.get("srn")) match {
       case (Some(psaId), Some(srn)) => block(psaId, srn)
-      case _ => Future.failed(new BadRequestException("Bad Request without psaId and srn"))
+      case _ =>
+        Future.failed(new BadRequestException("Bad Request without psaId and srn"))
     }
   }
 }
