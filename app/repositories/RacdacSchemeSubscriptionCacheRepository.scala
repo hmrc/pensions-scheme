@@ -17,6 +17,7 @@
 package repositories
 
 import com.google.inject.Inject
+import crypto.DataEncryptor
 import play.api.Configuration
 import uk.gov.hmrc.mongo.MongoComponent
 
@@ -24,12 +25,13 @@ import scala.concurrent.ExecutionContext
 
 class RacdacSchemeSubscriptionCacheRepository @Inject()(
                                              config: Configuration,
-                                             mongoComponent: MongoComponent
+                                             mongoComponent: MongoComponent,
+                                             cipher: DataEncryptor
                                            )(implicit val executionContext: ExecutionContext) extends SchemeCacheRepository (
   collectionName = config.underlying.getString("mongodb.pensions-scheme-cache.register-racdac-scheme.name"),
   mongoComponent = mongoComponent,
   config = config,
-  encryptionKey = "scheme.json.encryption",
   expireInSeconds = None,
-  expireInDays = Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays"))
+  expireInDays = Some(config.underlying.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays")),
+  cipher
 )

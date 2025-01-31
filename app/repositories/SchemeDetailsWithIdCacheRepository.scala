@@ -18,6 +18,7 @@ package repositories
 
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
+import crypto.DataEncryptor
 import models.SchemeWithId
 import org.mongodb.scala.model._
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
@@ -63,7 +64,8 @@ object SchemeDetailsWithIdCacheRepository {
 @Singleton
 class SchemeDetailsWithIdCacheRepository @Inject()(
                                                     mongoComponent: MongoComponent,
-                                                    configuration: Configuration
+                                                    configuration: Configuration,
+                                                    cipher: DataEncryptor
                                                   )(implicit val ec: ExecutionContext)
   extends PlayMongoRepository[DataCache](
     mongoComponent = mongoComponent,
@@ -91,7 +93,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     val id: String = schemeWithId.schemeId + schemeWithId.userId
     val modifier = Updates.combine(
       Updates.set(idField, id),
-      Updates.set(dataKey, Codecs.toBson(schemeDetails)),
+      Updates.set(dataKey, Codecs.toBson(cipher.encrypt(id, schemeDetails))),
       Updates.set(lastUpdatedKey, Instant.now()),
       Updates.set(expireAtKey, expireInSeconds)
     )
@@ -103,7 +105,9 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
   def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
     val id: String = schemeWithId.schemeId + schemeWithId.userId
     collection.find[DataCache](Filters.equal(uniqueSchemeWithId, id)).headOption().map {
-      _.map(_.data)
+      _.map { dataEntry =>
+        cipher.decrypt(id, dataEntry.data)
+      }
     }
   }
 }
