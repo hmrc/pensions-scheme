@@ -16,7 +16,9 @@
 
 package repositories
 
+import com.typesafe.config.Config
 import models.{Samples, SchemeWithId}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
@@ -41,12 +43,17 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 
   import SchemeDetailsWithIdCacheRepositorySpec._
 
-  var schemeDetailsWithIdCacheRepository: SchemeDetailsWithIdCacheRepository = _
+  private var schemeDetailsWithIdCacheRepository: SchemeDetailsWithIdCacheRepository = _
+  private val mockAppConfiguration = mock[Configuration]
+  private val mockAppConfig = mock[Config]
 
   override def beforeAll(): Unit = {
-    when(mockAppConfig.get[String]("mongodb.pensions-scheme-cache.scheme-with-id.name")).thenReturn("pensions-scheme-scheme-with-id-cache")
-    when(mockAppConfig.get[Int]("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")).thenReturn(3600)
-    schemeDetailsWithIdCacheRepository = buildRepository(mongoHost, mongoPort)
+    when(mockAppConfiguration.get[String]("mongodb.pensions-scheme-cache.scheme-with-id.name")).thenReturn("pensions-scheme-scheme-with-id-cache")
+    when(mockAppConfiguration.get[Int]("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")).thenReturn(3600)
+    when(mockAppConfiguration.get[Boolean]("encrypted")).thenReturn(true)
+    when(mockAppConfiguration.underlying).thenReturn(mockAppConfig)
+    when(mockAppConfig.getString(any())).thenReturn("QZNWcapID0BmWTneSk4hNl5RqdMlh4RI")
+    schemeDetailsWithIdCacheRepository = buildRepository(mongoHost, mongoPort, mockAppConfiguration)
     super.beforeAll()
   }
 
@@ -72,6 +79,30 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 
     "update an existing scheme details with_id cache in Mongo collection" in {
 
+      when(mockAppConfiguration.get[Boolean]("encrypted")).thenReturn(false)
+      val record1 = (SchemeWithId("SchemeId", "UserId"), Json.parse("""{"data":"1"}"""))
+      val record2 = (SchemeWithId("SchemeId", "UserId"), Json.parse("""{"data":"2"}"""))
+      val id: String = record1._1.schemeId + record1._1.userId
+      val filters = Filters.eq(idField, id)
+      val repository = buildRepository(mongoHost, mongoPort, mockAppConfiguration)
+
+      val documentsInDB = for {
+        _ <- repository.collection.drop().toFuture()
+        _ <- repository.upsert(record1._1, record1._2)
+        _ <- repository.upsert(record2._1, record2._2)
+        documentsInDB <- repository.collection.find[DataCache](filters).toFuture()
+      } yield documentsInDB
+
+      whenReady(documentsInDB) {
+        documentsInDB =>
+          documentsInDB.size mustBe 1
+          documentsInDB.head.data mustBe record2._2
+          documentsInDB.head.data must not be record1._2
+      }
+    }
+
+    "update an existing scheme details with_id cache in Mongo collection if data is encrypted" in {
+
       val record1 = (SchemeWithId("SchemeId", "UserId"), Json.parse("""{"data":"1"}"""))
       val record2 = (SchemeWithId("SchemeId", "UserId"), Json.parse("""{"data":"2"}"""))
       val id: String = record1._1.schemeId + record1._1.userId
@@ -87,7 +118,7 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
       whenReady(documentsInDB) {
         documentsInDB =>
           documentsInDB.size mustBe 1
-          documentsInDB.head.data mustBe record2._2
+          documentsInDB.head.data mustBe Json.parse("""{"value":"8Tg19J0udcVGrMR/33RFug=="}""")
           documentsInDB.head.data must not be record1._2
       }
     }
@@ -130,12 +161,9 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 }
 
 object SchemeDetailsWithIdCacheRepositorySpec extends MockitoSugar {
-
-  private val mockAppConfig = mock[Configuration]
-
-  private def buildRepository(mongoHost: String, mongoPort: Int): SchemeDetailsWithIdCacheRepository = {
+  private def buildRepository(mongoHost: String, mongoPort: Int, config: Configuration): SchemeDetailsWithIdCacheRepository = {
     val databaseName = "pensions-scheme"
     val mongoUri = s"mongodb://$mongoHost:$mongoPort/$databaseName?heartbeatFrequencyMS=1000&rm.failover=default"
-    new SchemeDetailsWithIdCacheRepository(MongoComponent(mongoUri), mockAppConfig)
+    new SchemeDetailsWithIdCacheRepository(MongoComponent(mongoUri), config)
   }
 }
