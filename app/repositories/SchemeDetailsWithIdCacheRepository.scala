@@ -64,7 +64,7 @@ object SchemeDetailsWithIdCacheRepository {
 @Singleton
 class SchemeDetailsWithIdCacheRepository @Inject()(
                                                     mongoComponent: MongoComponent,
-                                                    configuration: Configuration,
+                                                    configuration: Configuration
                                                   )(implicit val ec: ExecutionContext)
   extends PlayMongoRepository[DataCache](
     mongoComponent = mongoComponent,
