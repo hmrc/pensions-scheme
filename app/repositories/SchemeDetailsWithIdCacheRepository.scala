@@ -24,6 +24,7 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 import play.api.{Configuration, Logging}
 import repositories.SchemeDetailsWithIdCacheRepository._
+import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
@@ -84,14 +85,28 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     )
   ) with Logging {
 
+  private val jsonCrypto: Encrypter with Decrypter = SymmetricCryptoFactory
+    .aesCryptoFromConfig(baseConfigKey = "scheme.json.encryption", configuration.underlying)
+  private val encrypted: Boolean = configuration.get[Boolean]("encrypted")
+  private implicit val cryptoFormat: OFormat[Crypted] = Json.format[Crypted]
+
   private def expireInSeconds: Instant = Instant.now().
     plusSeconds(configuration.get[Int](path = "mongodb.pensions-scheme-cache.scheme-with-id.timeToLiveInSeconds"))
 
   def upsert(schemeWithId: SchemeWithId, schemeDetails: JsValue): Future[Boolean] = {
+    val data = {
+      if(encrypted) {
+        val encryptedData = jsonCrypto.encrypt(PlainText(Json.stringify(schemeDetails)))
+        Codecs.toBson(Json.toJson(encryptedData))
+      } else {
+        Codecs.toBson(schemeDetails)
+      }
+    }
+
     val id: String = schemeWithId.schemeId + schemeWithId.userId
     val modifier = Updates.combine(
       Updates.set(idField, id),
-      Updates.set(dataKey, Codecs.toBson(schemeDetails)),
+      Updates.set(dataKey, data),
       Updates.set(lastUpdatedKey, Instant.now()),
       Updates.set(expireAtKey, expireInSeconds)
     )
@@ -103,7 +118,12 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
   def get(schemeWithId: SchemeWithId): Future[Option[JsValue]] = {
     val id: String = schemeWithId.schemeId + schemeWithId.userId
     collection.find[DataCache](Filters.equal(uniqueSchemeWithId, id)).headOption().map {
-      _.map(_.data)
+      _.map { resp =>
+        val data = resp.data
+        data.validate[Crypted].map { encryptedData =>
+          Json.parse(jsonCrypto.decrypt(encryptedData).value)
+        }.getOrElse(data)
+      }
     }
   }
 }
