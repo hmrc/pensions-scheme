@@ -17,7 +17,7 @@ GET           /scheme/:srn                                      controllers.Sche
 #deprecated
 GET           /psp-scheme                                       controllers.SchemeDetailsController.getPspSchemeDetails
 GET           /psp-scheme/:srn                                  controllers.SchemeDetailsController.getPspSchemeDetailsSrn(srn: SchemeReferenceNumber)
-
+GET           /psa-invitation-info                              controllers.SchemeDetailsController.getSchemePsaInvitationInfo
 # answers caching in protected mongo
 
 #deprecated

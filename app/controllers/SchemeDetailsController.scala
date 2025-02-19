@@ -19,8 +19,8 @@ package controllers
 import com.google.inject.Inject
 import connector.SchemeDetailsConnector
 import controllers.actions.{PsaEnrolmentAuthAction, PsaPspEnrolmentAuthAction, PsaPspSchemeAuthAction, PsaSchemeAuthAction}
-import models.{SchemeReferenceNumber, SchemeWithId}
-import play.api.libs.json.JsObject
+import models.{PsaInvitationInfoResponse, SchemeReferenceNumber, SchemeWithId}
+import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
 import play.api.mvc._
 import repositories.SchemeDetailsWithIdCacheRepository
 import service.SchemeService
@@ -75,6 +75,30 @@ class SchemeDetailsController @Inject()(
     } recoverWith recoverFromError
   }
 
+  def getSchemePsaInvitationInfo: Action[AnyContent] = psaEnrolmentAuthAction.async {
+    implicit request => {
+
+      val idType = request.headers.get("schemeIdType")
+      val id = request.headers.get("idNumber")
+      val idPsa = request.psaId.value
+      val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
+
+      (idType, id) match {
+        case (Some(schemeIdType), Some(idNumber)) =>
+          fetchFromCacheOrApiForPsaNoResult(SchemeWithId(idNumber, idPsa), schemeIdType, refreshDataOpt).map {
+            case Left(e) => result(e)
+            case Right(json) =>
+              Json.fromJson[PsaInvitationInfoResponse](json) match {
+                case JsSuccess(value, _) => Ok(Json.toJson(value))
+                case JsError(errors) => InternalServerError(errors.toString)
+              }
+          }
+        case _ =>
+          Future.failed(new BadRequestException("Bad Request with missing parameters schemeIdType, idNumber"))
+      }
+    } recoverWith recoverFromError
+  }
+
   def getPspSchemeDetails: Action[AnyContent] = Action.async {
     implicit request => {
       val srnOpt = request.headers.get("srn")
@@ -119,13 +143,21 @@ class SchemeDetailsController @Inject()(
 
   private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
                                        (implicit hc: HeaderCarrier, request: RequestHeader): Future[Result] =
+    fetchFromCacheOrApiForPsaNoResult(id, schemeIdType, refreshData).map {
+      case Left(e) => result(e)
+      case Right(json) => Ok(json)
+    }
+
+  private def fetchFromCacheOrApiForPsaNoResult(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
+                                               (implicit hc: HeaderCarrier, request: RequestHeader)= {
     schemeDetailsCache.get(id).flatMap {
-      case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
+      case Some(json) if !refreshData.contains(true) => Future.successful(Right(json.as[JsObject]))
       case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
-        case Right(json) => schemeDetailsCache.upsert(id, json).map { _ => Ok(json) }
-        case Left(e) => Future.successful(result(e))
+        case Right(json) => schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
+        case Left(e) => Future.successful(Left(e))
       }
     }
+  }
 
   private def fetchFromCacheOrApiForPsp(id: SchemeWithId, refreshData: Option[Boolean])
                                        (implicit hc: HeaderCarrier, request: RequestHeader): Future[Result] =
