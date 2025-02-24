@@ -71,9 +71,15 @@ class SchemeController @Inject()(
 
   def listOfSchemesSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request => {
-      val idType = request.headers.get("idType")
+      val idTypeHeader = request.headers.get("idType")
 
-      val idValue = idType match {
+      val idType = idTypeHeader match {
+        case Some("PSP") => Some("pspid")
+        case Some("PSA") => Some("psaid")
+        case None => None
+      }
+
+      val idValue = idTypeHeader match {
         case Some("PSP") => request.pspId.map(_.value)
         case Some("PSA") => request.psaId.map(_.value)
         case _ => None
