@@ -366,7 +366,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
     "return OK with sorted list of schemes for PSA when If/ETMP returns it successfully" in {
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponseAlphabetical.json")
-      when(mockSchemeService.listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any()))
+      when(mockSchemeService.listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
@@ -381,7 +381,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       AuthUtils.authStubPsp(mockAuthConnector)
       val fakeRequest = FakeRequest("GET", "/").withHeaders(("idType", "PSP"), ("idValue", pspId))
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponseAlphabetical.json")
-      when(mockSchemeService.listOfSchemes(meq("PSP"), meq(pspId))(any(), any(), any()))
+      when(mockSchemeService.listOfSchemes(meq("pspid"), meq(pspId))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
@@ -402,7 +402,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
     "throw JsResultException when the invalid data returned from If/ETMP" in {
       val validResponse = Json.obj("invalid" -> "data")
-      when(mockSchemeService.listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any()))
+      when(mockSchemeService.listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
@@ -416,14 +416,14 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "INVALID_PSAID",
         "reason" -> "Submission has not passed validation. Invalid parameter PSAID."
       )
-      when(mockSchemeService.listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any())).thenReturn(
+      when(mockSchemeService.listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())).thenReturn(
         Future.failed(new BadRequestException(invalidPayload.toString())))
 
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
         e.getMessage mustBe invalidPayload.toString()
-        verify(mockSchemeService, times(1)).listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any())
+        verify(mockSchemeService, times(1)).listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())
       }
     }
 
@@ -432,26 +432,26 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         "code" -> "SERVICE_UNAVAILABLE",
         "reason" -> "Dependent systems are currently not responding."
       )
-      when(mockSchemeService.listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any())).thenReturn(
+      when(mockSchemeService.listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())).thenReturn(
         Future.failed(UpstreamErrorResponse(serviceUnavailable.toString(), SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[UpstreamErrorResponse]
         e.getMessage mustBe serviceUnavailable.toString()
-        verify(mockSchemeService, times(1)).listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any())
+        verify(mockSchemeService, times(1)).listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())
       }
     }
 
     "throw generic exception when any other exception returned from If" in {
-      when(mockSchemeService.listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any())).thenReturn(
+      when(mockSchemeService.listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())).thenReturn(
         Future.failed(new Exception("Generic Exception")))
 
-      val result = schemeController.listOfSchemes(fakeRequest)
+      val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
         e.getMessage mustBe "Generic Exception"
-        verify(mockSchemeService, times(1)).listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any())
+        verify(mockSchemeService, times(1)).listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())
       }
     }
   }
