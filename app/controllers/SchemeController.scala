@@ -54,14 +54,13 @@ class SchemeController @Inject()(
       (idType, idValue) match {
         case (Some(typeOfId), Some(valueOfId)) =>
           schemeService.listOfSchemes(typeOfId, valueOfId).map {
-            case Right(json) => {
+            case Right(json) =>
               val list = json.convertTo[ListOfSchemes]
               val sortedList = list.schemeDetails.map { schemes =>
                 schemes.sortBy(x => (x.schemeStatus == "Wound-up", x.name.toLowerCase()))
               }
               val newListOfSchemes = ListOfSchemes(list.processingDate, list.totalSchemesRegistered, sortedList)
               Ok(Json.toJson(newListOfSchemes))
-            }
             case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
@@ -76,7 +75,7 @@ class SchemeController @Inject()(
       val idType = idTypeHeader match {
         case Some("PSP") => Some("pspid")
         case Some("PSA") => Some("psaid")
-        case None => None
+        case _ => None
       }
 
       val idValue = idTypeHeader match {

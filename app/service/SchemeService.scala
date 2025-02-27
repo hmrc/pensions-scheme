@@ -51,9 +51,6 @@ class SchemeService @Inject()(
     schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly)
   }
 
-
-  case object RegisterSchemeToggleOffTransformFailed extends Exception
-
   private def registerNonRACDACScheme(json: JsValue, psaId: String)
                                      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
   Future[Either[HttpException, JsValue]] = {
@@ -169,9 +166,9 @@ class SchemeService @Inject()(
       case Left(e: Exception) => throw pstrException(e.getMessage, idValue)
     }
 
-  def pstrException(msg: String, idValue: String): BadRequestException = new BadRequestException(
-    s"Could not retrieved schemes for PSTR:  $idValue, error message: $msg");
-  def notFoundPstrException(idValue: String, srn: String): BadRequestException = new BadRequestException(s"Schemes not found for PSTR: $idValue and srn: $srn");
+  private def pstrException(msg: String, idValue: String): BadRequestException = new BadRequestException(
+    s"Could not retrieved schemes for PSTR:  $idValue, error message: $msg")
+  private def notFoundPstrException(idValue: String, srn: String): BadRequestException = new BadRequestException(s"Schemes not found for PSTR: $idValue and srn: $srn")
 
   private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
                                        (implicit hc: HeaderCarrier, request: RequestHeader): Future[Either[HttpException, JsObject]] =
