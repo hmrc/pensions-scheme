@@ -19,7 +19,6 @@ package controllers.cache
 import com.google.inject.Inject
 import controllers.actions.PsaPspEnrolmentAuthAction
 import models.SchemeVariance
-import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc._
 import repositories.LockRepository

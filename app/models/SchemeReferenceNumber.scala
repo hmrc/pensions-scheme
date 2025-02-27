@@ -31,7 +31,7 @@ case class SchemeReferenceNumber(id: String) {
 
 object SchemeReferenceNumber {
 
-  val regexSRN: Regex = "^S[0-9]{10}$".r
+  private val regexSRN: Regex = "^S[0-9]{10}$".r
 
   implicit def srnPathBindable(implicit stringBinder: PathBindable[String]): PathBindable[SchemeReferenceNumber] = new PathBindable[SchemeReferenceNumber] {
 

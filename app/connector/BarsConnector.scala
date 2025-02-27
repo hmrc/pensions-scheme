@@ -43,14 +43,14 @@ class BarsConnectorImpl @Inject()(httpClientV2: HttpClientV2, appConfig: AppConf
 
   private val logger = Logger(classOf[BarsConnectorImpl])
 
-  val barsBaseUrl: String = appConfig.barsBaseUrl
+  private val barsBaseUrl: String = appConfig.barsBaseUrl
 
   def invalidBankAccount(bankAccount: BankAccount,
                          psaId: String
                         )(implicit ec: ExecutionContext, hc: HeaderCarrier, rh: RequestHeader): Future[Boolean] = {
 
     val request = ValidateBankDetailsRequest(bankAccount)
-    val url = url"${barsBaseUrl}/validate/bank-details"
+    val url = url"$barsBaseUrl/validate/bank-details"
 
     httpClientV2.post(url)
       .withBody(request)

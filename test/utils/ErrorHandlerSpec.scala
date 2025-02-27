@@ -23,6 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.HttpEntity
 import play.api.mvc.{ResponseHeader, Result}
 import uk.gov.hmrc.http.{HttpException, NotFoundException, UpstreamErrorResponse}
+import scala.language.reflectiveCalls
 
 class ErrorHandlerSpec extends AnyWordSpec with Matchers {
   private val eh = new ErrorHandler {

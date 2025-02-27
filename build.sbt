@@ -13,10 +13,10 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test(),
     retrieveManaged := true,
-    update / evictionWarningOptions := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     PlayKeys.devSettings += "play.server.http.port" -> "8203",
     scalacOptions += "-Xlint:-missing-interpolator,_",
-    scalacOptions += "-Wconf:src=routes/.*:s"
+    scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-feature"
   )
   .settings(
     ScoverageKeys.coverageExcludedFiles := "<empty>;Reverse.*;.*filters.*;.*handlers.*;.*components.*;.*repositories.*;.*FeatureSwitchModule.*;" +
@@ -32,7 +32,8 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
   )
   .settings(
     Test / fork := true,
-    Test / javaOptions += "-Dconfig.file=conf/test.application.conf"
+    Test / javaOptions += "-Dconfig.file=conf/test.application.conf",
+    Test / scalacOptions += "-feature"
   )
   .settings(resolvers ++= Seq(
     Resolver.jcenterRepo,
