@@ -1,64 +1,42 @@
 # microservice specific routes
 
-#deprecated
-POST          /register-scheme/:schemeJourneyType               controllers.SchemeController.registerScheme(schemeJourneyType: SchemeJourneyType.Name)
 POST          /register-scheme-self/:schemeJourneyType          controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType.Name)
-#deprecated
-POST          /update-scheme                                    controllers.SchemeController.updateScheme
+
 #deprecated
 GET           /list-of-schemes                                  controllers.SchemeController.listOfSchemes
+
 GET           /list-of-schemes-self                             controllers.SchemeController.listOfSchemesSelf
+
 #deprecated
 GET           /open-date                                        controllers.SchemeController.openDateScheme
+
 GET           /open-date/:srn                                   controllers.SchemeController.openDateSchemeSrn(srn: SchemeReferenceNumber, loggedInAsPsa: Boolean)
+
 #deprecated
 GET           /scheme                                           controllers.SchemeDetailsController.getSchemeDetails
+
 GET           /scheme/:srn                                      controllers.SchemeDetailsController.getSchemeDetailsSrn(srn: SchemeReferenceNumber)
-#deprecated
-GET           /psp-scheme                                       controllers.SchemeDetailsController.getPspSchemeDetails
 GET           /psp-scheme/:srn                                  controllers.SchemeDetailsController.getPspSchemeDetailsSrn(srn: SchemeReferenceNumber)
 GET           /psa-invitation-info                              controllers.SchemeDetailsController.getSchemePsaInvitationInfo
-# answers caching in protected mongo
 
-#deprecated
+# answers caching in protected mongo
 GET           /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.get(id: String)
-GET           /journey-cache/scheme-subscription-self            controllers.cache.SchemeSubscriptionJourneyCacheController.getSelf
-#deprecated
 POST          /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.save(id: String)
-POST          /journey-cache/scheme-subscription-self            controllers.cache.SchemeSubscriptionJourneyCacheController.saveSelf
-#deprecated
 DELETE        /journey-cache/scheme-subscription/:id            controllers.cache.SchemeSubscriptionJourneyCacheController.remove(id: String)
-DELETE        /journey-cache/scheme-subscription-self            controllers.cache.SchemeSubscriptionJourneyCacheController.removeSelf
-#deprecated
 GET           /journey-cache/scheme-subscription/:id/lastUpdated            controllers.cache.SchemeSubscriptionJourneyCacheController.lastUpdated(id: String)
-GET           /journey-cache/scheme-subscription-self/lastUpdated            controllers.cache.SchemeSubscriptionJourneyCacheController.lastUpdatedSelf
+
 # Racdac ones in protected mongo
-#deprecated
 GET           /journey-cache/racdac-scheme-subscription/:id     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.get(id: String)
-GET           /journey-cache/racdac-scheme-subscription-self     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.getSelf
-#deprecated
 POST          /journey-cache/racdac-scheme-subscription/:id     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.save(id: String)
-POST          /journey-cache/racdac-scheme-subscription-self     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.saveSelf
-#deprecated
 DELETE        /journey-cache/racdac-scheme-subscription/:id     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.remove(id: String)
-DELETE        /journey-cache/racdac-scheme-subscription-self     controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.removeSelf
-#deprecated
 GET           /journey-cache/racdac-scheme-subscription/:id/lastUpdated            controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.lastUpdated(id: String)
-GET           /journey-cache/racdac-scheme-subscription-self/lastUpdated            controllers.cache.RacdacSchemeSubscriptionJourneyCacheController.lastUpdatedSelf
 
 # answers caching in protected mongo
-#deprecated
 GET           /journey-cache/update-scheme/:id                  controllers.cache.UpdateSchemeJourneyCacheController.get(id: String)
-GET           /journey-cache/update-scheme-self                  controllers.cache.UpdateSchemeJourneyCacheController.getSelf
-#deprecated
 POST          /journey-cache/update-scheme/:id                  controllers.cache.UpdateSchemeJourneyCacheController.save(id: String)
-POST          /journey-cache/update-scheme-self                  controllers.cache.UpdateSchemeJourneyCacheController.saveSelf
-#deprecated
 DELETE        /journey-cache/update-scheme/:id                  controllers.cache.UpdateSchemeJourneyCacheController.remove(id: String)
-DELETE        /journey-cache/update-scheme-self                  controllers.cache.UpdateSchemeJourneyCacheController.removeSelf
-#deprecated
 GET           /journey-cache/update-scheme/:id/lastUpdated            controllers.cache.UpdateSchemeJourneyCacheController.lastUpdated(id: String)
-GET           /journey-cache/update-scheme-self/lastUpdated            controllers.cache.UpdateSchemeJourneyCacheController.lastUpdatedSelf
+
 # scheme details lock caching in protected mongo
 GET           /update-scheme/get-lock                           controllers.cache.SchemeVarianceLockCacheController.getLock()
 GET           /update-scheme/get-lock-by-psa                    controllers.cache.SchemeVarianceLockCacheController.getLockByPsa()
@@ -70,15 +48,9 @@ POST          /update-scheme/:srn                               controllers.Sche
 
 # scheme details read only caching in protected mongo
 
-#deprecated
 GET           /journey-cache/scheme-details/:id                 controllers.cache.SchemeDetailsJourneyCacheController.get(id: String)
-GET           /journey-cache/scheme-details-self                 controllers.cache.SchemeDetailsJourneyCacheController.getSelf
-#deprecated
 POST          /journey-cache/scheme-details/:id                 controllers.cache.SchemeDetailsJourneyCacheController.save(id: String)
-POST          /journey-cache/scheme-details-self                 controllers.cache.SchemeDetailsJourneyCacheController.saveSelf
-#deprecated
 DELETE        /journey-cache/scheme-details/:id                 controllers.cache.SchemeDetailsJourneyCacheController.remove(id: String)
-DELETE        /journey-cache/scheme-details-self                 controllers.cache.SchemeDetailsJourneyCacheController.removeSelf
 
 POST          /email-response/:id                               controllers.EmailResponseController.retrieveStatus(id: String)
 POST          /email-response-racdac/:id                        controllers.EmailResponseController.retrieveStatusRacDac(id: String)

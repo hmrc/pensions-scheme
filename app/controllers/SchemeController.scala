@@ -185,22 +185,6 @@ class SchemeController @Inject()(
     } recoverWith recoverFromError
   }
 
-  def updateScheme(): Action[AnyContent] = Action.async {
-    implicit request => {
-      val json = request.body.asJson
-      logger.debug(s"[Update-Scheme-Incoming-Payload]$json")
-      (request.headers.get("pstr"), request.headers.get("psaId"), json) match {
-        case (Some(pstr), Some(psaId), Some(jsValue)) =>
-          schemeService.updateScheme(pstr, psaId, jsValue).map {
-            case Right(json) => Ok(json)
-            case Left(e) => result(e)
-          }
-
-        case _ => Future.failed(new BadRequestException("Bad Request without PSTR or PSAId or request body"))
-      }
-    } recoverWith recoverFromError
-  }
-
   def updateSchemeSrn(srn: SchemeReferenceNumber): Action[AnyContent] = (psaEnrolmentAuthAction andThen psaSchemeAuthAction(srn)).async {
     implicit request => {
       val json = request.body.asJson
@@ -212,7 +196,7 @@ class SchemeController @Inject()(
             case Left(e) => result(e)
           }
 
-        case _ => Future.failed(new BadRequestException("Bad Request without PSTR or PSAId or request body"))
+        case _ => Future.failed(new BadRequestException("Bad Request without PSTR or request body"))
       }
     } recoverWith recoverFromError
   }
