@@ -34,63 +34,20 @@ abstract class SchemeCacheController(
                                     )(
                                       implicit ec: ExecutionContext
                                     )
-  extends BackendController(cc)
-    with AuthorisedFunctions {
+  extends BackendController(cc) {
 
   private val logger = Logger(classOf[SchemeCacheController])
 
-  def save(id: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised() {
-        request.body.asJson.map {
-          jsValue =>
-            repository.upsert(id, jsValue).map(_ => Ok)
-        } getOrElse Future.successful(BadRequest("Can't parse json"))
-      }
-  }
-
-  def get(id: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised() {
-        logger.debug("controllers.SchemeCacheController.get: Authorised Request " + id)
-        repository.get(id).map { response =>
-          logger.debug(s"controllers.SchemeCacheController.get: Response for request Id $id is $response")
-          response.map(Ok(_)).getOrElse(NotFound)
-        }
-      }
-  }
-
-  def remove(id: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised() {
-        repository.remove(id).map(_ => Ok)
-      }
-  }
-
-  def lastUpdated(id: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised() {
-        logger.debug("controllers.SchemeCacheController.lastUpdated: Authorised Request " + id)
-        repository.getLastUpdated(id).map { response =>
-          logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
-          response.map {
-            date => Ok(Json.toJson(date.toEpochMilli))
-          } getOrElse NotFound
-        }
-      }
-  }
-
-  def saveSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+  def save(id: String): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
       request.body.asJson.map {
         jsValue =>
-          repository.upsert(request.externalId, jsValue).map(_ => Ok)
+          repository.upsert(id, jsValue).map(_ => Ok)
       } getOrElse Future.successful(BadRequest("Can't parse json"))
   }
 
-  def getSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+  def get(id: String): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      val id = request.externalId
       logger.debug("controllers.SchemeCacheController.get: Authorised Request " + id)
       repository.get(id).map { response =>
         logger.debug(s"controllers.SchemeCacheController.get: Response for request Id $id is $response")
@@ -98,14 +55,13 @@ abstract class SchemeCacheController(
       }
   }
 
-  def removeSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+  def remove(id: String): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      repository.remove(request.externalId).map(_ => Ok)
+      repository.remove(id).map(_ => Ok)
   }
 
-  def lastUpdatedSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+  def lastUpdated(id: String): Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request =>
-      val id = request.externalId
       logger.debug("controllers.SchemeCacheController.lastUpdated: Authorised Request " + id)
       repository.getLastUpdated(id).map { response =>
         logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
