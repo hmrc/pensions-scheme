@@ -43,22 +43,6 @@ class SchemeDetailsController @Inject()(
   extends BackendController(cc)
     with ErrorHandler {
 
-  def getSchemeDetails: Action[AnyContent] = Action.async {
-    implicit request => {
-      val idType = request.headers.get("schemeIdType")
-      val id = request.headers.get("idNumber")
-      val idPsa = request.headers.get("PSAId")
-      val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
-
-      (idType, id, idPsa) match {
-        case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
-          fetchFromCacheOrApiForPsa(SchemeWithId(idNumber, psaId), schemeIdType, refreshDataOpt)
-        case _ =>
-          Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
-      }
-    } recoverWith recoverFromError
-  }
-
   def getSchemeDetailsSrn(srn: SchemeReferenceNumber): Action[AnyContent] = (psaEnrolmentAuthAction andThen psaSchemeAuthAction(srn)).async {
     implicit request => {
       val idType = request.headers.get("schemeIdType")
