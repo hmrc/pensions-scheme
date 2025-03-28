@@ -46,28 +46,6 @@ class SchemeController @Inject()(
 
   private val logger = Logger(classOf[SchemeController])
 
-  def listOfSchemes: Action[AnyContent] = Action.async {
-    implicit request => {
-      val idType = request.headers.get("idType")
-      val idValue = request.headers.get("idValue")
-
-      (idType, idValue) match {
-        case (Some(typeOfId), Some(valueOfId)) =>
-          schemeService.listOfSchemes(typeOfId, valueOfId).map {
-            case Right(json) =>
-              val list = json.convertTo[ListOfSchemes]
-              val sortedList = list.schemeDetails.map { schemes =>
-                schemes.sortBy(x => (x.schemeStatus == "Wound-up", x.name.toLowerCase()))
-              }
-              val newListOfSchemes = ListOfSchemes(list.processingDate, list.totalSchemesRegistered, sortedList)
-              Ok(Json.toJson(newListOfSchemes))
-            case Left(e) => result(e)
-          }
-        case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
-      }
-    }
-  }
-
   def listOfSchemesSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request => {
       val idTypeHeader = request.headers.get("idType")
@@ -94,29 +72,6 @@ class SchemeController @Inject()(
               }
               val newListOfSchemes = ListOfSchemes(list.processingDate, list.totalSchemesRegistered, sortedList)
               Ok(Json.toJson(newListOfSchemes))
-            case Left(e) => result(e)
-          }
-        case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
-      }
-    }
-  }
-
-  def openDateScheme: Action[AnyContent] = Action.async {
-    implicit request => {
-      val idType = request.headers.get("idType")
-      val idValue = request.headers.get("idValue")
-      val pstr = request.headers.get("pstr")
-
-      (idType, idValue, pstr) match {
-        case (Some(typeOfId), Some(valueOfId), Some(valueOfPstr)) =>
-          schemeService.listOfSchemes(typeOfId, valueOfId).map {
-            case Right(json) =>
-             json.convertTo[ListOfSchemes].schemeDetails.flatMap(
-                _.find(_.pstr.exists(_ == valueOfPstr)).flatMap(_.openDate)) match {
-               case Some(openDate) =>
-                 Ok(JsString(openDate))
-                case None => throw new BadRequestException("Bad Request without openDate")
-              }
             case Left(e) => result(e)
           }
         case _ => Future.failed(new BadRequestException("Bad Request with no ID type or value"))
