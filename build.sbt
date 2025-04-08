@@ -1,22 +1,30 @@
+
 import play.sbt.PlayImport.PlayKeys
 import play.sbt.routes.RoutesKeys
-import sbt.Keys._
-import sbt._
+import sbt.*
+import sbt.Keys.*
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, scalaSettings}
 
-lazy val microservice = Project(AppDependencies.appName, file("."))
+val appName = "pensions-scheme"
+
+ThisBuild / scalaVersion := "3.6.2"
+ThisBuild / majorVersion := 0
+ThisBuild / scalacOptions ++= Seq(
+  "-Xlint:-missing-interpolator,_",
+  "-Wconf:src=routes/.*:s",
+  "-feature"
+)
+
+lazy val microservice = Project(appName, file("."))
   .disablePlugins(JUnitXmlReportPlugin)
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
-  .settings(scalaSettings: _*)
-  .settings(defaultSettings(): _*)
+  .settings(scalaSettings *)
+  .settings(defaultSettings() *)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test(),
     retrieveManaged := true,
-    PlayKeys.devSettings += "play.server.http.port" -> "8203",
-    scalacOptions += "-Xlint:-missing-interpolator,_",
-    scalacOptions += "-Wconf:src=routes/.*:s",
-    scalacOptions += "-feature"
+    PlayKeys.devSettings += "play.server.http.port" -> "8203"
   )
   .settings(
     ScoverageKeys.coverageExcludedFiles := "<empty>;Reverse.*;.*filters.*;.*handlers.*;.*components.*;.*repositories.*;.*FeatureSwitchModule.*;" +
@@ -38,5 +46,3 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
   .settings(resolvers ++= Seq(
     Resolver.jcenterRepo,
   ))
-  .settings(majorVersion := 0)
-  .settings(scalaVersion := "2.13.16")

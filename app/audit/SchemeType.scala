@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ package audit
 import play.api.libs.json.{Reads, Writes}
 
 object SchemeType extends Enumeration {
-  val singleTrust = Value("Single trust")
-  val groupLifeDeath = Value("Group life/death in service")
-  val bodyCorporate = Value("Body corporate")
-  val masterTrust = Value("Master trust")
-  val other = Value("Other")
+  val singleTrust: Value = Value("Single trust")
+  val groupLifeDeath: Value = Value("Group life/death in service")
+  val bodyCorporate: Value = Value("Body corporate")
+  val masterTrust: Value = Value("Master trust")
+  val other: Value = Value("Other")
 
   implicit val reads: Reads[SchemeType.Value] = Reads.enumNameReads(SchemeType)
   implicit val writes: Writes[SchemeType.Value] = Writes.enumNameWrites

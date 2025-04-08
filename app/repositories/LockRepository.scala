@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,17 @@ package repositories
 import com.google.inject.{Inject, Singleton}
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import config.AppConfig
-import models._
-import org.mongodb.scala.MongoCommandException
-import org.mongodb.scala.model._
-import play.api.libs.json._
+import models.*
+import org.mongodb.scala.model.*
+import org.mongodb.scala.{MongoCommandException, SingleObservableFuture}
+import play.api.libs.json.*
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
-
-import java.time.Instant
 
 
 object LockRepository {
@@ -65,7 +64,7 @@ class LockRepository @Inject()(configuration: Configuration,
   ) with Logging {
   //scalastyle:off magic.number
 
-  import LockRepository._
+  import LockRepository.*
 
   private lazy val documentExistsErrorCode = 11000
   private val srnKey = "srn"

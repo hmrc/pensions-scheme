@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import com.google.inject.Inject
 import controllers.actions.PsaPspEnrolmentAuthAction
 import models.SchemeVariance
 import play.api.libs.json.Json
-import play.api.mvc._
+import play.api.mvc.*
 import repositories.LockRepository
 import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -98,7 +98,7 @@ class SchemeVarianceLockCacheController @Inject()(
       }
   }
 
-  private def withIDs(block: (String, String) => Future[Result])(implicit request: Request[_]): Future[Result] = {
+  private def withIDs(block: (String, String) => Future[Result])(implicit request: Request[?]): Future[Result] = {
     (request.headers.get("psaId"), request.headers.get("srn")) match {
       case (Some(psaId), Some(srn)) => block(psaId, srn)
       case _ =>

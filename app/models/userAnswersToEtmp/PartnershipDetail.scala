@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package models.userAnswersToEtmp
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Reads, _}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 
 case class PartnershipDetail(name: String, vat: Option[String], paye: Option[String], utr: Option[String], utrReason: Option[String],
                              address: Address, contact: ContactDetails, addressYears: String, tradingTime: Option[Boolean], previousAddress: Option[Address])
@@ -35,5 +35,5 @@ object PartnershipDetail {
       (JsPath \ "partnershipAddressYears").read[String] and
       (JsPath \ "hasBeenTrading").readNullable[Boolean] and
       (JsPath \ "partnershipPreviousAddress").readNullable[Address]
-    ) (PartnershipDetail.apply _)
+    ) (PartnershipDetail.apply)
 }

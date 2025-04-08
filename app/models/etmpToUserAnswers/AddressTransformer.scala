@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,34 +17,34 @@
 package models.etmpToUserAnswers
 
 import models.etmpToUserAnswers.psaSchemeDetails.JsonTransformer
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import play.api.libs.json.Reads.*
 
 import scala.language.postfixOps
 
 class AddressTransformer extends JsonTransformer {
 
   private def getCommonAddressElements(userAnswersPath: JsPath, ifAddressPath: JsPath): Reads[JsObject] = {
-    (userAnswersPath \ Symbol("addressLine1")).json.copyFrom((ifAddressPath \ Symbol("line1")).json.pick) and
-      (userAnswersPath \ Symbol("addressLine2")).json.copyFrom((ifAddressPath \ Symbol("line2")).json.pick) and
-      ((userAnswersPath \ Symbol("addressLine3")).json.copyFrom((ifAddressPath \ Symbol("line3")).json.pick)
-        orElse doNothing) and
-      ((userAnswersPath \ Symbol("addressLine4")).json.copyFrom((ifAddressPath \ Symbol("line4")).json.pick)
-        orElse doNothing) reduce
+    (userAnswersPath \ Symbol("addressLine1")).json.copyFrom((ifAddressPath \ Symbol("line1")).json.pick) `and`
+      (userAnswersPath \ Symbol("addressLine2")).json.copyFrom((ifAddressPath \ Symbol("line2")).json.pick) `and`
+      (userAnswersPath \ Symbol("addressLine3")).json.copyFrom((ifAddressPath \ Symbol("line3")).json.pick)
+       .orElse(doNothing) `and`
+      (userAnswersPath \ Symbol("addressLine4")).json.copyFrom((ifAddressPath \ Symbol("line4")).json.pick)
+       .orElse(doNothing) reduce
   }
 
   def getAddress(userAnswersPath: JsPath, ifAddressPath: JsPath): Reads[JsObject] = {
-    getCommonAddressElements(userAnswersPath, ifAddressPath) and
-      ((userAnswersPath \ Symbol("postalCode")).json.copyFrom((ifAddressPath \ Symbol("postalCode")).json.pick)
-        orElse doNothing) and
+    getCommonAddressElements(userAnswersPath, ifAddressPath) `and`
+      (userAnswersPath \ Symbol("postalCode")).json.copyFrom((ifAddressPath \ Symbol("postalCode")).json.pick)
+       .orElse(doNothing) `and`
       (userAnswersPath \ Symbol("countryCode")).json.copyFrom((ifAddressPath \ Symbol("countryCode")).json.pick) reduce
   }
 
   def getDifferentAddress(userAnswersPath: JsPath, ifAddressPath: JsPath): Reads[JsObject] = {
-    getCommonAddressElements(userAnswersPath, ifAddressPath) and
-      ((userAnswersPath \ Symbol("postcode")).json.copyFrom((ifAddressPath \ Symbol("postalCode")).json.pick)
-        orElse doNothing) and
+    getCommonAddressElements(userAnswersPath, ifAddressPath) `and`
+      (userAnswersPath \ Symbol("postcode")).json.copyFrom((ifAddressPath \ Symbol("postalCode")).json.pick)
+       .orElse(doNothing) `and`
       (userAnswersPath \ Symbol("country")).json.copyFrom((ifAddressPath \ Symbol("countryCode")).json.pick) reduce
   }
 
@@ -56,12 +56,12 @@ class AddressTransformer extends JsonTransformer {
         JsString("over_a_year")
       }
       uaAddressYearsPath.json.put(value)
-    } orElse doNothing
+    }.orElse(doNothing)
   }
 
   def getPreviousAddress(userAnswersPath: JsPath): Reads[JsObject] = {
     (__ \ Symbol("previousAddressDetails") \ Symbol("previousAddress")).read[JsObject].flatMap { _ =>
       getDifferentAddress(userAnswersPath, __ \ Symbol("previousAddressDetails") \ Symbol("previousAddress"))
-    } orElse doNothing
+    }.orElse(doNothing)
   }
 }
