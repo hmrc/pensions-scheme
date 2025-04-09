@@ -41,7 +41,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     Test / fork := true,
     Test / javaOptions += "-Dconfig.file=conf/test.application.conf",
-    Test / scalacOptions += "-feature"
   )
   .settings(resolvers ++= Seq(
     Resolver.jcenterRepo,
