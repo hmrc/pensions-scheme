@@ -16,11 +16,11 @@
 
 package models
 
-import play.api.libs.json.{Format, JsObject, Json}
+import play.api.libs.json.{JsObject, Json, OFormat}
 
 case class PsaInvitationInfoResponse(pstr: Option[String], schemeName: Option[String], schemeType: Option[JsObject], racdacScheme: Option[Boolean])
 
 object PsaInvitationInfoResponse {
-  implicit val psaInvitationInfoResponse: Format[PsaInvitationInfoResponse] = Json.format
+  implicit val psaInvitationInfoResponse: OFormat[PsaInvitationInfoResponse] = Json.format[PsaInvitationInfoResponse]
 }
 

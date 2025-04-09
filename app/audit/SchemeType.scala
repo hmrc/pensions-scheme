@@ -26,6 +26,6 @@ object SchemeType extends Enumeration {
   val other: Value = Value("Other")
 
   implicit val reads: Reads[SchemeType.Value] = Reads.enumNameReads(SchemeType)
-  implicit val writes: Writes[SchemeType.Value] = Writes.enumNameWrites
+  implicit val writes: Writes[SchemeType.Value] = Writes.enumNameWrites[SchemeType.type]
 
 }

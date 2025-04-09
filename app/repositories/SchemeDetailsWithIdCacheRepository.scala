@@ -32,7 +32,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
+import _root_.javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeDetailsWithIdCacheRepository {
