@@ -21,7 +21,7 @@ import models.enumeration.{Benefits, SchemeMembers, SchemeType}
 import models.etmpToUserAnswers.AddressTransformer
 import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
-import play.api.libs.json.Reads.*
+import play.api.libs.json.Reads.JsObjectReducer
 
 import scala.language.postfixOps
 

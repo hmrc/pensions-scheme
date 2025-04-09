@@ -11,8 +11,9 @@ val appName = "pensions-scheme"
 ThisBuild / scalaVersion := "3.6.2"
 ThisBuild / majorVersion := 0
 ThisBuild / scalacOptions ++= Seq(
-  "-Xlint:-missing-interpolator,_",
   "-Wconf:src=routes/.*:s",
+  "-Wconf:msg=Flag.*repeatedly:s",
+  "-Wconf:msg=.*redundantly:s",
   "-feature"
 )
 
