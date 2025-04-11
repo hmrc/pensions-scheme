@@ -152,7 +152,7 @@ class SchemeController @Inject()(
     }
   }
 
-  def registerScheme(schemeJourneyType:SchemeJourneyType.Name): Action[AnyContent] = Action.async {
+  def registerScheme(schemeJourneyType:SchemeJourneyType): Action[AnyContent] = Action.async {
     implicit request => {
       val psaId = request.headers.get("psaId")
       val feJson = request.body.asJson
@@ -169,7 +169,7 @@ class SchemeController @Inject()(
     } recoverWith recoverFromError
   }
 
-  def registerSchemeSelf(schemeJourneyType:SchemeJourneyType.Name): Action[AnyContent] = psaEnrolmentAuthAction.async {
+  def registerSchemeSelf(schemeJourneyType:SchemeJourneyType): Action[AnyContent] = psaEnrolmentAuthAction.async {
     implicit request => {
       val feJson = request.body.asJson
       logger.debug(s"[PSA-Scheme-Incoming-Payload] $feJson for scheme journey type: $schemeJourneyType")

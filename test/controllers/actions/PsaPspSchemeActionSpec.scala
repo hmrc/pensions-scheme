@@ -53,7 +53,7 @@ class PsaPspSchemeActionSpec extends PlaySpec with MockitoSugar with BeforeAndAf
   private def getResult(loggedInAsPsa: Boolean, req: PsaPspAuthRequest[AnyContent]) = {
     new PsaPspSchemeAuthAction(mockSchemeService)
       .apply(srn, loggedInAsPsa)
-      .invokeBlock(req, { _: PsaPspAuthRequest[AnyContent] => Future.successful(Ok("success")) })
+      .invokeBlock(req, {(_: PsaPspAuthRequest[AnyContent] => (Future.successful(Ok("success")))})
   }
 
   private def mockCheckForAssociationPsa = {

@@ -1,8 +1,8 @@
 # microservice specific routes
 
 #deprecated
-POST          /register-scheme/:schemeJourneyType               controllers.SchemeController.registerScheme(schemeJourneyType: SchemeJourneyType.Name)
-POST          /register-scheme-self/:schemeJourneyType          controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType.Name)
+POST          /register-scheme/:schemeJourneyType               controllers.SchemeController.registerScheme(schemeJourneyType: SchemeJourneyType)
+POST          /register-scheme-self/:schemeJourneyType          controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType)
 #deprecated
 POST          /update-scheme                                    controllers.SchemeController.updateScheme()
 #deprecated

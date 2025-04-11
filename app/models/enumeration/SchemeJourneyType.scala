@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,26 @@
 
 package models.enumeration
 
-import models.enumeration.binders.EnumPathBinder
 import play.api.mvc.PathBindable
 
-object SchemeJourneyType extends Enumeration {
-  type Name = Value
-  val RAC_DAC_SCHEME: SchemeJourneyType.Value = Value("rac-dac")
-  val NON_RAC_DAC_SCHEME: SchemeJourneyType.Value = Value("non-rac-dac")
+sealed trait SchemeJourneyType
 
-  implicit val journeyTypePathBinder: PathBindable[Name] = EnumPathBinder.pathBinder(this)
-}
+object SchemeJourneyType:
+  private case object RAC_DAC_SCHEME extends SchemeJourneyType
+  private case object NON_RAC_DAC_SCHEME extends SchemeJourneyType
+
+  implicit def pathBindable: PathBindable[SchemeJourneyType] =
+    new PathBindable[SchemeJourneyType] {
+      override def bind(key: String, value: String): Either[String, SchemeJourneyType] =
+        value match {
+          case "rac-dac" => Right(SchemeJourneyType.RAC_DAC_SCHEME)
+          case "non-rac-dac" => Right(SchemeJourneyType.NON_RAC_DAC_SCHEME)
+          case _ => Left("invalid SchemeJourneyType")
+        }
+
+      override def unbind(key: String, value: SchemeJourneyType): String =
+        value match {
+          case SchemeJourneyType.RAC_DAC_SCHEME => "rac-dac"
+          case SchemeJourneyType.NON_RAC_DAC_SCHEME => "non-rac-dac"
+        }
+    }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.{HttpException, NotFoundException, UpstreamErrorResponse
 import scala.language.reflectiveCalls
 
 class ErrorHandlerSpec extends AnyWordSpec with Matchers {
-  private val eh = new ErrorHandler {
+  private val eh: ErrorHandler = new ErrorHandler {
     def testResult(res: HttpException): Result = result(res)
   }
 
@@ -59,8 +59,8 @@ class ErrorHandlerSpec extends AnyWordSpec with Matchers {
       val res = new HttpException(testMessage, 433)
       val expectedResult = Result(ResponseHeader(res.responseCode), HttpEntity.Strict(ByteString(testJson), Some("application/json")))
       val result = eh.testResult(res)
-      result.header mustBe expectedResult.header
-      result.body mustBe expectedResult.body
+      result.header `mustBe` expectedResult.header
+      result.body `mustBe` expectedResult.body
     }
 
     "return correct result for plain text" in {
@@ -68,8 +68,8 @@ class ErrorHandlerSpec extends AnyWordSpec with Matchers {
       val res = new HttpException(testJson, 433)
       val expectedResult = Result(ResponseHeader(res.responseCode), HttpEntity.Strict(ByteString(testJson), Some("text/plain")))
       val result = eh.testResult(res)
-      result.header mustBe expectedResult.header
-      result.body mustBe expectedResult.body
+      result.header `mustBe` expectedResult.header
+      result.body `mustBe` expectedResult.body
     }
   }
 }

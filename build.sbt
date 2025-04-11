@@ -8,7 +8,7 @@ import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, scalaSettings}
 
 val appName = "pensions-scheme"
 
-ThisBuild / scalaVersion := "3.6.2"
+ThisBuild / scalaVersion := "3.6.4"
 ThisBuild / majorVersion := 0
 ThisBuild / scalacOptions ++= Seq(
   "-Wconf:src=routes/.*:s",

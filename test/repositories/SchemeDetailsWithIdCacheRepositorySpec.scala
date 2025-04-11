@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.typesafe.config.Config
 import models.{Samples, SchemeWithId}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.mongodb.scala.ObservableFuture
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
@@ -41,7 +42,7 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 
   private val idField: String = "id"
 
-  import SchemeDetailsWithIdCacheRepositorySpec._
+  import SchemeDetailsWithIdCacheRepositorySpec.*
 
   private var schemeDetailsWithIdCacheRepository: SchemeDetailsWithIdCacheRepository = _
   private val mockAppConfiguration = mock[Configuration]
@@ -117,9 +118,9 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 
       whenReady(documentsInDB) {
         documentsInDB =>
-          documentsInDB.size mustBe 1
-          documentsInDB.head.data mustBe Json.parse("""{"value":"8Tg19J0udcVGrMR/33RFug=="}""")
-          documentsInDB.head.data must not be record1._2
+          documentsInDB.size `mustBe` 1
+          documentsInDB.head.data `mustBe` Json.parse("""{"value":"8Tg19J0udcVGrMR/33RFug=="}""")
+          documentsInDB.head.data `must` not `be` record1._2
       }
     }
 
@@ -137,7 +138,7 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 
       whenReady(documentsInDB) {
         documentsInDB =>
-          documentsInDB.size mustBe 2
+          documentsInDB.size `mustBe` 2
       }
     }
   }
@@ -154,7 +155,7 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
       } yield documentsInDB
 
       whenReady(documentsInDB) { documentsInDB =>
-        documentsInDB.isDefined mustBe true
+        documentsInDB.isDefined `mustBe` true
       }
     }
   }

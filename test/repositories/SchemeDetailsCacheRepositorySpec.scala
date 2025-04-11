@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ package repositories
 import com.typesafe.config.Config
 import models.Samples
 import org.mockito.Mockito.when
+import org.mongodb.scala.ObservableFuture
 import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.{convertToAnyShouldWrapper, should}
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
@@ -43,7 +44,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
 
   private val idField: String = "id"
 
-  import SchemeDetailsCacheRepositorySpec._
+  import SchemeDetailsCacheRepositorySpec.*
 
   override def beforeAll(): Unit = {
     when(mockAppConfig.underlying).thenReturn(mockConfig)
