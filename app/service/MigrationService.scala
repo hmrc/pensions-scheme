@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package service
 
-import com.google.inject.Inject
+//import com.google.inject.Inject
 import play.api.Logging
-import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
+//import uk.gov.hmrc.mongo.MongoComponent
+//import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
-class MigrationService @Inject()(mongoLockRepository: MongoLockRepository,
-                                 mongoComponent: MongoComponent) extends Logging {
+class MigrationService extends Logging {
   /*
   private val lock = LockService(mongoLockRepository, "event_reporting_data_expireAtLock", Duration(10, TimeUnit.MINUTES))
 

@@ -73,7 +73,7 @@ class SchemeCacheControllerSpec
       "metrics.jvm" -> false,
       "metrics.enabled" -> false
     )
-    .overrides(modules: _*)
+    .overrides(modules*)
     .build()
 
   private class SchemeCacheControllerImpl(
@@ -222,7 +222,7 @@ class SchemeCacheControllerSpec
       }
 
       "throw an exception when the call is not authorised" in {
-        when(authConnector.authorise[Unit](any(), any())(any(), any())).(thenReturn Future.failed {
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
           new UnauthorizedException("")
         })
 

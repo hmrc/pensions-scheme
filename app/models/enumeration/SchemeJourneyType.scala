@@ -21,8 +21,8 @@ import play.api.mvc.PathBindable
 sealed trait SchemeJourneyType
 
 object SchemeJourneyType:
-  private case object RAC_DAC_SCHEME extends SchemeJourneyType
-  private case object NON_RAC_DAC_SCHEME extends SchemeJourneyType
+  case object RAC_DAC_SCHEME extends SchemeJourneyType
+  case object NON_RAC_DAC_SCHEME extends SchemeJourneyType
 
   implicit def pathBindable: PathBindable[SchemeJourneyType] =
     new PathBindable[SchemeJourneyType] {

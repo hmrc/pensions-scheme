@@ -33,6 +33,7 @@ import play.api.libs.json.Json
 import repositories.SchemeDetailsWithIdCacheRepository.DataCache
 import uk.gov.hmrc.mongo.MongoComponent
 
+import scala.compiletime.uninitialized
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSugar with Matchers with BeforeAndAfter
@@ -44,12 +45,12 @@ class SchemeDetailsWithIdCacheRepositorySpec extends AnyWordSpec with MockitoSug
 
   import SchemeDetailsWithIdCacheRepositorySpec.*
 
-  private var schemeDetailsWithIdCacheRepository: SchemeDetailsWithIdCacheRepository = _
+  private var schemeDetailsWithIdCacheRepository: SchemeDetailsWithIdCacheRepository = uninitialized
   private val mockAppConfiguration = mock[Configuration]
   private val mockAppConfig = mock[Config]
 
   override def beforeAll(): Unit = {
-    when(mockAppConfiguration.get[String]("mongodb.pensions-scheme-cache.scheme-with-id.name")).thenReturn("pensions-scheme-scheme-with-id-cache")
+  when(mockAppConfiguration.get[String]("mongodb.pensions-scheme-cache.scheme-with-id.name")).thenReturn("pensions-scheme-scheme-with-id-cache")
     when(mockAppConfiguration.get[Int]("mongodb.pensions-scheme-cache.scheme-details.timeToLiveInSeconds")).thenReturn(3600)
     when(mockAppConfiguration.get[Boolean]("encrypted")).thenReturn(true)
     when(mockAppConfiguration.underlying).thenReturn(mockAppConfig)

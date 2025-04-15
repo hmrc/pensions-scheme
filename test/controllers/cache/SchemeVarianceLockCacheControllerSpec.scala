@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,10 +67,10 @@ class SchemeVarianceLockCacheControllerSpec extends AnyWordSpec with Matchers wi
       "metrics.jvm" -> false,
       "metrics.enabled" -> false
     )
-    .overrides(modules: _*)
+    .overrides(modules*)
     .build()
 
-  def getRequest(request: FakeRequest[_]): FakeRequest[_] =
+  def getRequest(request: FakeRequest[?]): FakeRequest[?] =
     request.withHeaders(("psaId", "A2100005"), ("srn", "SR0000001"))
 
   "SchemeVarianceLockCacheController" when {
