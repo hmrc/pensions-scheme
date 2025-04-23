@@ -20,8 +20,9 @@ import play.api.mvc.PathBindable
 
 sealed trait SchemeJourneyType
 
-object SchemeJourneyType:
+object SchemeJourneyType {
   case object RAC_DAC_SCHEME extends SchemeJourneyType
+
   case object NON_RAC_DAC_SCHEME extends SchemeJourneyType
 
   implicit def pathBindable: PathBindable[SchemeJourneyType] =
@@ -39,3 +40,4 @@ object SchemeJourneyType:
           case SchemeJourneyType.NON_RAC_DAC_SCHEME => "non-rac-dac"
         }
     }
+}
