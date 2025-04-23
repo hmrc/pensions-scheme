@@ -25,17 +25,15 @@ import play.api.mvc.{ResponseHeader, Result}
 import uk.gov.hmrc.http.{HttpException, NotFoundException, UpstreamErrorResponse}
 import scala.language.reflectiveCalls
 
-class ErrorHandlerSpec extends AnyWordSpec with Matchers {
-  private val eh: ErrorHandler = new ErrorHandler {
-    def testResult(res: HttpException): Result = result(res)
-  }
+class ErrorHandlerSpec extends AnyWordSpec with Matchers with ErrorHandler {
+  def testResult(res: HttpException): Result = result(res)
 
   "recoverFromError" must {
     "return a not found exception when such is passed into" in {
       val testMessage = "a message"
       val exception = new NotFoundException(testMessage)
 
-      val result = eh.recoverFromError(exception)
+      val result = recoverFromError(exception)
       ScalaFutures.whenReady(result.failed) {
         _.getMessage mustBe testMessage
       }
@@ -45,7 +43,7 @@ class ErrorHandlerSpec extends AnyWordSpec with Matchers {
       val testMessage = "INVALID_BUSINESS_PARTNER"
       val exception = UpstreamErrorResponse(testMessage, 403, 403)
 
-      val result = eh.recoverFromError(exception)
+      val result = recoverFromError(exception)
       ScalaFutures.whenReady(result.failed) {
         _.getMessage mustBe testMessage
       }
@@ -58,7 +56,7 @@ class ErrorHandlerSpec extends AnyWordSpec with Matchers {
       val testMessage = s"Response body: '$testJson'"
       val res = new HttpException(testMessage, 433)
       val expectedResult = Result(ResponseHeader(res.responseCode), HttpEntity.Strict(ByteString(testJson), Some("application/json")))
-      val result = eh.testResult(res)
+      val result = testResult(res)
       result.header `mustBe` expectedResult.header
       result.body `mustBe` expectedResult.body
     }
@@ -67,7 +65,7 @@ class ErrorHandlerSpec extends AnyWordSpec with Matchers {
       val testJson = "some text"
       val res = new HttpException(testJson, 433)
       val expectedResult = Result(ResponseHeader(res.responseCode), HttpEntity.Strict(ByteString(testJson), Some("text/plain")))
-      val result = eh.testResult(res)
+      val result = testResult(res)
       result.header `mustBe` expectedResult.header
       result.body `mustBe` expectedResult.body
     }

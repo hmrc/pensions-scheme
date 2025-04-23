@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ class SchemeDetailsControllerSpec
 
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe successResponse
     }
 
@@ -111,7 +111,7 @@ class SchemeDetailsControllerSpec
       when(mockSchemeDetailsCache.get(any())).thenReturn(Future.successful(Some(successResponse)))
       val result = schemeDetailsController.getSchemeDetails()(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe successResponse
     }
 
@@ -123,7 +123,7 @@ class SchemeDetailsControllerSpec
 
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
@@ -137,7 +137,7 @@ class SchemeDetailsControllerSpec
 
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
@@ -151,7 +151,7 @@ class SchemeDetailsControllerSpec
 
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
@@ -282,7 +282,7 @@ class SchemeDetailsControllerSpec
 
       val result = schemeDetailsController.getSchemeDetailsSrn(srn)(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe successResponse
     }
 
@@ -292,7 +292,7 @@ class SchemeDetailsControllerSpec
       when(mockSchemeDetailsCache.get(any())).thenReturn(Future.successful(Some(successResponse)))
       val result = schemeDetailsController.getSchemeDetailsSrn(srn)(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe successResponse
     }
 
@@ -304,7 +304,7 @@ class SchemeDetailsControllerSpec
 
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
@@ -318,7 +318,7 @@ class SchemeDetailsControllerSpec
 
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
@@ -427,7 +427,7 @@ class SchemeDetailsControllerSpec
       val result = schemeDetailsController.getSchemeDetailsSrn(srn)(fakeRequest)
       whenReady(result.failed) { e =>
         e mustBe a[Exception]
-        e.getMessage mustBe "Generic Exception"
+        e.getMessage.mustBe("Generic Exception")
       }
     }
   }
@@ -460,7 +460,7 @@ class SchemeDetailsControllerSpec
 
       val result = schemeDetailsController.getSchemePsaInvitationInfo()(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe Json.toJson(successResponse)
     }
 
@@ -469,7 +469,7 @@ class SchemeDetailsControllerSpec
       when(mockSchemeDetailsCache.get(any())).thenReturn(Future.successful(Some(userAnswersResponse)))
       val result = schemeDetailsController.getSchemePsaInvitationInfo()(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe Json.toJson(successResponse)
     }
 
@@ -480,7 +480,7 @@ class SchemeDetailsControllerSpec
 
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters schemeIdType, idNumber"
+        e.getMessage.mustBe("Bad Request with missing parameters schemeIdType, idNumber")
         verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
@@ -493,7 +493,7 @@ class SchemeDetailsControllerSpec
 
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters schemeIdType, idNumber"
+        e.getMessage.mustBe("Bad Request with missing parameters schemeIdType, idNumber")
         verify(mockSchemeConnector, never).getSchemeDetails(any(), any(), any())(any(), any(), any())
       }
     }
@@ -621,7 +621,7 @@ class SchemeDetailsControllerSpec
 
       val result = schemeDetailsController.getPspSchemeDetails()(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe successResponse
     }
 
@@ -631,7 +631,7 @@ class SchemeDetailsControllerSpec
       val result = schemeDetailsController.getPspSchemeDetails()(FakeRequest("GET", "/").withHeaders(("schemeIdType", schemeIdType), ("PSAId", psaId)))
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
           ArgumentMatchers.any())(any(), any(), any())
       }
@@ -643,7 +643,7 @@ class SchemeDetailsControllerSpec
       val result = schemeDetailsController.getPspSchemeDetails()(FakeRequest("GET", "/").withHeaders(("idNumber", srn), ("PSAId", psaId)))
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
           ArgumentMatchers.any())(any(), any(), any())
       }
@@ -655,7 +655,7 @@ class SchemeDetailsControllerSpec
       val result = schemeDetailsController.getPspSchemeDetails()(FakeRequest("GET", "/").withHeaders(("idNumber", srn), ("schemeIdType", schemeIdType)))
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
           ArgumentMatchers.any())(any(), any(), any())
       }
@@ -781,7 +781,7 @@ class SchemeDetailsControllerSpec
 
       val result = schemeDetailsController.getPspSchemeDetailsSrn(srn)(fakeRequest)
 
-      status(result) mustBe OK
+      status(result).mustBe(OK)
       contentAsJson(result) mustBe successResponse
     }
 
@@ -791,7 +791,7 @@ class SchemeDetailsControllerSpec
       val result = schemeDetailsController.getPspSchemeDetailsSrn(srn)(FakeRequest("GET", "/").withHeaders(("schemeIdType", schemeIdType)))
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
           ArgumentMatchers.any())(any(), any(), any())
       }
@@ -803,7 +803,7 @@ class SchemeDetailsControllerSpec
       val result = schemeDetailsController.getPspSchemeDetailsSrn(srn)(FakeRequest("GET", "/").withHeaders(("idNumber", srn)))
       whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with missing parameters idType, idNumber or PSAId"
+        e.getMessage.mustBe("Bad Request with missing parameters idType, idNumber or PSAId")
         verify(mockSchemeConnector, never).getPspSchemeDetails(ArgumentMatchers.any(),
           ArgumentMatchers.any())(any(), any(), any())
       }
