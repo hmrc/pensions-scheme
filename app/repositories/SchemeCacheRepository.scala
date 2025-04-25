@@ -24,7 +24,6 @@ import org.mongodb.scala.model.*
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.*
 import play.api.{Configuration, Logging}
-import repositories.SchemeDataEntry.SchemeDataEntryFormats.expireAtKey
 import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry, SchemeDataEntry, SchemeDataEntryFormats}
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -118,7 +117,7 @@ class SchemeCacheRepository @Inject()(
     ),
     indexes = Seq(
       IndexModel(
-        Indexes.ascending(expireAtKey),
+        Indexes.ascending(SchemeDataEntryFormats.expireAtKey),
         IndexOptions().name("dataExpiry")
           .expireAfter(0, TimeUnit.SECONDS).background(true)
       )
