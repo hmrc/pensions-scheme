@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package models.etmpToUserAnswers.psaSchemeDetails
 
 import com.google.inject.Inject
 import models.etmpToUserAnswers.AddressTransformer
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import play.api.libs.json.Reads.*
 
 import scala.language.postfixOps
 
@@ -36,7 +36,8 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
           __.read(Reads.seq(userAnswersEstablisherCompanyReads)).map(JsArray(_))).flatMap { company =>
           (__ \ Symbol("partnershipEstablisherDetails")).readNullable(
             __.read(Reads.seq(userAnswersEstablisherPartnershipReads)).map(JsArray(_))).flatMap { partnership =>
-            (__ \ Symbol("establishers")).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
+            (__ \ Symbol("establishers"))
+              .json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())).orElse(doNothing)
           }
         }
       })).map {
@@ -45,29 +46,29 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
   }
 
   def userAnswersEstablisherIndividualReads: Reads[JsObject] = {
-    (__ \ Symbol("establisherKind")).json.put(JsString("individual")) and
-      userAnswersIndividualDetailsReads("establisherDetails") and
-      userAnswersNinoReads("establisherNino") and
-      userAnswersUtrReads and
-      addressTransformer.getDifferentAddress(__ \ Symbol("address"), __ \ Symbol("correspondenceAddressDetails")) and
-      addressTransformer.getAddressYears(__ \ Symbol("addressYears")) and
-      addressTransformer.getPreviousAddress(__ \ Symbol("previousAddress")) and
-      userAnswersContactDetailsReads("contactDetails") and
+    (__ \ Symbol("establisherKind")).json.put(JsString("individual")) `and`
+      userAnswersIndividualDetailsReads("establisherDetails") `and`
+      userAnswersNinoReads("establisherNino") `and`
+      userAnswersUtrReads `and`
+      addressTransformer.getDifferentAddress(__ \ Symbol("address"), __ \ Symbol("correspondenceAddressDetails")) `and`
+      addressTransformer.getAddressYears(__ \ Symbol("addressYears")) `and`
+      addressTransformer.getPreviousAddress(__ \ Symbol("previousAddress")) `and`
+      userAnswersContactDetailsReads("contactDetails") `and`
       (__ \ Symbol("isEstablisherComplete")).json.put(JsBoolean(true)) reduce
   }
 
   def userAnswersEstablisherCompanyReads: Reads[JsObject] =
-    (__ \ Symbol("establisherKind")).json.put(JsString("company")) and
-      userAnswersCompanyDetailsReads and
-      transformVatToUserAnswersReads("companyVat") and
-      userAnswersPayeReads("companyPaye") and
-      userAnswersCrnReads and
-      userAnswersUtrReads and
-      addressTransformer.getDifferentAddress(__ \ Symbol("companyAddress"), __ \ Symbol("correspondenceAddressDetails")) and
-      addressTransformer.getAddressYears(__ \ Symbol("companyAddressYears")) and
-      addressTransformer.getPreviousAddress(__ \ Symbol("companyPreviousAddress")) and
-      userAnswersContactDetailsReads("companyContactDetails") and
-      ((__ \ Symbol("otherDirectors")).json.copyFrom((__ \ Symbol("haveMoreThanTenDirectors")).json.pick) orElse doNothing) and
+    (__ \ Symbol("establisherKind")).json.put(JsString("company")) `and`
+      userAnswersCompanyDetailsReads `and`
+      transformVatToUserAnswersReads("companyVat") `and`
+      userAnswersPayeReads("companyPaye") `and`
+      userAnswersCrnReads `and`
+      userAnswersUtrReads `and`
+      addressTransformer.getDifferentAddress(__ \ Symbol("companyAddress"), __ \ Symbol("correspondenceAddressDetails")) `and`
+      addressTransformer.getAddressYears(__ \ Symbol("companyAddressYears")) `and`
+      addressTransformer.getPreviousAddress(__ \ Symbol("companyPreviousAddress")) `and`
+      userAnswersContactDetailsReads("companyContactDetails") `and`
+      (__ \ Symbol("otherDirectors")).json.copyFrom((__ \ Symbol("haveMoreThanTenDirectors")).json.pick).orElse(doNothing) `and`
       getDirector reduce
 
   def getDirector: Reads[JsObject] = (__ \ Symbol("directorsDetails")).readNullable(
@@ -86,7 +87,7 @@ class EstablisherDetailsTransformer @Inject()(addressTransformer: AddressTransfo
       addressTransformer.getPreviousAddress(__ \ Symbol("partnershipPreviousAddress")) and
       userAnswersContactDetailsReads("partnershipContactDetails") and
       (__ \ Symbol("otherPartners")).json.copyFrom((__ \ Symbol("areMorethanTenPartners")).json.pick) and
-      (__ \ Symbol("isEstablisherComplete")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("isEstablisherComplete")).json.put(JsBoolean(true)) `and`
       getPartner reduce
 
   def getPartner: Reads[JsObject] = (__ \ Symbol("partnerDetails")).read(

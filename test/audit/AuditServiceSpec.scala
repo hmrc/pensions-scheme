@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,13 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.{ApplicationLifecycle, bind}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
-import repositories._
+import repositories.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector._
+import uk.gov.hmrc.play.audit.http.connector.*
 import uk.gov.hmrc.play.audit.model.DataEvent
 
+import scala.compiletime.uninitialized
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuditServiceSpec extends AsyncFlatSpec with Matchers with Inside {
@@ -84,7 +85,7 @@ object AuditServiceSpec extends MockitoSugar {
 //noinspection ScalaDeprecation
 object FakeAuditConnector extends AuditConnector {
 
-  private var sentEvent: DataEvent = _
+  private var sentEvent: DataEvent = uninitialized
 
   override def auditingConfig: AuditingConfig =
     AuditingConfig(

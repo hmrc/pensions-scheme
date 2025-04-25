@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,11 +49,10 @@ class PsaSchemeActionSpec extends PlaySpec with MockitoSugar with BeforeAndAfter
   private val authRequest = PsaAuthRequest[AnyContent](FakeRequest("", ""), PsaId(AuthUtils.psaId),  AuthUtils.externalId)
 
   private val srn = AuthUtils.srn
-  private def getResult = {
+  private def getResult =
     new PsaSchemeAuthAction(mockSchemeService)
       .apply(srn)
-      .invokeBlock(authRequest, { _: PsaAuthRequest[AnyContent] => Future.successful(Ok("success")) })
-  }
+      .invokeBlock(authRequest, (_: PsaAuthRequest[AnyContent]) => Future.successful(Ok("success")))
 
   private def mockCheckForAssociation = {
     when(mockSchemeService.isAssociated(ArgumentMatchers.eq(srn), ArgumentMatchers.eq(Left(PsaId(AuthUtils.psaId))))(ArgumentMatchers.any(), ArgumentMatchers.any()))

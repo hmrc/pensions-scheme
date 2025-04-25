@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ class PsaSchemeActionImpl (srn:SchemeReferenceNumber, schemeService: SchemeServi
                           (implicit val executionContext: ExecutionContext)
   extends ActionFunction[PsaAuthRequest, PsaAuthRequest] with BackendHeaderCarrierProvider with Logging with ErrorHandler {
 
-
   override def invokeBlock[A](request: PsaAuthRequest[A], block: PsaAuthRequest[A] => Future[Result]): Future[Result] = {
 
     val isAssociated = schemeService.isAssociated(
@@ -50,9 +49,6 @@ class PsaSchemeActionImpl (srn:SchemeReferenceNumber, schemeService: SchemeServi
     }
   }
 }
-
-
-
 
 class PsaSchemeAuthAction @Inject()(schemeService: SchemeService)(implicit ec: ExecutionContext){
   def apply(srn: SchemeReferenceNumber): ActionFunction[PsaAuthRequest, PsaAuthRequest] =

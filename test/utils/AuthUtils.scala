@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +41,10 @@ object AuthUtils {
   val externalId = "externalId"
 
   def failedAuthStub(mockAuthConnector: AuthConnector): OngoingStubbing[Future[Unit]] =
-    when(mockAuthConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed(InsufficientEnrolments())
+    when(mockAuthConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed(InsufficientEnrolments()))
 
   def authStub(mockAuthConnector: AuthConnector): OngoingStubbing[Future[Enrolments ~ Option[String]]] =
-    when(mockAuthConnector.authorise[Enrolments ~ Option[String]](any(), any())(any(), any())) thenReturn Future.successful(AuthUtils.authResponse)
+    when(mockAuthConnector.authorise[Enrolments ~ Option[String]](any(), any())(any(), any())).thenReturn(Future.successful(AuthUtils.authResponse))
   val authResponse = new ~(
     Enrolments(
       Set(
@@ -54,8 +54,7 @@ object AuthUtils {
   )
 
   def authStubPsp(mockAuthConnector: AuthConnector): OngoingStubbing[Future[Enrolments ~ Option[String]]] =
-    when(mockAuthConnector.authorise[Enrolments ~ Option[String]](any(), any())(any(), any())) thenReturn
-      Future.successful(AuthUtils.authResponsePsp)
+    when(mockAuthConnector.authorise[Enrolments ~ Option[String]](any(), any())(any(), any())).thenReturn(Future.successful(AuthUtils.authResponsePsp))
   val authResponsePsp = new ~(
     Enrolments(
       Set(
@@ -65,8 +64,7 @@ object AuthUtils {
   )
 
   def noEnrolmentAuthStub(mockAuthConnector: AuthConnector): OngoingStubbing[Future[Option[String]]] =
-    when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any())) thenReturn
-      Future.successful(AuthUtils.noEnrolmentAuthResponse)
+    when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any())).thenReturn(Future.successful(AuthUtils.noEnrolmentAuthResponse))
 
   val noEnrolmentAuthResponse: Option[String] = Some(externalId)
 

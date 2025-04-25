@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import com.google.inject.Inject
 import connector.SchemeDetailsConnector
 import controllers.actions.{PsaEnrolmentAuthAction, PsaPspEnrolmentAuthAction, PsaPspSchemeAuthAction, PsaSchemeAuthAction}
 import models.{PsaInvitationInfoResponse, SchemeReferenceNumber, SchemeWithId}
-import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
-import play.api.mvc._
+import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue, Json}
+import play.api.mvc.*
 import repositories.SchemeDetailsWithIdCacheRepository
 import service.SchemeService
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
@@ -89,7 +89,7 @@ class SchemeDetailsController @Inject()(
             case Left(e) => result(e)
             case Right(json) =>
               Json.fromJson[PsaInvitationInfoResponse](json) match {
-                case JsSuccess(value, _) => Ok(Json.toJson(value))
+                case JsSuccess(value, _) => Ok(Json.toJson(value)(PsaInvitationInfoResponse.psaInvitationInfoResponseWrites))
                 case JsError(errors) => InternalServerError(errors.toString)
               }
           }

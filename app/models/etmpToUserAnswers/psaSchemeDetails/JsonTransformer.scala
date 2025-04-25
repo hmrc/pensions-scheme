@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package models.etmpToUserAnswers.psaSchemeDetails
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import play.api.libs.json.Reads.JsObjectReducer
 
 import scala.language.postfixOps
 
@@ -35,23 +35,23 @@ trait JsonTransformer {
 
   def userAnswersNinoReads(userAnswersPath: String): Reads[JsObject] =
     (__ \ "nino").read[String].flatMap { _ =>
-      (__ \ Symbol("hasNino")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("hasNino")).json.put(JsBoolean(true)) `and`
         (__ \ userAnswersPath \ Symbol("value")).json.copyFrom((__ \ Symbol("nino")).json.pick) reduce
-    } orElse {
+    }.orElse {
       (__ \ Symbol("hasNino")).json.put(JsBoolean(false)) and
         (__ \ Symbol("noNinoReason")).json.copyFrom((__ \ Symbol("noNinoReason")).json.pick) reduce
-    } orElse {
+    }.orElse {
       doNothing
     }
 
   def userAnswersUtrReads: Reads[JsObject] =
     (__ \ "utr").read[String].flatMap { _ =>
-      (__ \ Symbol("hasUtr")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("hasUtr")).json.put(JsBoolean(true)) `and`
         (__ \ Symbol("utr") \ Symbol("value")).json.copyFrom((__ \ Symbol("utr")).json.pick) reduce
-    } orElse {
+    }.orElse {
       (__ \ Symbol("hasUtr")).json.put(JsBoolean(false)) and
         (__ \ Symbol("noUtrReason")).json.copyFrom((__ \ Symbol("noUtrReason")).json.pick) reduce
-    } orElse {
+    }.orElse {
       doNothing
     }
 
@@ -65,15 +65,14 @@ trait JsonTransformer {
 
   def userAnswersCrnReads: Reads[JsObject] =
     (__ \ "crnNumber").read[String].flatMap { _ =>
-      (__ \ Symbol("hasCrn")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("hasCrn")).json.put(JsBoolean(true)) `and`
         (__ \ Symbol("companyRegistrationNumber") \ Symbol("value")).json.copyFrom((__ \ Symbol("crnNumber")).json.pick) reduce
-    } orElse {
-      (__ \ Symbol("hasCrn")).json.put(JsBoolean(false)) and
+    }.orElse {
+      (__ \ Symbol("hasCrn")).json.put(JsBoolean(false)) `and`
         (__ \ Symbol("noCrnReason")).json.copyFrom((__ \ Symbol("noCrnReason")).json.pick) reduce
-    } orElse {
+    }.orElse {
       doNothing
     }
-
 
   def userAnswersPartnershipDetailsReads: Reads[JsObject] =
     (__ \ Symbol("partnershipDetails") \ Symbol("name")).json.copyFrom((__ \ Symbol("partnershipName")).json.pick)
@@ -83,17 +82,17 @@ trait JsonTransformer {
 
   def transformVatToUserAnswersReads(userAnswersBase: String): Reads[JsObject] =
     (__ \ "vatRegistrationNumber").read[String].flatMap { _ =>
-      (__ \ Symbol("hasVat")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("hasVat")).json.put(JsBoolean(true)) `and`
         (__ \ userAnswersBase \ Symbol("value")).json.copyFrom((__ \ Symbol("vatRegistrationNumber")).json.pick) reduce
-    } orElse {
+    }.orElse {
       (__ \ Symbol("hasVat")).json.put(JsBoolean(false))
     }
 
   def userAnswersPayeReads(userAnswersBase: String): Reads[JsObject] =
     (__ \ "payeReference").read[String].flatMap { _ =>
-      (__ \ Symbol("hasPaye")).json.put(JsBoolean(true)) and
+      (__ \ Symbol("hasPaye")).json.put(JsBoolean(true)) `and`
         (__ \ userAnswersBase \ Symbol("value")).json.copyFrom((__ \ Symbol("payeReference")).json.pick) reduce
-    } orElse {
+    }.orElse {
       (__ \ Symbol("hasPaye")).json.put(JsBoolean(false))
     }
 }

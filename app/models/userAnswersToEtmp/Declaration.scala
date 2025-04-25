@@ -34,6 +34,7 @@ sealed trait Declaration{
 
 object Declaration {
 
+  @annotation.nowarn
   implicit val reads: Reads[Declaration] = Reads {
     case declaration: PensionSchemeDeclaration =>
       PensionSchemeDeclaration.apiReads.reads(declaration)

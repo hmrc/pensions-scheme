@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ package repositories
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import models.SchemeWithId
-import org.mongodb.scala.model._
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.model.*
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.{Configuration, Logging}
-import repositories.SchemeDetailsWithIdCacheRepository._
+import repositories.SchemeDetailsWithIdCacheRepository.*
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
@@ -31,7 +32,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
+import _root_.javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 object SchemeDetailsWithIdCacheRepository {
@@ -85,7 +86,7 @@ class SchemeDetailsWithIdCacheRepository @Inject()(
     )
   ) with Logging {
 
-  private val jsonCrypto: Encrypter with Decrypter = SymmetricCryptoFactory
+  private val jsonCrypto: Encrypter & Decrypter = SymmetricCryptoFactory
     .aesCryptoFromConfig(baseConfigKey = "scheme.json.encryption", configuration.underlying)
   private val encrypted: Boolean = configuration.get[Boolean]("encrypted")
   private implicit val cryptoFormat: OFormat[Crypted] = Json.format[Crypted]

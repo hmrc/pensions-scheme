@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ class SchemeCacheControllerSpec
       "metrics.jvm" -> false,
       "metrics.enabled" -> false
     )
-    .overrides(modules: _*)
+    .overrides(modules*)
     .build()
 
   private class SchemeCacheControllerImpl(
@@ -90,10 +90,10 @@ class SchemeCacheControllerSpec
 
     s".get" must {
       "return 200 and the relevant data when it exists" in {
-        when(repo.get(eqTo("foo"))(any())) thenReturn Future.successful {
+        when(repo.get(eqTo("foo"))(any())).thenReturn(Future.successful {
           Some(Json.obj())
-        }
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        })
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = controller(repo, authConnector).get("foo")(FakeRequest())
 
@@ -102,10 +102,10 @@ class SchemeCacheControllerSpec
       }
 
       "return 404 when the data doesn't exist" in {
-        when(repo.get(eqTo("foo"))(any())) thenReturn Future.successful {
+        when(repo.get(eqTo("foo"))(any())).thenReturn(Future.successful {
           None
-        }
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        })
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = controller(repo, authConnector).get("foo")(FakeRequest())
 
@@ -113,10 +113,10 @@ class SchemeCacheControllerSpec
       }
 
       "throw an exception when the repository call fails" in {
-        when(repo.get(eqTo("foo"))(any())) thenReturn Future.failed {
+        when(repo.get(eqTo("foo"))(any())).thenReturn(Future.failed {
           new Exception()
-        }
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        })
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = controller(repo, authConnector).get("foo")(FakeRequest())
 
@@ -130,8 +130,8 @@ class SchemeCacheControllerSpec
 
       "return 200 when the request body can be parsed and passed to the repository successfully" in {
 
-        when(repo.upsert(any(), any())(any())) thenReturn Future.successful((): Unit)
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        when(repo.upsert(any(), any())(any())).thenReturn(Future.successful((): Unit))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = call(controller(repo, authConnector).save("foo"), FakeRequest("POST", "/").withJsonBody(Json.obj("abc" -> "def")))
 
@@ -139,8 +139,8 @@ class SchemeCacheControllerSpec
       }
 
       "return 400 when the request body cannot be parsed" in {
-        when(repo.upsert(any(), any())(any())) thenReturn Future.successful((): Unit)
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        when(repo.upsert(any(), any())(any())).thenReturn(Future.successful((): Unit))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withRawBody(ByteString("foo")))
 
@@ -148,9 +148,9 @@ class SchemeCacheControllerSpec
       }
 
       "throw an exception when the call is not authorised" in {
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
           new UnauthorizedException("")
-        }
+        })
 
         val result = call(controller(repo, authConnector).save("foo"), FakeRequest().withRawBody(ByteString("foo")))
 
@@ -162,8 +162,8 @@ class SchemeCacheControllerSpec
 
     s".remove" must {
       "return 200 when the data is removed successfully" in {
-        when(repo.remove(eqTo("foo"))(any())) thenReturn Future.successful(true)
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        when(repo.remove(eqTo("foo"))(any())).thenReturn(Future.successful(true))
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = controller(repo, authConnector).remove("foo")(FakeRequest())
 
@@ -171,9 +171,9 @@ class SchemeCacheControllerSpec
       }
 
       "throw an exception when the call is not authorised" in {
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
           new UnauthorizedException("")
-        }
+        })
 
         val result = controller(repo, authConnector).remove("foo")(FakeRequest())
 
@@ -186,10 +186,10 @@ class SchemeCacheControllerSpec
     s".lastUpdated" must {
       "return 200 and the relevant data when it exists" in {
         val date = Instant.now()
-        when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.successful {
+        when(repo.getLastUpdated(eqTo("foo"))(any())).thenReturn(Future.successful {
           Some(date)
-        }
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        })
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
@@ -198,10 +198,10 @@ class SchemeCacheControllerSpec
       }
 
       "return 404 when the data doesn't exist" in {
-        when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.successful {
+        when(repo.getLastUpdated(eqTo("foo"))(any())).thenReturn(Future.successful {
           None
-        }
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        })
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
@@ -209,10 +209,10 @@ class SchemeCacheControllerSpec
       }
 
       "throw an exception when the repository call fails" in {
-        when(repo.getLastUpdated(eqTo("foo"))(any())) thenReturn Future.failed {
+        when(repo.getLastUpdated(eqTo("foo"))(any())).thenReturn(Future.failed {
           new Exception()
-        }
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.successful(())
+        })
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.successful(()))
 
         val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
@@ -222,9 +222,9 @@ class SchemeCacheControllerSpec
       }
 
       "throw an exception when the call is not authorised" in {
-        when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+        when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
           new UnauthorizedException("")
-        }
+        })
 
         val result = controller(repo, authConnector).lastUpdated("foo")(FakeRequest())
 
@@ -237,9 +237,9 @@ class SchemeCacheControllerSpec
     "self" must {
       s".get" must {
         "return 200 and the relevant data when it exists" in {
-          when(repo.get(eqTo(externalId))(any())) thenReturn Future.successful {
+          when(repo.get(eqTo(externalId))(any())).thenReturn(Future.successful {
             Some(Json.obj())
-          }
+          })
           AuthUtils.authStub(authConnector)
 
           val result = controller(repo, authConnector).getSelf(FakeRequest())
@@ -249,9 +249,9 @@ class SchemeCacheControllerSpec
         }
 
         "return 404 when the data doesn't exist" in {
-          when(repo.get(eqTo(externalId))(any())) thenReturn Future.successful {
+          when(repo.get(eqTo(externalId))(any())).thenReturn(Future.successful {
             None
-          }
+          })
           AuthUtils.authStub(authConnector)
 
           val result = controller(repo, authConnector).getSelf(FakeRequest())
@@ -260,9 +260,9 @@ class SchemeCacheControllerSpec
         }
 
         "throw an exception when the repository call fails" in {
-          when(repo.get(eqTo(externalId))(any())) thenReturn Future.failed {
+          when(repo.get(eqTo(externalId))(any())).thenReturn(Future.failed {
             new Exception()
-          }
+          })
           AuthUtils.authStub(authConnector)
 
           val result = controller(repo, authConnector).getSelf(FakeRequest())
@@ -273,9 +273,9 @@ class SchemeCacheControllerSpec
         }
 
         "throw an exception when the call is not authorised" in {
-          when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+          when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
             new UnauthorizedException("")
-          }
+          })
 
           val result = controller(repo, authConnector).getSelf(FakeRequest())
 
@@ -289,7 +289,7 @@ class SchemeCacheControllerSpec
 
         "return 200 when the request body can be parsed and passed to the repository successfully" in {
 
-          when(repo.upsert(any(), any())(any())) thenReturn Future.successful((): Unit)
+          when(repo.upsert(any(), any())(any())).thenReturn(Future.successful((): Unit))
           AuthUtils.authStub(authConnector)
 
           val result = call(controller(repo, authConnector).saveSelf, FakeRequest("POST", "/").withJsonBody(Json.obj("abc" -> "def")))
@@ -298,7 +298,7 @@ class SchemeCacheControllerSpec
         }
 
         "return 400 when the request body cannot be parsed" in {
-          when(repo.upsert(any(), any())(any())) thenReturn Future.successful((): Unit)
+          when(repo.upsert(any(), any())(any())).thenReturn(Future.successful((): Unit))
           AuthUtils.authStub(authConnector)
 
           val result = call(controller(repo, authConnector).saveSelf, FakeRequest().withRawBody(ByteString("foo")))
@@ -307,9 +307,9 @@ class SchemeCacheControllerSpec
         }
 
         "throw an exception when the call is not authorised" in {
-          when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+          when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
             new UnauthorizedException("")
-          }
+          })
 
           val result = call(controller(repo, authConnector).saveSelf, FakeRequest().withRawBody(ByteString("foo")))
 
@@ -321,7 +321,7 @@ class SchemeCacheControllerSpec
 
       s".remove" must {
         "return 200 when the data is removed successfully" in {
-          when(repo.remove(eqTo(externalId))(any())) thenReturn Future.successful(true)
+          when(repo.remove(eqTo(externalId))(any())).thenReturn(Future.successful(true))
           AuthUtils.authStub(authConnector)
 
           val result = controller(repo, authConnector).removeSelf(FakeRequest())
@@ -330,9 +330,9 @@ class SchemeCacheControllerSpec
         }
 
         "throw an exception when the call is not authorised" in {
-          when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+          when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
             new UnauthorizedException("")
-          }
+          })
 
           val result = controller(repo, authConnector).removeSelf(FakeRequest())
 
@@ -345,9 +345,9 @@ class SchemeCacheControllerSpec
       s".lastUpdated" must {
         "return 200 and the relevant data when it exists" in {
           val date = Instant.now()
-          when(repo.getLastUpdated(eqTo(externalId))(any())) thenReturn Future.successful {
+          when(repo.getLastUpdated(eqTo(externalId))(any())).thenReturn(Future.successful {
             Some(date)
-          }
+          })
           AuthUtils.authStub(authConnector)
 
           val result = controller(repo, authConnector).lastUpdatedSelf(FakeRequest())
@@ -357,9 +357,9 @@ class SchemeCacheControllerSpec
         }
 
         "return 404 when the data doesn't exist" in {
-          when(repo.getLastUpdated(eqTo(externalId))(any())) thenReturn Future.successful {
+          when(repo.getLastUpdated(eqTo(externalId))(any())).thenReturn(Future.successful {
             None
-          }
+          })
           AuthUtils.authStub(authConnector)
 
           val result = controller(repo, authConnector).lastUpdatedSelf(FakeRequest())
@@ -368,9 +368,9 @@ class SchemeCacheControllerSpec
         }
 
         "throw an exception when the repository call fails" in {
-          when(repo.getLastUpdated(eqTo(externalId))(any())) thenReturn Future.failed {
+          when(repo.getLastUpdated(eqTo(externalId))(any())).thenReturn(Future.failed {
             new Exception()
-          }
+          })
           AuthUtils.authStub(authConnector)
 
           val result = controller(repo, authConnector).lastUpdatedSelf(FakeRequest())
@@ -381,9 +381,9 @@ class SchemeCacheControllerSpec
         }
 
         "throw an exception when the call is not authorised" in {
-          when(authConnector.authorise[Unit](any(), any())(any(), any())) thenReturn Future.failed {
+          when(authConnector.authorise[Unit](any(), any())(any(), any())).thenReturn(Future.failed {
             new UnauthorizedException("")
-          }
+          })
 
           val result = controller(repo, authConnector).lastUpdatedSelf(FakeRequest())
 

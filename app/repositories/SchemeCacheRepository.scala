@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package repositories
 
 import com.google.inject.Inject
 import com.mongodb.client.model.FindOneAndUpdateOptions
+import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.bson.BsonBinary
-import org.mongodb.scala.model._
+import org.mongodb.scala.model.*
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.{Configuration, Logging}
-import repositories.SchemeDataEntry.SchemeDataEntryFormats.expireAtKey
 import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry, SchemeDataEntry, SchemeDataEntryFormats}
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText, SymmetricCryptoFactory}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -117,16 +117,16 @@ class SchemeCacheRepository @Inject()(
     ),
     indexes = Seq(
       IndexModel(
-        Indexes.ascending(expireAtKey),
+        Indexes.ascending(SchemeDataEntryFormats.expireAtKey),
         IndexOptions().name("dataExpiry")
           .expireAfter(0, TimeUnit.SECONDS).background(true)
       )
     )
   ) with Logging {
 
-  import SchemeDataEntryFormats._
+  import SchemeDataEntryFormats.*
 
-  private val jsonCrypto: Encrypter with Decrypter = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = encryptionKey, config.underlying)
+  private val jsonCrypto: Encrypter & Decrypter = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = encryptionKey, config.underlying)
   private val encrypted: Boolean = config.get[Boolean]("encrypted")
 
   private def getExpireAt: Instant = if (expireInSeconds.isEmpty) {

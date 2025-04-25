@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 package models.userAnswersToEtmp
 
 import org.apache.pekko.util.ByteString
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 import play.api.libs.ws.{BodyWritable, InMemoryBody}
 
 case class BankAccount(sortCode: String, accountNumber: String)
@@ -52,12 +52,12 @@ object ValidateBankDetailsResponse {
 
   implicit val reads: Reads[ValidateBankDetailsResponse] = {
 
-    import play.api.libs.functional.syntax._
-    import play.api.libs.json._
+    import play.api.libs.functional.syntax.*
+    import play.api.libs.json.*
 
     (
       (__ \ "accountNumberWithSortCodeIsValid").read[String].map(_ == "yes") and
         (__ \ "sortCodeIsPresentOnEISCD").read[String].map(_ == "yes")
-      ) (ValidateBankDetailsResponse.apply _)
+      ) (ValidateBankDetailsResponse.apply)
   }
 }

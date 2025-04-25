@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,23 +20,21 @@ import sbt.*
 object AppDependencies {
   private val playVersion = "9.11.0"
   private val mongoVersion = "2.6.0"
-  val appName = "pensions-scheme"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
     "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-30"         % mongoVersion,
-    "com.typesafe.play"             %% "play-json"                  % "2.10.5",
+    "org.playframework"             %% "play-json"                  % "3.0.4",
     "uk.gov.hmrc"                   %% "bootstrap-backend-play-30"  % playVersion,
-    "com.networknt"                 %  "json-schema-validator"      % "1.5.5",
+    "com.networknt"                 %  "json-schema-validator"      % "1.5.6",
     "uk.gov.hmrc"                   %% "domain-play-30"             % "10.0.0",
-    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.18.2"
+    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.18.3"
   )
 
   def test(scope: String = "test"): Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                 %% "bootstrap-test-play-30"       % playVersion         % Test,
     "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-30"      % mongoVersion        % Test,
-    "org.scalatest"               %% "scalatest"                    % "3.2.19"            % Test,
-    "org.scalatestplus"           %% "scalacheck-1-17"              % "3.2.18.0"          % Test,
+    "org.scalatestplus"           %% "scalacheck-1-18"              % "3.2.19.0"          % Test,
     "org.scalatestplus"           %% "mockito-4-6"                  % "3.2.15.0"          % Test,
     "org.scalatestplus.play"      %% "scalatestplus-play"           % "7.0.1"             % Test,
     "io.github.wolfendale"        %% "scalacheck-gen-regexp"        % "1.1.0"             % scope

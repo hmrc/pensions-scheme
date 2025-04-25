@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package repositories
 
 import com.typesafe.config.Config
 import config.AppConfig
-import models._
+import models.*
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
@@ -28,10 +28,12 @@ import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import uk.gov.hmrc.mongo.MongoComponent
+import org.mongodb.scala.ObservableFuture
 
+import scala.compiletime.uninitialized
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers with BeforeAndAfterEach with Samples
   with MockitoSugar with ScalaFutures { // scalastyle:off magic.number
@@ -40,7 +42,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
 
   import repositories.LockRepositorySpec._
 
-  var lockRepository: LockRepository = _
+  var lockRepository: LockRepository = uninitialized
 
   override def beforeEach(): Unit = {
     when(mockConfiguration.underlying).thenReturn(mockConfig)
@@ -64,7 +66,7 @@ class LockRepositorySpec extends AnyWordSpec with BeforeAndAfter with Matchers w
         documentsInDB <- lockRepository.collection.countDocuments().toFuture()
       } yield documentsInDB
       whenReady(documentsInDB) { documentsInDB =>
-        documentsInDB mustBe 1
+        documentsInDB.size mustBe 1
       }
     }
   }
