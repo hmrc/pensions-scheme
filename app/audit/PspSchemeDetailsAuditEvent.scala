@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package audit
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import play.api.libs.json.Reads.JsObjectReducer
 
 import scala.language.postfixOps
 
@@ -51,32 +51,32 @@ case class PspSchemeDetailsAuditEvent(
         (
           (__ \ "pensionSchemePractitionerDetails").json.copyFrom(
             (__ \ "pspDetails").json.pick
-          ) and
+          ) `and`
             (__ \ "pensionSchemeTaxReference").json.copyFrom(
               (__ \ "pstr").json.pick
-            ) and
-            ((__ \ "schemeReferenceNumber").json.copyFrom(
+            ) `and`
+            (__ \ "schemeReferenceNumber").json.copyFrom(
               (__ \ "srn").json.pick
-            ) orElse doNothing) and
+            ).orElse(doNothing) `and`
             (__ \ "pensionSchemePractitionerDetails" \ "authorisingPensionSchemeAdministratorID").json.copyFrom(
               (__ \ "pspDetails" \ "authorisingPSAID").json.pick
-            ) and
+            ) `and`
             (__ \ "pensionSchemePractitionerDetails" \ "authorisingPensionSchemeAdministrator").json.copyFrom(
               (__ \ "pspDetails" \ "authorisingPSA").json.pick
-            ) and
-            ((__ \ "pensionSchemePractitionerDetails" \ "pensionSchemePractitionerClientReference").json.copyFrom(
+            ) `and`
+            (__ \ "pensionSchemePractitionerDetails" \ "pensionSchemePractitionerClientReference").json.copyFrom(
               (__ \ "pspDetails" \ "pspClientReference").json.pick
-            ) orElse doNothing)
+            ).orElse(doNothing)
           ) reduce
-      ) andThen
-        (__ \ "pspDetails").json.prune andThen
-        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSAID").json.prune andThen
-        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSA").json.prune andThen
-        (__ \ "pensionSchemePractitionerDetails" \ "pspClientReference").json.prune andThen
-        (__ \ "pstr").json.prune andThen
+      ) `andThen`
+        (__ \ "pspDetails").json.prune `andThen`
+        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSAID").json.prune `andThen`
+        (__ \ "pensionSchemePractitionerDetails" \ "authorisingPSA").json.prune `andThen`
+        (__ \ "pensionSchemePractitionerDetails" \ "pspClientReference").json.prune `andThen`
+        (__ \ "pstr").json.prune `andThen`
         (__ \ "srn").json.prune
     ).getOrElse(throw ExpandAcronymTransformerFailed)
 
-  case object ExpandAcronymTransformerFailed extends Exception
+  private case object ExpandAcronymTransformerFailed extends Exception
 
 }

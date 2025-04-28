@@ -17,14 +17,36 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.establisher.EstablisherDetails
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
-@Ignore
+
 class EstablisherDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests{
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" -> value),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "establisherDetails"),
+      Array("establisherPartnershipDetailsType"),
+      Array("establisherIndividualDetailsType"),
+      Array("establisherDetailsType"),
+      Array("establisherCompanyOrOrgDetailsType"),
+      Array("individualTrusteeDetailsType"),
+      Array("companyTrusteeDetailsType"),
+      Array("trusteeDetailsType"),
+      Array("partnershipTrusteeDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
 
   "An establisher details object" should {
 
@@ -37,10 +59,7 @@ class EstablisherDetailsWritesSpec extends AnyWordSpec with Matchers with Option
             val mappedEstablisher: JsValue = Json.toJson(establisher)(EstablisherDetails.updateWrites)
 
             val valid = Json.obj("establisherDetails" -> mappedEstablisher)
-
-            validateJson(elementToValidate = valid,
-                         schemaFileName = "api1468_schema.json",
-                         schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails").isSuccess mustBe true
+            jsonValidator(valid) mustBe Set()
           }
         }
       }
@@ -61,10 +80,7 @@ class EstablisherDetailsWritesSpec extends AnyWordSpec with Matchers with Option
             val mappedEstablisher: JsValue = Json.toJson(localEstablisher)(EstablisherDetails.updateWrites)
 
             val inValid = Json.obj("establisherDetails" -> mappedEstablisher)
-
-            validateJson(elementToValidate = inValid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails").isError mustBe true
+            jsonValidator(inValid).isEmpty mustBe false
           }
         }
       }

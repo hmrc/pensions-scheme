@@ -17,14 +17,34 @@
 package models.userAnswersToEtmp.writes
 
 import models.userAnswersToEtmp.establisher.CompanyEstablisher
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
-@Ignore
+
 class CompanyEstablisherWritesSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" ->
+      Json.obj("establisherDetails" ->
+        value
+      )
+    ),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "establisherDetails"),
+      Array("establisherDetailsType", "companyOrOrganisationDetails"),
+      Array("establisherCompanyOrOrgDetailsType"),
+      Array("specialCharStringType"),
+      Array("addressType"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes"),
+      Array("contactDetailsType")
+    )))
 
   "A company object" should {
 
@@ -38,9 +58,7 @@ class CompanyEstablisherWritesSpec extends AnyWordSpec with Matchers with Option
 
             val valid = Json.obj("companyOrOrganisationDetails" -> Json.arr(mappedCompany))
 
-            validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/companyOrOrganisationDetails").isSuccess mustBe true
+            jsonValidator(valid) mustBe Set()
           }
         }
       }
@@ -56,9 +74,8 @@ class CompanyEstablisherWritesSpec extends AnyWordSpec with Matchers with Option
 
             val inValid = Json.obj("companyOrOrganisationDetails" -> Json.arr(mappedCompany))
 
-            validateJson(elementToValidate = inValid,
-              schemaFileName = "api1468_schema.json",
-              schemaNodePath = "#/properties/establisherAndTrustDetailsType/establisherDetails/companyOrOrganisationDetails").isError mustBe true
+            jsonValidator(inValid).isEmpty mustBe false
+
           }
         }
       }

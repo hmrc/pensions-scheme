@@ -20,12 +20,12 @@ object SchemeMembers extends Enumeration {
 
   sealed case class TypeValue(name: String, value: String) extends Val(name)
 
-  val opt1 = TypeValue("opt1", "0")
-  val opt2 = TypeValue("opt2", "1")
-  val opt3 = TypeValue("opt3", "2 to 11")
-  val opt4 = TypeValue("opt4", "12 to 50")
-  val opt5 = TypeValue("opt5", "51 to 10,000")
-  val opt6 = TypeValue("opt6", "More than 10,000")
+  private val opt1 = TypeValue("opt1", "0")
+  private val opt2 = TypeValue("opt2", "1")
+  private val opt3 = TypeValue("opt3", "2 to 11")
+  private val opt4 = TypeValue("opt4", "12 to 50")
+  private val opt5 = TypeValue("opt5", "51 to 10,000")
+  private val opt6 = TypeValue("opt6", "More than 10,000")
 
   def valueWithName(name: String): String = {
     super.withName(name).asInstanceOf[TypeValue].value

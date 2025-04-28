@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,19 @@
 
 package connector
 
-import audit._
+import audit.*
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import models.ListOfSchemes
 import models.etmpToUserAnswers.psaSchemeDetails.PsaSchemeDetailsTransformer
 import models.etmpToUserAnswers.pspSchemeDetails.PspSchemeDetailsTransformer
 import play.api.Logger
-import play.api.http.Status._
-import play.api.libs.json._
+import play.api.http.Status.*
+import play.api.libs.json.*
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.*
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http._
 import utils.HttpResponseHelper
 import utils.ValidationUtils.genResponse
 
@@ -113,9 +113,6 @@ class SchemeDetailsConnectorImpl @Inject()(
         } andThen
         schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
     } yield response
-
-
-
   }
 
   override def getPspSchemeDetails(
@@ -131,7 +128,7 @@ class SchemeDetailsConnectorImpl @Inject()(
     logger.debug(s"Calling psp get scheme details API with url $url and hc $headerCarrier")
 
     httpClientV2.get(url)
-      .setHeader(headerUtils.integrationFrameworkHeader: _*)
+      .setHeader(headerUtils.integrationFrameworkHeader*)
       .execute[HttpResponse].map { response =>
       handlePspSchemeDetailsResponse(response, url.toString)
     } andThen

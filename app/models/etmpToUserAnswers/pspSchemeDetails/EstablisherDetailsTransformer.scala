@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package models.etmpToUserAnswers.pspSchemeDetails
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Reads._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import play.api.libs.json.Reads.*
 
 import scala.language.postfixOps
 
@@ -33,7 +33,8 @@ class EstablisherDetailsTransformer extends JsonTransformer {
           __.read(Reads.seq(userAnswersEstablisherCompanyReads(__))).map(JsArray(_))).flatMap { company =>
           (__ \ Symbol("partnershipDetails")).readNullable(
             __.read(Reads.seq(userAnswersEstablisherPartnershipReads(__))).map(JsArray(_))).flatMap { partnership =>
-            (__ \ Symbol("establishers")).json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())) orElse doNothing
+            (__ \ Symbol("establishers"))
+              .json.put(individual.getOrElse(JsArray()) ++ company.getOrElse(JsArray()) ++ partnership.getOrElse(JsArray())).orElse(doNothing)
           }
         }
       })).map {

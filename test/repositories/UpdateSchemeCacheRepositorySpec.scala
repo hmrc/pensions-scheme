@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,16 @@ import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.should
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
-import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
+import repositories.SchemeDataEntry.JsonDataEntry
 import uk.gov.hmrc.mongo.MongoComponent
+import org.mongodb.scala.ObservableFuture
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -118,7 +119,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       }
     }
 
-    "insert a new update scheme cache as DataEntry in Mongo collection when encrypted true and collection is empty" in {
+    "insert a new update scheme cache as JsonDataEntry in Mongo collection when encrypted true and collection is empty" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val updateSchemeCacheRepository: UpdateSchemeCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -128,7 +129,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       val documentsInDB = for {
         _ <- updateSchemeCacheRepository.collection.drop().toFuture()
         _ <- updateSchemeCacheRepository.upsert(record._1, record._2)
-        documentsInDB <- updateSchemeCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- updateSchemeCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -137,7 +138,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       }
     }
 
-    "update an existing update scheme cache as DataEntry in Mongo collection when encrypted true" in {
+    "update an existing update scheme cache as JsonDataEntry in Mongo collection when encrypted true" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val updateSchemeCacheRepository: UpdateSchemeCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -149,7 +150,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
         _ <- updateSchemeCacheRepository.collection.drop().toFuture()
         _ <- updateSchemeCacheRepository.upsert(record1._1, record1._2)
         _ <- updateSchemeCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- updateSchemeCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- updateSchemeCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -158,7 +159,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
       }
     }
 
-    "insert a new update scheme cache as DataEntry in Mongo collection when encrypted true and id is not same" in {
+    "insert a new update scheme cache as JsonDataEntry in Mongo collection when encrypted true and id is not same" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val updateSchemeCacheRepository: UpdateSchemeCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -169,7 +170,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
         _ <- updateSchemeCacheRepository.collection.drop().toFuture()
         _ <- updateSchemeCacheRepository.upsert(record1._1, record1._2)
         _ <- updateSchemeCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- updateSchemeCacheRepository.collection.find[DataEntry]().toFuture()
+        documentsInDB <- updateSchemeCacheRepository.collection.find[JsonDataEntry]().toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {

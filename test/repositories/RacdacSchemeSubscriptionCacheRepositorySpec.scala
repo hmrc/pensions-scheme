@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,16 @@ import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.should
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
-import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
+import repositories.SchemeDataEntry.JsonDataEntry
 import uk.gov.hmrc.mongo.MongoComponent
+import org.mongodb.scala.ObservableFuture
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -117,7 +118,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       }
     }
 
-    "insert a new racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true and collection is empty" in {
+    "insert a new racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted true and collection is empty" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val racdacSchemeSubscriptionCacheRepository: RacdacSchemeSubscriptionCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -127,7 +128,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       val documentsInDB = for {
         _ <- racdacSchemeSubscriptionCacheRepository.collection.drop().toFuture()
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record._1, record._2)
-        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -136,7 +137,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       }
     }
 
-    "update an existing racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true" in {
+    "update an existing racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted true" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val racdacSchemeSubscriptionCacheRepository: RacdacSchemeSubscriptionCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -148,7 +149,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         _ <- racdacSchemeSubscriptionCacheRepository.collection.drop().toFuture()
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -157,7 +158,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
       }
     }
 
-    "insert a new racdac scheme subscription cache as DataEntry in Mongo collection when encrypted true and id is not same" in {
+    "insert a new racdac scheme subscription cache as JsonDataEntry in Mongo collection when encrypted true and id is not same" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val racdacSchemeSubscriptionCacheRepository: RacdacSchemeSubscriptionCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -168,7 +169,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
         _ <- racdacSchemeSubscriptionCacheRepository.collection.drop().toFuture()
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record1._1, record1._2)
         _ <- racdacSchemeSubscriptionCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[DataEntry]().toFuture()
+        documentsInDB <- racdacSchemeSubscriptionCacheRepository.collection.find[JsonDataEntry]().toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {

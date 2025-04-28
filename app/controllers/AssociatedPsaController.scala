@@ -18,22 +18,20 @@ package controllers
 
 
 import com.google.inject.Inject
-import connector.SchemeDetailsConnector
-import models.SchemeWithId
+import models.SchemeReferenceNumber
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc._
-import repositories.SchemeDetailsWithIdCacheRepository
-import uk.gov.hmrc.http._
+import service.SchemeService
+import uk.gov.hmrc.domain.{PsaId, PspId}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.ErrorHandler
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AssociatedPsaController @Inject()(
-                                         schemeDetailsConnector: SchemeDetailsConnector,
                                          cc: ControllerComponents,
-                                         schemeDetailsCache: SchemeDetailsWithIdCacheRepository
+                                         schemeService: SchemeService
                                        )(
                                          implicit ec: ExecutionContext
                                        )
@@ -41,50 +39,28 @@ class AssociatedPsaController @Inject()(
     with ErrorHandler with Logging {
   def isPsaAssociated: Action[AnyContent] = Action.async {
     implicit request => {
-      val (userId, jsonPath) =
-        (request.headers.get("psaId"), request.headers.get("pspId")) match {
-          case (Some(psaId), _) => (psaId, "psaDetails")
-          case (_, Some(pspId)) => (pspId, "pspDetails")
-          case _ => throw new Exception("Unable to retrieve either PSA or PSP from request")
-        }
-
-      val srn = request.headers.get("schemeReferenceNumber")
-      val srnRequest = "srn"
-
-      srn match {
-        case Some(schemeReferenceNumber) =>
-          val schemeWithId = SchemeWithId(schemeReferenceNumber, userId)
-          fetchFromCacheOrApiForPsa(schemeWithId, srnRequest, None).map {
-            case Right(json) =>
-
-              val isAssociated =
-                (json \ jsonPath)
-                  .asOpt[JsArray]
-                  .exists(_.value.map {
-                    item => (item \ "id").as[String]
-                  }.toList.contains(userId))
-
-              Ok(Json.toJson(isAssociated))
-
-            case Left(e) => result(e)
+      request.headers.get("schemeReferenceNumber").map { SchemeReferenceNumber(_) }
+        .map { srn =>
+          def isAssociated(psaOrPsp: Either[PsaId, PspId]) = {
+            schemeService.isAssociated(srn, psaOrPsp).map {
+              case Left(e) =>
+                logger.error("Is association check failed", e)
+                result(e)
+              case Right(value) =>
+                Ok(Json.toJson(value))
+            }
           }
-        case _ =>
-          Future.failed(new BadRequestException("Bad Request with missing parameters PSA Id or SRN"))
-      }
+          (request.headers.get("psaId"), request.headers.get("pspId")) match {
+            case (Some(psaId), _) =>
+              isAssociated(Left(PsaId(psaId)))
+            case (None, Some(pspId)) =>
+              isAssociated(Right(PspId(pspId)))
+            case (None, None) => Future.successful(BadRequest("Missing headers: psaId or pspId"))
+          }
+        }.getOrElse(
+          Future.successful(BadRequest("Missing header: schemeReferenceNumber"))
+        )
     } recoverWith recoverFromError
   }
 
-  private def fetchFromCacheOrApiForPsa(id: SchemeWithId, schemeIdType: String, refreshData: Option[Boolean])
-                                       (implicit hc: HeaderCarrier, request: RequestHeader): Future[Either[HttpException, JsObject]] =
-    schemeDetailsCache.get(id).flatMap {
-      case Some(json) if !refreshData.contains(true) =>
-        logger.info("Retrieving scheme details from cache")
-        Future.successful(Right(json.as[JsObject]))
-      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
-        case Right(json) =>
-          logger.info("Retrieving scheme details from API")
-          schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
-        case e => Future.successful(e)
-      }
-    }
 }

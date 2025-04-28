@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,13 @@ import audit.{AuditService, SchemeAuditService}
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
 import play.api.Logger
-import play.api.http.Status._
-import play.api.libs.json._
+import play.api.http.Status.*
+import play.api.libs.json.*
+import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{BadRequestException, _}
+import uk.gov.hmrc.http.{BadRequestException, *}
 import utils.{HttpResponseHelper, InvalidPayloadHandler}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -84,7 +85,7 @@ class SchemeConnectorImpl @Inject()(
 
     httpClientV2.post(url)
       .withBody(registerData)
-      .setHeader(headerUtils.integrationFrameworkHeader: _*)
+      .setHeader(headerUtils.integrationFrameworkHeader*)
       .execute[HttpResponse].map { response =>
         response.status match {
           case OK =>
@@ -112,7 +113,7 @@ class SchemeConnectorImpl @Inject()(
     logger.debug(s"Calling list of schemes API on IF with url $listOfSchemesUrl")
 
     httpClientV2.get(listOfSchemesUrl)
-      .setHeader(headerUtils.integrationFrameworkHeader: _*)
+      .setHeader(headerUtils.integrationFrameworkHeader*)
       .execute[HttpResponse].map { response =>
         response.status match {
           case OK =>
@@ -142,7 +143,7 @@ class SchemeConnectorImpl @Inject()(
 
     httpClientV2.post(url)
       .withBody(data)
-      .setHeader(headerUtils.integrationFrameworkHeader: _*)
+      .setHeader(headerUtils.integrationFrameworkHeader*)
       .execute[HttpResponse].map { response =>
         response.status match {
           case OK =>

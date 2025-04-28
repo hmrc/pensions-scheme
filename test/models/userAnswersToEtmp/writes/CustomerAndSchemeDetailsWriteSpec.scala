@@ -18,14 +18,19 @@ package models.userAnswersToEtmp.writes
 
 import models.enumeration.{Benefits, SchemeType}
 import models.userAnswersToEtmp.CustomerAndSchemeDetails
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
-import play.api.libs.json.Json
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import play.api.libs.json.{JsValue, Json}
 import utils.{PensionSchemeGenerators, SchemaValidatorForTests}
-@Ignore
+
 class CustomerAndSchemeDetailsWriteSpec extends AnyWordSpec with Matchers with OptionValues with PensionSchemeGenerators with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate = value,
+    schemaFileName = "api1468_schemaIF.json",
+    relevantProperties = Array("schemeDetails"),
+    relevantDefinitions = None)
 
   "CustomerAndSchemeDetails object" should {
 
@@ -39,11 +44,9 @@ class CustomerAndSchemeDetailsWriteSpec extends AnyWordSpec with Matchers with O
             val mappedSchemeDetails = Json.toJson(schemeDetails)(CustomerAndSchemeDetails.updateWrites(psaid = "A0012221"))
             val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
 
-            val result = validateJson(elementToValidate = valid,
-              schemaFileName = "api1468_schemaIF.json",
-              schemaNodePath = "#/properties/schemeDetails")
+            val result = jsonValidator(valid)
 
-            result.isSuccess mustBe true
+            result mustBe Set()
           }
         }
       }
@@ -68,12 +71,10 @@ class CustomerAndSchemeDetailsWriteSpec extends AnyWordSpec with Matchers with O
         val mappedSchemeDetails = Json.toJson(details)(CustomerAndSchemeDetails.updateWrites(psaid = "INVALID"))
         val valid = Json.obj("schemeDetails" -> mappedSchemeDetails)
 
-        val result = validateJson(elementToValidate = valid,
-          schemaFileName = "api1468_schema.json",
-          schemaNodePath = "#/properties/schemeDetails")
+        val result = jsonValidator(valid)
 
-        result.isError mustBe true
-        result.asEither.left.toOption.toSeq.flatten.size mustBe 6
+        result.isEmpty mustBe false
+        result.size mustBe 4
       }
     }
   }
