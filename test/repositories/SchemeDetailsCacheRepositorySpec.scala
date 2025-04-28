@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,19 @@ package repositories
 import com.typesafe.config.Config
 import models.Samples
 import org.mockito.Mockito.when
+import org.mongodb.scala.ObservableFuture
 import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.should
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.Json
-import repositories.SchemeDataEntry.{DataEntry, JsonDataEntry}
-import scalaz.Leibniz.subst
+import repositories.SchemeDataEntry.JsonDataEntry
 import uk.gov.hmrc.mongo.MongoComponent
 
 import java.time.Instant
@@ -44,7 +44,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
 
   private val idField: String = "id"
 
-  import SchemeDetailsCacheRepositorySpec._
+  import SchemeDetailsCacheRepositorySpec.*
 
   override def beforeAll(): Unit = {
     when(mockAppConfig.underlying).thenReturn(mockConfig)
@@ -118,7 +118,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       }
     }
 
-    "insert a new scheme details cache as DataEntry in Mongo collection when encrypted true and collection is empty" in {
+    "insert a new scheme details cache as JsonDataEntry in Mongo collection when encrypted true and collection is empty" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val schemeDetailsCacheRepository: SchemeDetailsCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -128,7 +128,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       val documentsInDB = for {
         _ <- schemeDetailsCacheRepository.collection.drop().toFuture()
         _ <- schemeDetailsCacheRepository.upsert(record._1, record._2)
-        documentsInDB <- schemeDetailsCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- schemeDetailsCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -137,7 +137,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       }
     }
 
-    "update an existing scheme details cache as DataEntry in Mongo collection when encrypted true" in {
+    "update an existing scheme details cache as JsonDataEntry in Mongo collection when encrypted true" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val schemeDetailsCacheRepository: SchemeDetailsCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -149,7 +149,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
         _ <- schemeDetailsCacheRepository.collection.drop().toFuture()
         _ <- schemeDetailsCacheRepository.upsert(record1._1, record1._2)
         _ <- schemeDetailsCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- schemeDetailsCacheRepository.collection.find[DataEntry](filters).toFuture()
+        documentsInDB <- schemeDetailsCacheRepository.collection.find[JsonDataEntry](filters).toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {
@@ -158,7 +158,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
       }
     }
 
-    "insert a new scheme details cache as DataEntry in Mongo collection when encrypted true and id is not same" in {
+    "insert a new scheme details cache as JsonDataEntry in Mongo collection when encrypted true and id is not same" in {
       when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(true)
       val schemeDetailsCacheRepository: SchemeDetailsCacheRepository = buildRepository(mongoHost, mongoPort)
 
@@ -169,7 +169,7 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
         _ <- schemeDetailsCacheRepository.collection.drop().toFuture()
         _ <- schemeDetailsCacheRepository.upsert(record1._1, record1._2)
         _ <- schemeDetailsCacheRepository.upsert(record2._1, record2._2)
-        documentsInDB <- schemeDetailsCacheRepository.collection.find[DataEntry]().toFuture()
+        documentsInDB <- schemeDetailsCacheRepository.collection.find[JsonDataEntry]().toFuture()
       } yield documentsInDB
 
       whenReady(documentsInDB) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class FakeAuthConnector(stubbedResult: Future[_]) extends AuthConnector {
+class FakeAuthConnector(stubbedResult: Future[?]) extends AuthConnector {
 
   override def authorise[A](predicate: Predicate, retrieval: Retrieval[A])
                            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[A] = {

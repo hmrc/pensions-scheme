@@ -18,16 +18,33 @@ package models.userAnswersToEtmp.writes
 
 import models.Samples
 import models.userAnswersToEtmp.PreviousAddressDetails
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Ignore, OptionValues}
 import play.api.libs.json.{JsValue, Json}
 import utils.SchemaValidatorForTests
 
 import scala.util.Random
 
-@Ignore
+
 class PreviousAddressDetailsWritesSpec extends AnyWordSpec with Matchers with OptionValues with Samples with SchemaValidatorForTests {
+
+  private def jsonValidator(value: JsValue) = validateJson(elementToValidate =
+    Json.obj("establisherAndTrustDetailsType" ->
+      Json.obj("trusteeDetailsType" ->
+        Json.obj("individualDetails" -> Json.arr(value))
+      )
+    ),
+    schemaFileName = "api1468_schema.json",
+    relevantProperties = Array("establisherAndTrustDetailsType"),
+    relevantDefinitions = Some(Array(
+      Array("establisherAndTrustDetailsType", "trusteeDetailsType"),
+      Array("trusteeDetailsType", "individualDetails"),
+      Array("individualTrusteeDetailsType", "previousAddressDetails"),
+      Array("addressType"),
+      Array("addressLineType"),
+      Array("countryCodes")
+    )))
 
   "A previous address details object" should {
     "Map previous address details inner object as `previousaddresdetail`" when {
@@ -47,10 +64,7 @@ class PreviousAddressDetailsWritesSpec extends AnyWordSpec with Matchers with Op
 
         val mappedPreviousAddress: JsValue = Json.toJson(previousAddress)(PreviousAddressDetails.psaUpdateWrites)
         val testJsValue = Json.obj("previousAddressDetails" -> mappedPreviousAddress)
-
-        validateJson(elementToValidate = testJsValue,
-          schemaFileName = "api1468_schema.json",
-          schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails/items/previousAddressDetails").isSuccess mustBe true
+        jsonValidator(testJsValue) mustBe Set()
       }
     }
 
@@ -60,10 +74,7 @@ class PreviousAddressDetailsWritesSpec extends AnyWordSpec with Matchers with Op
 
         val mappedPreviousAddress: JsValue = Json.toJson(invalidPreviousAddress)(PreviousAddressDetails.psaUpdateWrites)
         val testJsValue = Json.obj("previousAddressDetails" -> mappedPreviousAddress)
-
-        validateJson(elementToValidate = testJsValue,
-          schemaFileName = "api1468_schema.json",
-          schemaNodePath = "#/properties/establisherAndTrustDetailsType/trusteeDetailsType/individualDetails/items/previousAddressDetails").isError mustBe true
+        jsonValidator(testJsValue).isEmpty mustBe false
       }
     }
   }

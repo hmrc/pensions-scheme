@@ -83,7 +83,7 @@ object ReadsHelper {
             }
           case _ => readFilteredSeq(result, t, isA, reads)
         }
-      case Nil => result
+      case _ => result
     }
   }
 
@@ -101,7 +101,7 @@ object ReadsHelper {
         } else {
           readFilteredSeqBoolean(result, t, isA, reads)
         }
-      case Nil => result
+      case _ => result
     }
   }
 

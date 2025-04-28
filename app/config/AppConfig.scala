@@ -18,10 +18,10 @@ package config
 
 import com.google.inject.Inject
 import com.typesafe.config.Config
-import play.api.{Configuration, Environment}
+import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class AppConfig @Inject()(configuration: Configuration, environment: Environment, servicesConfig: ServicesConfig) {
+class AppConfig @Inject()(configuration: Configuration, servicesConfig: ServicesConfig) {
   lazy val underlying: Config = configuration.underlying
   lazy val defaultDataExpireAfterDays: Int = underlying.getInt("defaultDataExpireInDays")
   lazy val ifURL: String = servicesConfig.baseUrl(serviceName = "if-hod")

@@ -16,6 +16,7 @@
 
 package controllers.cache
 
+import controllers.actions.PsaPspEnrolmentAuthAction
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -28,7 +29,8 @@ import scala.concurrent.{ExecutionContext, Future}
 abstract class SchemeCacheController(
                                       repository: SchemeCacheRepository,
                                       val authConnector: AuthConnector,
-                                      cc: ControllerComponents
+                                      cc: ControllerComponents,
+                                      psaPspEnrolmentAuthAction: PsaPspEnrolmentAuthAction
                                     )(
                                       implicit ec: ExecutionContext
                                     )
@@ -43,7 +45,7 @@ abstract class SchemeCacheController(
         request.body.asJson.map {
           jsValue =>
             repository.upsert(id, jsValue).map(_ => Ok)
-        } getOrElse Future.successful(EntityTooLarge)
+        } getOrElse Future.successful(BadRequest("Can't parse json"))
       }
   }
 
@@ -75,6 +77,41 @@ abstract class SchemeCacheController(
             date => Ok(Json.toJson(date.toEpochMilli))
           } getOrElse NotFound
         }
+      }
+  }
+
+  def saveSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+    implicit request =>
+      request.body.asJson.map {
+        jsValue =>
+          repository.upsert(request.externalId, jsValue).map(_ => Ok)
+      } getOrElse Future.successful(BadRequest("Can't parse json"))
+  }
+
+  def getSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+    implicit request =>
+      val id = request.externalId
+      logger.debug("controllers.SchemeCacheController.get: Authorised Request " + id)
+      repository.get(id).map { response =>
+        logger.debug(s"controllers.SchemeCacheController.get: Response for request Id $id is $response")
+        response.map(Ok(_)).getOrElse(NotFound)
+      }
+  }
+
+  def removeSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+    implicit request =>
+      repository.remove(request.externalId).map(_ => Ok)
+  }
+
+  def lastUpdatedSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
+    implicit request =>
+      val id = request.externalId
+      logger.debug("controllers.SchemeCacheController.lastUpdated: Authorised Request " + id)
+      repository.getLastUpdated(id).map { response =>
+        logger.debug("controllers.SchemeCacheController.lastUpdated: Response " + response)
+        response.map {
+          date => Ok(Json.toJson(date.toEpochMilli))
+        } getOrElse NotFound
       }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package models.userAnswersToEtmp
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 
 case class CorrespondenceAddress(addressLine1: String, addressLine2: String, addressLine3: Option[String],
                                  addressLine4: Option[String], countryCode: String, postalCode: Option[String])
@@ -31,13 +31,13 @@ object CorrespondenceAddress {
       (JsPath \ "line4").readNullable[String] and
       (JsPath \ "countryCode").read[String] and
       (JsPath \ "postalCode").readNullable[String]
-    ) (CorrespondenceAddress.apply _)
+    ) (CorrespondenceAddress.apply)
 }
 
 sealed trait Address
 
 object Address {
-  implicit val reads: Reads[Address] = ((__ \ "countryCode").read[String] orElse (__ \ "country").read[String]).flatMap(countryCode =>
+  implicit val reads: Reads[Address] = (__ \ "countryCode").read[String].orElse((__ \ "country").read[String]).flatMap(countryCode =>
     getReadsBasedOnCountry[UkAddress, InternationalAddress](UkAddress.apiReads, InternationalAddress.apiReads, countryCode))
 
   implicit val writes: Writes[Address] = Writes {
@@ -66,7 +66,7 @@ object Address {
       (JsPath \ "addressLine2").readNullable[String] and
       (JsPath \ "addressLine3").readNullable[String] and
       (JsPath \ "addressLine4").readNullable[String] and
-      ((JsPath \ "countryCode").read[String] orElse (JsPath \ "country").read[String])
+      (JsPath \ "countryCode").read[String].orElse((JsPath \ "country").read[String])
     ) ((line1, line2, line3, line4, countryCode) => (line1, line2, line3, line4, getCountryOrTerritoryCode(countryCode)))
 
   val commonAddressWrites: Writes[(String, Option[String], Option[String], Option[String])] = (
@@ -113,7 +113,7 @@ object UkAddress {
 
   val apiReads: Reads[UkAddress] = (
     JsPath.read(Address.commonAddressElementsReads) and
-      ((JsPath \ "postalCode").read[String] orElse (JsPath \ "postcode").read[String])
+      (JsPath \ "postalCode").read[String].orElse((JsPath \ "postcode").read[String])
     ) ((common, postalCode) => UkAddress(common._1, common._2, common._3, common._4, common._5, postalCode))
 }
 

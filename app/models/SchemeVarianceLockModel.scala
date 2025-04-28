@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package models
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import utils.{Enumerable, WithName}
 
 import scala.language.implicitConversions
@@ -56,6 +56,6 @@ object Lock extends Enumerable.Implicits {
   }
 
   implicit val enumerable: Enumerable[Lock] = Enumerable(
-    Seq(VarianceLock, PsaLock, SchemeLock).map(v => v.toString -> v): _*
+    Seq(VarianceLock, PsaLock, SchemeLock).map(v => v.toString -> v)*
   )
 }
