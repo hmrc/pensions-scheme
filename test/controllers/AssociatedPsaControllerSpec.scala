@@ -46,6 +46,8 @@ class AssociatedPsaControllerSpec
   private val schemeIdNumber = "S999999999"
   private val userIdNumber = "A0000001"
   private val userAnswersResponse: JsValue = readJsonFromFile("/data/validGetSchemeDetailsUserAnswers.json")
+  
+  fakeApplication().stop()
 
   override protected def bindings: Seq[GuiceableModule] =
     Seq(
