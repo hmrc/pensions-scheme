@@ -29,8 +29,8 @@ class PsaSchemeDetailsTransformer @Inject()(
                                              trusteeDetailsTransformer: TrusteeDetailsTransformer
                                            ) {
 
-  def transformToUserAnswers(pstr:Option[String]): Reads[JsObject] =
-    schemeDetailsTransformer.userAnswersSchemeDetailsReads(pstr) and
-      establisherDetailsTransformer.userAnswersEstablishersReads and
+  val transformToUserAnswers: Reads[JsObject] =
+    schemeDetailsTransformer.userAnswersSchemeDetailsReads `and`
+      establisherDetailsTransformer.userAnswersEstablishersReads `and`
       trusteeDetailsTransformer.userAnswersTrusteesReads reduce
 }

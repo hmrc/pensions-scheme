@@ -56,13 +56,13 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
         forAll(getSchemeDetailsGen) {
           case (ifScheme, uaScheme) =>
 
-            val result = ifScheme.transform(transformer.transformToUserAnswers(None)).get
+            val result = ifScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
         }
       }
 
       s"uses request/response json" in {
-        val result = ifResponse.transform(transformer.transformToUserAnswers(None)).get
+        val result = ifResponse.transform(transformer.transformToUserAnswers).get
         result mustBe userAnswersResponse
       }
     }
@@ -75,13 +75,13 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
         forAll(getSchemeDetailsGen) {
           case (ifScheme, uaScheme) =>
 
-            val result = ifScheme.transform(transformer.transformToUserAnswers(None)).get
+            val result = ifScheme.transform(transformer.transformToUserAnswers).get
             result mustBe uaScheme
         }
       }
 
       s"uses request/response json" in {
-        val result = ifResponseNoSrn.transform(transformer.transformToUserAnswers(None)).get
+        val result = ifResponseNoSrn.transform(transformer.transformToUserAnswers).get
         result mustBe userAnswersResponseNoSrn
       }
     }
@@ -94,14 +94,14 @@ class PsaSchemeDetailsTransformerSpec extends TransformationSpec {
         forAll(getRacDacSchemeDetailsGen) {
           case (fromEtmp, toUaJson) =>
 
-            val result = fromEtmp.transform(transformer.transformToUserAnswers(None)).get
+            val result = fromEtmp.transform(transformer.transformToUserAnswers).get
 
             result mustBe toUaJson
         }
       }
 
       s"uses request/response json" in {
-        val result = ifResponse.transform(transformer.transformToUserAnswers(None)).get
+        val result = ifResponse.transform(transformer.transformToUserAnswers).get
 
         result mustBe userAnswersResponse
       }

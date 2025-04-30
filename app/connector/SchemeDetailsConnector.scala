@@ -19,7 +19,6 @@ package connector
 import audit.*
 import com.google.inject.{ImplementedBy, Inject}
 import config.AppConfig
-import models.ListOfSchemes
 import models.etmpToUserAnswers.psaSchemeDetails.PsaSchemeDetailsTransformer
 import models.etmpToUserAnswers.pspSchemeDetails.PspSchemeDetailsTransformer
 import play.api.Logger
@@ -30,7 +29,6 @@ import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import utils.HttpResponseHelper
-import utils.ValidationUtils.genResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -64,8 +62,7 @@ class SchemeDetailsConnectorImpl @Inject()(
                                             schemeSubscriptionDetailsTransformer: PsaSchemeDetailsTransformer,
                                             pspSchemeDetailsTransformer: PspSchemeDetailsTransformer,
                                             schemeAuditService: SchemeAuditService,
-                                            headerUtils: HeaderUtils,
-                                            schemeConnector: SchemeConnector
+                                            headerUtils: HeaderUtils
                                           )
   extends SchemeDetailsConnector with HttpResponseHelper {
 
@@ -83,36 +80,15 @@ class SchemeDetailsConnectorImpl @Inject()(
 
     val url = url"${config.schemeDetailsUrl.format(schemeIdType, idNumber)}"
 
-    val retrievePSTRFromSchemes: Future[Option[String]] = if (schemeIdType == "srn") {
-      schemeConnector.listOfSchemes("PSA", psaId).map {
-        case Right(json) => {
-          val list = json.convertTo[ListOfSchemes]
-          list.schemeDetails.flatMap(_.find(_.referenceNumber.contains(idNumber))).flatMap(_.pstr)
-        }
-        case Left(e) =>
-          logger.warn(s"Unable to find pstr in list of schemes from the srn: ${idNumber} because: ${e}")
-          None
-      }
-    }.recover {
-      case ex =>
-        logger.warn(s"Error occurred while retrieving PSTR from list of schemes: ${ex.getMessage}")
-        None
-    } else {
-      logger.warn("Using pstr scheme so unable to find pstr from listOfSchemes")
-      Future.successful(None)
-    }
-
     logger.debug(s"Calling get scheme details API on IF with url $url and hc $headerCarrier")
 
-    for {
-      pstr <- retrievePSTRFromSchemes
-      response <- httpClientV2.get(url)
-        .setHeader(headerUtils.integrationFrameworkHeader*)
-        .execute[HttpResponse].map { response =>
-          handleSchemeDetailsResponse(response, url.toString, pstr)
-        } andThen
-        schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
-    } yield response
+    httpClientV2.get(url)
+      .setHeader(headerUtils.integrationFrameworkHeader*)
+      .execute[HttpResponse].map { response =>
+        handleSchemeDetailsResponse(response, url.toString)
+      } andThen
+      schemeAuditService.sendSchemeDetailsEvent(psaId)(auditService.sendEvent)
+
   }
 
   override def getPspSchemeDetails(
@@ -135,11 +111,11 @@ class SchemeDetailsConnectorImpl @Inject()(
       schemeAuditService.sendPspSchemeDetailsEvent(pspId)(auditService.sendExtendedEvent)
   }
 
-  private def handleSchemeDetailsResponse(response: HttpResponse, url: String, fallbackPSTR:Option[String]): Either[HttpException, JsObject] = {
+  private def handleSchemeDetailsResponse(response: HttpResponse, url: String): Either[HttpException, JsObject] = {
     logger.warn(s"Get-Scheme-details-response from IF API Structure - ${Json.prettyPrint(anonymizeJson(response.json))}")
     response.status match {
       case OK =>
-        response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers(fallbackPSTR)) match {
+        response.json.transform(schemeSubscriptionDetailsTransformer.transformToUserAnswers) match {
           case JsSuccess(value, _) =>
             logger.debug(s"Get-Scheme-details-UserAnswersJson - $value")
             Right(value)
