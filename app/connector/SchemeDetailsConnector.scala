@@ -107,7 +107,7 @@ class SchemeDetailsConnectorImpl @Inject()(
     for {
       pstr <- retrievePSTRFromSchemes
       response <- httpClientV2.get(url)
-        .setHeader(headerUtils.integrationFrameworkHeader*)
+        .setHeader(headerUtils.integrationFrameworkHeader: _*)
         .execute[HttpResponse].map { response =>
           handleSchemeDetailsResponse(response, url.toString, pstr)
         } andThen
