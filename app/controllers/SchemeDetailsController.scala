@@ -89,7 +89,7 @@ class SchemeDetailsController @Inject()(
             case Left(e) => result(e)
             case Right(json) =>
               Json.fromJson[PsaInvitationInfoResponse](json) match {
-                case JsSuccess(value, _) => Ok(Json.toJson(value)(PsaInvitationInfoResponse.psaInvitationInfoResponseWrites))
+                case JsSuccess(value, _) => Ok(Json.toJson[PsaInvitationInfoResponse](value))
                 case JsError(errors) => InternalServerError(errors.toString)
               }
           }

@@ -22,11 +22,5 @@ case class PsaInvitationInfoResponse(pstr: Option[String], schemeName: Option[St
 
 object PsaInvitationInfoResponse {
   implicit val psaInvitationInfoResponse: OFormat[PsaInvitationInfoResponse] = Json.format[PsaInvitationInfoResponse]
-
-  val psaInvitationInfoResponseWrites: Writes[PsaInvitationInfoResponse] = (psa: PsaInvitationInfoResponse) => Json.obj(
-    "pstr" -> psa.pstr,
-    "schemeName" -> psa.schemeName,
-    "schemeType" -> psa.schemeType
-  )
 }
 
