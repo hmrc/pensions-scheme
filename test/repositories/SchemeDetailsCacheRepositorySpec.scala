@@ -169,9 +169,6 @@ class SchemeDetailsCacheRepositorySpec extends AnyWordSpec with MockitoSugar wit
 
       "getLastUpdated" must {
         s"get a scheme details cache's lastUpdated field by id in Mongo collection when encrypted $encrypted" in {
-          //          when(mockAppConfig.get[Boolean](path = "encrypted")).thenReturn(false)
-          //          val schemeDetailsCacheRepository: SchemeDetailsCacheRepository = buildRepository(mongoHost, mongoPort)
-
           val record = ("id-1", Json.parse("""{"data":"1"}"""))
           val documentsInDB = for {
             _ <- schemeDetailsCacheRepository.collection.drop().toFuture()

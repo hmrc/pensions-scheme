@@ -48,15 +48,10 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
   private val mockAppConfig = mock[Configuration]
   private val mockConfig = mock[Config]
 
-//  import RacdacSchemeSubscriptionCacheRepositorySpec._
-
-//  override def beforeAll(): Unit = {
-    when(mockAppConfig.underlying).thenReturn(mockConfig)
-    when(mockConfig.getString("mongodb.pensions-scheme-cache.register-racdac-scheme.name")).thenReturn("pensions-scheme-register-racdac-scheme")
-    when(mockConfig.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays")).thenReturn(28)
-    when(mockConfig.getString("scheme.json.encryption.key")).thenReturn("gvBoGdgzqG1AarzF1LY0zQ==")
-//    super.beforeAll()
-//  }
+  when(mockAppConfig.underlying).thenReturn(mockConfig)
+  when(mockConfig.getString("mongodb.pensions-scheme-cache.register-racdac-scheme.name")).thenReturn("pensions-scheme-register-racdac-scheme")
+  when(mockConfig.getInt("mongodb.pensions-scheme-cache.register-racdac-scheme.timeToLiveInDays")).thenReturn(28)
+  when(mockConfig.getString("scheme.json.encryption.key")).thenReturn("gvBoGdgzqG1AarzF1LY0zQ==")
 
   Seq(true, false)
     .foreach { encrypted =>
