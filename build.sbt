@@ -39,6 +39,3 @@ lazy val microservice = Project(appName, file("."))
     Test / fork := true,
     Test / javaOptions += "-Dconfig.file=conf/test.application.conf",
   )
-  .settings(resolvers ++= Seq(
-    Resolver.jcenterRepo,
-  ))
