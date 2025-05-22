@@ -115,7 +115,7 @@ class UpdateSchemeCacheRepositorySpec extends AnyWordSpec with MockitoSugar with
           }
         }
         
-        s"save expireAt value as a datewhen encrypted $encrypted" in {
+        s"save expireAt value as a date when encrypted $encrypted" in {
           val ftr = updateSchemeCacheRepository.collection.drop().toFuture().flatMap { _ =>
             updateSchemeCacheRepository.upsert("id", Json.parse("{}")).flatMap { _ =>
               for {

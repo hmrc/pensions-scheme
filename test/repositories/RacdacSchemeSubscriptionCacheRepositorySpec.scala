@@ -154,7 +154,7 @@ class RacdacSchemeSubscriptionCacheRepositorySpec extends AnyWordSpec with Mocki
 
       "get" must {
         s"get a racdac scheme subscription cache data record as ${if (encrypted) "DataEntry" else "JsonDataEntry"} " +
-          "by id in Mongo collection when encrypted $encrypted" in {
+          s"by id in Mongo collection when encrypted $encrypted" in {
           val record = ("id-1", Json.parse("""{"data":"1"}"""))
 
           val documentsInDB = for {
