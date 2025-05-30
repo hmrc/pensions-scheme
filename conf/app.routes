@@ -1,6 +1,6 @@
 # microservice specific routes
 
-POST          /register-scheme-self/:schemeJourneyType          controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType.Name)
+POST          /register-scheme-self/:schemeJourneyType          controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType)
 GET           /list-of-schemes-self                             controllers.SchemeController.listOfSchemesSelf
 GET           /open-date/:srn                                   controllers.SchemeController.openDateSchemeSrn(srn: SchemeReferenceNumber, loggedInAsPsa: Boolean)
 
