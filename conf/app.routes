@@ -1,8 +1,8 @@
 # microservice specific routes
 
-POST          /register-scheme-self/:schemeJourneyType                         controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType)
-GET           /list-of-schemes-self                                            controllers.SchemeController.listOfSchemesSelf
-GET           /open-date/:srn                                                  controllers.SchemeController.openDateSchemeSrn(srn: SchemeReferenceNumber, loggedInAsPsa: Boolean)
+POST          /register-scheme-self/:schemeJourneyType          controllers.SchemeController.registerSchemeSelf(schemeJourneyType: SchemeJourneyType)
+GET           /list-of-schemes-self                             controllers.SchemeController.listOfSchemesSelf
+GET           /open-date/:srn                                   controllers.SchemeController.openDateSchemeSrn(srn: SchemeReferenceNumber, loggedInAsPsa: Boolean)
 
 GET           /scheme/:srn                                                     controllers.SchemeDetailsController.getSchemeDetailsSrn(srn: SchemeReferenceNumber)
 GET           /psp-scheme/:srn                                                 controllers.SchemeDetailsController.getPspSchemeDetailsSrn(srn: SchemeReferenceNumber)

@@ -17,9 +17,9 @@
 package controllers.actions
 
 import play.api.Logging
-import play.api.mvc.Results._
-import play.api.mvc._
-import uk.gov.hmrc.auth.core._
+import play.api.mvc.*
+import play.api.mvc.Results.*
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.domain.{PsaId, PspId}
@@ -29,12 +29,14 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-case class PsaPspAuthRequest[A](request: Request[A], psaId: Option[PsaId], pspId: Option[PspId], externalId: String) extends WrappedRequest[A](request)
+
+case class PsaPspAuthRequest[A](request: Request[A], psaId: Option[PsaId], pspId: Option[PspId], externalId: String)
+  extends WrappedRequest[A](request)
 
 class PsaPspEnrolmentAuthAction @Inject()(
-                                  override val authConnector: AuthConnector,
-                                  val parser: BodyParsers.Default
-                                )(implicit val executionContext: ExecutionContext)
+  override val authConnector: AuthConnector,
+  val parser: BodyParsers.Default
+)(implicit val executionContext: ExecutionContext)
   extends ActionBuilder[PsaPspAuthRequest, AnyContent]
     with ActionFunction[Request, PsaPspAuthRequest]
     with AuthorisedFunctions
@@ -44,24 +46,26 @@ class PsaPspEnrolmentAuthAction @Inject()(
   private val PSPEnrolmentIdKey: String = "PspID"
   private val PSAEnrolmentKey: String = "HMRC-PODS-ORG"
   private val PSAEnrolmentIdKey: String = "PsaID"
+
   private def getEnrolmentIdentifier(
-                                      enrolments: Enrolments,
-                                      enrolmentKey: String,
-                                      enrolmentIdKey: String
-                                    ): Option[String] =
+    enrolments: Enrolments,
+    enrolmentKey: String,
+    enrolmentIdKey: String
+  ): Option[String] =
     for {
       enrolment <- enrolments.getEnrolment(enrolmentKey)
       identifier <- enrolment.getIdentifier(enrolmentIdKey)
-    }
-    yield identifier.value
+    } yield identifier.value
 
-  override def
-  invokeBlock[A](request: Request[A], block: PsaPspAuthRequest[A] => Future[Result]): Future[Result] =
-    invoke(request, block)(HeaderCarrierConverter.fromRequest(request))
+  override def invokeBlock[A](request: Request[A], block: PsaPspAuthRequest[A] => Future[Result]): Future[Result] = {
+    implicit val headerCarrier: HeaderCarrier =
+      HeaderCarrierConverter.fromRequest(request)
 
-  private def invoke[A](request: Request[A], block: PsaPspAuthRequest[A] => Future[Result])
-                       (implicit hc: HeaderCarrier): Future[Result] = {
-    authorised(Enrolment(PSAEnrolmentKey) or Enrolment(PSPEnrolmentKey)).retrieve(Retrievals.authorisedEnrolments and Retrievals.externalId) {
+    authorised(
+      Enrolment(PSAEnrolmentKey) or Enrolment(PSPEnrolmentKey)
+    ).retrieve(
+      Retrievals.authorisedEnrolments and Retrievals.externalId
+    ) {
       case enrolments ~ Some(externalId) =>
         val psaId = getEnrolmentIdentifier(
           enrolments,
@@ -79,22 +83,23 @@ class PsaPspEnrolmentAuthAction @Inject()(
           case (None, None) =>
             logger.warn("Failed to authorise due to insufficient enrolments")
             Future.successful(Forbidden("Enrolments not present"))
-          case _ => block(PsaPspAuthRequest(request, psaId.map(PsaId), pspId.map(PspId), externalId))
+          case _ =>
+            block(PsaPspAuthRequest(request, psaId.map(PsaId), pspId.map(PspId), externalId))
         }
-
-      case _ => Future.failed(new RuntimeException("No externalId found"))
+      case _ =>
+        Future.failed(new RuntimeException("No externalId found"))
+    }.recover {
+      case e:
+        InsufficientEnrolments =>
+        logger.warn("Failed to authorise due to insufficient enrolments", e)
+        Forbidden("Current user doesn't have a valid enrolment.")
+      case e:
+        AuthorisationException =>
+        logger.warn(s"Failed to authorise", e)
+        Unauthorized(s"Failed to authorise user: ${e.reason}")
+      case NonFatal(throwable) =>
+        logger.error(s"Error returned from auth service: ${throwable.getMessage}", throwable)
+        throw throwable
     }
-  } recover {
-    case e:
-      InsufficientEnrolments =>
-      logger.warn("Failed to authorise due to insufficient enrolments", e)
-      Forbidden("Current user doesn't have a valid enrolment.")
-    case e:
-      AuthorisationException =>
-      logger.warn(s"Failed to authorise", e)
-      Unauthorized(s"Failed to authorise user: ${e.reason}")
-    case NonFatal(thr) =>
-      logger.error(s"Error returned from auth service: ${thr.getMessage}", thr)
-      throw thr
   }
 }

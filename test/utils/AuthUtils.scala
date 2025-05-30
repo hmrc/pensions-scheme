@@ -76,20 +76,22 @@ object AuthUtils {
   }
 
   case class FakePsaSchemeAuthAction() extends PsaSchemeAuthAction(mock[SchemeService]) {
-    override def apply(srn: SchemeReferenceNumber): ActionFunction[PsaAuthRequest, PsaAuthRequest] = new ActionFunction[PsaAuthRequest, PsaAuthRequest] {
-      override def invokeBlock[A](request: PsaAuthRequest[A], block: PsaAuthRequest[A] => Future[Result]): Future[Result] =
-        block(PsaAuthRequest(request, PsaId(psaId), externalId))
-
-      override protected def executionContext: ExecutionContext = global
+    override def apply(srn: SchemeReferenceNumber): ActionFunction[PsaAuthRequest, PsaAuthRequest] =
+      new ActionFunction[PsaAuthRequest, PsaAuthRequest] {
+        override def invokeBlock[A](request: PsaAuthRequest[A], block: PsaAuthRequest[A] => Future[Result]): Future[Result] =
+          block(PsaAuthRequest(request, PsaId(psaId), externalId))
+  
+        override protected def executionContext: ExecutionContext = global
     }
   }
 
   case class FakePsaPspSchemeAuthAction() extends PsaPspSchemeAuthAction(mock[SchemeService]) {
-    override def apply(srn: SchemeReferenceNumber, loggedInAsPsa: Boolean): ActionFunction[PsaPspAuthRequest, PsaPspAuthRequest] = new ActionFunction[PsaPspAuthRequest, PsaPspAuthRequest] {
-      override def invokeBlock[A](request: PsaPspAuthRequest[A], block: PsaPspAuthRequest[A] => Future[Result]): Future[Result] =
-        block(PsaPspAuthRequest(request, Some(PsaId(psaId)), Some(PspId(pspId)), externalId))
-
-      override protected def executionContext: ExecutionContext = global
+    override def apply(srn: SchemeReferenceNumber, loggedInAsPsa: Boolean): ActionFunction[PsaPspAuthRequest, PsaPspAuthRequest] =
+      new ActionFunction[PsaPspAuthRequest, PsaPspAuthRequest] {
+        override def invokeBlock[A](request: PsaPspAuthRequest[A], block: PsaPspAuthRequest[A] => Future[Result]): Future[Result] =
+          block(PsaPspAuthRequest(request, Some(PsaId(psaId)), Some(PspId(pspId)), externalId))
+  
+        override protected def executionContext: ExecutionContext = global
     }
   }
 }

@@ -84,7 +84,6 @@ class SchemeCacheControllerSpec
     new SchemeCacheControllerImpl(repo, authConnector)
   }
 
-  // scalastyle:off method.length
   "SchemeCacheController" must {
 
     s".get" must {
