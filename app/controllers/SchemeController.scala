@@ -127,10 +127,10 @@ class SchemeController @Inject()(
   def openDateSchemeSrn(srn: SchemeReferenceNumber, loggedInAsPsa: Boolean): Action[AnyContent] = {
     (psaPspEnrolmentAuthAction andThen psaPspSchemeAuthAction(srn, loggedInAsPsa)).async {
       implicit request => {
-        val idType = if(loggedInAsPsa) "PSA" else "PSP"
+        val idType = if (loggedInAsPsa) "psaid" else "pspid"
         val idValue = idType match {
-          case "PSP" => request.pspId.map(_.value)
-          case "PSA" => request.psaId.map(_.value)
+          case "pspid" => request.pspId.map(_.value)
+          case "psaid" => request.psaId.map(_.value)
         }
         val pstr = request.headers.get("pstr")
 

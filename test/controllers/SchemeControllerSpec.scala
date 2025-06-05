@@ -499,7 +499,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
     "return OK with openDate for PSA when If/ETMP returns it successfully" in {
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
-      when(mockSchemeService.listOfSchemes(meq("PSA"), meq(psaId))(any(), any(), any()))
+      when(mockSchemeService.listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.openDateSchemeSrn(srn, loggedInAsPsa = true)(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
@@ -512,7 +512,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
     "return OK with openDate for PSP when If/ETMP returns it successfully" in {
       val fakeRequest = FakeRequest("GET", "/").withHeaders(("pstr", "24000001IN"))
       val validResponse = readJsonFromFile("/data/validListOfSchemesIFResponse.json")
-      when(mockSchemeService.listOfSchemes(meq("PSP"), meq(pspId))(any(), any(), any()))
+      when(mockSchemeService.listOfSchemes(meq("pspid"), meq(pspId))(any(), any(), any()))
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.openDateSchemeSrn(srn, loggedInAsPsa = false)(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
