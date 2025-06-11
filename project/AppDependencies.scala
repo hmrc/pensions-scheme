@@ -18,21 +18,21 @@ import play.sbt.PlayImport.ws
 import sbt.*
 
 object AppDependencies {
-  private val playVersion = "9.11.0"
+  private val bootstrapVersion = "9.13.0"
   private val mongoVersion = "2.6.0"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
     "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-30"         % mongoVersion,
     "org.playframework"             %% "play-json"                  % "3.0.4",
-    "uk.gov.hmrc"                   %% "bootstrap-backend-play-30"  % playVersion,
+    "uk.gov.hmrc"                   %% "bootstrap-backend-play-30"  % bootstrapVersion,
     "com.networknt"                 %  "json-schema-validator"      % "1.5.6",
     "uk.gov.hmrc"                   %% "domain-play-30"             % "10.0.0",
-    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.18.3"
+    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.19.0"
   )
 
   def test(scope: String = "test"): Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"                 %% "bootstrap-test-play-30"       % playVersion         % Test,
+    "uk.gov.hmrc"                 %% "bootstrap-test-play-30"       % bootstrapVersion    % Test,
     "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-30"      % mongoVersion        % Test,
     "org.scalatestplus"           %% "scalacheck-1-18"              % "3.2.19.0"          % Test,
     "org.scalatestplus"           %% "mockito-4-6"                  % "3.2.15.0"          % Test,

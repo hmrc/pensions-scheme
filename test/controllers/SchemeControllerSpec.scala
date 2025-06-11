@@ -83,7 +83,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
       val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(fakeRequest(validData))
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustBe successResponse
       }
     }
@@ -94,7 +94,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(FakeRequest("POST", "/").withJsonBody(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without PSAId or request body"
+        e.getMessage.mustBe("Bad Request without PSAId or request body")
         verify(mockSchemeService, never).registerScheme(any(),
           any())(any(), any(), any())
       }
@@ -104,7 +104,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(FakeRequest("POST", "/").withHeaders(("psaId", "A2000001")))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without PSAId or request body"
+        e.getMessage.mustBe("Bad Request without PSAId or request body")
         verify(mockSchemeService, never).registerScheme(any(),
           any())(any(), any(), any())
       }
@@ -183,7 +183,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
       val result = schemeController.registerSchemeSelf(SchemeJourneyType.NON_RAC_DAC_SCHEME)(fakeRequest(validData))
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustBe successResponse
       }
     }
@@ -194,7 +194,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.registerScheme(SchemeJourneyType.NON_RAC_DAC_SCHEME)(FakeRequest("POST", "/").withJsonBody(validData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without PSAId or request body"
+        e.getMessage.mustBe("Bad Request without PSAId or request body")
         verify(mockSchemeService, never).registerScheme(any(),
           any())(any(), any(), any())
       }
@@ -202,8 +202,8 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
     "return BadRequestException when no data is not present in the request" in {
       val result = schemeController.registerSchemeSelf(SchemeJourneyType.NON_RAC_DAC_SCHEME)(FakeRequest("POST", "/").withHeaders(("psaId", "A2000001")))
-      status(result) mustBe BAD_REQUEST
-      contentAsString(result) mustBe "Bad Request without PSAId or request body"
+      status(result).mustBe(BAD_REQUEST)
+      contentAsString(result).mustBe("Bad Request without PSAId or request body")
       verify(mockSchemeService, never).registerScheme(any(), any())(any(), any(), any())
     }
 
@@ -277,7 +277,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual validResponse
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -290,7 +290,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual validResponse
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -300,7 +300,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemes(FakeRequest("GET", "/"))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with no ID type or value"
+        e.getMessage.mustBe("Bad Request with no ID type or value")
         verify(mockSchemeService, never).listOfSchemes(any(), any())(any(), any(), any())
       }
     }
@@ -327,7 +327,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe invalidPayload.toString()
+        e.getMessage.mustBe(invalidPayload.toString())
         verify(mockSchemeService, times(1)).listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any())
       }
     }
@@ -343,7 +343,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[UpstreamErrorResponse]
-        e.getMessage mustBe serviceUnavailable.toString()
+        e.getMessage.mustBe(serviceUnavailable.toString())
         verify(mockSchemeService, times(1)).listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any())
       }
     }
@@ -355,7 +355,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemes(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
-        e.getMessage mustBe "Generic Exception"
+        e.getMessage.mustBe("Generic Exception")
         verify(mockSchemeService, times(1)).listOfSchemes(meq("PSA"), meq("A2000001"))(any(), any(), any())
       }
     }
@@ -370,7 +370,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual validResponse
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -385,7 +385,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual validResponse
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -395,7 +395,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemesSelf(FakeRequest("GET", "/"))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with no ID type or value"
+        e.getMessage.mustBe("Bad Request with no ID type or value")
         verify(mockSchemeService, never).listOfSchemes(any(), any())(any(), any(), any())
       }
     }
@@ -422,7 +422,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe invalidPayload.toString()
+        e.getMessage.mustBe(invalidPayload.toString())
         verify(mockSchemeService, times(1)).listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())
       }
     }
@@ -438,7 +438,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[UpstreamErrorResponse]
-        e.getMessage mustBe serviceUnavailable.toString()
+        e.getMessage.mustBe(serviceUnavailable.toString())
         verify(mockSchemeService, times(1)).listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())
       }
     }
@@ -450,7 +450,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemesSelf(fakeRequest)
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[Exception]
-        e.getMessage mustBe "Generic Exception"
+        e.getMessage.mustBe("Generic Exception")
         verify(mockSchemeService, times(1)).listOfSchemes(meq("psaid"), meq(psaId))(any(), any(), any())
       }
     }
@@ -465,7 +465,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.openDateScheme(fakeRequest)
          ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual JsString("2017-12-17")
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -478,7 +478,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.openDateScheme(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual JsString("2017-12-17")
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -488,7 +488,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemes(FakeRequest("GET", "/"))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with no ID type or value"
+        e.getMessage.mustBe("Bad Request with no ID type or value")
         verify(mockSchemeService, never).listOfSchemes(any(), any())(any(), any(), any())
       }
     }
@@ -503,7 +503,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.openDateSchemeSrn(srn, loggedInAsPsa = true)(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual JsString("2017-12-17")
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -516,7 +516,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
         .thenReturn(Future.successful(Right(validResponse)))
       val result = schemeController.openDateSchemeSrn(srn, loggedInAsPsa = false)(fakeRequest)
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustEqual JsString("2017-12-17")
         verify(mockSchemeService, times(1)).listOfSchemes(any(), any())(any(), any(), any())
       }
@@ -526,7 +526,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.listOfSchemes(FakeRequest("GET", "/"))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request with no ID type or value"
+        e.getMessage.mustBe("Bad Request with no ID type or value")
         verify(mockSchemeService, never).listOfSchemes(any(), any())(any(), any(), any())
       }
     }
@@ -544,7 +544,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
       val result = schemeController.updateScheme()(fakeRequest(validSchemeUpdateData))
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustBe successResponse
       }
     }
@@ -554,7 +554,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.updateScheme()(FakeRequest("POST", "/").withJsonBody(validSchemeUpdateData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without PSTR or PSAId or request body"
+        e.getMessage.mustBe("Bad Request without PSTR or PSAId or request body")
         verify(mockSchemeService, never).updateScheme(any(), any(), any())(any(), any(), any())
       }
     }
@@ -563,7 +563,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.updateScheme()(FakeRequest("POST", "/").withHeaders(("pstr", "20010010AA")))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without PSTR or PSAId or request body"
+        e.getMessage.mustBe("Bad Request without PSTR or PSAId or request body")
         verify(mockSchemeService, never).updateScheme(any(), any(), any())(any(), any(), any())
       }
     }
@@ -637,7 +637,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
 
       val result = schemeController.updateSchemeSrn(srn)(fakeRequest(validSchemeUpdateData))
       ScalaFutures.whenReady(result) { _ =>
-        status(result) mustBe OK
+        status(result).mustBe(OK)
         contentAsJson(result) mustBe successResponse
       }
     }
@@ -647,7 +647,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.updateSchemeSrn(srn)(FakeRequest("POST", "/").withJsonBody(validSchemeUpdateData))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without PSTR or PSAId or request body"
+        e.getMessage.mustBe("Bad Request without PSTR or PSAId or request body")
         verify(mockSchemeService, never).updateScheme(any(), any(), any())(any(), any(), any())
       }
     }
@@ -656,7 +656,7 @@ class SchemeControllerSpec extends SpecBase with MockitoSugar with BeforeAndAfte
       val result = schemeController.updateSchemeSrn(srn)(FakeRequest("POST", "/").withHeaders(("pstr", "20010010AA")))
       ScalaFutures.whenReady(result.failed) { e =>
         e mustBe a[BadRequestException]
-        e.getMessage mustBe "Bad Request without PSTR or PSAId or request body"
+        e.getMessage.mustBe("Bad Request without PSTR or PSAId or request body")
         verify(mockSchemeService, never).updateScheme(any(), any(), any())(any(), any(), any())
       }
     }

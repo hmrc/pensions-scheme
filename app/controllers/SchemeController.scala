@@ -70,17 +70,17 @@ class SchemeController @Inject()(
 
   def listOfSchemesSelf: Action[AnyContent] = psaPspEnrolmentAuthAction.async {
     implicit request => {
-      val idTypeHeader = request.headers.get("idType")
+      val idTypeHeader = request.headers.get("idType").map(_.toUpperCase)
 
       val idType = idTypeHeader match {
-        case Some("PSP") => Some("pspid")
-        case Some("PSA") => Some("psaid")
+        case Some("PSP") | Some("PSPID") => Some("pspid")
+        case Some("PSA") | Some("PSAID") => Some("psaid")
         case _ => None
       }
 
       val idValue = idTypeHeader match {
-        case Some("PSP") => request.pspId.map(_.value)
-        case Some("PSA") => request.psaId.map(_.value)
+        case Some("PSP") | Some("PSPID") => request.pspId.map(_.value)
+        case Some("PSA") | Some("PSAID") => request.psaId.map(_.value)
         case _ => None
       }
 
