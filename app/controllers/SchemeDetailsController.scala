@@ -43,22 +43,6 @@ class SchemeDetailsController @Inject()(
   extends BackendController(cc)
     with ErrorHandler {
 
-  def getSchemeDetails: Action[AnyContent] = Action.async {
-    implicit request => {
-      val idType = request.headers.get("schemeIdType")
-      val id = request.headers.get("idNumber")
-      val idPsa = request.headers.get("PSAId")
-      val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
-
-      (idType, id, idPsa) match {
-        case (Some(schemeIdType), Some(idNumber), Some(psaId)) =>
-          fetchFromCacheOrApiForPsa(SchemeWithId(idNumber, psaId), schemeIdType, refreshDataOpt)
-        case _ =>
-          Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
-      }
-    } recoverWith recoverFromError
-  }
-
   def getSchemeDetailsSrn(srn: SchemeReferenceNumber): Action[AnyContent] = (psaEnrolmentAuthAction andThen psaSchemeAuthAction(srn)).async {
     implicit request => {
       val idType = request.headers.get("schemeIdType")
@@ -95,26 +79,6 @@ class SchemeDetailsController @Inject()(
           }
         case _ =>
           Future.failed(new BadRequestException("Bad Request with missing parameters schemeIdType, idNumber"))
-      }
-    } recoverWith recoverFromError
-  }
-
-  def getPspSchemeDetails: Action[AnyContent] = Action.async {
-    implicit request => {
-      val srnOpt = request.headers.get("srn")
-      val pstrOpt = request.headers.get("pstr")
-      val pspIdOpt = request.headers.get("pspId")
-      val refreshDataOpt = request.headers.get("refreshData").map(_.toBoolean)
-
-      (srnOpt, pstrOpt, pspIdOpt) match {
-        case (Some(srn), None, Some(pspId)) =>
-          schemeService.getPstrFromSrn(srn, "pspid", pspId).flatMap { pstr =>
-            fetchFromCacheOrApiForPsp(SchemeWithId(pstr, pspId), refreshDataOpt)
-          }
-        case (None, Some(pstr), Some(pspId)) =>
-            fetchFromCacheOrApiForPsp(SchemeWithId(pstr, pspId), refreshDataOpt)
-
-        case _ => Future.failed(new BadRequestException("Bad Request with missing parameters idType, idNumber or PSAId"))
       }
     } recoverWith recoverFromError
   }
