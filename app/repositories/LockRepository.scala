@@ -25,6 +25,7 @@ import org.mongodb.scala.{MongoCommandException, SingleObservableFuture}
 import play.api.libs.json.*
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.time.Instant
@@ -33,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 object LockRepository {
-  private[repositories] case class JsonDataEntry(psaId: String, srn: String, data: JsValue, lastUpdated: Instant, expireAt: Instant)
+  private[repositories] case class JsonDataEntry(psaId: String, srn: String, lastUpdated: Instant, expireAt: Instant)
 
   implicit val format: Format[JsonDataEntry] = Json.format[JsonDataEntry]
 }
@@ -47,6 +48,9 @@ class LockRepository @Inject()(configuration: Configuration,
     collectionName = configuration.underlying.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.name"),
     mongoComponent = mongoComponent,
     domainFormat = SchemeVariance.format,
+    extraCodecs = Seq(
+      Codecs.playFormatCodec(MongoJavatimeFormats.instantFormat)
+    ),
     indexes = Seq(
       IndexModel(
         Indexes.ascending("psaId"),
@@ -64,17 +68,14 @@ class LockRepository @Inject()(configuration: Configuration,
   ) with Logging {
   //scalastyle:off magic.number
 
-  import LockRepository.*
-
   private lazy val documentExistsErrorCode = 11000
   private val srnKey = "srn"
   private val psaIdKey = "psaId"
+  private val lastUpdated = "lastUpdated"
+  private val expireAt = "expireAt"
 
-  private def getExpireAt: Instant = {
-    val secondsInDay = 86400
-    val days = appConfig.defaultDataExpireAfterDays + 1
-    Instant.now().plusSeconds(secondsInDay * days)
-  }
+  private def getExpireAt: Instant =
+    Instant.now().plusSeconds(appConfig.lockTTLSeconds)
 
 
   private val filterPsa = Filters.eq("psaId", _: String)
@@ -105,12 +106,11 @@ class LockRepository @Inject()(configuration: Configuration,
   }
 
   def lock(newLock: SchemeVariance): Future[Lock] = {
-    val dataKey = "data"
-    val data: JsValue = Json.toJson(JsonDataEntry(newLock.psaId, newLock.srn, Json.toJson(newLock), Instant.now(), getExpireAt))
     val modifier = Updates.combine(
       Updates.set(psaIdKey, newLock.psaId),
       Updates.set(srnKey, newLock.srn),
-      Updates.set(dataKey, Codecs.toBson(data))
+      Updates.set(lastUpdated, Instant.now()),
+      Updates.set(expireAt, getExpireAt)
     )
 
     collection.findOneAndUpdate(
