@@ -27,7 +27,7 @@ import scala.concurrent.duration.Duration
 
 class DropLockEntriesService @Inject()(mongoLockRepository: MongoLockRepository,
                                        mongoComponent: MongoComponent)(implicit ec: ExecutionContext) extends Logging {
-  private val lock = LockService(mongoLockRepository, "minimal_detail_data_expireAtLock", Duration(10, TimeUnit.MINUTES))
+  private val lock = LockService(mongoLockRepository, "schema-variation-lock-drop", Duration(10, TimeUnit.MINUTES))
 
   private def dropLockEntries = {
     val collection = mongoComponent.database.getCollection("scheme_variation_lock")
