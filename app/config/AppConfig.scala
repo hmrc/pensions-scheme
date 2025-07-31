@@ -38,4 +38,14 @@ class AppConfig @Inject()(configuration: Configuration, servicesConfig: Services
   lazy val schemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
   lazy val pspSchemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.psp.scheme.details")}"
   lazy val updateSchemeUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
+
+  def lockTTLSeconds: Int = {
+    val ttlValue = underlying.getInt("mongodb.pensions-scheme-cache.scheme-variation-lock.ttl.value")
+    underlying.getString("mongodb.pensions-scheme-cache.scheme-variation-lock.ttl.time-period").toUpperCase match {
+      case "SECONDS" => ttlValue
+      case "MINUTES" => ttlValue * 60
+      case "HOURS"   => ttlValue * 60 * 60
+      case "DAYS"    => ttlValue * 60 * 60 * 24
+    }
+  }
 }
