@@ -19,7 +19,7 @@ package service
 import com.google.inject.Inject
 import connector.{HipSchemeConnector, HipSchemeDetailsConnector, SchemeConnector, SchemeDetailsConnector}
 
-class ConnectorServicce @Inject()(
+class ConnectorService @Inject()(
                                    schemeConnector: SchemeConnector,
                                    hipSchemeConnector: HipSchemeConnector,
                                    schemeDetailsConnector: SchemeDetailsConnector,

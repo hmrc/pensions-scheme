@@ -255,7 +255,7 @@ class SchemeServiceSpec
 
 object SchemeServiceSpec extends SpecBase with MockitoSugar {
 
-  private val connectorService: ConnectorServicce = mock[ConnectorServicce]
+  private val connectorService: ConnectorService = mock[ConnectorService]
   private val featureFlagService: FeatureFlagService = mock[FeatureFlagService]
   private val barsConnector: BarsConnector = mock[BarsConnector]
   private val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
