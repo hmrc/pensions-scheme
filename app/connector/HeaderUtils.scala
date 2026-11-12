@@ -19,6 +19,10 @@ package connector
 import com.google.inject.Inject
 import config.AppConfig
 
+import java.nio.charset.StandardCharsets
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.util.{Base64, UUID}
 import java.util.UUID.randomUUID
 
 class HeaderUtils @Inject()(config: AppConfig) {
@@ -31,5 +35,26 @@ class HeaderUtils @Inject()(config: AppConfig) {
       "CorrelationId" -> getCorrelationId)
   }
 
+  def hipHeader: Seq[(String, String)] = {
+    Seq(
+      "X-Transmitting-System" -> "HIP",
+      "X-Originating-System" -> "MDTP",
+      "X-Receipt-Date" -> xReceiptDate,
+      "correlationid" -> UUID.randomUUID().toString,
+      "Authorization" -> s"Basic $token"
+    )
+  }
+
+  private val token: String =
+    Base64
+      .getEncoder
+      .encodeToString(s"${config.hipClientId}:${config.hipClientSecret}".getBytes(StandardCharsets.UTF_8))
+      
+  private val xReceiptDate: String =
+    ZonedDateTime
+      .ofInstant(Instant.now(), ZoneId.of("UTC"))
+      .withNano(0)
+      .format(DateTimeFormatter.ISO_INSTANT)
+      
   private def getCorrelationId: String = randomUUID.toString.slice(0, maxLengthCorrelationIdIF)
 }

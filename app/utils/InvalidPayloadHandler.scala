@@ -18,14 +18,15 @@ package utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.ImplementedBy
-import com.networknt.schema.{JsonSchema, JsonSchemaFactory, SpecVersion, ValidationMessage}
+import com.networknt.schema.{JsonSchema, JsonSchemaFactory, SchemaLocation, SchemaValidatorsConfig, SpecVersion, ValidationMessage}
 import play.api.Logger
-import play.api.libs.json._
+import play.api.libs.json.*
 
 import java.io.InputStream
+import java.nio.file.Paths
 import javax.inject.Inject
 import scala.collection.mutable
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 @ImplementedBy(classOf[InvalidPayloadHandlerImpl])
 trait InvalidPayloadHandler {
@@ -33,6 +34,8 @@ trait InvalidPayloadHandler {
   def getFailures(schemaFileName: String, json: JsValue): Set[ValidationFailure]
 
   def logFailures(schemaFileName: String, json: JsValue, args: String*): Unit
+
+  def logFailures(schemaFileName: String, schema: String, json: JsValue, args: String*): Unit
 
 }
 
@@ -72,6 +75,22 @@ class InvalidPayloadHandlerImpl @Inject() extends InvalidPayloadHandler {
     val schema = loadSchema(schemaFileName)
     logFailure(schema, json, args)
 
+  }
+
+  private lazy val config: SchemaValidatorsConfig =
+    SchemaValidatorsConfig
+      .builder
+      .discriminatorKeywordEnabled(false)
+      .typeLoose(true)
+      .build
+
+  def logFailures(schemaFileName: String, schema: String, json: JsValue, args: String*): Unit = {
+    val schemaPath = s"${Paths.get(schemaFileName).toUri}#/components/schemas/$schema"
+    val jsonSchema = JsonSchemaFactory
+      .getInstance(SpecVersion.VersionFlag.V4)
+      .getSchema(SchemaLocation.of(schemaPath), config)
+
+    logFailure(jsonSchema, json, args)
   }
 
   private[utils] def logFailure(schema: JsonSchema, json: JsValue, args: Seq[String]): Unit = {

@@ -2,3 +2,4 @@
 ->        /pensions-scheme        app.Routes
 
 ->        /                             health.Routes
+->        /admin                        admin.Routes
