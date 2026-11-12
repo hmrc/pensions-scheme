@@ -18,16 +18,17 @@ package service
 
 import audit.{AuditService, SchemeAuditService}
 import com.google.inject.Inject
-import connector.{BarsConnector, SchemeConnector, SchemeDetailsConnector}
+import connector.BarsConnector
 import models.userAnswersToEtmp.PensionsScheme.pensionSchemeHaveInvalidBank
 import models.userAnswersToEtmp.{BankAccount, PensionsScheme, RACDACPensionsScheme}
-import models.{ListOfSchemes, SchemeReferenceNumber, SchemeWithId}
+import models.{Api1359HipMigrationToggle, Api1360HipMigrationToggle, Api1444HipMigrationToggle, Api1468HipMigrationToggle, ListOfSchemes, SchemeReferenceNumber, SchemeWithId}
 import play.api.Logger
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.mvc.RequestHeader
 import repositories.SchemeDetailsWithIdCacheRepository
 import uk.gov.hmrc.domain.{PsaId, PspId}
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpException}
+import uk.gov.hmrc.mongoFeatureToggles.services.FeatureFlagService
 import utils.HttpResponseHelper
 import utils.ValidationUtils.genResponse
 
@@ -35,12 +36,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 class SchemeService @Inject()(
-                                   schemeConnector: SchemeConnector,
-                                   barsConnector: BarsConnector,
-                                   auditService: AuditService,
-                                   schemeAuditService: SchemeAuditService,
-                                   schemeDetailsConnector: SchemeDetailsConnector,
-                                   schemeDetailsCache: SchemeDetailsWithIdCacheRepository
+                               barsConnector: BarsConnector,
+                               auditService: AuditService,
+                               schemeAuditService: SchemeAuditService,
+                               schemeDetailsCache: SchemeDetailsWithIdCacheRepository,
+                               connectorService: ConnectorService,
+                               featureFlagService: FeatureFlagService
                                  )(implicit ec: ExecutionContext) extends HttpResponseHelper {
 
   private val logger = Logger(classOf[SchemeService])
@@ -48,10 +49,12 @@ class SchemeService @Inject()(
   def listOfSchemes(idType: String, idValue: String)
                             (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
   Future[Either[HttpException, JsValue]]= {
-    schemeConnector.listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly)
+    featureFlagService.get(Api1360HipMigrationToggle).flatMap { toggle =>
+      connectorService.getSchemeConnector(toggle.isEnabled).listOfSchemes(idType, idValue)(headerCarrier, implicitly, implicitly)
+    }
   }
 
-  private def registerNonRACDACScheme(json: JsValue, psaId: String)
+  private def registerNonRACDACScheme(json: JsValue, psaId: String, hipEnabled: Boolean)
                                      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
   Future[Either[HttpException, JsValue]] = {
     json.validate[PensionsScheme](PensionsScheme.registerApiReads).fold(
@@ -67,7 +70,7 @@ class SchemeService @Inject()(
           bankAccount => haveInvalidBank(bankAccount, validPensionsScheme, psaId).flatMap {
             pensionsScheme =>
               val registerData = Json.toJson(pensionsScheme).as[JsObject]
-              schemeConnector.registerScheme(psaId, registerData) andThen {
+              connectorService.getSchemeConnector(hipEnabled).registerScheme(psaId, registerData) andThen {
                 schemeAuditService.sendSchemeSubscriptionEvent(psaId, pensionsScheme, bankAccount.isDefined)(auditService.sendEvent)
               }
           }
@@ -76,7 +79,7 @@ class SchemeService @Inject()(
     )
   }
 
-  private def registerRACDACScheme(json: JsValue, psaId: String)(implicit
+  private def registerRACDACScheme(json: JsValue, psaId: String, hipEnabled: Boolean)(implicit
                                                                  headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
   Future[Either[HttpException, JsValue]] = {
     json.validate[RACDACPensionsScheme](RACDACPensionsScheme.reads).fold(
@@ -88,7 +91,7 @@ class SchemeService @Inject()(
       },
       valid = { validRACDACPensionsScheme =>
         val registerData = Json.toJson(validRACDACPensionsScheme)
-        schemeConnector.registerScheme(psaId, registerData) andThen {
+        connectorService.getSchemeConnector(hipEnabled).registerScheme(psaId, registerData) andThen {
           schemeAuditService.sendRACDACSchemeSubscriptionEvent(psaId, registerData)(auditService.sendExtendedEvent)
         }
       }
@@ -98,11 +101,14 @@ class SchemeService @Inject()(
   def registerScheme(psaId: String, json: JsValue)
                              (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
   Future[Either[HttpException, JsValue]] = {
-    def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
-    if (isRACDACSchemeDeclaration) {
-      registerRACDACScheme(json, psaId)
-    } else {
-      registerNonRACDACScheme(json, psaId)
+    featureFlagService.get(Api1359HipMigrationToggle).flatMap { toggle =>
+      def isRACDACSchemeDeclaration = (json \ "racdac" \ "declaration").toOption.exists(_.as[Boolean])
+
+      if (isRACDACSchemeDeclaration) {
+        registerRACDACScheme(json, psaId, toggle.isEnabled)
+      } else {
+        registerNonRACDACScheme(json, psaId, toggle.isEnabled)
+      }
     }
   }
 
@@ -119,8 +125,10 @@ class SchemeService @Inject()(
       valid = { validPensionsScheme =>
         val updatedScheme = Json.toJson(validPensionsScheme)(PensionsScheme.updateWrite(psaId))
         logger.debug(s"[Update-Scheme-Outgoing-Payload]$updatedScheme")
-        schemeConnector.updateSchemeDetails(pstr, updatedScheme) andThen
-          schemeAuditService.sendSchemeUpdateEvent(psaId, validPensionsScheme)(auditService.sendEvent)
+        featureFlagService.get(Api1468HipMigrationToggle).flatMap { toggle =>
+          connectorService.getSchemeConnector(toggle.isEnabled).updateSchemeDetails(pstr, updatedScheme) andThen
+            schemeAuditService.sendSchemeUpdateEvent(psaId, validPensionsScheme)(auditService.sendEvent)
+        }
       })
   }
 
@@ -176,12 +184,15 @@ class SchemeService @Inject()(
       case Some(json) if !refreshData.contains(true) =>
         logger.info("Retrieving scheme details from cache")
         Future.successful(Right(json.as[JsObject]))
-      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
-        case Right(json) =>
-          logger.info("Retrieving scheme details from API")
-          schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
-        case e => Future.successful(e)
-      }
+      case _ =>
+        featureFlagService.get(Api1444HipMigrationToggle).flatMap{ toggle =>
+          connectorService.getSchemeDetailsConnector(toggle.isEnabled).getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
+              case Right(json) =>
+                logger.info("Retrieving scheme details from API")
+                schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
+              case e => Future.successful(e)
+            }
+       }
     }
 
   def isAssociated(srn: SchemeReferenceNumber, psaOrPspId: Either[PsaId, PspId])
@@ -206,4 +217,18 @@ class SchemeService @Inject()(
       case Left(e) => Left(e)
     }
   }
+
+  def getSchemeDetails(userIdNumber: String, schemeIdType: String, schemeIdNumber: String)
+                      (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
+                                              Future[Either[HttpException, JsObject]] =
+    featureFlagService.get(Api1444HipMigrationToggle).flatMap { toggle =>
+      connectorService.getSchemeDetailsConnector(toggle.isEnabled).getSchemeDetails(userIdNumber, schemeIdType, schemeIdNumber)
+    }
+
+  def getPspSchemeDetails(pspId: String, pstr: String)
+                         (implicit headerCarrier: HeaderCarrier, ec: ExecutionContext, request: RequestHeader):
+                                              Future[Either[HttpException, JsObject]] =
+    featureFlagService.get(Api1444HipMigrationToggle).flatMap { toggle =>
+      connectorService.getSchemeDetailsConnector(toggle.isEnabled).getPspSchemeDetails(pspId, pstr)
+    }
 }

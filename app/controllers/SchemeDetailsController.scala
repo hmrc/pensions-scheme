@@ -17,7 +17,6 @@
 package controllers
 
 import com.google.inject.Inject
-import connector.SchemeDetailsConnector
 import controllers.actions.{PsaEnrolmentAuthAction, PsaPspEnrolmentAuthAction, PsaPspSchemeAuthAction, PsaSchemeAuthAction}
 import models.{PsaInvitationInfoResponse, SchemeReferenceNumber, SchemeWithId}
 import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue, Json}
@@ -31,7 +30,6 @@ import utils.ErrorHandler
 import scala.concurrent.{ExecutionContext, Future}
 
 class SchemeDetailsController @Inject()(
-                                         schemeDetailsConnector: SchemeDetailsConnector,
                                          schemeDetailsCache: SchemeDetailsWithIdCacheRepository,
                                          schemeService: SchemeService,
                                          cc: ControllerComponents,
@@ -116,7 +114,7 @@ class SchemeDetailsController @Inject()(
                                                (implicit hc: HeaderCarrier, request: RequestHeader)= {
     schemeDetailsCache.get(id).flatMap {
       case Some(json) if !refreshData.contains(true) => Future.successful(Right(json.as[JsObject]))
-      case _ => schemeDetailsConnector.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
+      case _ => schemeService.getSchemeDetails(id.userId, schemeIdType, id.schemeId).flatMap {
         case Right(json) => schemeDetailsCache.upsert(id, json).map { _ => Right(json) }
         case Left(e) => Future.successful(Left(e))
       }
@@ -127,7 +125,7 @@ class SchemeDetailsController @Inject()(
                                        (implicit hc: HeaderCarrier, request: RequestHeader): Future[Result] =
     schemeDetailsCache.get(id).flatMap {
       case Some(json) if !refreshData.contains(true) => Future.successful(Ok(json.as[JsObject]))
-      case _ => schemeDetailsConnector.getPspSchemeDetails(id.userId, id.schemeId).flatMap {
+      case _ => schemeService.getPspSchemeDetails(id.userId, id.schemeId).flatMap {
         case Right(json) => schemeDetailsCache.upsert(id, json).map {
           _ => Ok(json)
         }

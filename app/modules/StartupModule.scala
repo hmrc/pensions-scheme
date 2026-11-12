@@ -25,6 +25,9 @@ import scala.annotation.nowarn
 @nowarn("msg=unused explicit parameter")
 class StartupModule @Inject() (environment: Environment, configuration: Configuration) extends AbstractModule {
   override def configure(): Unit = {
-    if (configuration.underlying.getBoolean("mongodb.drop.collection.scheme_variation_lock.enable")) bind(classOf[DropLockEntriesService]).asEagerSingleton()
+    if (configuration.underlying.getBoolean("mongodb.drop.collection.scheme_variation_lock.enable"))
+      bind(classOf[DropLockEntriesService]).asEagerSingleton()
+
+    bind(classOf[ApplicationStartUp]).asEagerSingleton()
   }
 }

@@ -25,6 +25,7 @@ class AppConfig @Inject()(configuration: Configuration, servicesConfig: Services
   lazy val underlying: Config = configuration.underlying
   lazy val defaultDataExpireAfterDays: Int = underlying.getInt("defaultDataExpireInDays")
   lazy val ifURL: String = servicesConfig.baseUrl(serviceName = "if-hod")
+  lazy val hipURL: String = servicesConfig.baseUrl(serviceName = "hip-hod")
   lazy val barsBaseUrl: String = servicesConfig.baseUrl("bank-account-reputation")
   lazy val appName: String = underlying.getString("appName")
 
@@ -38,6 +39,15 @@ class AppConfig @Inject()(configuration: Configuration, servicesConfig: Services
   lazy val schemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.scheme.details")}"
   lazy val pspSchemeDetailsUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.psp.scheme.details")}"
   lazy val updateSchemeUrl: String = s"$ifURL${underlying.getString("serviceUrls.if.update.scheme")}"
+
+  lazy val hipClientId: String = servicesConfig.getConfString("hip-hod.clientId", "local")
+  lazy val hipClientSecret: String = servicesConfig.getConfString("hip-hod.clientSecret", "local")
+  
+  lazy val schemeRegistrationHipUrl: String = s"$hipURL${underlying.getString("serviceUrls.hip.scheme.register")}"
+  lazy val listOfSchemesHipUrl: String = s"$hipURL${underlying.getString("serviceUrls.hip.list.of.schemes")}"
+  lazy val schemeDetailsHipUrl: String = s"$hipURL${underlying.getString("serviceUrls.hip.scheme.details")}"
+  lazy val pspSchemeDetailsHipUrl: String = s"$hipURL${underlying.getString("serviceUrls.hip.psp.scheme.details")}"
+  lazy val updateSchemeHipUrl: String = s"$hipURL${underlying.getString("serviceUrls.hip.update.scheme")}"
 
   def lockTTLSeconds: Int = {
     val ttlValue = underlying.getInt("mongodb.pensions-scheme-cache.scheme-variation-lock.ttl.value")

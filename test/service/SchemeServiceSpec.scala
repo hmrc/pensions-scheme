@@ -17,26 +17,28 @@
 package service
 
 import audit.testdoubles.StubSuccessfulAuditService
-import audit.{RACDACDeclarationAuditEvent, SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType => AuditSchemeType}
+import audit.{RACDACDeclarationAuditEvent, SchemeAuditService, SchemeSubscription, SchemeUpdate, SchemeType as AuditSchemeType}
 import base.SpecBase
-import connector.{BarsConnector, SchemeConnector, SchemeDetailsConnector}
-import models._
+import connector.{BarsConnector, SchemeConnector}
+import models.*
 import models.enumeration.SchemeType
 import models.userAnswersToEtmp.establisher.EstablisherDetails
 import models.userAnswersToEtmp.trustee.TrusteeDetails
 import models.userAnswersToEtmp.{BankAccount, CustomerAndSchemeDetails, PensionSchemeDeclaration, PensionsScheme}
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import repositories.SchemeDetailsWithIdCacheRepository
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
+import uk.gov.hmrc.mongoFeatureToggles.model.FeatureFlag
+import uk.gov.hmrc.mongoFeatureToggles.services.FeatureFlagService
 
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.Future
@@ -253,19 +255,28 @@ class SchemeServiceSpec
 
 object SchemeServiceSpec extends SpecBase with MockitoSugar {
 
-  private val schemeConnector: SchemeConnector = mock[SchemeConnector]
+  private val connectorService: ConnectorService = mock[ConnectorService]
+  private val featureFlagService: FeatureFlagService = mock[FeatureFlagService]
   private val barsConnector: BarsConnector = mock[BarsConnector]
   private val auditService: StubSuccessfulAuditService = new StubSuccessfulAuditService()
-  private val mockSchemeDetailsConnector = mock[SchemeDetailsConnector]
   private val mockSchemeDetailsWithIdCache = mock[SchemeDetailsWithIdCacheRepository]
 
+  private val schemeConnector: SchemeConnector = mock[SchemeConnector]
+
+  when(connectorService.getSchemeConnector(false)).thenReturn(schemeConnector)
+  Seq(
+    Api1359HipMigrationToggle, Api1360HipMigrationToggle, Api1444HipMigrationToggle, Api1468HipMigrationToggle
+  ).foreach{ toggle =>
+    when(featureFlagService.get(any)).thenReturn(Future.successful(FeatureFlag(toggle, isEnabled = false)))
+  }
+
   private val schemeService: SchemeService = new SchemeService(
-    schemeConnector,
     barsConnector,
     auditService,
     new SchemeAuditService,
-    mockSchemeDetailsConnector,
-    mockSchemeDetailsWithIdCache
+    mockSchemeDetailsWithIdCache,
+    connectorService,
+    featureFlagService
   )(global)
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
