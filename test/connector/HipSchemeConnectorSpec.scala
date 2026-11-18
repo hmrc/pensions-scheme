@@ -312,15 +312,15 @@ object HipSchemeConnectorSpec extends JsonFileReader {
   private val pstr = "20010010AA"
   private val registerSchemeData = readJsonFromFile("/data/validSchemeRegistrationRequest.json")
   private val updateSchemeData = readJsonFromFile("/data/validSchemeUpdateRequest.json")
-  private val schemeHipUrl = s"/RESTAdapter/pension-online/scheme-subscription/$idValue"
-  private val updateSchemeHipUrl = s"/RESTAdapter/pension-online/scheme-variation/$pstr"
+  private val schemeHipUrl = s"/etmp/RESTAdapter/pension-online/scheme-subscription/$idValue"
+  private val updateSchemeHipUrl = s"/etmp/RESTAdapter/pension-online/scheme-variation/$pstr"
 
   private val psaType = "PSA"
   private val pspType = "PSP"
   private val validListOfSchemeHipResponse = readJsonFromFile("/data/validListOfSchemesHipResponse.json")
 
   private def listOfSchemesHipUrl(idType: String = psaType): String =
-    s"/RESTAdapter/pension-online/subscriptions/schemes/list/$idType/$idValue"
+    s"/etmp/RESTAdapter/pension-online/subscriptions/schemes/list/$idType/$idValue"
 
   private val invalidBusinessPartnerResponse =
     Json.stringify(

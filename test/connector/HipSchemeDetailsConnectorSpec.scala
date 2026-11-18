@@ -274,8 +274,8 @@ object HipSchemeDetailsConnectorSpec extends JsonFileReader {
 
   private val pspId = "psp-id"
 
-  private val schemeDetailsHipUrl: String = s"/RESTAdapter/pension-online/scheme-details/$schemeIdType/$idNumber"
-  private val pspSchemeDetailsHipUrl: String = s"/RESTAdapter/pension-online/psp-scheme-details/$pspId/$pstr"
+  private val schemeDetailsHipUrl: String = s"/etmp/RESTAdapter/pension-online/scheme-details/$schemeIdType/$idNumber"
+  private val pspSchemeDetailsHipUrl: String = s"/etmp/RESTAdapter/pension-online/psp-scheme-details/$pspId/$pstr"
 
   private def errorResponse(code: String): String = {
     Json.stringify(
